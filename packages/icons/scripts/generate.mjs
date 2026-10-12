@@ -200,14 +200,6 @@ async function main() {
     }
   }
 
-  const glyphs = [];
-  for (const { componentName, slug } of seen.values()) {
-    const iconNode = iconNodeBySlug.get(slug);
-    const source = glyphSource(componentName, iconNode);
-    await writeFile(join(OUT_GLYPHS_DIR, `${componentName}.tsx`), source);
-    glyphs.push({ componentName, slug });
-  }
-
   // Hand-rolled extras: icons that lucide doesn't carry (or has
   // dropped) but motif keeps for backward compat. Files in
   // `src/_extras/` aren't touched by the regen - they're added to
@@ -222,8 +214,28 @@ async function main() {
   } catch {
     // No extras directory - skip silently.
   }
-  // Drop any generated glyph that an extras file overrides.
   const extrasSet = new Set(extras);
+
+  // An alias whose target is written as its own generated glyph re-exports
+  // that glyph instead of duplicating its body under a second name.
+  const keptTarget = (targetSlug) => {
+    const targetName = pascalCase(targetSlug);
+    return seen.get(targetName.toLowerCase())?.slug === targetSlug && !extrasSet.has(targetName)
+      ? targetName
+      : undefined;
+  };
+
+  const glyphs = [];
+  for (const { componentName, slug } of seen.values()) {
+    const target = aliasTargets.has(slug) ? keptTarget(aliasTargets.get(slug)) : undefined;
+    if (target === undefined) {
+      const source = glyphSource(componentName, iconNodeBySlug.get(slug));
+      await writeFile(join(OUT_GLYPHS_DIR, `${componentName}.tsx`), source);
+    }
+    glyphs.push({ componentName, target });
+  }
+
+  // Drop any generated glyph that an extras file overrides.
   const generatedNotOverridden = glyphs.filter(
     ({ componentName }) => !extrasSet.has(componentName),
   );
@@ -233,8 +245,10 @@ async function main() {
   extras.sort();
 
   const exportLines = [
-    ...generatedNotOverridden.map(
-      ({ componentName }) => `export { ${componentName} } from './glyphs/${componentName}.js';`,
+    ...generatedNotOverridden.map(({ componentName, target }) =>
+      target === undefined
+        ? `export { ${componentName} } from './glyphs/${componentName}.js';`
+        : `export { ${target} as ${componentName} } from './glyphs/${target}.js';`,
     ),
     ...extras.map((name) => `export { ${name} } from './_extras/${name}.js';`),
   ];

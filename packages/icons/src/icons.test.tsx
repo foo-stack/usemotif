@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import {
+  ActivitySquare,
   Check,
   Discord,
   Facebook,
@@ -14,6 +15,7 @@ import {
   Instagram,
   Linkedin,
   Slack,
+  SquareActivity,
   Star,
   Twitter,
   X,
@@ -25,8 +27,13 @@ const GLYPHS_DIR = resolve(HERE, 'glyphs');
 
 describe('@usemotif/icons - generator output', () => {
   it('the barrel contains a substantial number of glyphs', () => {
-    const files = readdirSync(GLYPHS_DIR).filter((f) => f.endsWith('.tsx'));
-    expect(files.length).toBeGreaterThanOrEqual(1900);
+    // Count exported names, not files: a lucide alias re-exports its target's file.
+    const indexSrc = readFileSync(resolve(HERE, 'index.ts'), 'utf8');
+    expect(indexSrc.match(/^export \{ /gm)?.length).toBeGreaterThanOrEqual(1900);
+  });
+
+  it('a lucide alias is its target glyph, not a copy of it', () => {
+    expect(ActivitySquare).toBe(SquareActivity);
   });
 
   it('each generated glyph is small (per-icon import-cost proxy)', () => {
