@@ -167,11 +167,17 @@ export function useSpring(initial: number, config?: SpringConfig | string): Moti
     velocity: number;
     rafId: number | null;
     lastTime: number;
+    /** Whether the configured initial velocity has already been applied.
+     * `velocity` resets to 0 on every settle, so without this flag the
+     * configured seed would be re-applied on every settled→moving
+     * transition - but it is documented as a *first* `.set()` seed only. */
+    seeded: boolean;
   }>({
     target: initial,
     velocity: 0,
     rafId: null,
     lastTime: 0,
+    seeded: false,
   });
 
   const [mv] = useState<MotionValue<number>>(() => {
@@ -212,9 +218,12 @@ export function useSpring(initial: number, config?: SpringConfig | string): Moti
         }
         s.target = target;
         if (s.rafId === null) {
-          // Seed velocity once per kickoff from the config; mid-flight
+          // Seed the configured velocity on the first kickoff only; mid-flight
           // re-targets keep existing velocity for smooth re-direction.
-          if (s.velocity === 0) s.velocity = configRef.current.velocity;
+          if (!s.seeded) {
+            s.seeded = true;
+            if (s.velocity === 0) s.velocity = configRef.current.velocity;
+          }
           s.lastTime =
             typeof performance !== 'undefined' && typeof performance.now === 'function'
               ? performance.now()
