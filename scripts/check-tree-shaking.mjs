@@ -623,12 +623,9 @@ function fmt(n) {
   if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
   return `${(n / 1024 / 1024).toFixed(2)} MB`;
 }
-function pad(s, n) {
-  return s.length >= n ? s : s + ' '.repeat(n - s.length);
-}
 
 // Default the width when there are no targets: Math.max() with no args is
-// -Infinity, which would turn every pad() width into NaN.
+// -Infinity, which would turn every padEnd() width into NaN.
 const W_NAME = targets.length > 0 ? Math.max(...targets.map((t) => t.name.length)) + 2 : 0;
 
 let overruns = 0;
@@ -650,15 +647,15 @@ for (const t of targets) {
   }
 }
 
-console.log(pad('target', W_NAME) + 'status   raw       gzip      budget');
+console.log('target'.padEnd(W_NAME) + 'status   raw       gzip      budget');
 console.log('-'.repeat(W_NAME + 40));
 for (const r of rows) {
   if (r.status === 'ERR') {
-    console.log(`${pad(r.name, W_NAME)}ERR     ${r.error?.slice(0, 80) ?? ''}`);
+    console.log(`${r.name.padEnd(W_NAME)}ERR     ${r.error?.slice(0, 80) ?? ''}`);
     continue;
   }
   console.log(
-    `${pad(r.name, W_NAME)}${pad(r.status, 8)}${pad(fmt(r.raw), 10)}${pad(fmt(r.gzipped), 10)}${fmt(r.budget)}`,
+    `${r.name.padEnd(W_NAME)}${r.status.padEnd(8)}${fmt(r.raw).padEnd(10)}${fmt(r.gzipped).padEnd(10)}${fmt(r.budget)}`,
   );
 }
 

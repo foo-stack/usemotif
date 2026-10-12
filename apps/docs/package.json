@@ -21,7 +21,6 @@
     "@vorge/core": "^1.3.2",
     "@vorge/plugin-pagefind": "^1.3.2",
     "@vorge/plugin-sitemap": "^1.3.2",
-    "@vorge/vite": "^1.3.2",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "usemotif": "workspace:*",

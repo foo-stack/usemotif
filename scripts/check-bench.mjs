@@ -67,10 +67,6 @@ function findHz(fileFragment, nameFragment) {
   return undefined;
 }
 
-function pad(s, n) {
-  return s.length >= n ? s : s + ' '.repeat(n - s.length);
-}
-
 // ─── Evaluate each check ───────────────────────────────────────────
 const results = [];
 let breaches = 0;
@@ -91,18 +87,18 @@ for (const check of budgets.checks) {
 }
 
 const W = Math.max(...results.map((r) => r.check.label.length)) + 2;
-console.log(pad('check', W) + 'status   observed   floor');
+console.log('check'.padEnd(W) + 'status   observed   floor');
 console.log('-'.repeat(W + 26));
 for (const r of results) {
   if (r.status === 'missing') {
     console.log(
-      `${pad(r.check.label, W)}MISSING  (bench "${r.check.bench}"/"${r.check.baseline}" not found)`,
+      `${r.check.label.padEnd(W)}MISSING  (bench "${r.check.bench}"/"${r.check.baseline}" not found)`,
     );
     continue;
   }
   const tag = r.status === 'ok' ? 'OK    ' : 'BREACH';
   console.log(
-    `${pad(r.check.label, W)}${tag}   ${pad(`${r.ratio.toFixed(1)}×`, 10)}≥ ${r.check.minRatio}×`,
+    `${r.check.label.padEnd(W)}${tag}   ${`${r.ratio.toFixed(1)}×`.padEnd(10)}≥ ${r.check.minRatio}×`,
   );
 }
 

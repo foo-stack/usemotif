@@ -17,7 +17,6 @@
     "@usemotif/react-native": "workspace:*",
     "@usemotif/tokens": "workspace:*",
     "expo": "^55.0.17",
-    "expo-status-bar": "^3.0.8",
     "react": "^19.2.0",
     "react-native": "^0.85.0"
   },
