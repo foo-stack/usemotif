@@ -1,8 +1,9 @@
 'use client';
 
 import { MultiSelect as HeadlessMultiSelect, type ComboboxOption } from '@usemotif/headless';
-import type { CSSProperties, ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { Box, type BoxProps } from 'usemotif';
+import { LIST_STYLE } from './_list-surface.js';
 
 export interface MultiSelectProps {
   readonly options: ReadonlyArray<ComboboxOption>;
@@ -15,16 +16,6 @@ export interface MultiSelectProps {
   /** Width of the field and listbox (number → px). */
   readonly width?: number | string;
 }
-
-const LIST_STYLE: CSSProperties = {
-  maxHeight: 260,
-  overflowY: 'auto',
-  padding: 4,
-  borderRadius: 'var(--radii-lg, 12px)',
-  background: 'var(--colors-surface-raised, #fff)',
-  border: '1px solid var(--colors-border-default, #d1d5db)',
-  boxShadow: '0 8px 24px rgba(0, 0, 0, 0.18)',
-};
 
 // Module-scoped stable `renderChip` / `renderOption` references (lint).
 function renderThemedChip(

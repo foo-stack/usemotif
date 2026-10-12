@@ -20,6 +20,7 @@ import {
   type ViewStyle,
 } from 'react-native';
 import { nativeText } from './_native-text.js';
+import { defaultFilter } from './_combobox-filter.js';
 
 /**
  * Native Combobox / Select / Search / MultiSelect.
@@ -154,11 +155,6 @@ function ComboboxRoot<T>(props: ComboboxRootProps<T>): ReactElement {
       {children}
     </ComboboxContext.Provider>
   );
-}
-
-function defaultFilter<T>(option: ComboboxOption<T>, input: string): boolean {
-  if (input.length === 0) return true;
-  return option.label.toLowerCase().includes(input.toLowerCase());
 }
 
 interface ComboboxInputChildProps extends Partial<TextInputProps> {

@@ -5,8 +5,8 @@ import {
   Search as HeadlessSearch,
   type ComboboxOption,
 } from '@usemotif/headless';
-import type { CSSProperties, ReactNode } from 'react';
 import { Box, type BoxProps } from 'usemotif';
+import { LIST_STYLE, renderThemedOption } from './_list-surface.js';
 
 export type ComboboxItem = ComboboxOption;
 
@@ -18,39 +18,6 @@ export interface ComboboxProps {
   readonly placeholder?: string;
   /** Width of the input and listbox (number → px). */
   readonly width?: number | string;
-}
-
-// The headless renders its own portalled `<div role="listbox">`, themeable only
-// inline - so the surface uses motif's token CSS vars (hex fallbacks).
-const LIST_STYLE: CSSProperties = {
-  maxHeight: 260,
-  overflowY: 'auto',
-  padding: 4,
-  borderRadius: 'var(--radii-lg, 12px)',
-  background: 'var(--colors-surface-raised, #fff)',
-  border: '1px solid var(--colors-border-default, #d1d5db)',
-  boxShadow: '0 8px 24px rgba(0, 0, 0, 0.18)',
-};
-
-// Module-scoped so it's a stable `renderOption` reference (lint: no-new-fn-as-prop).
-function renderThemedOption(
-  opt: ComboboxOption,
-  info: { highlighted: boolean; selected: boolean; index: number },
-): ReactNode {
-  return (
-    <Box
-      px="$space.3"
-      py="$space.2"
-      borderRadius="$radii.md"
-      fontSize="$fontSizes.sm"
-      bg={info.highlighted ? '$colors.surface.interactive' : 'transparent'}
-      color={opt.disabled === true ? '$colors.text.muted' : '$colors.text.default'}
-      fontWeight={info.selected ? 600 : 400}
-      cursor={opt.disabled === true ? 'not-allowed' : 'pointer'}
-    >
-      {opt.label}
-    </Box>
-  );
 }
 
 // The themed text input projected into the headless Input (which clones the

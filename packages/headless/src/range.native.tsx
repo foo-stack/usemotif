@@ -6,6 +6,7 @@ import {
   type LayoutChangeEvent,
   type ViewStyle,
 } from 'react-native';
+import { clamp, snap } from './_range-math.js';
 
 /**
  * Native range family - Slider / RangeSlider / Progress / RatingInput.
@@ -15,14 +16,6 @@ import {
  * exposes the exact same prop shape as the web variants, with `style`
  * / `thumbStyle` / `fillStyle` swapped to RN's `ViewStyle`.
  */
-
-function clamp(n: number, min: number, max: number): number {
-  return Math.max(min, Math.min(max, n));
-}
-function snap(n: number, step: number, base = 0): number {
-  // Quantize relative to `base` (the slider's min), not 0 - see range.tsx.
-  return base + Math.round((n - base) / step) * step;
-}
 
 // ─────────── Slider ───────────────────────────────────────────────
 

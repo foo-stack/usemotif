@@ -19,6 +19,7 @@ import {
   type ReactNode,
 } from 'react';
 import { useClickOutside, useFloatingPosition, type Placement } from './positioning.js';
+import { defaultFilter } from './_combobox-filter.js';
 
 // Stable empty selection for a controlled MultiSelect whose `value` is
 // `undefined` (controlled, empty). A fresh `[]` each render would change
@@ -180,11 +181,6 @@ function ComboboxRoot<T>(props: ComboboxRootProps<T>): ReactElement {
       {children}
     </ComboboxContext.Provider>
   );
-}
-
-function defaultFilter<T>(option: ComboboxOption<T>, input: string): boolean {
-  if (input.length === 0) return true;
-  return option.label.toLowerCase().includes(input.toLowerCase());
 }
 
 interface ComboboxInputChildProps {

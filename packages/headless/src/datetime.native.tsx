@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from 'react';
 import { Modal, Pressable, TextInput, View, type ViewStyle } from 'react-native';
+import { addMonths, isSameDay } from './_date-math.js';
 
 /**
  * Native date/time family - Calendar / DatePicker / TimeInput.
@@ -25,24 +26,6 @@ import { Modal, Pressable, TextInput, View, type ViewStyle } from 'react-native'
 
 function startOfDay(d: Date): Date {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate());
-}
-function isSameDay(a: Date, b: Date): boolean {
-  return (
-    a.getFullYear() === b.getFullYear() &&
-    a.getMonth() === b.getMonth() &&
-    a.getDate() === b.getDate()
-  );
-}
-function addMonths(d: Date, n: number): Date {
-  const out = new Date(d);
-  // Clamp day to the target month's last day so prev/next from a 31st doesn't
-  // overflow into the following month and skip/repeat months.
-  const day = out.getDate();
-  out.setDate(1);
-  out.setMonth(out.getMonth() + n);
-  const lastDay = new Date(out.getFullYear(), out.getMonth() + 1, 0).getDate();
-  out.setDate(Math.min(day, lastDay));
-  return out;
 }
 function buildMonthGrid(viewMonth: Date, weekStartsOn: number): Date[] {
   const first = new Date(viewMonth.getFullYear(), viewMonth.getMonth(), 1);
