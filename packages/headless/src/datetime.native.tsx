@@ -3,12 +3,12 @@ import {
   isValidElement,
   useCallback,
   useMemo,
-  useState,
   type ReactElement,
   type ReactNode,
 } from 'react';
 import { Modal, Pressable, TextInput, View, type ViewStyle } from 'react-native';
 import { addMonths, isSameDay } from './_date-math.js';
+import { useControllableState } from './use-controllable-state.js';
 
 /**
  * Native date/time family - Calendar / DatePicker / TimeInput.
@@ -80,30 +80,24 @@ export function Calendar({
   accessibilityLabel,
   style,
 }: CalendarProps): ReactElement {
-  const [valueUncontrolled, setValueUncontrolled] = useState<Date | undefined>(defaultValue);
-  const isValueControlled = controlledValue !== undefined;
-  const value = isValueControlled ? controlledValue : valueUncontrolled;
+  const [value, commitValue] = useControllableState({
+    value: controlledValue,
+    defaultValue,
+    onChange: onValueChange,
+  });
 
-  const [viewMonthUncontrolled, setViewMonthUncontrolled] = useState<Date>(
-    () => defaultViewMonth ?? value ?? new Date(),
-  );
-  const isViewControlled = controlledViewMonth !== undefined;
-  const viewMonth = isViewControlled ? controlledViewMonth : viewMonthUncontrolled;
-  const setViewMonth = useCallback(
-    (next: Date) => {
-      if (!isViewControlled) setViewMonthUncontrolled(next);
-      onViewMonthChange?.(next);
-    },
-    [isViewControlled, onViewMonthChange],
-  );
+  const [viewMonth, setViewMonth] = useControllableState({
+    value: controlledViewMonth,
+    defaultValue: defaultViewMonth ?? value ?? new Date(),
+    onChange: onViewMonthChange,
+  });
 
   const select = useCallback(
     (d: Date) => {
       const day = startOfDay(d);
-      if (!isValueControlled) setValueUncontrolled(day);
-      onValueChange?.(day);
+      commitValue(day);
     },
-    [isValueControlled, onValueChange],
+    [commitValue],
   );
 
   const days = useMemo(() => buildMonthGrid(viewMonth, weekStartsOn), [viewMonth, weekStartsOn]);
@@ -193,23 +187,21 @@ export function DatePicker({
   modalStyle,
   ...calendarProps
 }: DatePickerProps): ReactElement {
-  const [openUncontrolled, setOpenUncontrolled] = useState(defaultOpen);
-  const isOpenControlled = controlledOpen !== undefined;
-  const open = isOpenControlled ? controlledOpen : openUncontrolled;
-  const setOpen = useCallback(
-    (next: boolean) => {
-      if (!isOpenControlled) setOpenUncontrolled(next);
-      onOpenChange?.(next);
-    },
-    [isOpenControlled, onOpenChange],
-  );
+  const [open, setOpen] = useControllableState({
+    value: controlledOpen,
+    defaultValue: defaultOpen,
+    onChange: onOpenChange,
+  });
   // Track the committed selection locally so the trigger label reflects an
   // *uncontrolled* Calendar's internal pick (the Calendar owns that state and
   // DatePicker can't otherwise read it). Controlled mode keeps `value`
   // authoritative; uncontrolled mode mirrors onValueChange into `committed`.
-  const isValueControlled = 'value' in calendarProps;
-  const [committed, setCommitted] = useState<Date | undefined>(calendarProps.defaultValue);
-  const current = isValueControlled ? calendarProps.value : committed;
+  const [current, commit] = useControllableState({
+    value: calendarProps.value,
+    defaultValue: calendarProps.defaultValue,
+    onChange: calendarProps.onValueChange,
+    controlled: 'value' in calendarProps,
+  });
   const formatted =
     current !== undefined ? (format?.(current) ?? current.toDateString()) : placeholder;
 
@@ -244,8 +236,7 @@ export function DatePicker({
               value={current}
               {...(renderDay !== undefined ? { renderDay } : {})}
               onValueChange={(d) => {
-                if (!isValueControlled) setCommitted(d);
-                calendarProps.onValueChange?.(d);
+                commit(d);
                 setOpen(false);
               }}
             />
@@ -285,16 +276,11 @@ export function TimeInput({
   placeholder = 'HH:MM',
   children,
 }: TimeInputProps): ReactElement {
-  const [uncontrolled, setUncontrolled] = useState(defaultValue);
-  const isControlled = controlled !== undefined;
-  const value = isControlled ? controlled : uncontrolled;
-  const setValue = useCallback(
-    (next: string) => {
-      if (!isControlled) setUncontrolled(next);
-      onValueChange?.(next);
-    },
-    [isControlled, onValueChange],
-  );
+  const [value, setValue] = useControllableState({
+    value: controlled,
+    defaultValue,
+    onChange: onValueChange,
+  });
   const sharedProps = {
     accessibilityLabel,
     accessibilityRole: 'text' as const,

@@ -11,6 +11,7 @@ import {
   type ReactNode,
 } from 'react';
 import { Modal, Pressable, Text, View, type ViewStyle } from 'react-native';
+import { useControllableState } from './use-controllable-state.js';
 
 /**
  * Native Dialog - RN's `<Modal>` is the right primitive: it handles
@@ -58,16 +59,11 @@ function Root({
   role = 'dialog',
   children,
 }: DialogRootProps): ReactElement {
-  const [uncontrolled, setUncontrolled] = useState(defaultOpen);
-  const isControlled = controlled !== undefined;
-  const open = isControlled ? controlled : uncontrolled;
-  const setOpen = useCallback(
-    (next: boolean) => {
-      if (!isControlled) setUncontrolled(next);
-      onOpenChange?.(next);
-    },
-    [isControlled, onOpenChange],
-  );
+  const [open, setOpen] = useControllableState({
+    value: controlled,
+    defaultValue: defaultOpen,
+    onChange: onOpenChange,
+  });
   const reactId = useId();
   const [descriptionText, setDescriptionText] = useState<string | undefined>(undefined);
 

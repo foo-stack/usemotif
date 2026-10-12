@@ -23,6 +23,7 @@ import {
   type ColorFormat,
   type HSVColor,
 } from './_color.js';
+import { useControllableState } from './use-controllable-state.js';
 export { formatColor, parseColor } from './_color.js';
 export type { ColorFormat } from './_color.js';
 
@@ -99,9 +100,11 @@ export function ColorPicker({
   hueSliderStyle,
   alphaSliderStyle,
 }: ColorPickerProps): ReactElement {
-  const [uncontrolledFormat, setUncontrolledFormat] = useState<ColorFormat>('hex');
-  const isFormatControlled = controlledFormat !== undefined;
-  const format = isFormatControlled ? controlledFormat : uncontrolledFormat;
+  const [format, commitFormat] = useControllableState<ColorFormat>({
+    value: controlledFormat,
+    defaultValue: 'hex',
+    onChange: onFormatChange,
+  });
 
   // Keep an internal HSV state so dragging in low-saturation / zero-value
   // regions doesn't lose hue information that doesn't survive the round-
@@ -132,15 +135,14 @@ export function ColorPicker({
 
   const setFormat = useCallback(
     (next: ColorFormat) => {
-      if (!isFormatControlled) setUncontrolledFormat(next);
-      onFormatChange?.(next);
+      commitFormat(next);
       // Re-emit the current colour in the new format so consumers see
       // the updated string immediately.
       const formatted = formatColor(hsv, next);
       lastEmittedRef.current = formatted;
       onValueChange?.(formatted);
     },
-    [isFormatControlled, onFormatChange, onValueChange, hsv],
+    [commitFormat, onValueChange, hsv],
   );
 
   const setSV = useCallback(
@@ -688,18 +690,14 @@ export function TreeView<T>(props: TreeViewProps<T>): ReactElement {
     style,
     ...aria
   } = props;
-  const [uncontrolled, setUncontrolled] = useState<string | undefined>(defaultValue);
   // Prop-presence detection: a controlled tree cleared to `value={undefined}`
   // must stay controlled-and-empty, not fall back to stale internal state.
-  const isControlled = 'value' in props;
-  const selected = isControlled ? controlled : uncontrolled;
-  const setSelected = useCallback(
-    (next: string) => {
-      if (!isControlled) setUncontrolled(next);
-      onValueChange?.(next);
-    },
-    [isControlled, onValueChange],
-  );
+  const [selected, setSelected] = useControllableState({
+    value: controlled,
+    defaultValue,
+    onChange: onValueChange,
+    controlled: 'value' in props,
+  });
 
   const [expanded, setExpanded] = useState<Set<string>>(new Set(defaultExpanded));
   const toggle = useCallback((id: string) => {

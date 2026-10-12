@@ -6,7 +6,6 @@ import {
   useEffect,
   useId,
   useRef,
-  useState,
   type CSSProperties,
   type KeyboardEvent,
   type MouseEvent,
@@ -15,6 +14,7 @@ import {
   type Ref,
 } from 'react';
 import { clamp, snap } from './_range-math.js';
+import { useControllableState } from './use-controllable-state.js';
 
 /**
  * Range family - Slider, RangeSlider, Progress, RatingInput.
@@ -59,19 +59,20 @@ export const Slider = forwardRef(function Slider(
   }: SliderProps,
   ref: Ref<HTMLDivElement>,
 ): ReactElement {
-  const [uncontrolled, setUncontrolled] = useState(defaultValue);
-  const isControlled = controlled !== undefined;
-  const value = isControlled ? controlled : uncontrolled;
+  const [value, commit] = useControllableState({
+    value: controlled,
+    defaultValue,
+    onChange: onValueChange,
+  });
   const setValue = useCallback(
     // `exact` skips the step-snap so Home/End can reach an endpoint that is
     // off the step lattice (min=0, max=100, step=3: End must reach 100, not
     // snap down to 99 - aria-valuemax advertises 100).
     (next: number, exact = false) => {
       const v = clamp(exact ? next : snap(next, step, min), min, max);
-      if (!isControlled) setUncontrolled(v);
-      onValueChange?.(v);
+      commit(v);
     },
-    [isControlled, onValueChange, min, max, step],
+    [commit, min, max, step],
   );
   const trackRef = useRef<HTMLDivElement | null>(null);
   const percent = ((value - min) / (max - min)) * 100;
@@ -216,9 +217,11 @@ export function RangeSlider({
   fillStyle,
   ...aria
 }: RangeSliderProps): ReactElement {
-  const [uncontrolled, setUncontrolled] = useState<[number, number]>(defaultValue);
-  const isControlled = controlled !== undefined;
-  const value = isControlled ? controlled : uncontrolled;
+  const [value, commit] = useControllableState<[number, number]>({
+    value: controlled,
+    defaultValue,
+    onChange: onValueChange,
+  });
   const setValue = useCallback(
     (next: [number, number], exact = false) => {
       // `exact` skips the step-snap for Home/End so a thumb can reach an
@@ -236,10 +239,9 @@ export function RangeSlider({
         clamp(q(next[0]), min, value[1]),
         clamp(q(next[1]), value[0], max),
       ];
-      if (!isControlled) setUncontrolled(v);
-      onValueChange?.(v);
+      commit(v);
     },
-    [isControlled, onValueChange, min, max, step, value],
+    [commit, min, max, step, value],
   );
 
   function thumbHandlers(idx: 0 | 1): {
@@ -372,17 +374,18 @@ export function RatingInput({
   style,
   ...aria
 }: RatingInputProps): ReactElement {
-  const [uncontrolled, setUncontrolled] = useState(defaultValue);
-  const isControlled = controlled !== undefined;
-  const value = isControlled ? controlled : uncontrolled;
+  const [value, commit] = useControllableState({
+    value: controlled,
+    defaultValue,
+    onChange: onValueChange,
+  });
   const step = allowHalf ? 0.5 : 1;
   const setValue = useCallback(
     (next: number) => {
       const v = clamp(snap(next, step), 0, count);
-      if (!isControlled) setUncontrolled(v);
-      onValueChange?.(v);
+      commit(v);
     },
-    [isControlled, onValueChange, count, step],
+    [commit, count, step],
   );
 
   function onKeyDown(e: KeyboardEvent<HTMLDivElement>): void {

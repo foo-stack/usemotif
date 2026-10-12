@@ -1,7 +1,10 @@
 'use client';
 
-import { Select as HeadlessSelect, type ComboboxOption } from '@usemotif/headless';
-import { useCallback, useState } from 'react';
+import {
+  Select as HeadlessSelect,
+  useControllableState,
+  type ComboboxOption,
+} from '@usemotif/headless';
 import { Box } from 'usemotif';
 import { LIST_STYLE, renderThemedOption } from './_list-surface.js';
 
@@ -54,23 +57,18 @@ export function Select({
   placeholder = 'Select...',
   width = 240,
 }: SelectProps) {
-  const [internal, setInternal] = useState<string | undefined>(defaultValue);
-  const isControlled = controlledValue !== undefined;
-  const value = isControlled ? controlledValue : internal;
-  const handleChange = useCallback(
-    (next: string | undefined) => {
-      if (!isControlled) setInternal(next);
-      onValueChange?.(next);
-    },
-    [isControlled, onValueChange],
-  );
+  const [value, handleChange] = useControllableState({
+    value: controlledValue,
+    defaultValue,
+    onChange: onValueChange,
+  });
   const selected = options.find((o) => o.value === value);
 
   return (
     <HeadlessSelect.Root
       options={options}
       onValueChange={handleChange}
-      {...(isControlled ? { value: controlledValue } : {})}
+      {...(controlledValue !== undefined ? { value: controlledValue } : {})}
       {...(defaultValue !== undefined ? { defaultValue } : {})}
     >
       <HeadlessSelect.Trigger>

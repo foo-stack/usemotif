@@ -17,6 +17,7 @@ import {
   type ReactNode,
 } from 'react';
 import { fuzzyScore } from './_fuzzy.js';
+import { useControllableState } from './use-controllable-state.js';
 
 /**
  * CommandPalette - a fuzzy-searchable command launcher (think ⌘K). The
@@ -137,27 +138,17 @@ function Root({
   dismissOnScrimClick = true,
   children,
 }: CommandPaletteRootProps): ReactElement {
-  const [openUncontrolled, setOpenUncontrolled] = useState(defaultOpen);
-  const isOpenControlled = controlledOpen !== undefined;
-  const open = isOpenControlled ? controlledOpen : openUncontrolled;
-  const setOpen = useCallback(
-    (next: boolean) => {
-      if (!isOpenControlled) setOpenUncontrolled(next);
-      onOpenChange?.(next);
-    },
-    [isOpenControlled, onOpenChange],
-  );
+  const [open, setOpen] = useControllableState({
+    value: controlledOpen,
+    defaultValue: defaultOpen,
+    onChange: onOpenChange,
+  });
 
-  const [recentsUncontrolled, setRecentsUncontrolled] = useState<ReadonlyArray<string>>([]);
-  const isRecentsControlled = controlledRecents !== undefined;
-  const recents = isRecentsControlled ? controlledRecents : recentsUncontrolled;
-  const commitRecents = useCallback(
-    (next: ReadonlyArray<string>) => {
-      if (!isRecentsControlled) setRecentsUncontrolled(next);
-      onRecentsChange?.(next);
-    },
-    [isRecentsControlled, onRecentsChange],
-  );
+  const [recents, commitRecents] = useControllableState<ReadonlyArray<string>>({
+    value: controlledRecents,
+    defaultValue: [],
+    onChange: onRecentsChange,
+  });
 
   const [inputValue, setInputValue] = useState('');
   const [rawHighlightedIndex, setHighlightedIndex] = useState(0);

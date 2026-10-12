@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState, type ReactElement } from 'react';
+import { useCallback, useMemo, useRef, type ReactElement } from 'react';
 import {
   Pressable,
   View,
@@ -7,6 +7,7 @@ import {
   type ViewStyle,
 } from 'react-native';
 import { clamp, snap } from './_range-math.js';
+import { useControllableState } from './use-controllable-state.js';
 
 /**
  * Native range family - Slider / RangeSlider / Progress / RatingInput.
@@ -47,16 +48,17 @@ export function Slider({
   thumbStyle,
   fillStyle,
 }: SliderProps): ReactElement {
-  const [uncontrolled, setUncontrolled] = useState(defaultValue);
-  const isControlled = controlled !== undefined;
-  const value = isControlled ? controlled : uncontrolled;
+  const [value, commit] = useControllableState({
+    value: controlled,
+    defaultValue,
+    onChange: onValueChange,
+  });
   const setValue = useCallback(
     (next: number) => {
       const v = clamp(snap(next, step, min), min, max);
-      if (!isControlled) setUncontrolled(v);
-      onValueChange?.(v);
+      commit(v);
     },
-    [isControlled, onValueChange, min, max, step],
+    [commit, min, max, step],
   );
 
   const trackSize = useRef({ width: 0, height: 0, x: 0, y: 0 });
@@ -141,9 +143,11 @@ export function RangeSlider({
   accessibilityLabel,
   style,
 }: RangeSliderProps): ReactElement {
-  const [uncontrolled, setUncontrolled] = useState<[number, number]>(defaultValue);
-  const isControlled = controlled !== undefined;
-  const value = isControlled ? controlled : uncontrolled;
+  const [value, commit] = useControllableState<[number, number]>({
+    value: controlled,
+    defaultValue,
+    onChange: onValueChange,
+  });
   // The two-thumb drag UX needs PanResponder + per-thumb hit testing;
   // the v0 native shape exposes the controlled value but leaves the
   // visual + drag rendering to the caller. Tapping a thumb-sized
@@ -157,10 +161,9 @@ export function RangeSlider({
         clamp(snap(Math.min(next[0], next[1]), step, min), min, max),
         clamp(snap(Math.max(next[0], next[1]), step, min), min, max),
       ];
-      if (!isControlled) setUncontrolled(v);
-      onValueChange?.(v);
+      commit(v);
     },
-    [value, disabled, step, min, max, isControlled, onValueChange],
+    [value, disabled, step, min, max, commit],
   );
 
   return (
@@ -246,17 +249,18 @@ export function RatingInput({
   renderItem,
   style,
 }: RatingInputProps): ReactElement {
-  const [uncontrolled, setUncontrolled] = useState(defaultValue);
-  const isControlled = controlled !== undefined;
-  const value = isControlled ? controlled : uncontrolled;
+  const [value, commit] = useControllableState({
+    value: controlled,
+    defaultValue,
+    onChange: onValueChange,
+  });
   const step = allowHalf ? 0.5 : 1;
   const setValue = useCallback(
     (next: number) => {
       const v = clamp(snap(next, step), 0, count);
-      if (!isControlled) setUncontrolled(v);
-      onValueChange?.(v);
+      commit(v);
     },
-    [isControlled, onValueChange, count, step],
+    [commit, count, step],
   );
 
   const items = useMemo(

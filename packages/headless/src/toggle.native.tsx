@@ -4,12 +4,12 @@ import {
   useCallback,
   useContext,
   useId,
-  useState,
   type ReactElement,
   type ReactNode,
   type Ref,
 } from 'react';
 import { Pressable, Switch as RNSwitch, View, type ViewStyle } from 'react-native';
+import { useControllableState } from './use-controllable-state.js';
 
 /**
  * Native toggle family - Switch / Checkbox / Radio / RadioGroup.
@@ -37,16 +37,11 @@ export const Switch = forwardRef(function Switch(
   { value, defaultValue = false, onValueChange, disabled, accessibilityLabel }: SwitchProps,
   _ref: Ref<unknown>,
 ): ReactElement {
-  const [uncontrolled, setUncontrolled] = useState(defaultValue);
-  const isControlled = value !== undefined;
-  const current = isControlled ? value : uncontrolled;
-  const handleChange = useCallback(
-    (next: boolean) => {
-      if (!isControlled) setUncontrolled(next);
-      onValueChange?.(next);
-    },
-    [isControlled, onValueChange],
-  );
+  const [current, handleChange] = useControllableState({
+    value: value,
+    defaultValue,
+    onChange: onValueChange,
+  });
   return (
     <RNSwitch
       value={current}
@@ -84,15 +79,15 @@ export const Checkbox = forwardRef(function Checkbox(
   }: CheckboxProps,
   _ref: Ref<unknown>,
 ): ReactElement {
-  const [uncontrolled, setUncontrolled] = useState(defaultValue);
-  const isControlled = value !== undefined;
-  const current = isControlled ? value : uncontrolled;
+  const [current, commit] = useControllableState({
+    value,
+    defaultValue,
+    onChange: onValueChange,
+  });
   const toggle = useCallback(() => {
     if (disabled === true) return;
-    const next = !current;
-    if (!isControlled) setUncontrolled(next);
-    onValueChange?.(next);
-  }, [current, disabled, isControlled, onValueChange]);
+    commit(!current);
+  }, [current, disabled, commit]);
   const checked: boolean | 'mixed' = indeterminate === true ? 'mixed' : current;
   return (
     <Pressable
@@ -136,16 +131,11 @@ export function RadioGroup({
   children,
   style,
 }: RadioGroupProps): ReactElement {
-  const [uncontrolled, setUncontrolled] = useState(defaultValue);
-  const isControlled = value !== undefined;
-  const current = isControlled ? value : uncontrolled;
-  const setValue = useCallback(
-    (next: string) => {
-      if (!isControlled) setUncontrolled(next);
-      onValueChange?.(next);
-    },
-    [isControlled, onValueChange],
-  );
+  const [current, setValue] = useControllableState({
+    value: value,
+    defaultValue,
+    onChange: onValueChange,
+  });
   const reactId = useId();
   const groupName = name ?? `${reactId}-radio`;
   return (

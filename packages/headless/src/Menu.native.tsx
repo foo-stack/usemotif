@@ -2,13 +2,12 @@ import {
   cloneElement,
   createContext,
   isValidElement,
-  useCallback,
   useContext,
-  useState,
   type ReactElement,
   type ReactNode,
 } from 'react';
 import { Modal, Pressable, View, type ViewStyle } from 'react-native';
+import { useControllableState } from './use-controllable-state.js';
 
 /**
  * Native Menu - Modal-presented menu surface with `role="menu"` and
@@ -41,16 +40,11 @@ function Root({
   onOpenChange,
   children,
 }: MenuRootProps): ReactElement {
-  const [uncontrolled, setUncontrolled] = useState(defaultOpen);
-  const isControlled = controlled !== undefined;
-  const open = isControlled ? controlled : uncontrolled;
-  const setOpen = useCallback(
-    (next: boolean) => {
-      if (!isControlled) setUncontrolled(next);
-      onOpenChange?.(next);
-    },
-    [isControlled, onOpenChange],
-  );
+  const [open, setOpen] = useControllableState({
+    value: controlled,
+    defaultValue: defaultOpen,
+    onChange: onOpenChange,
+  });
   return <MenuContext.Provider value={{ open, setOpen }}>{children}</MenuContext.Provider>;
 }
 

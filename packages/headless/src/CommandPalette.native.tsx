@@ -14,6 +14,7 @@ import {
 import { Modal, Pressable, ScrollView, Text, TextInput, View, type ViewStyle } from 'react-native';
 import { nativeText } from './_native-text.js';
 import { fuzzyScore } from './_fuzzy.js';
+import { useControllableState } from './use-controllable-state.js';
 
 /**
  * Native CommandPalette - Dialog-presented searchable command list.
@@ -96,26 +97,16 @@ function Root({
   matcher,
   children,
 }: CommandPaletteRootProps): ReactElement {
-  const [openUncontrolled, setOpenUncontrolled] = useState(defaultOpen);
-  const isOpenControlled = controlledOpen !== undefined;
-  const open = isOpenControlled ? controlledOpen : openUncontrolled;
-  const setOpen = useCallback(
-    (next: boolean) => {
-      if (!isOpenControlled) setOpenUncontrolled(next);
-      onOpenChange?.(next);
-    },
-    [isOpenControlled, onOpenChange],
-  );
-  const [recentsUncontrolled, setRecentsUncontrolled] = useState<ReadonlyArray<string>>([]);
-  const isRecentsControlled = controlledRecents !== undefined;
-  const recents = isRecentsControlled ? controlledRecents : recentsUncontrolled;
-  const commitRecents = useCallback(
-    (next: ReadonlyArray<string>) => {
-      if (!isRecentsControlled) setRecentsUncontrolled(next);
-      onRecentsChange?.(next);
-    },
-    [isRecentsControlled, onRecentsChange],
-  );
+  const [open, setOpen] = useControllableState({
+    value: controlledOpen,
+    defaultValue: defaultOpen,
+    onChange: onOpenChange,
+  });
+  const [recents, commitRecents] = useControllableState<ReadonlyArray<string>>({
+    value: controlledRecents,
+    defaultValue: [],
+    onChange: onRecentsChange,
+  });
   const [inputValue, setInputValue] = useState('');
   const [highlightedIndex, setHighlightedIndex] = useState(0);
   const reactId = useRef(`cmd-${Math.random().toString(36).slice(2, 8)}`).current;

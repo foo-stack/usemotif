@@ -27,6 +27,7 @@ import {
   type ColorFormat,
   type HSVColor,
 } from './_color.js';
+import { useControllableState } from './use-controllable-state.js';
 export { formatColor, parseColor } from './_color.js';
 export type { ColorFormat } from './_color.js';
 
@@ -181,9 +182,11 @@ export function ColorPicker({
   hueSliderStyle,
   alphaSliderStyle,
 }: ColorPickerProps): ReactElement {
-  const [uncontrolledFormat, setUncontrolledFormat] = useState<ColorFormat>('hex');
-  const isFormatControlled = controlledFormat !== undefined;
-  const format = isFormatControlled ? controlledFormat : uncontrolledFormat;
+  const [format, commitFormat] = useControllableState<ColorFormat>({
+    value: controlledFormat,
+    defaultValue: 'hex',
+    onChange: onFormatChange,
+  });
 
   // Internal HSV state preserves hue across zero-saturation / zero-value
   // regions where the RGB round-trip would otherwise drop the hue.
@@ -210,13 +213,12 @@ export function ColorPicker({
 
   const setFormat = useCallback(
     (next: ColorFormat) => {
-      if (!isFormatControlled) setUncontrolledFormat(next);
-      onFormatChange?.(next);
+      commitFormat(next);
       const formatted = formatColor(hsv, next);
       lastEmittedRef.current = formatted;
       onValueChange?.(formatted);
     },
-    [hsv, isFormatControlled, onFormatChange, onValueChange],
+    [hsv, commitFormat, onValueChange],
   );
 
   const setSV = useCallback(
@@ -801,19 +803,14 @@ export function TreeView<T>(props: TreeViewProps<T>): ReactElement {
     accessibilityLabel,
     style,
   } = props;
-  const [valueUncontrolled, setValueUncontrolled] = useState<string | undefined>(defaultValue);
   // Prop-presence detection so a controlled tree cleared to `value={undefined}`
   // stays controlled-and-empty, mirroring the web TreeView/combobox family.
-  const isValueControlled = 'value' in props;
-  const value = isValueControlled ? controlledValue : valueUncontrolled;
-
-  const select = useCallback(
-    (id: string) => {
-      if (!isValueControlled) setValueUncontrolled(id);
-      onValueChange?.(id);
-    },
-    [isValueControlled, onValueChange],
-  );
+  const [value, select] = useControllableState({
+    value: controlledValue,
+    defaultValue,
+    onChange: onValueChange,
+    controlled: 'value' in props,
+  });
 
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(() => new Set(defaultExpanded));
   const toggle = useCallback((id: string) => {

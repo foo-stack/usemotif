@@ -19,6 +19,7 @@ import {
 } from 'react';
 import { mergeRefs } from './_compose-refs.js';
 import { useExitTransition } from './_use-exit-transition.js';
+import { useControllableState } from './use-controllable-state.js';
 
 /**
  * Dialog - accessible modal dialog. Headless: composes the visuals
@@ -98,16 +99,11 @@ function Root({
   role = 'dialog',
   children,
 }: DialogRootProps): ReactElement {
-  const [uncontrolled, setUncontrolled] = useState(defaultOpen);
-  const isControlled = controlled !== undefined;
-  const open = isControlled ? controlled : uncontrolled;
-  const setOpen = useCallback(
-    (next: boolean) => {
-      if (!isControlled) setUncontrolled(next);
-      onOpenChange?.(next);
-    },
-    [isControlled, onOpenChange],
-  );
+  const [open, setOpen] = useControllableState({
+    value: controlled,
+    defaultValue: defaultOpen,
+    onChange: onOpenChange,
+  });
   const reactId = useId();
   const triggerRef = useRef<HTMLElement | null>(null);
 

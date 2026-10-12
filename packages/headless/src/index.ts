@@ -240,6 +240,7 @@ export {
   Toolbar,
   TreeView,
   useCommandPaletteShortcut,
+  useControllableState,
   useDialogState,
   useReducedMotion,
   useToast,
@@ -309,4 +310,5 @@ export type {
   TooltipTriggerProps,
   TreeNode,
   TreeViewProps,
+  UseControllableStateOptions,
 } from './client.js';
