@@ -6466,7 +6466,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/babel__generator@npm:*, @types/babel__generator@npm:^7.27.0":
+"@types/babel__generator@npm:*":
   version: 7.27.0
   resolution: "@types/babel__generator@npm:7.27.0"
   dependencies:
@@ -6882,11 +6882,9 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@usemotif/compiler-core@workspace:packages/compiler-core"
   dependencies:
-    "@babel/generator": "npm:^7.29.0"
     "@babel/parser": "npm:^7.29.0"
     "@babel/traverse": "npm:^7.29.0"
     "@babel/types": "npm:^7.29.0"
-    "@types/babel__generator": "npm:^7.27.0"
     "@types/babel__traverse": "npm:^7.20.7"
     "@usemotif/core": "workspace:*"
     "@usemotif/test-utils": "workspace:*"
@@ -6906,6 +6904,8 @@ __metadata:
     tsup: "npm:^8.5.1"
     typescript: "npm:^6.0.3"
     vitest: "npm:^4.1.5"
+  peerDependencies:
+    "@babel/core": ^7.20.0
   languageName: unknown
   linkType: soft
 

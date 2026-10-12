@@ -40,13 +40,16 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@babel/core": "^7.29.0",
     "@usemotif/compiler-babel": "workspace:*"
   },
   "devDependencies": {
+    "@babel/core": "^7.29.0",
     "@types/babel__core": "^7.20.5",
     "tsup": "^8.5.1",
     "typescript": "^6.0.3",
     "vitest": "^4.1.5"
+  },
+  "peerDependencies": {
+    "@babel/core": "^7.20.0"
   }
 }

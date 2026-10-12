@@ -71,12 +71,7 @@ const PLACEHOLDER_SENTINEL = '/*!__motif_extract_placeholder__*/';
  * the test and those files are silently skipped (styles never extracted).
  */
 function cleanUrl(id: string): string {
-  const queryIdx = id.indexOf('?');
-  const hashIdx = id.indexOf('#');
-  let end = id.length;
-  if (queryIdx !== -1) end = Math.min(end, queryIdx);
-  if (hashIdx !== -1) end = Math.min(end, hashIdx);
-  return id.slice(0, end);
+  return id.split(/[?#]/)[0]!;
 }
 
 function shouldTransform(
@@ -132,8 +127,26 @@ export const motifExtract: UnpluginInstance<MotifBundlerOptions | undefined, fal
 
     // Aggregate every module's CSS into one deduped, deterministically-ordered
     // stylesheet. Shared by `generateBundle` (build) and `load` (dev) so both
-    // paths emit identical output. See the long note in `generateBundle` for
-    // why ordering is by module id and dedup is per-line.
+    // paths emit identical output.
+    //
+    // Order: `cssByModule` is keyed by module id in the order `transform()`
+    // fired, which bundlers run concurrently and in graph order that varies
+    // run-to-run - so iterating Map order would emit the same rules in
+    // different orders across identical builds, defeating content-hashed asset
+    // caching. Sorting by module id (stable across builds) fixes the
+    // cross-module order while preserving each module's *internal* rule order,
+    // so a single class's base → media → container cascade (emitted adjacently
+    // by one resolve) stays intact.
+    //
+    // Dedup: each module contributes its CSS as newline-separated rules, and
+    // the css-emit helpers emit one rule per line, so splitting on '\n' yields
+    // individual rules. The `m-<hash>` scheme makes identical rule content
+    // produce an identical line, so a Set over lines collapses cross-module
+    // reuse (the common case for a design system) instead of shipping the same
+    // rule once per importing module. Set insertion order keeps first
+    // occurrence within the stable order; a hash collision keeps both lines
+    // (they differ). The emit helpers never produce blank lines, so no filter
+    // is needed.
     const aggregateCss = (): string =>
       [
         ...new Set(
@@ -181,26 +194,6 @@ export const motifExtract: UnpluginInstance<MotifBundlerOptions | undefined, fal
         }
       },
       generateBundle(_options: NormalizedOutputOptions, bundle: OutputBundle) {
-        // Dedupe across modules. Each module contributes its CSS as
-        // newline-separated rules, and the css-emit helpers emit one rule
-        // per line, so splitting on '\n' yields individual rules. The
-        // `m-<hash>` scheme makes identical rule content produce an
-        // identical line, so a Set over lines collapses cross-module reuse
-        // (the common case for a design system) instead of shipping the
-        // same rule once per importing module. Set insertion order keeps
-        // first-occurrence order; a hash collision keeps both lines (they
-        // differ). The emit helpers never produce blank lines, so no filter
-        // is needed (matching the pre-dedup behaviour).
-        // Aggregate in a deterministic order. `cssByModule` is keyed by module
-        // id in the order `transform()` fired, which bundlers run concurrently
-        // and in graph order that varies run-to-run - so iterating Map order
-        // would emit the same rules in different orders across identical
-        // builds, defeating content-hashed asset caching. Sorting by module id
-        // (stable across builds) fixes the cross-module order while preserving
-        // each module's *internal* rule order, so a single class's
-        // base → media → container cascade (emitted adjacently by one resolve)
-        // stays intact. Set dedup then keeps first-occurrence within that
-        // stable order.
         const replacement = aggregateCss();
         for (const file of Object.values(bundle)) {
           if (
