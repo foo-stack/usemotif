@@ -1,4 +1,12 @@
-import { createMotionValue, type MotionValue } from '@usemotif/core';
+import {
+  createMotionValue,
+  type DragAxis,
+  type DragConstraints,
+  type DragInfo,
+  type DragSpringConfig,
+  type MotionValue,
+  type UseDragOptions,
+} from '@usemotif/core';
 import {
   Fragment,
   createElement,
@@ -11,62 +19,7 @@ import {
 import { PanResponder } from 'react-native';
 import { getMotionDriver } from './_animation/index.js';
 
-/** Axis filter for {@link useDrag}. See web counterpart for semantics. */
-export type DragAxis = 'x' | 'y' | 'both';
-
-/** Drag-constraint bounds in DIPs. See web counterpart. */
-export interface DragConstraints {
-  left?: number;
-  right?: number;
-  top?: number;
-  bottom?: number;
-}
-
-/** Snapshot of the drag state passed to lifecycle callbacks. */
-export interface DragInfo {
-  readonly offset: { readonly x: number; readonly y: number };
-  readonly velocity: { readonly x: number; readonly y: number };
-}
-
-/** Spring config for the post-release momentum animation. */
-export interface DragSpringConfig {
-  stiffness?: number;
-  damping?: number;
-  mass?: number;
-  restSpeed?: number;
-  restDistance?: number;
-}
-
-/** Options for {@link useDrag}. */
-export interface UseDragOptions {
-  axis?: DragAxis;
-  constraints?: DragConstraints;
-  /**
-   * Rubber-band elasticity past {@link constraints}. `0` (default)
-   * clamps hard at bounds; `1` lets the value extend freely. Values
-   * between scale the over-the-bound portion linearly - the iOS-style
-   * over-scroll feel.
-   *
-   * Has no effect when {@link constraints} is omitted.
-   */
-  dragElastic?: number;
-  /**
-   * When `true`, the released value continues with velocity-driven
-   * inertia and settles via a spring back into {@link constraints}.
-   * When `false` (default), the value stops at its release position.
-   */
-  dragMomentum?: boolean;
-  /**
-   * Spring config for the post-release settle. Only used when
-   * {@link dragMomentum} is true or the released value is outside
-   * {@link constraints} (overshoot from {@link dragElastic}).
-   */
-  dragTransition?: DragSpringConfig;
-  onDragStart?: (info: DragInfo) => void;
-  onDrag?: (info: DragInfo) => void;
-  /** Fires before the post-release momentum settle. */
-  onDragEnd?: (info: DragInfo) => void;
-}
+export type { DragAxis, DragConstraints, DragInfo, DragSpringConfig, UseDragOptions };
 
 /**
  * Result returned by {@link useDrag} on native. `dragProps` is the

@@ -262,3 +262,120 @@ export type CSSValue = string | number;
  * in the responsive module.
  */
 export type StyleValue<V extends CSSValue = CSSValue> = V | TokenRef;
+
+/**
+ * Spring physics configuration. Defaults match a critically-damped
+ * UI spring (`stiffness=100, damping=10, mass=1`) - close to framer-
+ * motion's defaults, easy to tune toward bouncier or stiffer feels.
+ *
+ * `restSpeed` and `restDistance` set the settle thresholds: the spring
+ * snaps to the target once both `|velocity| < restSpeed` and
+ * `|value - target| < restDistance`. Lower values let the spring
+ * crawl closer before settling; higher values cut animation tails
+ * shorter at the cost of a more visible snap.
+ */
+export interface SpringConfig {
+  /** Spring stiffness. Higher = faster snap. Default `100`. */
+  stiffness?: number;
+  /** Damping coefficient. Higher = less oscillation. Default `10`. */
+  damping?: number;
+  /** Mass of the spring. Higher = slower. Default `1`. */
+  mass?: number;
+  /** Settle threshold for velocity. Default `0.01`. */
+  restSpeed?: number;
+  /** Settle threshold for distance to target. Default `0.01`. */
+  restDistance?: number;
+  /** Initial velocity to seed on the first `.set()`. Default `0`. */
+  velocity?: number;
+}
+
+/**
+ * Axis filter for `useDrag`. `'x'` and `'y'` lock movement to
+ * the horizontal or vertical axis; the other axis stays pinned to its
+ * starting position. Omit (or pass `'both'`) to allow free 2D drag.
+ */
+export type DragAxis = 'x' | 'y' | 'both';
+
+/**
+ * Drag-constraint bounds in pixels relative to the drag start. Each
+ * bound is optional - omitted bounds are unconstrained on that side.
+ *
+ * `left` / `right` are negative / positive offsets on the X axis;
+ * `top` / `bottom` are negative / positive offsets on the Y axis.
+ * Constraints clamp the offset at every move event before it's
+ * written to the motion values, so consumers reading `x` / `y` always
+ * see in-bounds values (unless {@link UseDragOptions.dragElastic}
+ * lets the value overshoot during the gesture - the value still
+ * settles back to bounds on release).
+ */
+export interface DragConstraints {
+  left?: number;
+  right?: number;
+  top?: number;
+  bottom?: number;
+}
+
+/** Snapshot of the drag state passed to lifecycle callbacks. */
+export interface DragInfo {
+  /** Current offset from the drag-start position (clamped to constraints). */
+  readonly offset: { readonly x: number; readonly y: number };
+  /** Pixel-per-second velocity at the moment of the callback. Computed
+   * from the last two pointer samples; zero before the first move. */
+  readonly velocity: { readonly x: number; readonly y: number };
+}
+
+/**
+ * Spring config for the post-release momentum animation. Same shape
+ * as {@link SpringConfig} so consumers can
+ * share configs between draggers and spring motion values.
+ */
+export interface DragSpringConfig {
+  /** Spring stiffness. Default `200`. */
+  stiffness?: number;
+  /** Damping coefficient. Default `25`. */
+  damping?: number;
+  /** Mass. Default `1`. */
+  mass?: number;
+  /** Settle threshold for velocity. Default `0.1`. */
+  restSpeed?: number;
+  /** Settle threshold for distance to target. Default `0.1`. */
+  restDistance?: number;
+}
+
+/** Options for `useDrag`. */
+export interface UseDragOptions {
+  /** Lock the drag to a single axis. Default `'both'` (free 2D drag). */
+  axis?: DragAxis;
+  /** Bounds for the drag offset. See {@link DragConstraints}. */
+  constraints?: DragConstraints;
+  /**
+   * Rubber-band elasticity past {@link constraints}. `0` (default)
+   * clamps hard at bounds; `1` lets the value extend freely (no
+   * constraint at all). Values between scale the over-the-bound
+   * portion of the offset linearly - the canonical iOS-style
+   * over-scroll feel.
+   *
+   * Has no effect when {@link constraints} is omitted.
+   */
+  dragElastic?: number;
+  /**
+   * When `true`, the released value continues with velocity-driven
+   * inertia and settles via a spring back into {@link constraints}.
+   * When `false` (default), the value stops at its release position.
+   *
+   * Tune the settle behaviour through {@link dragTransition}.
+   */
+  dragMomentum?: boolean;
+  /**
+   * Spring config for the post-release settle. Only used when
+   * {@link dragMomentum} is true or the released value is outside
+   * {@link constraints} (overshoot from {@link dragElastic}).
+   */
+  dragTransition?: DragSpringConfig;
+  /** Fires once on pointer-down (or equivalent). */
+  onDragStart?: (info: DragInfo) => void;
+  /** Fires on every move event during a drag. */
+  onDrag?: (info: DragInfo) => void;
+  /** Fires once on pointer-up / cancel - before the momentum settle. */
+  onDragEnd?: (info: DragInfo) => void;
+}

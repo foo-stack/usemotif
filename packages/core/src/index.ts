@@ -11,12 +11,17 @@ export type {
   AnimationToken,
   CSSValue,
   Direction,
+  DragAxis,
+  DragConstraints,
+  DragInfo,
+  DragSpringConfig,
   FontFace,
   FontSource,
   ReducedMotionMode,
   ResolvedStyle,
   ScaleName,
   SpringAnimationToken,
+  SpringConfig,
   StyleValue,
   Theme,
   ThemeRootStyles,
@@ -26,6 +31,7 @@ export type {
   TokenRef,
   TokenScale,
   TokenValue,
+  UseDragOptions,
 } from './types.js';
 
 export { isTokenRef, resolveOutputRangeTokens, resolveToken, resolveValue } from './token.js';
