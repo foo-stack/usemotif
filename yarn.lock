@@ -16928,6 +16928,7 @@ __metadata:
     "@types/node": "npm:^25.6.0"
     "@types/react": "npm:^19.2.14"
     "@types/react-dom": "npm:^19.2.3"
+    esbuild: "npm:^0.27.0"
     oxfmt: "npm:^0.46.0"
     oxlint: "npm:^1.61.0"
     tsup: "npm:^8.5.1"
