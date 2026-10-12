@@ -61,7 +61,7 @@
     "@usemotif/test-utils": "workspace:*",
     "jsdom": "^29.1.0",
     "react": "^19.2.0",
-    "react-native": "^0.85.0",
+    "react-native": "^0.83.0",
     "react-test-renderer": "^19.2.5",
     "tsup": "^8.5.1",
     "typescript": "^6.0.3",

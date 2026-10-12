@@ -18,7 +18,7 @@
     "@usemotif/tokens": "workspace:*",
     "expo": "^55.0.17",
     "react": "^19.2.0",
-    "react-native": "^0.85.0"
+    "react-native": "^0.83.0"
   },
   "devDependencies": {
     "@babel/core": "^7.27.0",
