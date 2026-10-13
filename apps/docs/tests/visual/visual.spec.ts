@@ -76,6 +76,11 @@ for (const route of ROUTES) {
     await page.goto(route, { waitUntil: 'load' });
     await settle(page);
     const slug = route === '/' ? 'home' : route.slice(1).replace(/\//g, '_');
-    await expect(page).toHaveScreenshot(`${slug}.png`, { fullPage: true });
+    // "Updated N months ago" is measured against the current date, so it would
+    // drift out of the baseline as time passes. Mask it rather than freeze time.
+    await expect(page).toHaveScreenshot(`${slug}.png`, {
+      fullPage: true,
+      mask: [page.getByText(/^Updated /)],
+    });
   });
 }
