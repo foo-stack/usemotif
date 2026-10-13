@@ -1,5 +1,9 @@
 import type { ReactNode } from 'react';
-import { Box, Text } from 'usemotif';
+import { statDeltaRecipe, statRecipe } from '@usemotif/recipes';
+import { Box, Text, styled } from 'usemotif';
+
+const StatFrame = styled(Box, statRecipe);
+const StatDelta = styled(Text, statDeltaRecipe);
 
 export type StatTrend = 'up' | 'down' | 'neutral';
 
@@ -26,15 +30,9 @@ export interface StatProps {
  * ```
  */
 export function Stat({ label, value, delta, trend = 'neutral', helpText }: StatProps) {
-  const deltaColor =
-    trend === 'up'
-      ? '$colors.status.success.fg'
-      : trend === 'down'
-        ? '$colors.status.danger.fg'
-        : '$colors.text.muted';
   const arrow = trend === 'up' ? '↑ ' : trend === 'down' ? '↓ ' : '';
   return (
-    <Box display="flex" flexDirection="column" gap="$space.1">
+    <StatFrame>
       <Text fontSize="$fontSizes.sm" color="$colors.text.muted">
         {label}
       </Text>
@@ -43,10 +41,10 @@ export function Stat({ label, value, delta, trend = 'neutral', helpText }: StatP
           {value}
         </Text>
         {delta !== undefined ? (
-          <Text fontSize="$fontSizes.sm" fontWeight="$fontWeights.semibold" color={deltaColor}>
+          <StatDelta trend={trend}>
             {arrow}
             {delta}
-          </Text>
+          </StatDelta>
         ) : null}
       </Box>
       {helpText !== undefined ? (
@@ -54,6 +52,6 @@ export function Stat({ label, value, delta, trend = 'neutral', helpText }: StatP
           {helpText}
         </Text>
       ) : null}
-    </Box>
+    </StatFrame>
   );
 }
