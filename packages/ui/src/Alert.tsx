@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { alertRecipe } from '@usemotif/recipes';
 import { Box, Text } from 'usemotif';
 
 export type AlertIntent = 'neutral' | 'info' | 'success' | 'warning' | 'danger';
@@ -27,22 +28,9 @@ export interface AlertProps {
  * ```
  */
 export function Alert({ intent = 'neutral', title, icon, children }: AlertProps) {
-  const tint = `$colors.status.${intent}.tint`;
   const fg = `$colors.status.${intent}.fg`;
-  const border = `$colors.status.${intent}.border`;
   return (
-    <Box
-      role="alert"
-      display="flex"
-      flexDirection="row"
-      gap="$space.3"
-      p="$space.4"
-      bg={tint}
-      color={fg}
-      borderRadius="$radii.md"
-      borderWidth="$borderWidths.thin"
-      borderColor={border}
-    >
+    <Box role="alert" {...alertRecipe.base} {...alertRecipe.variants.intent[intent]}>
       {icon ? <Box flexShrink={0}>{icon}</Box> : null}
       <Box display="flex" flexDirection="column" gap="$space.1" flex={1}>
         {title ? (

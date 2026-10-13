@@ -1,6 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
+import { chipRecipe } from '@usemotif/recipes';
 import { Box, type BoxProps } from 'usemotif';
 
 export type ChipIntent = 'neutral' | 'primary';
@@ -15,14 +16,6 @@ export interface ChipProps {
   readonly onRemove?: () => void;
 }
 
-const INTENT_BG = {
-  neutral: '$colors.surface.muted',
-  primary: '$colors.action.primary.bg',
-} as const;
-const INTENT_FG = {
-  neutral: '$colors.text.default',
-  primary: '$colors.text.inverse',
-} as const;
 const REMOVE_HOVER = { opacity: 0.65 } as const;
 
 /**
@@ -38,16 +31,10 @@ const REMOVE_HOVER = { opacity: 0.65 } as const;
 export function Chip({ children, icon, intent = 'neutral', onRemove }: ChipProps) {
   return (
     <Box
-      display="inline-flex"
-      alignItems="center"
-      gap="$space.1"
-      pl={icon !== undefined ? '$space.2' : '$space.3'}
-      pr={onRemove !== undefined ? '$space.1' : '$space.3'}
-      py="$space.1"
-      borderRadius="$radii.full"
-      fontSize="$fontSizes.sm"
-      bg={INTENT_BG[intent]}
-      color={INTENT_FG[intent]}
+      {...chipRecipe.base}
+      {...chipRecipe.variants.intent[intent]}
+      {...chipRecipe.variants.withIcon[icon !== undefined ? 'true' : 'false']}
+      {...chipRecipe.variants.removable[onRemove !== undefined ? 'true' : 'false']}
     >
       {icon !== undefined ? (
         <Box as="span" display="inline-flex" alignItems="center">

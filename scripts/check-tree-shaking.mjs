@@ -531,8 +531,10 @@ const targets = [
     name: '@usemotif/ui - Stat only',
     code: `import { Stat } from '@usemotif/ui';\nconsole.log(Stat);\n`,
     // Pure presentational (Box + Text, no headless) - must hug the display floor,
-    // NOT pull any `@usemotif/headless` behaviour.
-    budget: 11800,
+    // NOT pull any `@usemotif/headless` behaviour. Stat takes its styling from
+    // `statRecipe` and `statDeltaRecipe`, so the recipe data (every trend's
+    // colour) ships with it; that is about 70 B over the hand-inlined version.
+    budget: 11900,
   },
   {
     name: '@usemotif/ui - EmptyState only',
