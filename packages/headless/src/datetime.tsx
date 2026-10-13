@@ -15,6 +15,8 @@ import {
   type Ref,
 } from 'react';
 import { PopoverContent, PopoverRoot, PopoverTrigger } from './Popover.js';
+import { addMonths, isSameDay } from './_date-math.js';
+import { useControllableState } from './use-controllable-state.js';
 
 /**
  * Date / time family - Calendar, DatePicker, TimeInput.
@@ -42,26 +44,6 @@ function addDays(date: Date, n: number): Date {
   const d = new Date(date);
   d.setDate(d.getDate() + n);
   return d;
-}
-function addMonths(date: Date, n: number): Date {
-  const d = new Date(date);
-  // Clamp the day to the target month's last day before shifting, so paging
-  // from a 31st doesn't overflow into the next month (Jan 31 + 1 → Mar 3) and
-  // skip/repeat months. Set day to 1, change the month, then restore the day
-  // clamped to that month's length.
-  const day = d.getDate();
-  d.setDate(1);
-  d.setMonth(d.getMonth() + n);
-  const lastDay = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
-  d.setDate(Math.min(day, lastDay));
-  return d;
-}
-function isSameDay(a: Date, b: Date): boolean {
-  return (
-    a.getFullYear() === b.getFullYear() &&
-    a.getMonth() === b.getMonth() &&
-    a.getDate() === b.getDate()
-  );
 }
 
 // ─────────── Calendar ─────────────────────────────────────────────
@@ -111,18 +93,14 @@ export function Calendar(props: CalendarProps): ReactElement {
     style,
     renderDay,
   } = props;
-  const [uncontrolled, setUncontrolled] = useState<Date | undefined>(defaultValue);
   // Prop-presence detection so a controlled Calendar cleared to
   // `value={undefined}` stays controlled (no selection), not stale.
-  const isControlled = 'value' in props;
-  const selected = isControlled ? controlled : uncontrolled;
-  const setSelected = useCallback(
-    (next: Date) => {
-      if (!isControlled) setUncontrolled(next);
-      onValueChange?.(next);
-    },
-    [isControlled, onValueChange],
-  );
+  const [selected, setSelected] = useControllableState({
+    value: controlled,
+    defaultValue,
+    onChange: onValueChange,
+    controlled: 'value' in props,
+  });
   const [focusedDay, setFocusedDay] = useState<Date>(selected ?? new Date());
   const monthStart = startOfMonth(focusedDay);
 
@@ -293,9 +271,11 @@ export function DatePicker({
   // state, which DatePicker cannot otherwise read. In controlled mode `value`
   // stays authoritative; in uncontrolled mode we mirror Calendar's
   // onValueChange into `committed`.
-  const isControlled = value !== undefined;
-  const [committed, setCommitted] = useState<Date | undefined>(defaultValue);
-  const current = isControlled ? value : committed;
+  const [current, commit] = useControllableState({
+    value,
+    defaultValue,
+    onChange: onValueChange,
+  });
   const label =
     current === undefined
       ? placeholder
@@ -322,8 +302,7 @@ export function DatePicker({
           // reopened grid in sync with the trigger label.
           value={current}
           onValueChange={(d) => {
-            if (!isControlled) setCommitted(d);
-            onValueChange?.(d);
+            commit(d);
             setOpen(false);
           }}
           {...(locale !== undefined ? { locale } : {})}

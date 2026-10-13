@@ -198,7 +198,7 @@ export function animationEntryToTiming(
   theme: Theme | undefined,
 ): { duration: string; easing: string } {
   if (entry.type === 'spring') {
-    const fitted = springToCssTimingForCss(entry);
+    const fitted = springToCssTiming(entry);
     return {
       duration: resolveTimingPart(fitted.duration, theme, 'durations') ?? fitted.duration,
       easing: resolveTimingPart(fitted.easing, theme, 'easings') ?? fitted.easing,
@@ -221,28 +221,43 @@ function resolveTimingPart(
   return typeof resolved === 'string' ? resolved : undefined;
 }
 
-/** Local copy of springToCssTiming that returns a fixed { duration,
- * easing } pair suitable for CSS-variable emission. Mirrors the
- * exported `springToCssTiming` in motion.ts but lives here to avoid
- * a circular import. */
-function springToCssTimingForCss(spring: SpringAnimationToken): {
+/**
+ * Approximate a spring config as a `{ duration, easing }` pair for web
+ * (which can't natively run a spring). Uses fitted heuristics over the
+ * spring parameters; the result is a CSS transition that *feels*
+ * close to the requested spring without the overhead of a JS-driven
+ * physics loop on the main thread.
+ *
+ * Native renderers should use the spring directly via Reanimated's
+ * `withSpring` instead of going through this helper.
+ */
+export function springToCssTiming(spring: SpringAnimationToken): {
   duration: string;
   easing: string;
 } {
+  // Prefer explicit overrides if the user supplied them.
   if (spring.duration !== undefined && spring.easing !== undefined) {
     return { duration: spring.duration, easing: spring.easing };
   }
+
+  // Heuristic duration: lighter mass + stiffer spring = faster.
+  // Real spring half-lives depend on damping but for the CSS
+  // approximation a coarse mapping suffices.
   const mass = spring.mass ?? 1;
   const stiffness = spring.stiffness ?? 100;
   const damping = spring.damping ?? 10;
   const ms = Math.round(220 * Math.sqrt(mass / Math.max(1, stiffness / 100)));
+
+  // Damping ratio < 1 → overshoot bezier; ≥ 1 → critically/over-damped → smooth.
+  // Critical damping for a unit spring: ζ = damping / (2 * sqrt(mass * stiffness)).
   const zeta = damping / (2 * Math.sqrt(Math.max(1, mass * stiffness)));
   const easing =
     zeta < 0.7
-      ? 'cubic-bezier(0.34, 1.56, 0.64, 1)'
+      ? 'cubic-bezier(0.34, 1.56, 0.64, 1)' // overshoot - bouncy feel
       : zeta < 1
-        ? 'cubic-bezier(0.22, 1, 0.36, 1)'
-        : 'cubic-bezier(0.4, 0, 0.2, 1)';
+        ? 'cubic-bezier(0.22, 1, 0.36, 1)' // gentle ease-out, slight settle
+        : 'cubic-bezier(0.4, 0, 0.2, 1)'; // critically damped - Material standard
+
   return { duration: spring.duration ?? `${ms}ms`, easing: spring.easing ?? easing };
 }
 

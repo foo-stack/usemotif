@@ -3,6 +3,7 @@ import {
   motionValueBrand,
   resolveAnimationToken,
   type MotionValue,
+  type SpringConfig,
 } from '@usemotif/core';
 import { useEffect, useRef, useState } from 'react';
 import { getMotionDriver } from './_animation/index.js';
@@ -23,24 +24,7 @@ import { useTheme } from './theme-context.js';
 // driver. Drivers that don't implement `useSpringBacking` fall through
 // to the JS-thread rAF integrator below.
 
-/**
- * Spring physics configuration. Defaults match a critically-damped
- * UI spring (`stiffness=100, damping=10, mass=1`).
- */
-export interface SpringConfig {
-  /** Spring stiffness. Higher = faster snap. Default `100`. */
-  stiffness?: number;
-  /** Damping coefficient. Higher = less oscillation. Default `10`. */
-  damping?: number;
-  /** Mass of the spring. Higher = slower. Default `1`. */
-  mass?: number;
-  /** Settle threshold for velocity. Default `0.01`. */
-  restSpeed?: number;
-  /** Settle threshold for distance to target. Default `0.01`. */
-  restDistance?: number;
-  /** Initial velocity to seed on the first `.set()`. Default `0`. */
-  velocity?: number;
-}
+export type { SpringConfig };
 
 interface ResolvedSpringConfig {
   stiffness: number;

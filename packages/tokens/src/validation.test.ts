@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { resolveValue } from '@usemotif/core';
-import { primerLightTheme } from './validation/primer.js';
-import { atlassianLightTheme } from './validation/atlassian.js';
-import { m3LightTheme } from './validation/m3.js';
+import { primerLightTheme } from './__fixtures__/primer.js';
+import { atlassianLightTheme } from './__fixtures__/atlassian.js';
+import { m3LightTheme } from './__fixtures__/m3.js';
 
 /**
  * Validation: prove motif's two-layer token model can carry the three
@@ -11,7 +11,7 @@ import { m3LightTheme } from './validation/m3.js';
  *
  * **Pass criterion:** every distinctive shape from the source system
  * resolves to the expected literal value via motif's `resolveValue`.
- * The fixtures live in `validation/{primer,atlassian,m3}.ts`.
+ * The fixtures live in `__fixtures__/{primer,atlassian,m3}.ts`.
  */
 
 describe('Token model - Primer (GitHub) light', () => {

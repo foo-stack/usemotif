@@ -173,6 +173,33 @@ describe('useSpring', () => {
     expect(mv.get()).toBe(0);
   });
 
+  it('seeds the configured velocity on the first .set() only', () => {
+    const plain = vi.fn();
+    const seeded = vi.fn();
+    render(
+      <>
+        <Probe initial={0} onValue={plain} />
+        <Probe initial={0} config={{ velocity: 500 }} onValue={seeded} />
+      </>,
+    );
+    const a = plain.mock.calls[0]![0] as MotionValue<number>;
+    const b = seeded.mock.calls[0]![0] as MotionValue<number>;
+    act(() => {
+      a.set(100);
+      b.set(100);
+    });
+    advanceFrame(16);
+    expect(b.get()).toBeGreaterThan(a.get());
+
+    runToSettle();
+    expect(b.get()).toBe(100);
+    // Velocity is 0 again after the settle. Re-applying the seed here would push
+    // the first frame away from the new target instead of toward it.
+    act(() => b.set(0));
+    advanceFrame(16);
+    expect(b.get()).toBeLessThan(100);
+  });
+
   it('.set(currentTarget) after settle is a no-op (no new rAF queued)', () => {
     const captured = vi.fn();
     render(<Probe initial={0} onValue={captured} />);

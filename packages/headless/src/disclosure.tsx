@@ -9,7 +9,6 @@ import {
   useEffect,
   useId,
   useRef,
-  useState,
   type CSSProperties,
   type KeyboardEvent,
   type MouseEvent,
@@ -18,6 +17,7 @@ import {
   type Ref,
 } from 'react';
 import { mergeRefs } from './_compose-refs.js';
+import { useControllableState } from './use-controllable-state.js';
 
 // Stable empty selection for a controlled Accordion cleared to
 // `value={undefined}` - keeps a constant identity across renders.
@@ -56,17 +56,14 @@ export interface CollapsibleRootProps {
 }
 function CollapsibleRoot(props: CollapsibleRootProps): ReactElement {
   const { open: controlled, defaultOpen = false, onOpenChange, children } = props;
-  const [uncontrolled, setUncontrolled] = useState(defaultOpen);
   // Prop-presence detection so `open={undefined}` stays controlled.
-  const isControlled = 'open' in props;
-  const open = (isControlled ? controlled : uncontrolled) ?? false;
-  const setOpen = useCallback(
-    (next: boolean) => {
-      if (!isControlled) setUncontrolled(next);
-      onOpenChange?.(next);
-    },
-    [isControlled, onOpenChange],
-  );
+  const [rawOpen, setOpen] = useControllableState({
+    value: controlled,
+    defaultValue: defaultOpen,
+    onChange: onOpenChange,
+    controlled: 'open' in props,
+  });
+  const open = rawOpen ?? false;
   const id = useId();
   return (
     <CollapsibleContext.Provider
@@ -173,12 +170,14 @@ export interface AccordionRootProps {
 }
 function AccordionRoot(props: AccordionRootProps): ReactElement {
   const { type = 'single', value: controlled, defaultValue = [], onValueChange, children } = props;
-  const [uncontrolled, setUncontrolled] = useState<string[]>(defaultValue);
   // Prop-presence detection so `value={undefined}` stays controlled-and-empty.
-  const isControlled = 'value' in props;
-  const value: readonly string[] = isControlled
-    ? (controlled ?? EMPTY_ACCORDION_VALUE)
-    : uncontrolled;
+  const [rawValue, setValue] = useControllableState({
+    value: controlled,
+    defaultValue,
+    onChange: onValueChange,
+    controlled: 'value' in props,
+  });
+  const value: readonly string[] = rawValue ?? EMPTY_ACCORDION_VALUE;
   const toggle = useCallback(
     (id: string) => {
       const isOpen = value.includes(id);
@@ -186,10 +185,9 @@ function AccordionRoot(props: AccordionRootProps): ReactElement {
       if (isOpen) next = value.filter((v) => v !== id);
       else if (type === 'single') next = [id];
       else next = [...value, id];
-      if (!isControlled) setUncontrolled(next);
-      onValueChange?.(next);
+      setValue(next);
     },
-    [value, type, isControlled, onValueChange],
+    [value, type, setValue],
   );
   return (
     <AccordionContext.Provider value={{ type, value, toggle }}>
@@ -244,17 +242,14 @@ function TabsRoot(props: TabsRootProps): ReactElement {
     orientation = 'horizontal',
     children,
   } = props;
-  const [uncontrolled, setUncontrolled] = useState<string | undefined>(defaultValue);
   // Prop-presence detection so `value={undefined}` stays controlled (empty).
-  const isControlled = 'value' in props;
-  const value = (isControlled ? controlled : uncontrolled) ?? '';
-  const setValue = useCallback(
-    (v: string) => {
-      if (!isControlled) setUncontrolled(v);
-      onValueChange?.(v);
-    },
-    [isControlled, onValueChange],
-  );
+  const [rawValue, setValue] = useControllableState({
+    value: controlled,
+    defaultValue,
+    onChange: onValueChange,
+    controlled: 'value' in props,
+  });
+  const value = rawValue ?? '';
   const idPrefix = useId();
   return (
     <TabsContext.Provider value={{ value, setValue, idPrefix, orientation }}>

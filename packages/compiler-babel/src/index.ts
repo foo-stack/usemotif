@@ -151,8 +151,6 @@ interface NativeStyleEntry {
  * stay at runtime - the Babel pass processes one file at a time.
  */
 interface StyledBinding {
-  /** Local name introduced by `const X = styled(...)`. */
-  readonly localName: string;
   /** The motif primitive being styled (resolved against state.bindings). */
   readonly underlying: PrimitiveBinding;
   /** The literal-evaluated config object. */
@@ -468,20 +466,7 @@ function inlineStaticSpreads(
 
 /** Local names bound to a `useMedia` import from a motif source in this file. */
 function collectUseMediaLocals(body: readonly t.Statement[]): Set<string> {
-  const out = new Set<string>();
-  for (const stmt of body) {
-    if (!t.isImportDeclaration(stmt) || !STYLED_SOURCES.has(stmt.source.value)) continue;
-    for (const spec of stmt.specifiers) {
-      if (
-        t.isImportSpecifier(spec) &&
-        t.isIdentifier(spec.imported) &&
-        spec.imported.name === 'useMedia'
-      ) {
-        out.add(spec.local.name);
-      }
-    }
-  }
-  return out;
+  return new Set(findMotifBindings(body, STYLED_SOURCES, new Set(['useMedia'])).keys());
 }
 
 const MEDIA_KEY_SET: ReadonlySet<string> = new Set(MEDIA_KEYS);
@@ -590,7 +575,6 @@ function resolveScalarStyle(
   styleName: string,
   value: unknown,
 ): { prop: string; value: string | number } | null {
-  if (value === null || typeof value === 'object' || typeof value === 'boolean') return null;
   if (typeof value !== 'string' && typeof value !== 'number') return null;
   const { style } = resolveStylesToVars({ [styleName]: value });
   const keys = Object.keys(style);
@@ -705,13 +689,7 @@ function rewriteJsxForWeb(
   if (ternaries !== null) {
     for (const ternary of ternaries) consumed.add(ternary.sourceName);
   }
-  const remaining: (t.JSXAttribute | t.JSXSpreadAttribute)[] = [];
-  for (const attr of path.node.attributes) {
-    if (t.isJSXAttribute(attr) && t.isJSXIdentifier(attr.name) && consumed.has(attr.name.name)) {
-      continue;
-    }
-    remaining.push(attr);
-  }
+  const remaining = dropConsumed(path.node.attributes, consumed);
 
   const bakedStyle = resolvedStyleToObjectExpression(result.inlineStyle);
   if (ternaries !== null && ternaries.length > 0) {
@@ -749,7 +727,7 @@ function rewriteJsxForWeb(
     const parentEl = t.isJSXElement(parent) ? parent : null;
     const safety = analyzeStripSafety(path.node, parentEl, primitive, analysis);
     if (safety.safe) {
-      stripWrapper(path, primitive);
+      renameJsxElement(path, primitive.defaultTag);
     }
   }
 }
@@ -769,13 +747,7 @@ function rewriteJsxForNative(
   if (result.consumedProps.length === 0) return;
 
   const consumed = new Set(result.consumedProps);
-  const remaining: (t.JSXAttribute | t.JSXSpreadAttribute)[] = [];
-  for (const attr of path.node.attributes) {
-    if (t.isJSXAttribute(attr) && t.isJSXIdentifier(attr.name) && consumed.has(attr.name.name)) {
-      continue;
-    }
-    remaining.push(attr);
-  }
+  const remaining = dropConsumed(path.node.attributes, consumed);
 
   if (Object.keys(result.style).length === 0) {
     path.node.attributes = remaining;
@@ -873,23 +845,25 @@ function mergeNativeStyleAttribute(
 }
 
 /**
- * Replace the JSX element name with the primitive's underlying HTML tag.
- * The caller is responsible for verifying safety via
- * `analyzeStripSafety` first; this helper performs the rewrite only.
- *
- * Mutates the opening element's name and the closing element to match.
+ * Rename a JSX element: the opening tag, and the closing tag when there is one.
+ * Rewrite only - stripping a wrapper must be cleared by `analyzeStripSafety`
+ * first.
  */
-function stripWrapper(path: NodePath<t.JSXOpeningElement>, primitive: PrimitiveInfo): void {
-  const newName = t.jsxIdentifier(primitive.defaultTag);
-  path.node.name = newName;
+function renameJsxElement(path: NodePath<t.JSXOpeningElement>, name: string): void {
+  path.node.name = t.jsxIdentifier(name);
+  const closing = t.isJSXElement(path.parent) ? path.parent.closingElement : null;
+  if (closing !== null && closing !== undefined) closing.name = t.jsxIdentifier(name);
+}
 
-  const parent = path.parent;
-  if (t.isJSXElement(parent)) {
-    const closing = parent.closingElement;
-    if (closing !== null && closing !== undefined) {
-      closing.name = t.jsxIdentifier(primitive.defaultTag);
-    }
-  }
+/** The attributes left once every plain attribute named in `consumed` is removed. */
+function dropConsumed(
+  attrs: readonly (t.JSXAttribute | t.JSXSpreadAttribute)[],
+  consumed: ReadonlySet<string>,
+): (t.JSXAttribute | t.JSXSpreadAttribute)[] {
+  return attrs.filter(
+    (attr) =>
+      !(t.isJSXAttribute(attr) && t.isJSXIdentifier(attr.name) && consumed.has(attr.name.name)),
+  );
 }
 
 /**
@@ -1046,19 +1020,9 @@ function collectStyledBindings(
   primitiveBindings: ReadonlyMap<string, PrimitiveBinding>,
   aggressive: boolean,
 ): Map<string, StyledBinding> {
-  const styledLocals = new Set<string>();
-  for (const stmt of programBody) {
-    if (!t.isImportDeclaration(stmt)) continue;
-    if (!STYLED_SOURCES.has(stmt.source.value)) continue;
-    if (stmt.importKind === 'type') continue;
-    for (const spec of stmt.specifiers) {
-      if (!t.isImportSpecifier(spec)) continue;
-      if (spec.importKind === 'type') continue;
-      const importedName = t.isIdentifier(spec.imported) ? spec.imported.name : spec.imported.value;
-      if (importedName !== 'styled') continue;
-      styledLocals.add(spec.local.name);
-    }
-  }
+  const styledLocals = new Set(
+    findMotifBindings(programBody, STYLED_SOURCES, new Set(['styled'])).keys(),
+  );
   if (styledLocals.size === 0) return new Map();
 
   const out = new Map<string, StyledBinding>();
@@ -1107,7 +1071,7 @@ function collectStyledBindings(
         if (underlying === undefined) continue;
       }
 
-      out.set(decl.id.name, { localName: decl.id.name, underlying, config: effectiveConfig });
+      out.set(decl.id.name, { underlying, config: effectiveConfig });
     }
   }
   return out;
@@ -1209,7 +1173,10 @@ function applyStyledExpansion(path: NodePath<t.JSXOpeningElement>, styled: Style
   const mergedAttrs: t.JSXAttribute[] = [];
   for (const [k, v] of Object.entries(merged)) {
     if (callerAttrNames.has(k)) continue;
-    mergedAttrs.push(buildJsxAttrFromValue(k, v));
+    const value = literalToJsxAttrValue(v);
+    // Not representable as a literal attribute: leave the call site to the runtime.
+    if (value === null) return false;
+    mergedAttrs.push(t.jsxAttribute(t.jsxIdentifier(k), value));
   }
   // Place merged-config attrs first so caller's later entries override
   // at runtime - mirrors the runtime's `{ ...merged, ...passThrough }`
@@ -1219,32 +1186,8 @@ function applyStyledExpansion(path: NodePath<t.JSXOpeningElement>, styled: Style
   // Rewrite the JSX name to the underlying primitive. Closing tag
   // mirrors. Subsequent visitor logic (extractWeb, wrapper-stripping)
   // sees a regular primitive call site.
-  const newName = t.jsxIdentifier(styled.underlying.localName);
-  path.node.name = newName;
-  const parent = path.parent;
-  if (
-    t.isJSXElement(parent) &&
-    parent.closingElement !== null &&
-    parent.closingElement !== undefined
-  ) {
-    parent.closingElement.name = t.jsxIdentifier(styled.underlying.localName);
-  }
+  renameJsxElement(path, styled.underlying.localName);
   return true;
-}
-
-/**
- * Build a `JSXAttribute` from a literal value. Strings → string-literal
- * attribute (no braces); numbers / booleans / objects / arrays →
- * expression container with the corresponding literal node. Falls back
- * to expression container with `null` for unsupported values, but the
- * resolver only emits primitives + plain objects so that branch is
- * dead in practice.
- */
-function buildJsxAttrFromValue(name: string, value: unknown): t.JSXAttribute {
-  if (typeof value === 'string') {
-    return t.jsxAttribute(t.jsxIdentifier(name), t.stringLiteral(value));
-  }
-  return t.jsxAttribute(t.jsxIdentifier(name), t.jsxExpressionContainer(literalToNode(value)));
 }
 
 /**
@@ -1256,24 +1199,6 @@ function buildJsxAttrFromValue(name: string, value: unknown): t.JSXAttribute {
  */
 function objectKey(k: string): t.Identifier | t.StringLiteral {
   return t.isValidIdentifier(k) ? t.identifier(k) : t.stringLiteral(k);
-}
-
-function literalToNode(value: unknown): t.Expression {
-  if (typeof value === 'string') return t.stringLiteral(value);
-  if (typeof value === 'number') return t.numericLiteral(value);
-  if (typeof value === 'boolean') return t.booleanLiteral(value);
-  if (value === null) return t.nullLiteral();
-  if (Array.isArray(value)) {
-    return t.arrayExpression(value.map((v) => literalToNode(v)));
-  }
-  if (typeof value === 'object') {
-    const props: t.ObjectProperty[] = [];
-    for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
-      props.push(t.objectProperty(objectKey(k), literalToNode(v)));
-    }
-    return t.objectExpression(props);
-  }
-  return t.identifier('undefined');
 }
 
 export { PACKAGE_NAME };

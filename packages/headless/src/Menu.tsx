@@ -22,6 +22,7 @@ import {
 import { mergeRefs } from './_compose-refs.js';
 import { inDomOrder } from './_dom-order.js';
 import { useClickOutside, useFloatingPosition, type Placement } from './positioning.js';
+import { useControllableState } from './use-controllable-state.js';
 
 /**
  * Menu - accessible dropdown menu with arrow-key navigation.
@@ -77,16 +78,11 @@ function Root({
   onOpenChange,
   children,
 }: MenuRootProps): ReactElement {
-  const [uncontrolled, setUncontrolled] = useState(defaultOpen);
-  const isControlled = controlled !== undefined;
-  const open = isControlled ? controlled : uncontrolled;
-  const setOpen = useCallback(
-    (next: boolean) => {
-      if (!isControlled) setUncontrolled(next);
-      onOpenChange?.(next);
-    },
-    [isControlled, onOpenChange],
-  );
+  const [open, setOpen] = useControllableState({
+    value: controlled,
+    defaultValue: defaultOpen,
+    onChange: onOpenChange,
+  });
   const reactId = useId();
   const triggerRef = useRef<HTMLElement | null>(null);
   const itemsRef = useRef<HTMLElement[]>([]);

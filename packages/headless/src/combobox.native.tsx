@@ -6,7 +6,6 @@ import {
   useContext,
   useId,
   useMemo,
-  useState,
   type ReactElement,
   type ReactNode,
 } from 'react';
@@ -20,6 +19,8 @@ import {
   type ViewStyle,
 } from 'react-native';
 import { nativeText } from './_native-text.js';
+import { defaultFilter } from './_combobox-filter.js';
+import { useControllableState } from './use-controllable-state.js';
 
 /**
  * Native Combobox / Select / Search / MultiSelect.
@@ -93,41 +94,27 @@ function ComboboxRoot<T>(props: ComboboxRootProps<T>): ReactElement {
     onOpenChange,
     children,
   } = props;
-  const [openUncontrolled, setOpenUncontrolled] = useState(defaultOpen);
-  const isOpenControlled = controlledOpen !== undefined;
-  const open = isOpenControlled ? controlledOpen : openUncontrolled;
-  const setOpen = useCallback(
-    (next: boolean) => {
-      if (!isOpenControlled) setOpenUncontrolled(next);
-      onOpenChange?.(next);
-    },
-    [isOpenControlled, onOpenChange],
-  );
+  const [open, setOpen] = useControllableState({
+    value: controlledOpen,
+    defaultValue: defaultOpen,
+    onChange: onOpenChange,
+  });
 
-  const [valueUncontrolled, setValueUncontrolled] = useState<T | undefined>(defaultValue);
   // Detect controlled-ness by prop presence so `value={undefined}` stays
   // "controlled, empty" instead of falling back to stale internal state -
   // mirroring the web combobox.
-  const isValueControlled = 'value' in props;
-  const value = isValueControlled ? controlledValue : valueUncontrolled;
-  const setValue = useCallback(
-    (next: T | undefined) => {
-      if (!isValueControlled) setValueUncontrolled(next);
-      onValueChange?.(next);
-    },
-    [isValueControlled, onValueChange],
-  );
+  const [value, setValue] = useControllableState<T | undefined>({
+    value: controlledValue,
+    defaultValue,
+    onChange: onValueChange,
+    controlled: 'value' in props,
+  });
 
-  const [inputUncontrolled, setInputUncontrolled] = useState('');
-  const isInputControlled = controlledInput !== undefined;
-  const inputValue = isInputControlled ? controlledInput : inputUncontrolled;
-  const setInputValue = useCallback(
-    (next: string) => {
-      if (!isInputControlled) setInputUncontrolled(next);
-      onInputValueChange?.(next);
-    },
-    [isInputControlled, onInputValueChange],
-  );
+  const [inputValue, setInputValue] = useControllableState({
+    value: controlledInput,
+    defaultValue: '',
+    onChange: onInputValueChange,
+  });
 
   const filtered = useMemo(() => {
     const fn = filter ?? defaultFilter;
@@ -154,11 +141,6 @@ function ComboboxRoot<T>(props: ComboboxRootProps<T>): ReactElement {
       {children}
     </ComboboxContext.Provider>
   );
-}
-
-function defaultFilter<T>(option: ComboboxOption<T>, input: string): boolean {
-  if (input.length === 0) return true;
-  return option.label.toLowerCase().includes(input.toLowerCase());
 }
 
 interface ComboboxInputChildProps extends Partial<TextInputProps> {
@@ -366,41 +348,26 @@ function MultiSelectRoot<T>(props: MultiSelectRootProps<T>): ReactElement {
     enableSelectAll = false,
     children,
   } = props;
-  const [openUncontrolled, setOpenUncontrolled] = useState(defaultOpen);
-  const isOpenControlled = controlledOpen !== undefined;
-  const open = isOpenControlled ? controlledOpen : openUncontrolled;
-  const setOpen = useCallback(
-    (next: boolean) => {
-      if (!isOpenControlled) setOpenUncontrolled(next);
-      onOpenChange?.(next);
-    },
-    [isOpenControlled, onOpenChange],
-  );
-  const [valueUncontrolled, setValueUncontrolled] = useState<ReadonlyArray<T>>(defaultValue ?? []);
+  const [open, setOpen] = useControllableState({
+    value: controlledOpen,
+    defaultValue: defaultOpen,
+    onChange: onOpenChange,
+  });
   // Prop-presence detection so a controlled MultiSelect cleared to
   // `value={undefined}` stays controlled-and-empty (stable EMPTY_VALUES
   // identity), instead of resurrecting stale toggled chips. Mirrors web.
-  const isValueControlled = 'value' in props;
-  const values: ReadonlyArray<T> = isValueControlled
-    ? (controlledValue ?? EMPTY_VALUES)
-    : valueUncontrolled;
-  const commit = useCallback(
-    (next: ReadonlyArray<T>) => {
-      if (!isValueControlled) setValueUncontrolled(next);
-      onValueChange?.(next);
-    },
-    [isValueControlled, onValueChange],
-  );
-  const [inputUncontrolled, setInputUncontrolled] = useState('');
-  const isInputControlled = controlledInput !== undefined;
-  const inputValue = isInputControlled ? controlledInput : inputUncontrolled;
-  const setInputValue = useCallback(
-    (next: string) => {
-      if (!isInputControlled) setInputUncontrolled(next);
-      onInputValueChange?.(next);
-    },
-    [isInputControlled, onInputValueChange],
-  );
+  const [rawValues, commit] = useControllableState({
+    value: controlledValue,
+    defaultValue: defaultValue ?? [],
+    onChange: onValueChange,
+    controlled: 'value' in props,
+  });
+  const values: ReadonlyArray<T> = rawValues ?? EMPTY_VALUES;
+  const [inputValue, setInputValue] = useControllableState({
+    value: controlledInput,
+    defaultValue: '',
+    onChange: onInputValueChange,
+  });
   const filteredOptions = useMemo(() => {
     const fn = filter ?? defaultFilter;
     return options.filter((o) => fn(o, inputValue));

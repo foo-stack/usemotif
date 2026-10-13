@@ -83,10 +83,6 @@ function fmt(n) {
   return `${(n / 1024 / 1024).toFixed(2)} MB`;
 }
 
-function pad(s, n) {
-  return s.length >= n ? s : s + ' '.repeat(n - s.length);
-}
-
 const results = [];
 let overruns = 0;
 let missing = 0;
@@ -117,20 +113,20 @@ if (results.length === 0) {
 }
 
 // Guard the spread: Math.max() with no args is -Infinity, which would make
-// every pad() width NaN and garble the table.
+// every padEnd() width NaN and garble the table.
 const W_PKG = Math.max(...results.map((r) => r.pkg.length)) + 2;
 
-console.log(pad('package', W_PKG) + 'status   raw      gzip     budget');
+console.log('package'.padEnd(W_PKG) + 'status   raw      gzip     budget');
 console.log('-'.repeat(W_PKG + 38));
 for (const r of results) {
   if (r.status === 'missing') {
     const why = r.isEntry ? 'no dist - run yarn build first' : `missing ${r.missing}`;
-    console.log(`${pad(r.pkg, W_PKG)}MISSING                         ${fmt(r.budget)} (${why})`);
+    console.log(`${r.pkg.padEnd(W_PKG)}MISSING                         ${fmt(r.budget)} (${why})`);
     continue;
   }
   const tag = r.status === 'ok' ? 'OK   ' : 'OVER ';
   console.log(
-    `${pad(r.pkg, W_PKG)}${tag}    ${pad(fmt(r.raw), 9)}${pad(fmt(r.gzipped), 9)}${fmt(r.budget)}`,
+    `${r.pkg.padEnd(W_PKG)}${tag}    ${fmt(r.raw).padEnd(9)}${fmt(r.gzipped).padEnd(9)}${fmt(r.budget)}`,
   );
 }
 

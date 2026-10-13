@@ -19,6 +19,8 @@ import {
   type ReactNode,
 } from 'react';
 import { useClickOutside, useFloatingPosition, type Placement } from './positioning.js';
+import { defaultFilter } from './_combobox-filter.js';
+import { useControllableState } from './use-controllable-state.js';
 
 // Stable empty selection for a controlled MultiSelect whose `value` is
 // `undefined` (controlled, empty). A fresh `[]` each render would change
@@ -100,44 +102,30 @@ function ComboboxRoot<T>(props: ComboboxRootProps<T>): ReactElement {
     onOpenChange,
     children,
   } = props;
-  const [openUncontrolled, setOpenUncontrolled] = useState(defaultOpen);
-  const isOpenControlled = controlledOpen !== undefined;
-  const open = isOpenControlled ? controlledOpen : openUncontrolled;
-  const setOpen = useCallback(
-    (next: boolean) => {
-      if (!isOpenControlled) setOpenUncontrolled(next);
-      onOpenChange?.(next);
-    },
-    [isOpenControlled, onOpenChange],
-  );
+  const [open, setOpen] = useControllableState({
+    value: controlledOpen,
+    defaultValue: defaultOpen,
+    onChange: onOpenChange,
+  });
 
-  const [valueUncontrolled, setValueUncontrolled] = useState<T | undefined>(defaultValue);
   // Detect controlled-ness by prop *presence*, not `!== undefined`: a
   // combobox/select can legitimately hold a cleared (`undefined`) value, so
   // `value={undefined}` must stay controlled-and-empty rather than silently
   // falling back to stale internal state. `'value' in props` is true
   // whenever the consumer wrote the prop (even as `undefined`) and false
   // when it was omitted.
-  const isValueControlled = 'value' in props;
-  const value = isValueControlled ? controlledValue : valueUncontrolled;
-  const setValue = useCallback(
-    (next: T | undefined) => {
-      if (!isValueControlled) setValueUncontrolled(next);
-      onValueChange?.(next);
-    },
-    [isValueControlled, onValueChange],
-  );
+  const [value, setValue] = useControllableState<T | undefined>({
+    value: controlledValue,
+    defaultValue,
+    onChange: onValueChange,
+    controlled: 'value' in props,
+  });
 
-  const [inputUncontrolled, setInputUncontrolled] = useState('');
-  const isInputControlled = controlledInput !== undefined;
-  const inputValue = isInputControlled ? controlledInput : inputUncontrolled;
-  const setInputValue = useCallback(
-    (next: string) => {
-      if (!isInputControlled) setInputUncontrolled(next);
-      onInputValueChange?.(next);
-    },
-    [isInputControlled, onInputValueChange],
-  );
+  const [inputValue, setInputValue] = useControllableState({
+    value: controlledInput,
+    defaultValue: '',
+    onChange: onInputValueChange,
+  });
 
   const filtered = useMemo(() => {
     const fn = filter ?? defaultFilter;
@@ -180,11 +168,6 @@ function ComboboxRoot<T>(props: ComboboxRootProps<T>): ReactElement {
       {children}
     </ComboboxContext.Provider>
   );
-}
-
-function defaultFilter<T>(option: ComboboxOption<T>, input: string): boolean {
-  if (input.length === 0) return true;
-  return option.label.toLowerCase().includes(input.toLowerCase());
 }
 
 interface ComboboxInputChildProps {
@@ -607,18 +590,12 @@ function MultiSelectRoot<T>(props: MultiSelectRootProps<T>): ReactElement {
     enableSelectAll = false,
     children,
   } = props;
-  const [openUncontrolled, setOpenUncontrolled] = useState(defaultOpen);
-  const isOpenControlled = controlledOpen !== undefined;
-  const open = isOpenControlled ? controlledOpen : openUncontrolled;
-  const setOpen = useCallback(
-    (next: boolean) => {
-      if (!isOpenControlled) setOpenUncontrolled(next);
-      onOpenChange?.(next);
-    },
-    [isOpenControlled, onOpenChange],
-  );
+  const [open, setOpen] = useControllableState({
+    value: controlledOpen,
+    defaultValue: defaultOpen,
+    onChange: onOpenChange,
+  });
 
-  const [valueUncontrolled, setValueUncontrolled] = useState<ReadonlyArray<T>>(defaultValue ?? []);
   // `'value' in props`, not `controlledValue !== undefined`, so passing
   // `value={undefined}` to mean "controlled, empty" stays controlled instead
   // of silently falling back to stale uncontrolled state - matching Combobox.
@@ -626,28 +603,19 @@ function MultiSelectRoot<T>(props: MultiSelectRootProps<T>): ReactElement {
   // to a *stable* empty array (controlled, empty), never the uncontrolled
   // state. The shared EMPTY_VALUES keeps the identity stable across renders so
   // it can sit in hook dependency arrays without re-running every render.
-  const isValueControlled = 'value' in props;
-  const values: ReadonlyArray<T> = isValueControlled
-    ? (controlledValue ?? EMPTY_VALUES)
-    : valueUncontrolled;
-  const commit = useCallback(
-    (next: ReadonlyArray<T>) => {
-      if (!isValueControlled) setValueUncontrolled(next);
-      onValueChange?.(next);
-    },
-    [isValueControlled, onValueChange],
-  );
+  const [rawValues, commit] = useControllableState({
+    value: controlledValue,
+    defaultValue: defaultValue ?? [],
+    onChange: onValueChange,
+    controlled: 'value' in props,
+  });
+  const values: ReadonlyArray<T> = rawValues ?? EMPTY_VALUES;
 
-  const [inputUncontrolled, setInputUncontrolled] = useState('');
-  const isInputControlled = controlledInput !== undefined;
-  const inputValue = isInputControlled ? controlledInput : inputUncontrolled;
-  const setInputValue = useCallback(
-    (next: string) => {
-      if (!isInputControlled) setInputUncontrolled(next);
-      onInputValueChange?.(next);
-    },
-    [isInputControlled, onInputValueChange],
-  );
+  const [inputValue, setInputValue] = useControllableState({
+    value: controlledInput,
+    defaultValue: '',
+    onChange: onInputValueChange,
+  });
 
   const filteredOptions = useMemo(() => {
     const fn = filter ?? defaultFilter;

@@ -3,16 +3,15 @@
 import {
   createContext,
   forwardRef,
-  useCallback,
   useContext,
   useId,
-  useState,
   type CSSProperties,
   type InputHTMLAttributes,
   type ReactElement,
   type ReactNode,
   type Ref,
 } from 'react';
+import { useControllableState } from './use-controllable-state.js';
 
 /**
  * Toggle family - Switch / Checkbox / Radio / RadioGroup.
@@ -104,17 +103,13 @@ export interface RadioGroupProps {
 }
 export function RadioGroup(props: RadioGroupProps): ReactElement {
   const { name, value, defaultValue, onValueChange, children, style, ...aria } = props;
-  const [uncontrolled, setUncontrolled] = useState(defaultValue);
   // Prop-presence detection so `value={undefined}` stays controlled-and-empty.
-  const isControlled = 'value' in props;
-  const current = isControlled ? value : uncontrolled;
-  const setValue = useCallback(
-    (next: string) => {
-      if (!isControlled) setUncontrolled(next);
-      onValueChange?.(next);
-    },
-    [isControlled, onValueChange],
-  );
+  const [current, setValue] = useControllableState({
+    value: value,
+    defaultValue,
+    onChange: onValueChange,
+    controlled: 'value' in props,
+  });
   const reactId = useId();
   const groupName = name ?? `${reactId}-radio`;
 

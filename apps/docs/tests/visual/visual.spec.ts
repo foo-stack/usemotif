@@ -63,6 +63,12 @@ const ROUTES = [
 async function settle(page: Page) {
   await page.waitForLoadState('networkidle');
   await page.evaluate(() => document.fonts.ready);
+  // "Updated N months ago" is measured against the current date, so its text
+  // and width drift as time passes. Pin it so the snapshot only changes when
+  // the page does.
+  await page.getByText(/^Updated /).evaluateAll((els) => {
+    for (const el of els) el.textContent = 'Updated 1 month ago';
+  });
   await page.addStyleTag({
     content: `
       .marquee__track { animation: none !important; transform: none !important; }

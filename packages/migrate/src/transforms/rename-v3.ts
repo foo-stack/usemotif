@@ -93,5 +93,5 @@ export function needsRenameV3(source: string): boolean {
   // SOURCE_PATTERN is `g`-flagged, so `.test()` on it would mutate
   // `.lastIndex` and corrupt later calls. Build a fresh non-global
   // regex per check.
-  return /@motif-js\/react-web|@motif-js\/[\w-]+/.test(source);
+  return new RegExp(SOURCE_PATTERN.source).test(source);
 }

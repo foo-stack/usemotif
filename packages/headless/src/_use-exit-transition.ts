@@ -1,35 +1,8 @@
 'use client';
 
-import { PresenceContext, type PresenceContextValue } from '@usemotif/react';
-import {
-  createElement,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type ReactElement,
-  type ReactNode,
-} from 'react';
+import { useExitPresence, type MotionPhase } from '@usemotif/react';
+import { useEffect, useRef, type ReactElement, type ReactNode } from 'react';
 import { useReducedMotion } from './_use-reduced-motion.js';
-
-/**
- * Possible motion phases for an element managed by an exit-aware boundary.
- *
- * - `'closed'` - element should not be rendered.
- * - `'entering'` - element just mounted; reserved for future symmetry with
- *   `enterStyle` orchestration.
- * - `'open'` - element is steady-state open.
- * - `'exiting'` - `open` flipped to `false` but the element is still rendered so
- *   its exit can play: with the CSS driver the consumer sets
- *   `data-motif-state="exiting"` and motif's `exitStyle` rule + `transitionend`
- *   drive it; with the off-thread WAAPI driver a descendant `<Box exitStyle>`
- *   reads the phase through the provided `PresenceContext`, registers its exit,
- *   and the driver settles it. The boundary unmounts once every registered exit
- *   completes, a `transitionend` fires, or the fallback timer expires -
- *   whichever comes first.
- */
-export type MotionPhase = 'closed' | 'entering' | 'open' | 'exiting';
 
 export interface UseExitTransitionResult {
   /** True while the element should be rendered (`open` or `exiting`). */
@@ -72,104 +45,27 @@ export function useExitTransition(
   open: boolean,
   fallbackDurationMs = 400,
 ): UseExitTransitionResult {
-  const [phase, setPhase] = useState<MotionPhase>(open ? 'open' : 'closed');
-  const elementRef = useRef<HTMLElement | null>(null);
-  const previousOpenRef = useRef<boolean>(open);
   const reducedMotion = useReducedMotion();
-  const pendingExits = useRef<Set<symbol>>(new Set());
-  const settledRef = useRef<boolean>(false);
-
-  // Settle the exit to `'closed'`. Idempotent for a given exit window; the
-  // transitionend, fallback-timer, and registered-exit routes all funnel here.
-  const settle = useCallback(() => {
-    if (settledRef.current) return;
-    settledRef.current = true;
-    pendingExits.current.clear();
-    setPhase('closed');
-  }, []);
-
-  const registerExit = useCallback((): (() => void) => {
-    if (phase !== 'exiting') return () => {};
-    const id = Symbol('motif-pending-exit');
-    pendingExits.current.add(id);
-    let signalled = false;
-    return () => {
-      if (signalled) return;
-      signalled = true;
-      pendingExits.current.delete(id);
-      if (pendingExits.current.size === 0) settle();
-    };
-  }, [phase, settle]);
+  const { shouldRender, phase, settle, ExitBoundary } = useExitPresence(
+    open,
+    reducedMotion ? 0 : fallbackDurationMs,
+  );
+  const elementRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
-    const wasOpen = previousOpenRef.current;
-    previousOpenRef.current = open;
+    const el = elementRef.current;
+    if (phase !== 'exiting' || el === null) return undefined;
+    const onEnd = (event: TransitionEvent): void => {
+      // Accept the transition on the element itself OR a descendant - the
+      // documented CSS usage puts `exitStyle` on a child `<Box>`, so the
+      // event bubbles up with `target === child`.
+      const target = event.target as Node | null;
+      if (target !== el && (target === null || !el.contains(target))) return;
+      settle();
+    };
+    el.addEventListener('transitionend', onEnd);
+    return () => el.removeEventListener('transitionend', onEnd);
+  }, [phase, settle]);
 
-    if (open && !wasOpen) {
-      pendingExits.current.clear();
-      settledRef.current = false;
-      setPhase('open');
-      return undefined;
-    }
-    if (!open && wasOpen) {
-      // No exit window (or reduced motion) - unmount synchronously.
-      if (fallbackDurationMs <= 0 || reducedMotion) {
-        pendingExits.current.clear();
-        settledRef.current = true;
-        setPhase('closed');
-        return undefined;
-      }
-      pendingExits.current.clear();
-      settledRef.current = false;
-      setPhase('exiting');
-      const el = elementRef.current;
-      const cleanups: Array<() => void> = [];
-      if (el !== null) {
-        const onEnd = (event: TransitionEvent): void => {
-          // Accept the transition on the element itself OR a descendant - the
-          // documented CSS usage puts `exitStyle` on a child `<Box>`, so the
-          // event bubbles up with `target === child`.
-          const target = event.target as Node | null;
-          if (target !== el && (target === null || !el.contains(target))) return;
-          settle();
-        };
-        el.addEventListener('transitionend', onEnd);
-        cleanups.push(() => el.removeEventListener('transitionend', onEnd));
-      }
-      const id = setTimeout(settle, fallbackDurationMs);
-      cleanups.push(() => clearTimeout(id));
-      return () => {
-        for (const fn of cleanups) fn();
-      };
-    }
-    // Steady state - sync phase to `open`.
-    setPhase(open ? 'open' : 'closed');
-    return undefined;
-  }, [open, fallbackDurationMs, reducedMotion, settle]);
-
-  // PresenceContext value descendants read. Stable identity per phase/registerExit
-  // pair so consumers don't rebind on unrelated re-renders.
-  const value = useMemo<PresenceContextValue>(
-    () => ({ phase, registerExit }),
-    [phase, registerExit],
-  );
-  const valueRef = useRef(value);
-  valueRef.current = value;
-
-  // The boundary reads the latest value through a ref so its own identity stays
-  // stable - keying it on `value` would swap the component type each phase flip,
-  // tearing down + recreating the subtree (wiping descendant state / replaying
-  // entry animations). Phase changes reach descendants through the Provider.
-  const ExitBoundary = useCallback(
-    ({ children }: { children: ReactNode }): ReactElement =>
-      createElement(PresenceContext.Provider, { value: valueRef.current }, children),
-    [],
-  );
-
-  return {
-    shouldRender: phase === 'open' || phase === 'exiting' || phase === 'entering',
-    phase,
-    elementRef,
-    ExitBoundary,
-  };
+  return { shouldRender, phase, elementRef, ExitBoundary };
 }

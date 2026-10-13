@@ -72,6 +72,12 @@ export interface UseExitPresenceResult {
   /** Current motion phase. */
   readonly phase: MotionPhase;
   /**
+   * Settle the current exit now, as if every registered exit had completed.
+   * Idempotent within one exit window. Lets a wrapper add its own completion
+   * signal, such as a `transitionend` listener.
+   */
+  readonly settle: () => void;
+  /**
    * Boundary component to wrap exit-aware children in. Provides the
    * `PresenceContext` so descendants like `<Box exitStyle={...}>` see the phase
    * and can register their pending exit animations.
@@ -191,6 +197,7 @@ export function useExitPresence(open: boolean, fallbackDurationMs = 400): UseExi
   return {
     shouldRender: phase === 'open' || phase === 'exiting' || phase === 'entering',
     phase,
+    settle,
     ExitBoundary,
   };
 }

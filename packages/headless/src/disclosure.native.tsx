@@ -5,11 +5,11 @@ import {
   useCallback,
   useContext,
   useId,
-  useState,
   type ReactElement,
   type ReactNode,
 } from 'react';
 import { Pressable, View, type ViewStyle } from 'react-native';
+import { useControllableState } from './use-controllable-state.js';
 
 /**
  * Native disclosure family - Collapsible / Accordion / Tabs.
@@ -51,16 +51,11 @@ function CollapsibleRoot({
   onOpenChange,
   children,
 }: CollapsibleRootProps): ReactElement {
-  const [uncontrolled, setUncontrolled] = useState(defaultOpen);
-  const isControlled = controlled !== undefined;
-  const open = isControlled ? controlled : uncontrolled;
-  const setOpen = useCallback(
-    (next: boolean) => {
-      if (!isControlled) setUncontrolled(next);
-      onOpenChange?.(next);
-    },
-    [isControlled, onOpenChange],
-  );
+  const [open, setOpen] = useControllableState({
+    value: controlled,
+    defaultValue: defaultOpen,
+    onChange: onOpenChange,
+  });
   const id = useId();
   return (
     <CollapsibleContext.Provider
@@ -166,9 +161,11 @@ function AccordionRoot({
   onValueChange,
   children,
 }: AccordionRootProps): ReactElement {
-  const [uncontrolled, setUncontrolled] = useState<string[]>(defaultValue);
-  const isControlled = controlled !== undefined;
-  const value = isControlled ? controlled : uncontrolled;
+  const [value, commit] = useControllableState<string[]>({
+    value: controlled,
+    defaultValue,
+    onChange: onValueChange,
+  });
   const toggle = useCallback(
     (id: string) => {
       const isOpen = value.includes(id);
@@ -176,10 +173,9 @@ function AccordionRoot({
       if (isOpen) next = value.filter((v) => v !== id);
       else if (type === 'single') next = [id];
       else next = [...value, id];
-      if (!isControlled) setUncontrolled(next);
-      onValueChange?.(next);
+      commit(next);
     },
-    [value, type, isControlled, onValueChange],
+    [value, type, commit],
   );
   return (
     <AccordionContext.Provider value={{ type, value, toggle }}>
@@ -231,16 +227,12 @@ function TabsRoot({
   orientation = 'horizontal',
   children,
 }: TabsRootProps): ReactElement {
-  const [uncontrolled, setUncontrolled] = useState<string | undefined>(defaultValue);
-  const isControlled = controlled !== undefined;
-  const value = (isControlled ? controlled : uncontrolled) ?? '';
-  const setValue = useCallback(
-    (v: string) => {
-      if (!isControlled) setUncontrolled(v);
-      onValueChange?.(v);
-    },
-    [isControlled, onValueChange],
-  );
+  const [rawValue, setValue] = useControllableState({
+    value: controlled,
+    defaultValue,
+    onChange: onValueChange,
+  });
+  const value = rawValue ?? '';
   const idPrefix = useId();
   return (
     <TabsContext.Provider value={{ value, setValue, idPrefix, orientation }}>

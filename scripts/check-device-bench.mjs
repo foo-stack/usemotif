@@ -107,20 +107,17 @@ console.log('');
 function ms(n) {
   return `${n.toFixed(1)}ms`;
 }
-function pad(s, n) {
-  return s.length >= n ? s : s + ' '.repeat(n - s.length);
-}
 const W = Math.max(...rows.map((r) => r.label.length)) + 2;
-console.log(`${pad('phase', W)}${pad('motif', 11)}${pad('baseline', 11)}added`);
+console.log(`${'phase'.padEnd(W)}${'motif'.padEnd(11)}${'baseline'.padEnd(11)}added`);
 console.log('-'.repeat(W + 28));
 for (const r of rows) {
   console.log(
-    `${pad(r.label, W)}${pad(ms(r.motif), 11)}${pad(ms(r.base), 11)}${r.delta >= 0 ? '+' : ''}${ms(r.delta)}`,
+    `${r.label.padEnd(W)}${ms(r.motif).padEnd(11)}${ms(r.base).padEnd(11)}${r.delta >= 0 ? '+' : ''}${ms(r.delta)}`,
   );
 }
 console.log('-'.repeat(W + 28));
 console.log(
-  `${pad('motif added over baseline', W)}${pad('', 22)}${addedMs >= 0 ? '+' : ''}${ms(addedMs)}  (budget ≤ ${ms(maxAddedMs)})`,
+  `${'motif added over baseline'.padEnd(W)}${''.padEnd(22)}${addedMs >= 0 ? '+' : ''}${ms(addedMs)}  (budget ≤ ${ms(maxAddedMs)})`,
 );
 
 if (addedMs > maxAddedMs) {

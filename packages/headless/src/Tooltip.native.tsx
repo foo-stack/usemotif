@@ -2,7 +2,6 @@ import {
   cloneElement,
   createContext,
   isValidElement,
-  useCallback,
   useContext,
   useEffect,
   useId,
@@ -11,6 +10,7 @@ import {
   type ReactNode,
 } from 'react';
 import { Modal, Pressable, View, type ViewStyle } from 'react-native';
+import { useControllableState } from './use-controllable-state.js';
 
 /**
  * Native Tooltip - hover doesn't exist on touch, so the
@@ -46,16 +46,11 @@ function Root({
   onOpenChange,
   children,
 }: TooltipRootProps): ReactElement {
-  const [uncontrolled, setUncontrolled] = useState(defaultOpen);
-  const isControlled = controlled !== undefined;
-  const open = isControlled ? controlled : uncontrolled;
-  const setOpen = useCallback(
-    (next: boolean) => {
-      if (!isControlled) setUncontrolled(next);
-      onOpenChange?.(next);
-    },
-    [isControlled, onOpenChange],
-  );
+  const [open, setOpen] = useControllableState({
+    value: controlled,
+    defaultValue: defaultOpen,
+    onChange: onOpenChange,
+  });
   const id = useId();
   const [hint, setHint] = useState<string | undefined>(undefined);
   return (

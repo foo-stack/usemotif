@@ -132,6 +132,31 @@ describe('useExitPresence (web presence-context)', () => {
     expect(container.querySelector('[data-testid="child"]')).not.toBeNull();
   });
 
+  it('settle() closes an exit before the fallback timer, once', () => {
+    let settle: (() => void) | undefined;
+    function Probe({ open }: { open: boolean }): ReactElement {
+      const result = useExitPresence(open, 1000);
+      settle = result.settle;
+      useEffect(() => {
+        recordPhase(result.phase);
+      }, [result.phase]);
+      return <span />;
+    }
+    render(<Probe open />);
+    render(<Probe open={false} />);
+    expect(recordedPhases[recordedPhases.length - 1]).toBe('exiting');
+
+    act(() => settle?.());
+    expect(recordedPhases[recordedPhases.length - 1]).toBe('closed');
+    const settledAt = recordedPhases.length;
+
+    act(() => settle?.());
+    act(() => {
+      vi.advanceTimersByTime(1000);
+    });
+    expect(recordedPhases.length).toBe(settledAt);
+  });
+
   it('usePresence is standalone (phase open, no-op registerExit) with no boundary', () => {
     let captured: MotionPhase | undefined;
     let registerResult: (() => void) | undefined;

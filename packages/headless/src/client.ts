@@ -162,3 +162,5 @@ export type {
 } from './navigation.js';
 
 export { useReducedMotion } from './_use-reduced-motion.js';
+export { useControllableState } from './use-controllable-state.js';
+export type { UseControllableStateOptions } from './use-controllable-state.js';

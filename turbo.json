@@ -11,16 +11,6 @@
       "dependsOn": ["^build"],
       "outputs": ["*.tsbuildinfo"]
     },
-    "lint": {
-      "outputs": []
-    },
-    "format": {
-      "cache": false,
-      "outputs": []
-    },
-    "format:check": {
-      "outputs": []
-    },
     "test": {
       "dependsOn": ["^build"],
       "outputs": []

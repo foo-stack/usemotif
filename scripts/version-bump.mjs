@@ -1,8 +1,7 @@
 /**
- * Pure version-bump classification shared by `publish.mjs` and
- * `verify-version-bump.mjs`. No I/O, no `process.exit` - just semver
- * math, so both the standalone gate and the in-line publish guard
- * apply identical rules to every package.
+ * Pure version-bump classification used by `publish.mjs`. No I/O, no
+ * `process.exit` - just semver math, so the publish guard applies
+ * identical rules to every package.
  */
 
 /**

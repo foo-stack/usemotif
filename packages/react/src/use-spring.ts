@@ -5,6 +5,7 @@ import {
   motionValueBrand,
   resolveAnimationToken,
   type MotionValue,
+  type SpringConfig,
 } from '@usemotif/core';
 import { useEffect, useRef, useState } from 'react';
 import { useTheme } from './theme-context.js';
@@ -16,31 +17,7 @@ import { useTheme } from './theme-context.js';
 // the two copies stay in sync by convention - change one, change the
 // other.
 
-/**
- * Spring physics configuration. Defaults match a critically-damped
- * UI spring (`stiffness=100, damping=10, mass=1`) - close to framer-
- * motion's defaults, easy to tune toward bouncier or stiffer feels.
- *
- * `restSpeed` and `restDistance` set the settle thresholds: the spring
- * snaps to the target once both `|velocity| < restSpeed` and
- * `|value - target| < restDistance`. Lower values let the spring
- * crawl closer before settling; higher values cut animation tails
- * shorter at the cost of a more visible snap.
- */
-export interface SpringConfig {
-  /** Spring stiffness. Higher = faster snap. Default `100`. */
-  stiffness?: number;
-  /** Damping coefficient. Higher = less oscillation. Default `10`. */
-  damping?: number;
-  /** Mass of the spring. Higher = slower. Default `1`. */
-  mass?: number;
-  /** Settle threshold for velocity. Default `0.01`. */
-  restSpeed?: number;
-  /** Settle threshold for distance to target. Default `0.01`. */
-  restDistance?: number;
-  /** Initial velocity to seed on the first `.set()`. Default `0`. */
-  velocity?: number;
-}
+export type { SpringConfig };
 
 interface ResolvedSpringConfig {
   stiffness: number;
@@ -167,11 +144,17 @@ export function useSpring(initial: number, config?: SpringConfig | string): Moti
     velocity: number;
     rafId: number | null;
     lastTime: number;
+    /** Whether the configured initial velocity has already been applied.
+     * `velocity` resets to 0 on every settle, so without this flag the
+     * configured seed would be re-applied on every settled→moving
+     * transition - but it is documented as a *first* `.set()` seed only. */
+    seeded: boolean;
   }>({
     target: initial,
     velocity: 0,
     rafId: null,
     lastTime: 0,
+    seeded: false,
   });
 
   const [mv] = useState<MotionValue<number>>(() => {
@@ -212,9 +195,12 @@ export function useSpring(initial: number, config?: SpringConfig | string): Moti
         }
         s.target = target;
         if (s.rafId === null) {
-          // Seed velocity once per kickoff from the config; mid-flight
+          // Seed the configured velocity on the first kickoff only; mid-flight
           // re-targets keep existing velocity for smooth re-direction.
-          if (s.velocity === 0) s.velocity = configRef.current.velocity;
+          if (!s.seeded) {
+            s.seeded = true;
+            if (s.velocity === 0) s.velocity = configRef.current.velocity;
+          }
           s.lastTime =
             typeof performance !== 'undefined' && typeof performance.now === 'function'
               ? performance.now()

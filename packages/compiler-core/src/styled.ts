@@ -146,7 +146,7 @@ export function resolveStyledMergedProps(
       // Function-form variant - opaque at compile time.
       return null;
     }
-    const explicitKey = typeof value === 'boolean' ? (value ? 'true' : 'false') : String(value);
+    const explicitKey = String(value);
     const fromExplicit = entry.cases[explicitKey];
     if (fromExplicit === undefined) {
       // Runtime would silently fall through to the fallback (none here)
@@ -205,12 +205,9 @@ function parseVariantsAst(
 
     if (!t.isExpression(value)) return null;
     const lit = evaluateLiteral(value, scope);
-    if (!lit.ok || typeof lit.value !== 'object' || lit.value === null) return null;
-    const cases: Record<string, Record<string, unknown>> = {};
-    for (const [caseKey, caseValue] of Object.entries(lit.value as Record<string, unknown>)) {
-      if (typeof caseValue !== 'object' || caseValue === null) return null;
-      cases[caseKey] = caseValue as Record<string, unknown>;
-    }
+    if (!lit.ok) return null;
+    const cases = toVariantCases(lit.value);
+    if (cases === null) return null;
     out[variantName] = { kind: 'explicit', cases };
   }
   return out;
@@ -226,18 +223,31 @@ function parseCompoundVariantsAst(
     if (el === null) return null;
     if (t.isSpreadElement(el)) return null;
     const lit = evaluateLiteral(el, scope);
-    if (!lit.ok || typeof lit.value !== 'object' || lit.value === null) return null;
-    const obj = lit.value as Record<string, unknown>;
-    const css = obj['css'];
-    if (typeof css !== 'object' || css === null) return null;
-    const matchers: Record<string, unknown> = {};
-    for (const [k, v] of Object.entries(obj)) {
-      if (k === 'css') continue;
-      matchers[k] = v;
-    }
-    out.push({ matchers, css: css as Record<string, unknown> });
+    if (!lit.ok) return null;
+    const compound = toCompoundVariant(lit.value);
+    if (compound === null) return null;
+    out.push(compound);
   }
   return out;
+}
+
+/** A variant's cases, or `null` unless every case is a style object. */
+function toVariantCases(value: unknown): Record<string, Record<string, unknown>> | null {
+  if (typeof value !== 'object' || value === null) return null;
+  const cases: Record<string, Record<string, unknown>> = {};
+  for (const [caseKey, caseValue] of Object.entries(value)) {
+    if (typeof caseValue !== 'object' || caseValue === null) return null;
+    cases[caseKey] = caseValue as Record<string, unknown>;
+  }
+  return cases;
+}
+
+/** Split a compound-variant entry into its matchers and `css`, or `null` without a `css` object. */
+function toCompoundVariant(value: unknown): ResolvedCompoundVariant | null {
+  if (typeof value !== 'object' || value === null) return null;
+  const { css, ...matchers } = value as Record<string, unknown>;
+  if (typeof css !== 'object' || css === null) return null;
+  return { matchers, css: css as Record<string, unknown> };
 }
 
 /**
@@ -257,12 +267,8 @@ function resolveFromLiteralRecord(value: Record<string, unknown>): ResolvedStyle
   const variantNames = new Set<string>();
   if (variantsRaw !== undefined) {
     for (const [k, v] of Object.entries(variantsRaw)) {
-      if (typeof v !== 'object' || v === null) return null;
-      const cases: Record<string, Record<string, unknown>> = {};
-      for (const [ck, cv] of Object.entries(v as Record<string, unknown>)) {
-        if (typeof cv !== 'object' || cv === null) return null;
-        cases[ck] = cv as Record<string, unknown>;
-      }
+      const cases = toVariantCases(v);
+      if (cases === null) return null;
       variants[k] = { kind: 'explicit', cases };
       variantNames.add(k);
     }
@@ -271,16 +277,9 @@ function resolveFromLiteralRecord(value: Record<string, unknown>): ResolvedStyle
   const compoundVariants: ResolvedCompoundVariant[] = [];
   if (compoundRaw !== undefined) {
     for (const entry of compoundRaw) {
-      if (typeof entry !== 'object' || entry === null) return null;
-      const obj = entry as Record<string, unknown>;
-      const css = obj['css'];
-      if (typeof css !== 'object' || css === null) return null;
-      const matchers: Record<string, unknown> = {};
-      for (const [k, v] of Object.entries(obj)) {
-        if (k === 'css') continue;
-        matchers[k] = v;
-      }
-      compoundVariants.push({ matchers, css: css as Record<string, unknown> });
+      const compound = toCompoundVariant(entry);
+      if (compound === null) return null;
+      compoundVariants.push(compound);
     }
   }
 
