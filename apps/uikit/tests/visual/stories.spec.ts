@@ -38,8 +38,13 @@ function loadStoryIds(): string[] {
 
 const storyIds = loadStoryIds();
 
+const FIXED_NOW = new Date('2026-01-15T12:00:00Z');
+
 for (const id of storyIds) {
   test(id, async ({ page }) => {
+    // Calendar and DatePicker stories (and Calendar's "today" marker) read the
+    // current date, so freeze it: otherwise their snapshots change every day.
+    await page.clock.setFixedTime(FIXED_NOW);
     await page.goto(`/iframe.html?id=${id}&viewMode=story`);
     await page.waitForSelector('#storybook-root', { state: 'attached' });
     // CDN Inter loads async - wait for it so snapshots don't flip between the
