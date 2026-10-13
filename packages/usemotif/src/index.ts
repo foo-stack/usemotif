@@ -166,11 +166,12 @@ export type {
   TextAreaProps,
 } from '@usemotif/react';
 
-export { ScrollView, Sticky, VirtualList, useScroll } from '@usemotif/react';
+export { ScrollView, Sticky, VirtualList, useScroll, useScrollTarget } from '@usemotif/react';
 export type {
   ScrollOffsetEdge,
   ScrollOffsetEntry,
   ScrollOffsetPair,
+  ScrollTargetHandle,
   ScrollViewProps,
   StickyProps,
   UseScrollOptions,
