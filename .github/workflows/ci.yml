@@ -182,3 +182,50 @@ jobs:
           name: visual-diffs
           path: apps/docs/test-results/
           retention-days: 7
+
+  visual-uikit:
+    name: visual baselines (uikit)
+    runs-on: macos-latest
+
+    env:
+      ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Enable corepack
+        run: corepack enable
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: yarn
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      # The uikit's `build` is `storybook build`, so filtering on it with its
+      # dependencies builds the workspace packages and a fresh storybook-static.
+      # The visual spec reads the story list from that build's index.json, and
+      # Playwright reuses whatever server is up, so a stale build would compare
+      # baselines against the wrong stories.
+      - name: Build packages and Storybook
+        run: yarn turbo run build --filter=@usemotif/uikit...
+
+      - name: Install Chromium
+        run: yarn workspace @usemotif/uikit exec playwright install --with-deps chromium
+
+      - name: Visual check
+        run: yarn workspace @usemotif/uikit visual-check
+
+      # On a failure (including the first run, before baselines exist) this
+      # carries the rendered PNGs, which are what new baselines are taken from.
+      - name: Upload renders on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-uikit-renders
+          path: apps/uikit/test-results/
+          retention-days: 7

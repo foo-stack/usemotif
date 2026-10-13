@@ -7311,6 +7311,7 @@ __metadata:
     "@usemotif/icons": "workspace:*"
     "@usemotif/react-native": "workspace:*"
     "@usemotif/tokens": "workspace:*"
+    "@usemotif/ui": "workspace:*"
     "@vitejs/plugin-react": "npm:^5.0.0"
     react: "npm:^19.2.0"
     react-dom: "npm:^19.2.0"
