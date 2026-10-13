@@ -2,8 +2,18 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createRoot, type Root } from 'react-dom/client';
 import { act } from 'react';
-import { Box, Input, Pressable, styled } from 'usemotif';
-import { badgeRecipe, buttonRecipe, cardRecipe, inputRecipe } from './index.js';
+import { Box, Input, Pressable, Text, styled } from 'usemotif';
+import {
+  alertRecipe,
+  badgeRecipe,
+  bannerRecipe,
+  buttonRecipe,
+  cardRecipe,
+  chipRecipe,
+  inputRecipe,
+  statDeltaRecipe,
+  statRecipe,
+} from './index.js';
 
 let container: HTMLElement;
 let root: Root;
@@ -106,5 +116,88 @@ describe('recipe data is internally consistent', () => {
         expect(variants[key]![String(value)], `${name}.${key}=${value}`).toBeDefined();
       }
     }
+  });
+});
+
+describe('display recipes', () => {
+  function looks(ids: readonly string[]): string[] {
+    return ids.map((id) => {
+      const el = container.querySelector(`[data-testid="${id}"]`);
+      expect(el, id).not.toBeNull();
+      return look(el!);
+    });
+  }
+
+  it('gives every alert and banner intent its own look, defaulting to neutral', () => {
+    const Alert = styled(Box, alertRecipe);
+    const Banner = styled(Box, bannerRecipe);
+    const intents = ['neutral', 'info', 'success', 'warning', 'danger'] as const;
+    render(
+      <>
+        <Alert data-testid="alert-default" />
+        <Banner data-testid="banner-default" />
+        {intents.map((intent) => (
+          <Alert key={`a-${intent}`} data-testid={`alert-${intent}`} intent={intent} />
+        ))}
+        {intents.map((intent) => (
+          <Banner key={`b-${intent}`} data-testid={`banner-${intent}`} intent={intent} />
+        ))}
+      </>,
+    );
+    for (const kind of ['alert', 'banner']) {
+      const all = looks(intents.map((i) => `${kind}-${i}`));
+      expect(new Set(all).size, kind).toBe(intents.length);
+      const [byDefault] = looks([`${kind}-default`]);
+      expect(byDefault, kind).toBe(all[0]);
+    }
+  });
+
+  it('switches chip padding on withIcon and removable', () => {
+    const Chip = styled(Box, chipRecipe);
+    render(
+      <>
+        <Chip data-testid="plain">a</Chip>
+        <Chip data-testid="icon" withIcon>
+          a
+        </Chip>
+        <Chip data-testid="remove" removable>
+          a
+        </Chip>
+        <Chip data-testid="primary" intent="primary">
+          a
+        </Chip>
+      </>,
+    );
+    const all = looks(['plain', 'icon', 'remove', 'primary']);
+    expect(new Set(all).size).toBe(4);
+  });
+
+  it('colours the stat delta by trend and renders the stat column', () => {
+    const Stat = styled(Box, statRecipe);
+    const Delta = styled(Text, statDeltaRecipe);
+    render(
+      <Stat data-testid="stat">
+        <Delta data-testid="default">1</Delta>
+        <Delta data-testid="up" trend="up">
+          1
+        </Delta>
+        <Delta data-testid="down" trend="down">
+          1
+        </Delta>
+        <Delta data-testid="neutral" trend="neutral">
+          1
+        </Delta>
+      </Stat>,
+    );
+    const [stat, byDefault, up, down, neutral] = looks([
+      'stat',
+      'default',
+      'up',
+      'down',
+      'neutral',
+    ]);
+    expect(stat).not.toBe('|');
+    expect(new Set([up, down, neutral]).size).toBe(3);
+    expect(byDefault).toBe(neutral);
   });
 });
