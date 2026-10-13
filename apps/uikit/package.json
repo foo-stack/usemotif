@@ -20,6 +20,7 @@
     "@usemotif/icons": "workspace:*",
     "@usemotif/react-native": "workspace:*",
     "@usemotif/tokens": "workspace:*",
+    "@usemotif/ui": "workspace:*",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-native-web": "^0.21.0",
