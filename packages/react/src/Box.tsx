@@ -133,6 +133,12 @@ export type BoxProps = ResponsiveStyleProps &
      */
     layout?: boolean | 'position' | 'size';
     /**
+     * Native-only layout callback. Accepted as `undefined` so handles
+     * built for both platforms (`useScrollTarget`, `useLayoutAnimation`)
+     * spread onto a web Box, and never forwarded to the DOM.
+     */
+    onLayout?: undefined;
+    /**
      * Make the Box draggable. `true` enables free 2D drag; `'x'` /
      * `'y'` locks the drag to a single axis. Internally wires
      * `useDrag` and binds its `x` / `y` motion values to the Box's
@@ -234,6 +240,7 @@ export const Box: MotifComponent<BoxProps, ReactElement | null> = function (prop
     animation,
     animateOnly,
     layout: _layout,
+    onLayout: _onLayout,
     drag: _drag,
     dragConstraints: _dragConstraints,
     dragElastic: _dragElastic,
