@@ -1,8 +1,6 @@
 import type { ReactNode } from 'react';
 import { alertRecipe } from '@usemotif/recipes';
-import { Box, Text, styled } from 'usemotif';
-
-const AlertFrame = styled(Box, alertRecipe);
+import { Box, Text } from 'usemotif';
 
 export type AlertIntent = 'neutral' | 'info' | 'success' | 'warning' | 'danger';
 
@@ -32,7 +30,7 @@ export interface AlertProps {
 export function Alert({ intent = 'neutral', title, icon, children }: AlertProps) {
   const fg = `$colors.status.${intent}.fg`;
   return (
-    <AlertFrame role="alert" intent={intent}>
+    <Box role="alert" {...alertRecipe.base} {...alertRecipe.variants.intent[intent]}>
       {icon ? <Box flexShrink={0}>{icon}</Box> : null}
       <Box display="flex" flexDirection="column" gap="$space.1" flex={1}>
         {title ? (
@@ -46,6 +44,6 @@ export function Alert({ intent = 'neutral', title, icon, children }: AlertProps)
           </Text>
         ) : null}
       </Box>
-    </AlertFrame>
+    </Box>
   );
 }

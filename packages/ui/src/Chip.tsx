@@ -2,9 +2,7 @@
 
 import type { ReactNode } from 'react';
 import { chipRecipe } from '@usemotif/recipes';
-import { Box, styled, type BoxProps } from 'usemotif';
-
-const ChipFrame = styled(Box, chipRecipe);
+import { Box, type BoxProps } from 'usemotif';
 
 export type ChipIntent = 'neutral' | 'primary';
 
@@ -32,7 +30,12 @@ const REMOVE_HOVER = { opacity: 0.65 } as const;
  */
 export function Chip({ children, icon, intent = 'neutral', onRemove }: ChipProps) {
   return (
-    <ChipFrame intent={intent} withIcon={icon !== undefined} removable={onRemove !== undefined}>
+    <Box
+      {...chipRecipe.base}
+      {...chipRecipe.variants.intent[intent]}
+      {...chipRecipe.variants.withIcon[icon !== undefined ? 'true' : 'false']}
+      {...chipRecipe.variants.removable[onRemove !== undefined ? 'true' : 'false']}
+    >
       {icon !== undefined ? (
         <Box as="span" display="inline-flex" alignItems="center">
           {icon}
@@ -60,6 +63,6 @@ export function Chip({ children, icon, intent = 'neutral', onRemove }: ChipProps
           ×
         </Box>
       ) : null}
-    </ChipFrame>
+    </Box>
   );
 }

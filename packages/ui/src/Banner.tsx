@@ -2,9 +2,7 @@
 
 import type { ReactNode } from 'react';
 import { bannerRecipe } from '@usemotif/recipes';
-import { Box, Text, styled, type BoxProps } from 'usemotif';
-
-const BannerFrame = styled(Box, bannerRecipe);
+import { Box, Text, type BoxProps } from 'usemotif';
 
 export type BannerIntent = 'neutral' | 'info' | 'success' | 'warning' | 'danger';
 
@@ -49,9 +47,10 @@ export function Banner({
 }: BannerProps) {
   const fg = `$colors.status.${intent}.fg`;
   return (
-    <BannerFrame
+    <Box
       role={intent === 'danger' || intent === 'warning' ? 'alert' : 'status'}
-      intent={intent}
+      {...bannerRecipe.base}
+      {...bannerRecipe.variants.intent[intent]}
     >
       {icon !== undefined ? (
         <Box flexShrink={0} display="inline-flex" alignItems="center">
@@ -93,6 +92,6 @@ export function Banner({
           ×
         </Box>
       ) : null}
-    </BannerFrame>
+    </Box>
   );
 }
