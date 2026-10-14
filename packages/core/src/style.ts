@@ -189,6 +189,28 @@ export function resolveStylesToVars(props: Record<string, unknown>): ResolveStyl
 }
 
 /**
+ * Resolve one state bag (`_hover`, `_focus`, ...) into its rules. A flat bag
+ * is one rule, built exactly as before so its class hash is unchanged. A bag
+ * holding responsive values adds a rule per breakpoint or container query, so
+ * `_hover={{ bg: { base: 'red', md: 'blue' } }}` emits `.m-x:hover` and
+ * `@media (min-width: 768px) { .m-x:hover }`. The runtime `Box` and the
+ * compiler both build state rules here. Returns `PseudoRule`s, written out
+ * structurally because `css-emit` already imports from this module.
+ */
+export function resolveStateRules(
+  pseudo: string,
+  bag: Record<string, unknown>,
+): { pseudo: string; style: ResolvedStyle; at?: string }[] {
+  const { atRules } = resolveResponsiveStylesToVars(bag, { baseAsClass: true });
+  if (atRules.every((r) => r.atRule === '')) {
+    return [{ pseudo, style: resolveStylesToVars(bag).style }];
+  }
+  return atRules.map((r) =>
+    r.atRule === '' ? { pseudo, style: r.style } : { pseudo, style: r.style, at: r.atRule },
+  );
+}
+
+/**
  * Resolve a `_before` / `_after` bag to a CSS-shaped style. `content` is not a
  * registered style prop, so it is carried by hand, and it defaults to `'""'`:
  * without one, browsers render no pseudo-element. It comes first so the rule

@@ -1,5 +1,10 @@
 import { transformSync } from '@babel/core';
-import { configureBreakpoints, resolveResponsiveStylesToVars } from '@usemotif/core';
+import {
+  configureBreakpoints,
+  hashPseudoRules,
+  resolveResponsiveStylesToVars,
+  resolveStateRules,
+} from '@usemotif/core';
 import { afterEach, describe, expect, it } from 'vitest';
 import motifBabelPlugin, {
   type AggressiveReport,
@@ -350,6 +355,18 @@ describe('motif babel plugin - binding resolution', () => {
       );
     `);
     expect(css).toMatch(/\[aria-expanded="true"\]\s*\{[^}]*background-color:\s*olive/);
+  });
+
+  it('extracts a responsive state bag with the class and CSS the runtime builds', () => {
+    const { code, css } = transform(`
+      import { Box } from '@usemotif/react';
+      const X = () => <Box _hover={{ bg: { base: 'red', md: 'blue' } }} />;
+    `);
+    const cls = hashPseudoRules(resolveStateRules(':hover', { bg: { base: 'red', md: 'blue' } }));
+    expect(code).toContain(`<div className="${cls}"`);
+    expect(css).toContain(
+      `@media (min-width: 768px) { .${cls}:hover { background-color: blue; } }`,
+    );
   });
 
   it('extracts _invalid, _pressed, _focusWithin and _readOnly, and strips the Box', () => {

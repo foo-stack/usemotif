@@ -81,11 +81,12 @@ export function Pressable(props: PressableProps) {
   const direction = useDirection();
   const width = useViewportWidth();
   const container = useContainerInfo();
+  const breakpoints = useBreakpointWidths();
   const flattened = resolveResponsivePropsAtViewportAndContainer(
     rest,
     width,
     container,
-    useBreakpointWidths(),
+    breakpoints,
   );
   const { style: resolvedBase, rest: passThrough } = resolveStyles(
     flattened as Record<string, unknown>,
@@ -96,13 +97,24 @@ export function Pressable(props: PressableProps) {
   // nested `<Direction>`, matching Box/Text.
   baseStyle.direction = direction;
 
-  // Resolve each pseudo-state bag against the same theme, then run it
-  // through the same native translation as the base - otherwise a bag's
-  // `shadow`/`transform`/web-only keys reach StyleSheet.create raw.
+  // Resolve each pseudo-state bag at the current viewport and container, the
+  // way the base props are, then against the same theme and through the same
+  // native translation - otherwise a bag's `shadow`/`transform`/web-only keys
+  // reach StyleSheet.create raw.
   const resolveBag = (bag: StateStyleBag | undefined): Record<string, unknown> | null =>
     bag === undefined
       ? null
-      : sanitizeNativeStyle(resolveStyles(bag as Record<string, unknown>, theme).style);
+      : sanitizeNativeStyle(
+          resolveStyles(
+            resolveResponsivePropsAtViewportAndContainer(
+              bag as Record<string, unknown>,
+              width,
+              container,
+              breakpoints,
+            ) as Record<string, unknown>,
+            theme,
+          ).style,
+        );
   const hoverStyle = resolveBag(_hover);
   const focusStyle = resolveBag(_focus);
   const activeStyle = resolveBag(_active);

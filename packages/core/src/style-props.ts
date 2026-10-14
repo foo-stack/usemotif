@@ -1,4 +1,5 @@
 import type { MotifTokens, ScalePath, StrictTokens } from './token-path.js';
+import type { BreakpointName } from './breakpoints.js';
 import type { ResolvedStyle, ScaleName } from './types.js';
 
 /**
@@ -601,17 +602,25 @@ export const PSEUDO_SELECTOR: Readonly<Record<PseudoStatePropName, string>> = {
 };
 
 /**
- * Style bag for a pseudo-state. Same prop shape as {@link StyleProps} but
- * **flat** - no responsive object/array/DSL nesting in v1. (Responsive +
- * pseudo composition would require nesting at-rules under the pseudo
- * selector; planned for a later release.)
+ * Style bag for a pseudo-state. Same prop shape as {@link StyleProps}, and each
+ * value may be responsive: object, array, or the string DSL.
  */
 export type StateStyleBag = {
   // `Exclude`, not `NonNullable`: `NonNullable<T>` is `T & {}`, and that
   // intersection reduces a prop's `(string & {}) | '$space.4'` union back to
   // a bare `string`, dropping every token path from `_hover={{ ... }}`.
-  -readonly [K in keyof StyleProps]?: Exclude<StyleProps[K], undefined>;
+  -readonly [K in keyof StyleProps]?: StateStyleValue<Exclude<StyleProps[K], undefined>>;
 };
+
+/**
+ * A value inside a state bag: a literal, or the responsive object or array
+ * form (the string DSL is a string already). On web the responsive slots nest
+ * at-rules under the state selector.
+ */
+export type StateStyleValue<V> =
+  | V
+  | ({ base?: V } & { [K in BreakpointName]?: V } & { [K in `@${string}`]?: V })
+  | readonly (V | undefined)[];
 
 /**
  * Pseudo-state props as React props - accepted by every styled primitive.
