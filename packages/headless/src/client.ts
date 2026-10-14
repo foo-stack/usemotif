@@ -190,6 +190,8 @@ export type {
 } from './specialized.js';
 
 export { PinInput } from './pin-input.js';
+export { Listbox } from './listbox.js';
+export type { ListboxBaseProps, ListboxProps, MultiListboxProps } from './listbox.js';
 export { TagsInput } from './tags-input.js';
 export type { TagInfo, TagsInputProps } from './tags-input.js';
 export type { PinInputProps, PinType } from './pin-input.js';
