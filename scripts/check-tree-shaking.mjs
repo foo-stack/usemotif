@@ -216,7 +216,8 @@ const targets = [
     // Like Switch, a themed <Box as="input"> styled via `_checked` - pure
     // primitives, so it must NOT pull any `@usemotif/headless` behaviour and
     // stays near the Card/Switch floor.
-    budget: 11800,
+    // Bumped when four more state props joined core's selector map.
+    budget: 11900,
   },
   {
     name: '@usemotif/ui - Radio only',
@@ -332,7 +333,8 @@ const targets = [
     name: '@usemotif/ui - Separator only',
     code: `import { Separator } from '@usemotif/ui';\nconsole.log(Separator);\n`,
     // Pure primitive (a themed Box) - NO headless. Hugs the display floor.
-    budget: 11500,
+    // Bumped when four more state props joined core's selector map.
+    budget: 11600,
   },
   {
     name: '@usemotif/ui - Skeleton only',
