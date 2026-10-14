@@ -357,6 +357,16 @@ describe('motif babel plugin - binding resolution', () => {
     expect(css).toMatch(/\[aria-expanded="true"\]\s*\{[^}]*background-color:\s*olive/);
   });
 
+  it('extracts _groupHover to a rule keyed on the group ancestor', () => {
+    const { code, css } = transform(`
+      import { Box } from '@usemotif/react';
+      const X = () => <Box _groupHover={{ color: 'red' }} />;
+    `);
+    const cls = hashPseudoRules(resolveStateRules('[data-motif-group]:hover &', { color: 'red' }));
+    expect(code).toContain(`<div className="${cls}"`);
+    expect(css).toContain(`[data-motif-group]:hover .${cls} { color: red; }`);
+  });
+
   it('extracts a responsive state bag with the class and CSS the runtime builds', () => {
     const { code, css } = transform(`
       import { Box } from '@usemotif/react';

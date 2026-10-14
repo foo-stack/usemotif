@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  GROUP_ATTRIBUTE,
   PSEUDO_SELECTOR,
   PSEUDO_STATE_PROP_NAMES,
   PSEUDO_STATE_PROPS,
@@ -63,6 +64,9 @@ describe('pseudo-state schema', () => {
       '_pressed',
       '_focusWithin',
       '_readOnly',
+      '_groupHover',
+      '_groupFocus',
+      '_groupActive',
     ]);
   });
 
@@ -79,7 +83,7 @@ describe('pseudo-state schema', () => {
   });
 
   it('PSEUDO_STATE_PROPS membership matches the name list', () => {
-    expect(PSEUDO_STATE_PROPS.size).toBe(11);
+    expect(PSEUDO_STATE_PROPS.size).toBe(14);
     for (const name of PSEUDO_STATE_PROP_NAMES) {
       expect(PSEUDO_STATE_PROPS.has(name)).toBe(true);
     }
@@ -104,6 +108,13 @@ describe('pseudo-state schema', () => {
     expect(PSEUDO_SELECTOR._readOnly).toBe('&[readonly], &[aria-readonly="true"]');
     expect(PSEUDO_SELECTOR._pressed).toBe('&[aria-pressed="true"]');
     expect(PSEUDO_SELECTOR._focusWithin).toBe(':focus-within');
+  });
+
+  it('keys the group states on an ancestor carrying the group attribute', () => {
+    expect(GROUP_ATTRIBUTE).toBe('data-motif-group');
+    expect(PSEUDO_SELECTOR._groupHover).toBe('[data-motif-group]:hover &');
+    expect(PSEUDO_SELECTOR._groupFocus).toBe('[data-motif-group]:focus-visible &');
+    expect(PSEUDO_SELECTOR._groupActive).toBe('[data-motif-group]:active &');
   });
 
   it('maps _disabled to a selector that covers both :disabled and aria-disabled', () => {

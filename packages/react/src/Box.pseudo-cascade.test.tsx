@@ -174,3 +174,28 @@ describe('Box - responsive values inside state bags', () => {
     );
   });
 });
+
+describe('Box - group states', () => {
+  it('marks a group and styles a child by the group state', () => {
+    render(
+      <Box group>
+        <Box _groupHover={{ color: 'red' }} _groupFocus={{ color: 'blue' }} />
+      </Box>,
+    );
+    const parent = container.firstElementChild as HTMLElement;
+    expect(parent.hasAttribute('data-motif-group')).toBe(true);
+    expect(parent.hasAttribute('group')).toBe(false);
+    const child = parent.firstElementChild as HTMLElement;
+    const cls = Array.from(child.classList).find((c) => c.startsWith('m-'))!;
+    const css = getEmittedCss();
+    expect(css).toContain(`[data-motif-group]:hover .${cls} { color: red; }`);
+    expect(css).toContain(`[data-motif-group]:focus-visible .${cls} { color: blue; }`);
+  });
+
+  it('renders no marker without group', () => {
+    render(<Box group={false} />);
+    expect((container.firstElementChild as HTMLElement).hasAttribute('data-motif-group')).toBe(
+      false,
+    );
+  });
+});

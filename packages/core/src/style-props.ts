@@ -550,6 +550,9 @@ export const PSEUDO_STATE_PROP_NAMES = [
   '_pressed',
   '_focusWithin',
   '_readOnly',
+  '_groupHover',
+  '_groupFocus',
+  '_groupActive',
 ] as const;
 
 export type PseudoStatePropName = (typeof PSEUDO_STATE_PROP_NAMES)[number];
@@ -561,6 +564,9 @@ export const PSEUDO_STATE_PROPS: ReadonlySet<string> = new Set(PSEUDO_STATE_PROP
 export function isPseudoStateProp(key: string): key is PseudoStatePropName {
   return PSEUDO_STATE_PROPS.has(key);
 }
+
+/** The attribute a `group` Box renders, which the `_group*` states key on. */
+export const GROUP_ATTRIBUTE = 'data-motif-group';
 
 /**
  * Pseudo-state prop → CSS selector suffix. Every member is written with a
@@ -586,6 +592,10 @@ export function isPseudoStateProp(key: string): key is PseudoStatePropName {
  * `_readOnly` reads the `readonly` attribute or `[aria-readonly="true"]`
  * rather than `:read-only`, which matches every element that is not
  * editable, a plain `div` included.
+ *
+ * The group states style an element by the state of an ancestor marked with
+ * `group`, which renders {@link GROUP_ATTRIBUTE}: `_groupHover` applies while
+ * any marked ancestor is hovered.
  */
 export const PSEUDO_SELECTOR: Readonly<Record<PseudoStatePropName, string>> = {
   _hover: ':hover',
@@ -599,6 +609,9 @@ export const PSEUDO_SELECTOR: Readonly<Record<PseudoStatePropName, string>> = {
   _pressed: '&[aria-pressed="true"]',
   _focusWithin: ':focus-within',
   _readOnly: '&[readonly], &[aria-readonly="true"]',
+  _groupHover: `[${GROUP_ATTRIBUTE}]:hover &`,
+  _groupFocus: `[${GROUP_ATTRIBUTE}]:focus-visible &`,
+  _groupActive: `[${GROUP_ATTRIBUTE}]:active &`,
 };
 
 /**

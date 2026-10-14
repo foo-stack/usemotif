@@ -54,7 +54,8 @@ const targets = [
     // Bumped by cascade-layer support: `Box` now reads the active layer and
     // can emit base props as a class instead of inline styles.
     // Bumped when state bags took responsive values (nested at-rules).
-    budget: 11600, // gzip bytes
+    // Bumped when the group states joined core's selector map and Box marks a group.
+    budget: 11700, // gzip bytes
   },
   {
     name: '@usemotif/react - Button only',
@@ -65,7 +66,8 @@ const targets = [
     // Bumped by cascade-layer support: `Box` now reads the active layer and
     // can emit base props as a class instead of inline styles.
     // Bumped when state bags took responsive values (nested at-rules).
-    budget: 12500,
+    // Bumped when the group states joined core's selector map and Box marks a group.
+    budget: 12600,
   },
   {
     name: '@usemotif/react-native - Box only',
@@ -83,7 +85,8 @@ const targets = [
     // frame clock add about 1.5 KB. Colours parse through RN's
     // `processColor` rather than core's colour-space module, which would
     // have cost another 3 KB.
-    budget: 15000,
+    // Bumped when the group states joined core's selector map and Box marks a group.
+    budget: 15200,
   },
   {
     name: '@usemotif/headless - Dialog only',
@@ -200,7 +203,8 @@ const targets = [
     code: `import { Switch } from '@usemotif/ui';\nconsole.log(Switch);\n`,
     // Switch is a themed <Box as="input">, pure primitives - it must NOT pull
     // any `@usemotif/headless` behaviour, so it stays near the Card-only floor.
-    budget: 11800,
+    // Bumped when the group states joined core's selector map and Box marks a group.
+    budget: 12000,
   },
   {
     name: '@usemotif/ui - Tabs only',
@@ -221,7 +225,8 @@ const targets = [
     // primitives, so it must NOT pull any `@usemotif/headless` behaviour and
     // stays near the Card/Switch floor.
     // Bumped when four more state props joined core's selector map.
-    budget: 11900,
+    // Bumped when the group states joined core's selector map and Box marks a group.
+    budget: 12100,
   },
   {
     name: '@usemotif/ui - Radio only',
@@ -229,7 +234,8 @@ const targets = [
     // Radio + RadioGroup are pure primitives (a `_checked` <Box as="input"> plus
     // a small name-sharing context) - no headless, so they hug the same floor.
     // Bumped when state bags took responsive values (nested at-rules).
-    budget: 11900,
+    // Bumped when the group states joined core's selector map and Box marks a group.
+    budget: 12000,
   },
   {
     name: '@usemotif/ui - Popover only',
@@ -339,13 +345,15 @@ const targets = [
     code: `import { Separator } from '@usemotif/ui';\nconsole.log(Separator);\n`,
     // Pure primitive (a themed Box) - NO headless. Hugs the display floor.
     // Bumped when four more state props joined core's selector map.
-    budget: 11600,
+    // Bumped when the group states joined core's selector map and Box marks a group.
+    budget: 11800,
   },
   {
     name: '@usemotif/ui - Skeleton only',
     code: `import { Skeleton } from '@usemotif/ui';\nconsole.log(Skeleton);\n`,
     // Pure primitive (Box + `keyframes` pulse) - NO headless. Display floor.
-    budget: 11800,
+    // Bumped when the group states joined core's selector map and Box marks a group.
+    budget: 12000,
   },
   {
     name: '@usemotif/ui - Pagination only',
@@ -548,14 +556,16 @@ const targets = [
     // `statRecipe` and `statDeltaRecipe`, so the recipe data (every trend's
     // colour) ships with it; that is about 70 B over the hand-inlined version.
     // Bumped when state bags took responsive values (nested at-rules).
-    budget: 12000,
+    // Bumped when the group states joined core's selector map and Box marks a group.
+    budget: 12100,
   },
   {
     name: '@usemotif/ui - EmptyState only',
     code: `import { EmptyState } from '@usemotif/ui';\nconsole.log(EmptyState);\n`,
     // Pure presentational (Box + Text, no headless) - display floor.
     // Bumped when state bags took responsive values (nested at-rules).
-    budget: 11900,
+    // Bumped when the group states joined core's selector map and Box marks a group.
+    budget: 12000,
   },
   {
     name: '@usemotif/ui - Timeline only',
@@ -566,21 +576,24 @@ const targets = [
     // paths. `var X = function (p) {}` is a few bytes wider than
     // `function X(p) {}`; nothing new is pulled in.
     // Bumped when Box's `layout` animation took `layoutTransition` timing.
-    budget: 11950,
+    // Bumped when the group states joined core's selector map and Box marks a group.
+    budget: 12200,
   },
   {
     name: '@usemotif/ui - AvatarGroup only',
     code: `import { AvatarGroup } from '@usemotif/ui';\nconsole.log(AvatarGroup);\n`,
     // Composes the Avatar primitive (no headless) - display floor.
     // Bumped when state bags took responsive values (nested at-rules).
-    budget: 12300,
+    // Bumped when the group states joined core's selector map and Box marks a group.
+    budget: 12500,
   },
   {
     name: '@usemotif/ui - Chip only',
     code: `import { Chip } from '@usemotif/ui';\nconsole.log(Chip);\n`,
     // Pure presentational (Box, no headless) - display floor.
     // Bumped when state bags took responsive values (nested at-rules).
-    budget: 11900,
+    // Bumped when the group states joined core's selector map and Box marks a group.
+    budget: 12000,
   },
   {
     name: '@usemotif/ui - Banner only',
@@ -590,7 +603,8 @@ const targets = [
     // can emit base props as a class instead of inline styles.
     // Bumped when Box's `layout` animation took `layoutTransition` timing.
     // Bumped when state bags took responsive values (nested at-rules).
-    budget: 12200,
+    // Bumped when the group states joined core's selector map and Box marks a group.
+    budget: 12300,
   },
   {
     name: '@usemotif/ui - FormField only',
@@ -599,7 +613,8 @@ const targets = [
     // Box's pseudo-element resolver moved into core so the compiler could
     // share it (a couple of bytes).
     // Bumped when state bags took responsive values (nested at-rules).
-    budget: 12000,
+    // Bumped when the group states joined core's selector map and Box marks a group.
+    budget: 12100,
   },
   {
     name: '@usemotif/ui - SegmentedControl only',
@@ -607,7 +622,8 @@ const targets = [
     // Self-contained single-select (Box + useState, no headless) - display floor.
     // Bumped by cascade-layer support: `Box` now reads the active layer and
     // can emit base props as a class instead of inline styles.
-    budget: 12100,
+    // Bumped when the group states joined core's selector map and Box marks a group.
+    budget: 12300,
   },
 ];
 
