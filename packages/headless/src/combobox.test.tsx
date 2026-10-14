@@ -581,3 +581,38 @@ describe('long lists render only the rows in view', () => {
     expect(onValueChange).toHaveBeenCalledWith(['v2']);
   });
 });
+
+describe('long lists - the highlighted row', () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it('stays rendered, in place, after the list scrolls away from it', () => {
+    vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockImplementation(
+      function (this: HTMLElement) {
+        return this.getAttribute('role') === 'listbox' ? 100 : 0;
+      },
+    );
+    const many = Array.from({ length: 1000 }, (_, i) => ({ value: `v${i}`, label: `Item ${i}` }));
+    render(
+      <Combobox.Root options={many}>
+        <Combobox.Input />
+        <Combobox.List itemHeight={20} />
+      </Combobox.Root>,
+    );
+    const input = container.querySelector<HTMLInputElement>('[role="combobox"]')!;
+    input.focus();
+    press(input, 'ArrowDown');
+    press(input, 'ArrowDown');
+    const list = document.querySelector<HTMLElement>('[role="listbox"]')!;
+    act(() => {
+      list.scrollTop = 10_000;
+      list.dispatchEvent(new Event('scroll'));
+    });
+    const active = document.getElementById(input.getAttribute('aria-activedescendant')!);
+    expect(active?.textContent).toBe('Item 1');
+    // Spacers either side keep every row at its offset: 1 row, the highlight, then rows 2 on.
+    const kids = Array.from(list.children) as HTMLElement[];
+    expect(kids[0]!.style.height).toBe('20px');
+    expect(kids[1]).toBe(active);
+    expect(kids[2]!.style.height).toBe(`${(492 - 2) * 20}px`);
+  });
+});
