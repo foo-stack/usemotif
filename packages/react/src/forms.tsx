@@ -222,23 +222,79 @@ function pickAriaProps(ctx: FieldContextValue | null): Record<string, string | u
 
 export interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'size'> {
   invalid?: boolean;
+  /** Shown inside the field before the text: an icon, a prefix, a button. */
+  startElement?: ReactNode;
+  /** Shown inside the field after the text. */
+  endElement?: ReactNode;
 }
+
+// With an adornment, the field is a flex row: the wrapper carries the
+// surface, so the adornments take the width they need with no measuring, and
+// shows the focus ring the borderless input inside it gives up.
+const ADORNED_INPUT: CSSProperties = {
+  flex: 1,
+  minWidth: 0,
+  paddingBlock: 8,
+  paddingInline: 0,
+  fontSize: 16,
+  border: 'none',
+  background: 'transparent',
+  color: 'inherit',
+  outline: 'none',
+};
+const ADORNMENT: CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  flexShrink: 0,
+  color: 'var(--colors-text-muted)',
+};
+const FOCUS_RING = { outlineStyle: 'auto' } as const;
+
+/**
+ * A themed text input. `startElement` and `endElement` sit inside the field,
+ * before and after the text.
+ *
+ * @example
+ * ```tsx
+ * <Input placeholder="Search" startElement={<Icon icon={Search} />} />
+ * ```
+ */
 export const Input = forwardRef(function Input(
-  { invalid, disabled, type = 'text', style, ...rest }: InputProps,
+  { invalid, disabled, type = 'text', style, startElement, endElement, ...rest }: InputProps,
   ref: Ref<HTMLInputElement>,
 ): ReactElement {
   const ctx = useFieldContext();
   const isInvalid = invalid ?? ctx?.invalid ?? false;
   const isDisabled = disabled ?? ctx?.disabled ?? false;
-  return (
+  const adorned = startElement !== undefined || endElement !== undefined;
+  const { paddingBlock: _block, fontSize: _size, ...surface } = inputStyle(isInvalid, isDisabled);
+  const input = (
     <input
       ref={ref}
       type={type}
-      style={{ ...inputStyle(isInvalid, isDisabled), ...style }}
+      style={
+        adorned
+          ? { ...ADORNED_INPUT, ...style }
+          : { ...inputStyle(isInvalid, isDisabled), ...style }
+      }
       {...pickAriaProps(ctx)}
       {...(isDisabled ? { disabled: true } : {})}
       {...rest}
     />
+  );
+  if (!adorned) return input;
+  return (
+    <Box
+      display="flex"
+      alignItems="center"
+      gap={8}
+      _focusWithin={FOCUS_RING}
+      style={{ boxSizing: 'border-box', ...surface }}
+    >
+      {startElement !== undefined && <span style={ADORNMENT}>{startElement}</span>}
+      {input}
+      {endElement !== undefined && <span style={ADORNMENT}>{endElement}</span>}
+    </Box>
   );
 });
 

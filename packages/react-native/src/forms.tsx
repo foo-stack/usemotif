@@ -11,9 +11,11 @@ import {
 } from 'react';
 import {
   TextInput as RNTextInput,
+  View,
   type KeyboardTypeOptions,
   type TextInputProps as RNTextInputProps,
   type TextStyle,
+  type ViewStyle,
 } from 'react-native';
 import { Box, type BoxProps } from './Box.js';
 import { useDirection } from './direction-context.js';
@@ -140,9 +142,31 @@ export interface InputProps extends Omit<RNTextInputProps, 'editable' | 'style'>
   disabled?: boolean;
   /** Style override merged onto the resolved input surface. */
   style?: TextStyle | readonly TextStyle[];
+  /** Shown inside the field before the text: an icon, a prefix, a button. */
+  startElement?: ReactNode;
+  /** Shown inside the field after the text. */
+  endElement?: ReactNode;
 }
+
+// Moved to the row wrapping an adorned input, which carries the surface.
+const SURFACE_KEYS = [
+  'paddingInline',
+  'borderWidth',
+  'borderStyle',
+  'borderColor',
+  'borderRadius',
+  'backgroundColor',
+  'opacity',
+  'direction',
+] as const;
+
+/** A bare string must sit in `<Text>` on native, or React Native throws. */
+function adornment(node: ReactNode): ReactNode {
+  return typeof node === 'string' || typeof node === 'number' ? <Text>{node}</Text> : node;
+}
+
 export const Input = forwardRef(function Input(
-  { invalid, disabled, style: userStyle, ...rest }: InputProps,
+  { invalid, disabled, style: userStyle, startElement, endElement, ...rest }: InputProps,
   ref: Ref<RNTextInput>,
 ): ReactElement {
   const ctx = useFieldContext();
@@ -173,7 +197,28 @@ export const Input = forwardRef(function Input(
       : Array.isArray(userStyle)
         ? [resolved as TextStyle, ...(userStyle as TextStyle[])]
         : [resolved as TextStyle, userStyle as TextStyle];
-  return <RNTextInput ref={ref} editable={!isDisabled} style={finalStyle} {...rest} />;
+  if (startElement === undefined && endElement === undefined) {
+    return <RNTextInput ref={ref} editable={!isDisabled} style={finalStyle} {...rest} />;
+  }
+  // With an adornment, the field is a row: the wrapper carries the surface,
+  // and the borderless input takes the width the adornments leave.
+  const surface: Record<string, unknown> = { flexDirection: 'row', alignItems: 'center', gap: 8 };
+  const field: Record<string, unknown> = { flex: 1 };
+  for (const [key, value] of Object.entries(resolved as Record<string, unknown>)) {
+    if ((SURFACE_KEYS as readonly string[]).includes(key)) surface[key] = value;
+    else field[key] = value;
+  }
+  const inputStyle: TextStyle[] =
+    userStyle === undefined
+      ? [field as TextStyle]
+      : [field as TextStyle, ...(Array.isArray(userStyle) ? userStyle : [userStyle as TextStyle])];
+  return (
+    <View style={surface as ViewStyle}>
+      {adornment(startElement)}
+      <RNTextInput ref={ref} editable={!isDisabled} style={inputStyle} {...rest} />
+      {adornment(endElement)}
+    </View>
+  );
 });
 
 export interface TextAreaProps extends Omit<InputProps, 'multiline' | 'numberOfLines'> {
