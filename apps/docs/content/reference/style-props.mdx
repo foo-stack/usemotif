@@ -3,7 +3,7 @@ title: Style props
 description: The full catalogue of style props every motif primitive accepts - CSS properties, pseudo-state bags, pseudo-element bags, and motion props.
 diataxis: reference
 covers: ['styleProps', 'STYLE_PROP_NAMES', 'PSEUDO_STATE_PROPS', 'PSEUDO_STATE_PROP_NAMES', 'PSEUDO_ELEMENT_PROPS', 'PSEUDO_ELEMENT_PROP_NAMES', 'MOTION_PROPS', 'MOTION_PROP_NAMES']
-last_verified: 2026-06-22
+last_verified: 2026-10-14
 ---
 
 import { ApiSignature, ArticleMeta, CodeBlock, Eyebrow } from '../../components/index.js';
@@ -33,6 +33,21 @@ styleProps['backgroundColor'];   // { property: 'background-color', category: 'c
 `styleProps` is a map from prop name to its definition (`StylePropDefinition`). The definition
 carries the CSS property it serialises to, the value category (`color`, `length`, `keyword`,
 ...), and whether the prop is responsive-eligible.
+
+### Gradients
+
+`backgroundImage` reads a theme's `gradients` scale, so a gradient defined once is a token like
+any other, and `$gradients.` paths autocomplete on that prop:
+
+<CodeBlock lang="tsx" code={`const theme = createTheme({
+  name: 'brand',
+  tokens: { gradients: { hero: 'linear-gradient(90deg, #2563eb, #7c3aed)' } },
+});
+
+<Box backgroundImage="$gradients.hero" p="$4" />`} />
+
+It is web-only by design: React Native views have no background image, so native accepts the prop
+for parity and draws nothing.
 
 ## Shorthand props
 
