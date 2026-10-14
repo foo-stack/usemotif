@@ -1,0 +1,100 @@
+---
+title: AvatarGroup
+description: A themed cluster of overlapping avatars with a +N overflow circle for the ones that do not fit.
+diataxis: reference
+covers: ['AvatarGroup', 'AvatarGroupProps', 'AvatarGroupItem']
+last_verified: 2026-10-14
+---
+
+import {
+  ApiSignature,
+  ArticleMeta,
+  Callout,
+  CodeBlock,
+  Eyebrow,
+  Lede,
+} from '../../../components/index.js';
+
+<Eyebrow>UI kit / Display</Eyebrow>
+
+# AvatarGroup
+
+<Lede>
+  AvatarGroup shows who is involved - a document's collaborators, a channel's members - as a row of
+  overlapping avatars, collapsing the rest into a `+N` count.
+</Lede>
+
+<ArticleMeta />
+
+## What it is
+
+A row of [Avatar](/components/media/avatar) primitives, each overlapping the one before by about
+a third of its width and ringed in the page surface colour so the edges read cleanly. The first
+`max` entries render as avatars; any beyond that become one muted circle showing `+N`, labelled
+"N more" for assistive tech.
+
+Each avatar shows the image at `src` when one is given, and initials from `name` otherwise.
+
+## Install
+
+<CodeBlock lang="bash" code={`yarn add @usemotif/ui`} />
+
+<CodeBlock lang="tsx" code={`import { AvatarGroup } from '@usemotif/ui';`} />
+
+## Usage
+
+<CodeBlock lang="tsx" code={`import { AvatarGroup } from '@usemotif/ui';
+
+<AvatarGroup
+  avatars={[
+    { name: 'Jane Doe', src: '/avatars/jane.jpg' },
+    { name: 'Sam Lee' },
+    { name: 'Ana Silva' },
+    { name: 'Kofi Mensah' },
+    { name: 'Lee Park' },
+  ]}
+  max={3}
+  size="sm"
+/>`} />
+
+## API
+
+<ApiSignature
+  name="AvatarGroup"
+  status="stable"
+  signature={`function AvatarGroup(props: AvatarGroupProps): JSX.Element`}
+  params={[
+    {
+      name: 'avatars',
+      type: 'ReadonlyArray<AvatarGroupItem>',
+      required: true,
+      description: 'The people to show, in order.',
+    },
+    {
+      name: 'max',
+      type: 'number',
+      default: '4',
+      description: 'Show at most this many avatars; the rest collapse into a `+N` circle.',
+    },
+    {
+      name: 'size',
+      type: "'xs' | 'sm' | 'md' | 'lg' | 'xl' | number",
+      default: "'md'",
+      description: 'Avatar size, passed to each `Avatar`. A number is pixels.',
+    },
+  ]}
+/>
+
+### AvatarGroupItem
+
+<CodeBlock
+  lang="ts"
+  code={`interface AvatarGroupItem {
+  name: string; // alt text for the image, and the source of the initials
+  src?: string; // image URL
+}`}
+/>
+
+<Callout variant="info" title="Related">
+  [Avatar](/components/media/avatar) - the primitive each entry renders.
+</Callout>

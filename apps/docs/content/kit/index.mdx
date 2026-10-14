@@ -1,0 +1,67 @@
+---
+title: UI kit
+description: '@usemotif/ui is the install-and-go component kit - themed components composed over the primitives, the headless behaviours, and @usemotif/recipes. Code-split per component.'
+diataxis: explanation
+covers: ['@usemotif/ui']
+last_verified: 2026-10-14
+---
+
+import { ArticleMeta, Callout, CodeBlock, Eyebrow, Lede } from '../../components/index.js';
+
+<Eyebrow>UI kit</Eyebrow>
+
+# UI kit
+
+<Lede>
+  Where [recipes](/recipes/component-recipes) give you styling data and the [headless](/headless)
+  components give you behaviour, `@usemotif/ui` gives you the finished components - already themed,
+  already interactive. Import one and render it; there is no `styled()` call to make first.
+</Lede>
+
+<ArticleMeta />
+
+## What it is
+
+A leaf package of ready components. Each one is assembled from three layers you can also use on
+their own:
+
+- **Primitives** from `usemotif` - `Box`, `Text`, `Avatar`, and the rest of the
+  [components](/components).
+- **Headless behaviours** from `@usemotif/headless` - focus, keyboard, and ARIA wiring for the
+  interactive components.
+- **Recipes** from `@usemotif/recipes` - the `styled()` configs for Card, Badge, Alert, Banner,
+  Chip, and Stat.
+
+Colours, spacing, and radii resolve from the active theme's tokens, so every kit component
+re-themes in light and dark with the rest of your app.
+
+## Install
+
+<CodeBlock lang="bash" code={`yarn add @usemotif/ui`} />
+
+`usemotif`, `@usemotif/headless`, and `react` are peer dependencies.
+
+<CodeBlock lang="tsx" code={`import { Card, Badge, Alert } from '@usemotif/ui';`} />
+
+<Callout variant="info" title="Pay only for what you import">
+  The kit is code-split per component. Importing `Card` pulls its primitives and recipe, not the
+  `@usemotif/headless` dependency an overlay component carries. A display-only app never bundles the
+  overlay layer.
+</Callout>
+
+<Callout variant="warning" title="Web only, for now">
+  The kit targets the web today. The package ships no `.native.tsx` variants, so its components are
+  not yet built for React Native. The primitives and headless behaviours it is made from are
+  cross-platform.
+</Callout>
+
+## The groups
+
+| Group                   | What is in it                                                                                                                 |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| [Display](/kit/display) | Alert, Banner, Badge, Card, Chip, EmptyState, Stat, Timeline, Skeleton, Spinner, AvatarGroup, FormField, Separator, Progress. |
+
+<Callout variant="info" title="Where to next">
+  [Display](/kit/display) - the presentational components, from status pills to loading
+  placeholders.
+</Callout>

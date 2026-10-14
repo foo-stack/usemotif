@@ -1,0 +1,82 @@
+---
+title: Spinner
+description: An indeterminate loading spinner - a themed ring with one accented edge, rotating continuously. Announced with role="status".
+diataxis: reference
+covers: ['Spinner', 'SpinnerProps']
+last_verified: 2026-10-14
+---
+
+import {
+  ApiSignature,
+  ArticleMeta,
+  Callout,
+  CodeBlock,
+  Eyebrow,
+  Lede,
+} from '../../../components/index.js';
+
+<Eyebrow>UI kit / Display</Eyebrow>
+
+# Spinner
+
+<Lede>
+  Spinner says "working on it" when you cannot say how long it will take. One prop sets its size;
+  its colours come from the theme.
+</Lede>
+
+<ArticleMeta />
+
+## What it is
+
+A round `Box` with a `border.muted` ring and an `action.primary` top edge, rotating on a
+`keyframes` animation. It renders with `role="status"` and `aria-label="Loading"`. The rotation
+runs through motif's reduced-motion guard, so it stops under `prefers-reduced-motion`.
+
+## Install
+
+<CodeBlock lang="bash" code={`yarn add @usemotif/ui`} />
+
+<CodeBlock lang="tsx" code={`import { Spinner } from '@usemotif/ui';`} />
+
+## Usage
+
+<CodeBlock lang="tsx" code={`import { Spinner } from '@usemotif/ui';
+
+<Spinner size={24} />`} />
+
+A more specific label, since the default is "Loading":
+
+<CodeBlock lang="tsx" code={`import { Spinner } from '@usemotif/ui';
+import { HStack, Text } from 'usemotif';
+
+<HStack gap="$space.2" alignItems="center">
+  <Spinner size={16} aria-label="Saving changes" />
+  <Text>Saving</Text>
+</HStack>`} />
+
+## API
+
+<ApiSignature
+  name="Spinner"
+  status="stable"
+  signature={`function Spinner(props: SpinnerProps): JSX.Element`}
+  params={[
+    {
+      name: 'size',
+      type: 'number',
+      default: '20',
+      description: 'Diameter in pixels.',
+    },
+    {
+      name: '...BoxProps',
+      type: "Omit<BoxProps, 'children'>",
+      description:
+        'Any other `Box` prop, spread last, so it can override the defaults, including `aria-label`.',
+    },
+  ]}
+/>
+
+<Callout variant="info" title="Related">
+  [Progress](/kit/display/progress) for a bar, determinate or not, and
+  [Skeleton](/kit/display/skeleton) for a placeholder in the shape of the content.
+</Callout>

@@ -1,0 +1,88 @@
+---
+title: Progress
+description: A themed progress bar over the headless Progress behaviour - determinate, or an indeterminate sweep when the value is null.
+diataxis: reference
+covers: ['Progress', 'ProgressProps']
+last_verified: 2026-10-14
+---
+
+import {
+  ApiSignature,
+  ArticleMeta,
+  Callout,
+  CodeBlock,
+  Eyebrow,
+  Lede,
+} from '../../../components/index.js';
+
+<Eyebrow>UI kit / Display</Eyebrow>
+
+# Progress
+
+<Lede>
+  Progress shows how far along a task is. Pass a number for a bar that fills to that point, or
+  `null` when the length of the task is unknown.
+</Lede>
+
+<ArticleMeta />
+
+## What it is
+
+The headless [Progress](/headless/numeric/progress) behaviour with a themed track and fill. The
+headless layer renders `role="progressbar"` with `aria-valuenow`; the kit paints an 8px rounded
+track in the `surface.muted` colour and a fill in `action.primary`.
+
+A numeric `value` fills the bar to `value / max` and eases to each new width. A `null` value
+switches to an indeterminate sweep, which becomes a static partial bar under
+`prefers-reduced-motion`.
+
+## Install
+
+<CodeBlock lang="bash" code={`yarn add @usemotif/ui`} />
+
+<CodeBlock lang="tsx" code={`import { Progress } from '@usemotif/ui';`} />
+
+## Usage
+
+<CodeBlock lang="tsx" code={`import { Progress } from '@usemotif/ui';
+
+<Progress value={70} aria-label="Uploading" />
+<Progress value={null} aria-label="Loading" />`} />
+
+Counting items instead of a percentage:
+
+<CodeBlock lang="tsx" code={`import { Progress } from '@usemotif/ui';
+
+<Progress value={filesDone} max={filesTotal} aria-label="Files uploaded" />`} />
+
+## API
+
+<ApiSignature
+  name="Progress"
+  status="stable"
+  signature={`function Progress(props: ProgressProps): JSX.Element`}
+  params={[
+    {
+      name: 'value',
+      type: 'number | null',
+      required: true,
+      description: 'Progress from 0 to `max`, or `null` for an indeterminate bar.',
+    },
+    {
+      name: 'max',
+      type: 'number',
+      default: '100',
+      description: 'The value that means complete.',
+    },
+    {
+      name: 'aria-label',
+      type: 'string',
+      description: 'Accessible name for the progress bar.',
+    },
+  ]}
+/>
+
+<Callout variant="info" title="Related">
+  [Progress (headless)](/headless/numeric/progress) - the unstyled behaviour, for a bar you theme
+  yourself. [Spinner](/kit/display/spinner) for a compact indeterminate indicator.
+</Callout>

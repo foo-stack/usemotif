@@ -1,0 +1,97 @@
+---
+title: Alert
+description: A themed message box - a soft intent-tinted surface with a title, body copy, and an optional icon. Announced with role="alert".
+diataxis: reference
+covers: ['Alert', 'AlertProps', 'AlertIntent']
+last_verified: 2026-10-14
+---
+
+import {
+  ApiSignature,
+  ArticleMeta,
+  Callout,
+  CodeBlock,
+  Eyebrow,
+  Lede,
+} from '../../../components/index.js';
+
+<Eyebrow>UI kit / Display</Eyebrow>
+
+# Alert
+
+<Lede>
+  Alert is an inline message box. Pick an `intent` and it tints the background, border, and text
+  from the theme's `status` tokens, so it reads correctly in light and dark.
+</Lede>
+
+<ArticleMeta />
+
+## What it is
+
+A `Box` with `role="alert"`, styled by the `alertRecipe` from `@usemotif/recipes`. It lays out an
+optional leading icon beside a column holding a bold `title` and the body copy. Both text lines
+take the intent's foreground colour, and so does the icon when it draws with `currentColor`.
+
+Alert sits inside the content it describes. For a page-level announcement that spans the full
+width and carries an action or a dismiss button, use [Banner](/kit/display/banner).
+
+## Install
+
+<CodeBlock lang="bash" code={`yarn add @usemotif/ui`} />
+
+<CodeBlock lang="tsx" code={`import { Alert } from '@usemotif/ui';`} />
+
+## Usage
+
+<CodeBlock lang="tsx" code={`import { Alert } from '@usemotif/ui';
+
+<Alert intent="danger" title="Payment failed">
+  Update your card and try again.
+</Alert>`} />
+
+With a leading icon. Pass any node; an SVG that draws with `currentColor` picks up the intent
+colour:
+
+<CodeBlock lang="tsx" code={`import { Alert } from '@usemotif/ui';
+
+<Alert intent="info" title="New billing page" icon={<InfoIcon />}>
+  Invoices now live under Settings.
+</Alert>`} />
+
+## API
+
+<ApiSignature
+  name="Alert"
+  status="stable"
+  signature={`function Alert(props: AlertProps): JSX.Element`}
+  params={[
+    {
+      name: 'intent',
+      type: "'neutral' | 'info' | 'success' | 'warning' | 'danger'",
+      default: "'neutral'",
+      description: 'Tone. Drives the tinted background, border, and text colour.',
+    },
+    {
+      name: 'title',
+      type: 'ReactNode',
+      description: 'Bold heading line. Omitted when not set.',
+    },
+    {
+      name: 'icon',
+      type: 'ReactNode',
+      description: 'Optional leading icon. Inherits the intent colour through `currentColor`.',
+    },
+    {
+      name: 'children',
+      type: 'ReactNode',
+      description: 'Body copy, rendered in a smaller size under the title.',
+    },
+  ]}
+/>
+
+`AlertIntent` is exported as the union of the five `intent` values.
+
+<Callout variant="info" title="Related">
+  [Component recipes](/recipes/component-recipes) - `alertRecipe`, the styling data Alert is built
+  on. [Banner](/kit/display/banner) for a full-width announcement.
+</Callout>

@@ -1,0 +1,110 @@
+---
+title: FormField
+description: A themed form-field wrapper - label, control, and a help or error line, with htmlFor and the aria attributes wired for you.
+diataxis: reference
+covers: ['FormField', 'FormFieldProps']
+last_verified: 2026-10-14
+---
+
+import {
+  ApiSignature,
+  ArticleMeta,
+  Callout,
+  CodeBlock,
+  Eyebrow,
+  Lede,
+} from '../../../components/index.js';
+
+<Eyebrow>UI kit / Display</Eyebrow>
+
+# FormField
+
+<Lede>
+  FormField wraps one control with its label and its help or error text, and wires the accessibility
+  attributes between them so you do not have to generate ids by hand.
+</Lede>
+
+<ArticleMeta />
+
+## What it is
+
+A column with a `<label>`, the control you pass as `children`, and a line of help or error text.
+FormField generates an id with `useId` and clones your control to add:
+
+- `id`, matched by the label's `htmlFor`
+- `aria-describedby`, pointing at the error line when there is one, or the help line otherwise
+- `aria-invalid`, when `error` is set
+- `aria-required`, when `required` is set
+
+When `error` is set it replaces the help line and renders in the theme's danger colour. A
+`required` field also shows a `*` after the label, hidden from assistive tech.
+
+`children` must be a single element that passes `id` and `aria-*` props through to the real input.
+
+## Install
+
+<CodeBlock lang="bash" code={`yarn add @usemotif/ui`} />
+
+<CodeBlock lang="tsx" code={`import { FormField } from '@usemotif/ui';`} />
+
+## Usage
+
+<CodeBlock lang="tsx" code={`import { FormField } from '@usemotif/ui';
+import { Input } from 'usemotif';
+
+<FormField label="Email" required help="We will never share it." error={errors.email}>
+  <Input type="email" />
+</FormField>`} />
+
+With a native element:
+
+<CodeBlock lang="tsx" code={`import { FormField } from '@usemotif/ui';
+
+<FormField label="Notes" help="Optional.">
+  <textarea rows={4} />
+</FormField>`} />
+
+## API
+
+<ApiSignature
+  name="FormField"
+  status="stable"
+  signature={`function FormField(props: FormFieldProps): JSX.Element`}
+  params={[
+    {
+      name: 'label',
+      type: 'ReactNode',
+      required: true,
+      description: 'The field label, wired to the control through `htmlFor` and `id`.',
+    },
+    {
+      name: 'children',
+      type: 'ReactElement',
+      required: true,
+      description:
+        'The single control element. Cloned to add `id`, `aria-describedby`, `aria-invalid`, and `aria-required`.',
+    },
+    {
+      name: 'help',
+      type: 'ReactNode',
+      description: 'Helper text under the control. Hidden while `error` is shown.',
+    },
+    {
+      name: 'error',
+      type: 'ReactNode',
+      description:
+        'Error message, in the danger colour. Sets `aria-invalid`. `undefined`, `null`, and `false` count as no error.',
+    },
+    {
+      name: 'required',
+      type: 'boolean',
+      default: 'false',
+      description: 'Adds a `*` to the label and `aria-required` to the control.',
+    },
+  ]}
+/>
+
+<Callout variant="info" title="Related">
+  [Field](/components/forms/field) - the primitive form-field wrapper, which also shares invalid,
+  disabled, and required state with its parts through context.
+</Callout>

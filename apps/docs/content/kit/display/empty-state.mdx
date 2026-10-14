@@ -1,0 +1,97 @@
+---
+title: EmptyState
+description: A centered zero-data placeholder - an optional icon, a title, supporting copy, and an action slot.
+diataxis: reference
+covers: ['EmptyState', 'EmptyStateProps']
+last_verified: 2026-10-14
+---
+
+import {
+  ApiSignature,
+  ArticleMeta,
+  Callout,
+  CodeBlock,
+  Eyebrow,
+  Lede,
+} from '../../../components/index.js';
+
+<Eyebrow>UI kit / Display</Eyebrow>
+
+# EmptyState
+
+<Lede>
+  EmptyState fills the space where content would be: an empty inbox, a search with no results, a
+  project with nothing in it yet. It says what is missing and offers the next step.
+</Lede>
+
+<ArticleMeta />
+
+## What it is
+
+A centered column composed from `Box` and `Text`. From top to bottom: an optional `icon` in the
+muted text colour, the `title`, an optional `description` in smaller muted text, and an optional
+`action` below them.
+
+## Install
+
+<CodeBlock lang="bash" code={`yarn add @usemotif/ui`} />
+
+<CodeBlock lang="tsx" code={`import { EmptyState } from '@usemotif/ui';`} />
+
+## Usage
+
+<CodeBlock lang="tsx" code={`import { EmptyState } from '@usemotif/ui';
+import { Button } from 'usemotif';
+
+<EmptyState
+  icon={<InboxIcon />}
+  title="No messages yet"
+  description="When someone writes to you, it will show up here."
+  action={<Button>Compose</Button>}
+/>`} />
+
+A search with no results:
+
+<CodeBlock lang="tsx" code={`import { EmptyState } from '@usemotif/ui';
+
+<EmptyState
+  title={'No results for "' + query + '"'}
+  description="Try a shorter search, or check the spelling."
+/>`} />
+
+## API
+
+<ApiSignature
+  name="EmptyState"
+  status="stable"
+  signature={`function EmptyState(props: EmptyStateProps): JSX.Element`}
+  params={[
+    {
+      name: 'title',
+      type: 'ReactNode',
+      required: true,
+      description: 'The headline.',
+    },
+    {
+      name: 'icon',
+      type: 'ReactNode',
+      description: 'Optional glyph or illustration above the title, in the muted text colour.',
+    },
+    {
+      name: 'description',
+      type: 'ReactNode',
+      description: 'Supporting copy under the title.',
+    },
+    {
+      name: 'action',
+      type: 'ReactNode',
+      description:
+        'Action area below the copy, for example a `Button` that resolves the empty state.',
+    },
+  ]}
+/>
+
+<Callout variant="info" title="Related">
+  [Skeleton](/kit/display/skeleton) for the loading state that comes before content, or before an
+  empty state.
+</Callout>
