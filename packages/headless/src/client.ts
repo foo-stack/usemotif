@@ -187,6 +187,8 @@ export type {
 export { ColorPicker, FileUpload, TreeView } from './specialized.js';
 export type {
   ColorPickerProps,
+  FileRejection,
+  FileRejectionReason,
   FileUploadProps,
   MultiTreeViewProps,
   TreeNode,

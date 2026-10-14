@@ -304,6 +304,8 @@ export type {
   DialogTitleProps,
   DialogTriggerProps,
   DrawerContentProps,
+  FileRejection,
+  FileRejectionReason,
   FileUploadProps,
   HoverCardContentProps,
   HoverCardRootProps,

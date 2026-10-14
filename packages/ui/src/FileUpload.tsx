@@ -1,6 +1,6 @@
 'use client';
 
-import { FileUpload as HeadlessFileUpload } from '@usemotif/headless';
+import { FileUpload as HeadlessFileUpload, type FileRejection } from '@usemotif/headless';
 import { useCallback, type CSSProperties, type ReactNode } from 'react';
 import { Box } from 'usemotif';
 
@@ -9,6 +9,12 @@ export interface FileUploadProps {
   readonly multiple?: boolean;
   readonly disabled?: boolean;
   readonly onFiles?: (files: File[]) => void;
+  /** Largest file accepted, in bytes. */
+  readonly maxSize?: number;
+  /** Most files taken from one pick or drop, with `multiple`. */
+  readonly maxFiles?: number;
+  /** Every refused file from a pick or drop, and why: `type`, `size`, or `count`. */
+  readonly onReject?: (rejections: FileRejection<File>[]) => void;
   /** Prompt shown inside the drop zone. */
   readonly label?: ReactNode;
 }

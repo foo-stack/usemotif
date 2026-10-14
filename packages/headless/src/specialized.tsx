@@ -24,6 +24,9 @@ import {
   type HSVColor,
 } from './_color.js';
 import { useControllableState } from './use-controllable-state.js';
+import { sortFiles, type FileFacts, type FileRejection } from './_file-rules.js';
+
+export type { FileRejection, FileRejectionReason } from './_file-rules.js';
 export { formatColor, parseColor } from './_color.js';
 export type { ColorFormat } from './_color.js';
 
@@ -508,33 +511,23 @@ function FormatToggle({
 
 // ─────────── FileUpload ───────────────────────────────────────────
 
-/**
- * Whether `file` satisfies an HTML `accept` string - the same grammar the
- * native file picker uses: a comma-separated list of MIME types
- * (`image/png`), MIME wildcards (`image/*`), or filename extensions
- * (`.pdf`). Matching any one token accepts the file.
- */
-function fileMatchesAccept(file: File, accept: string): boolean {
-  const tokens = accept
-    .split(',')
-    .map((t) => t.trim().toLowerCase())
-    .filter(Boolean);
-  if (tokens.length === 0) return true;
-  const type = file.type.toLowerCase();
-  const name = file.name.toLowerCase();
-  return tokens.some((token) => {
-    if (token === '*/*' || token === '*') return true;
-    if (token.startsWith('.')) return name.endsWith(token);
-    if (token.endsWith('/*')) return type.startsWith(token.slice(0, -1)); // `image/` prefix
-    return type === token;
-  });
+function fileFacts(file: File): FileFacts {
+  return { name: file.name, type: file.type, size: file.size };
 }
 
 export interface FileUploadProps {
   accept?: string;
   multiple?: boolean;
   disabled?: boolean;
+  /** Largest file accepted, in bytes. */
+  maxSize?: number;
+  /** Most files taken from one pick or drop, with `multiple`. Without it, one. */
+  maxFiles?: number;
+  /** Called with the files that pass every rule. */
   onFiles?: (files: File[]) => void;
+  /** Called with every refused file from a pick or drop, and why: `type`,
+   * `size`, or `count`. */
+  onReject?: (rejections: FileRejection<File>[]) => void;
   /** Render fn for the drop zone. Receives `{ isDragging,
    * openPicker }`. */
   children: (info: { isDragging: boolean; openPicker: () => void }) => ReactNode;
@@ -544,7 +537,10 @@ export function FileUpload({
   accept,
   multiple = false,
   disabled = false,
+  maxSize,
+  maxFiles,
   onFiles,
+  onReject,
   children,
   style,
 }: FileUploadProps): ReactElement {
@@ -560,19 +556,17 @@ export function FileUpload({
   const handleFiles = useCallback(
     (list: FileList | null): void => {
       if (list === null || list.length === 0) return;
-      // Enforce `accept` + `multiple` here so the drop path is gated the same
-      // way the picker's hidden <input> already gates the click path -
-      // otherwise a dropped `.exe` reaches `onFiles` despite accept="image/*",
-      // and `multiple={false}` delivers every dropped file.
-      let files = Array.from(list);
-      if (accept !== undefined && accept.trim() !== '') {
-        files = files.filter((f) => fileMatchesAccept(f, accept));
-      }
-      if (!multiple) files = files.slice(0, 1);
-      if (files.length === 0) return;
-      onFiles?.(files);
+      // The same rules for a drop as for a pick: the picker's hidden <input>
+      // only filters what the dialog offers, never what is dropped.
+      const { accepted, rejected } = sortFiles(Array.from(list), fileFacts, {
+        accept,
+        maxSize,
+        maxFiles: multiple ? maxFiles : 1,
+      });
+      if (rejected.length > 0) onReject?.(rejected);
+      if (accepted.length > 0) onFiles?.(accepted);
     },
-    [onFiles, accept, multiple],
+    [onFiles, onReject, accept, multiple, maxSize, maxFiles],
   );
 
   function onDragEnter(e: DragEvent<HTMLDivElement>): void {

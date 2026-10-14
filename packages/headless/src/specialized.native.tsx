@@ -28,6 +28,9 @@ import {
   type HSVColor,
 } from './_color.js';
 import { useControllableState } from './use-controllable-state.js';
+import { sortFiles, type FileFacts, type FileRejection } from './_file-rules.js';
+
+export type { FileRejection, FileRejectionReason } from './_file-rules.js';
 export { formatColor, parseColor } from './_color.js';
 export type { ColorFormat } from './_color.js';
 
@@ -666,6 +669,10 @@ interface DocumentPickerModule {
 const DOCUMENT_PICKER: DocumentPickerModule | null =
   tryRequire<DocumentPickerModule>('expo-document-picker');
 
+function assetFacts(asset: DocumentPickerAsset): FileFacts {
+  return { name: asset.name ?? '', type: asset.mimeType ?? '', size: asset.size };
+}
+
 /** True when `expo-document-picker` is present - exposed for tests / docs. */
 export const NATIVE_FILE_UPLOAD_HAS_PICKER: boolean = DOCUMENT_PICKER !== null;
 
@@ -683,6 +690,12 @@ export interface FileUploadProps {
    * support should branch on Platform.OS or accept `unknown[]`.
    */
   onFiles?: (files: ReadonlyArray<DocumentPickerAsset>) => void;
+  /** Largest file accepted, in bytes. A picker that reports no size passes. */
+  maxSize?: number;
+  /** Most files taken from one pick, with `multiple`. Without it, one. */
+  maxFiles?: number;
+  /** Called with every refused file from a pick, and why: `type`, `size`, or `count`. */
+  onReject?: (rejections: FileRejection<DocumentPickerAsset>[]) => void;
   /** Render-prop. Same shape as web - `{ isDragging, openPicker }`.
    * `isDragging` is always `false` on native (no drag-drop on
    * mobile); the prop stays for cross-platform parity. */
@@ -712,6 +725,9 @@ export function FileUpload({
   multiple = false,
   disabled = false,
   onFiles,
+  maxSize,
+  maxFiles,
+  onReject,
   children,
   style,
 }: FileUploadProps): ReactElement {
@@ -728,16 +744,20 @@ export function FileUpload({
     })
       .then((result) => {
         if (result.canceled) return;
-        const assets = result.assets ?? [];
-        if (assets.length === 0) return;
-        onFiles?.(assets);
+        const { accepted, rejected } = sortFiles(result.assets ?? [], assetFacts, {
+          accept,
+          maxSize,
+          maxFiles: multiple ? maxFiles : 1,
+        });
+        if (rejected.length > 0) onReject?.(rejected);
+        if (accepted.length > 0) onFiles?.(accepted);
       })
       .catch((err: unknown) => {
         // A picker failure (denied permission, picker already open on
         // Android, ...) would otherwise surface as an unhandled rejection.
         nativeStubWarn(`FileUpload picker failed: ${String(err)}`);
       });
-  }, [accept, disabled, multiple, onFiles]);
+  }, [accept, disabled, multiple, onFiles, maxSize, maxFiles, onReject]);
 
   return (
     <View style={style} accessibilityLabel="File upload">
