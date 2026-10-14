@@ -110,6 +110,17 @@ describe('analyzeStripSafety - runtime-owned props keep the wrapper', () => {
     expectBail(`<Box p={4} enterStyle={{ opacity: 0 }} />`, 'Box', 'blocked-prop:enterStyle');
   });
 
+  // The FLIP runs in the runtime Box; a stripped `<div layout>` would not animate.
+  it('bails on layout and layoutTransition', () => {
+    expectBail(`<Box p={4} layout />`, 'Box', 'blocked-prop:layout');
+    expectBail(`<Stack layout="position" />`, 'Stack', 'blocked-prop:layout');
+    expectBail(
+      `<Box layoutTransition={{ duration: '120ms' }} p={4} />`,
+      'Box',
+      'blocked-prop:layoutTransition',
+    );
+  });
+
   // _before/_after are extracted into ::before/::after rules, so a literal
   // bag no longer keeps the wrapper; a dynamic one makes the element
   // non-static, which does.
