@@ -1,5 +1,17 @@
 # @usemotif/react
 
+## 1.7.0
+
+### Minor Changes
+
+- d93f805: `useContainerInfo()` on web returns the measured widths of the enclosing `Container`s, `{ nearestWidth, named }`, in the same shape as React Native. A `Container` measures only while something below it calls the hook, through a `ResizeObserver` that stops when the last reader unmounts. `usemotif` exports `useContainerInfo` and `ContainerContextValue` from both its web and native entries.
+- ab3361a: `useThemeSetting` on web accepts a `storage` option, any object with synchronous `getItem`, `setItem` and `removeItem`, and persists the user's theme override there instead of `localStorage`. `storage: null` turns persistence off. The `SyncStorage` type is exported, with the same shape as the React Native one, so one store type-checks on both platforms.
+
+### Patch Changes
+
+- Updated dependencies [35cd26c]
+  - @usemotif/core@1.7.0
+
 ## 1.6.0
 
 ### Minor Changes

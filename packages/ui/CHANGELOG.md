@@ -1,5 +1,16 @@
 # @usemotif/ui
 
+## 1.7.0
+
+### Minor Changes
+
+- e4e0b4b: `Calendar` and `DatePicker` take `mode="range"` to pick a start and an end date, in the headless components on web and React Native and in the kit. The value is a `DateRange`, `{ start, end }`, with `end` `null` until the second pick; a second pick earlier than the first swaps the two. Every day in the range is selected for assistive technology, and `renderDay` receives `isRangeStart`, `isRangeEnd` and `isInRange`. A range `DatePicker` stays open after the first pick, closes after the second, and labels the range with both dates. The kit paints the ends as selected and tints the days between. `CalendarProps` and `DatePickerProps` keep their shape; `RangeCalendarProps`, `RangeDatePickerProps`, `DateRange` and `CalendarDayInfo` are new exports.
+- 381501c: `Menu.Sub`, `Menu.SubTrigger` and `Menu.SubContent` nest a menu inside a menu, and `ContextMenu` exposes the very same parts. On the web, ArrowRight, Enter or Space on a submenu trigger opens the submenu and focuses its first item; hovering or clicking opens it without moving focus; ArrowLeft or Escape closes only the submenu and returns focus to its trigger. Choosing an item at any depth closes the whole menu. On React Native a submenu expands inline within the menu sheet. `ContextMenu.Item` is now the same component as `Menu.Item`. The kit's Menu and ContextMenu gain themed `SubTrigger` (with a trailing chevron) and `SubContent`, and export `MenuSubTriggerPropsThemed`.
+
+### Patch Changes
+
+- @usemotif/recipes@1.7.0
+
 ## 1.6.0
 
 ### Patch Changes

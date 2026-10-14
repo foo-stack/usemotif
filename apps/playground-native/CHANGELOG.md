@@ -1,5 +1,14 @@
 # @motif-js/playground-native
 
+## 0.0.18
+
+### Patch Changes
+
+- Updated dependencies [35cd26c]
+- Updated dependencies [0e9d616]
+  - @usemotif/react-native@1.7.0
+  - @usemotif/tokens@1.7.0
+
 ## 0.0.17
 
 ### Patch Changes

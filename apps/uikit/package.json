@@ -1,6 +1,6 @@
 {
   "name": "@usemotif/uikit",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "private": true,
   "description": "Storybook showcase for every Motif primitive, headless component, and motion hook (web + native via react-native-web).",
   "type": "module",

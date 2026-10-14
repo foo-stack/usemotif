@@ -1,5 +1,11 @@
 # @usemotif/example-desktop-electron
 
+## 0.0.8
+
+### Patch Changes
+
+- @usemotif/example-desktop-web@0.0.8
+
 ## 0.0.7
 
 ### Patch Changes

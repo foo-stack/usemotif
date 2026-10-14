@@ -1,6 +1,6 @@
 {
   "name": "@usemotif/icons",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "description": "Cross-platform SVG icon primitive and bundled icon set for motif-js.",
   "homepage": "https://github.com/foo-stack/usemotif/tree/main/packages/icons#readme",
   "bugs": "https://github.com/foo-stack/usemotif/issues",
