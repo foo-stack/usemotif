@@ -2,8 +2,27 @@
 /** Native `toast.promise` and `maxVisible`, on the `react-native` jsdom mock. */
 import { act, type ReactNode } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type * as ReactNativeModule from '@usemotif/react-native';
 import { Toaster, useToast, type ToastItem } from './Toast.native.js';
+
+type DragEnd = (info: {
+  offset: { x: number; y: number };
+  velocity: { x: number; y: number };
+}) => void;
+const dragEnds: DragEnd[] = [];
+// Record the drag options each toast passes, so a swipe's release can be
+// replayed without a real gesture pipeline.
+vi.mock('@usemotif/react-native', async (importOriginal) => {
+  const actual = await importOriginal<typeof ReactNativeModule>();
+  return {
+    ...actual,
+    useDrag: (options: { onDragEnd?: DragEnd }) => {
+      if (options.onDragEnd !== undefined) dragEnds.push(options.onDragEnd);
+      return actual.useDrag(options as Parameters<typeof actual.useDrag>[0]);
+    },
+  };
+});
 
 let container: HTMLElement;
 let root: Root;
@@ -91,5 +110,30 @@ describe('native toast.promise', () => {
       api!.toast({ title: 'three' });
     });
     expect(titles()).toEqual(['two', 'three']);
+  });
+});
+
+describe('native swipe to dismiss', () => {
+  it('dismisses on a long or fast swipe and keeps the toast on a short slow one', () => {
+    render(
+      <Toaster>
+        <Api />
+      </Toaster>,
+    );
+    act(() => {
+      api!.toast({ title: 'Saved', duration: Infinity });
+    });
+    const release = (x: number, vx: number): void => {
+      act(() => dragEnds.at(-1)!({ offset: { x, y: 0 }, velocity: { x: vx, y: 0 } }));
+    };
+    release(40, 100);
+    expect(titles()).toEqual(['Saved']);
+    release(-120, 0);
+    expect(titles()).toEqual([]);
+    act(() => {
+      api!.toast({ title: 'Again', duration: Infinity });
+    });
+    release(20, 900);
+    expect(titles()).toEqual([]);
   });
 });
