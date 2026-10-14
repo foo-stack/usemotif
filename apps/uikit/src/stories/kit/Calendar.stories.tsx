@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { Calendar } from '@usemotif/ui';
 
 const SELECTED = new Date(2026, 0, 15);
+const RANGE = { start: new Date(2026, 0, 12), end: new Date(2026, 0, 16) };
 
 /** Calendar - the kit's themed month grid with keyboard navigation. */
 const meta = {
@@ -26,4 +27,9 @@ export const DisabledWeekends: Story = {
     weekStartsOn: 1,
     isDisabled: (date: Date) => date.getDay() === 0 || date.getDay() === 6,
   },
+};
+
+/** `mode="range"`: the ends paint as selected and the days between take a tint. */
+export const Range: Story = {
+  render: () => <Calendar mode="range" defaultValue={RANGE} />,
 };

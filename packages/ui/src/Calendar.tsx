@@ -2,12 +2,15 @@
 
 import {
   Calendar as HeadlessCalendar,
+  type CalendarDayInfo,
   type CalendarProps as HeadlessCalendarProps,
+  type RangeCalendarProps as HeadlessRangeCalendarProps,
 } from '@usemotif/headless';
 import { useMemo, type CSSProperties, type ReactNode } from 'react';
 import { Box } from 'usemotif';
 
 export type CalendarProps = HeadlessCalendarProps;
+export type RangeCalendarProps = HeadlessRangeCalendarProps;
 
 // The headless Calendar applies this `style` to its role="grid" container. Themed
 // via token CSS vars (hex fallbacks), like TimeInput - `style` here is raw
@@ -31,14 +34,11 @@ const DAY_HOVER = { bg: '$colors.surface.interactive' } as const;
  * uses `action.primary` (the cell is the headless `<div>`, not this Box, so the
  * selected paint is JS-driven from `info`, not the `_selected` pseudo).
  */
-export function renderThemedDay(info: {
-  date: Date;
-  isSelected: boolean;
-  isToday: boolean;
-  isOutsideMonth: boolean;
-  isDisabled: boolean;
-}): ReactNode {
-  const { date, isSelected, isToday, isOutsideMonth, isDisabled } = info;
+export function renderThemedDay(info: CalendarDayInfo): ReactNode {
+  const { date, isToday, isOutsideMonth, isDisabled } = info;
+  // Days between a range's ends take a soft tint; the ends paint as selected.
+  const isBetween = info.isInRange && !info.isRangeStart && !info.isRangeEnd;
+  const isSelected = info.isSelected && !isBetween;
   return (
     <Box
       display="flex"
@@ -50,17 +50,25 @@ export function renderThemedDay(info: {
       fontSize="$fontSizes.sm"
       borderWidth="$borderWidths.thin"
       borderColor={isToday && !isSelected ? '$colors.action.primary.bg' : 'transparent'}
-      bg={isSelected ? '$colors.action.primary.bg' : 'transparent'}
+      bg={
+        isSelected
+          ? '$colors.action.primary.bg'
+          : isBetween
+            ? '$colors.status.info.tint'
+            : 'transparent'
+      }
       color={
         isSelected
           ? '$colors.text.inverse'
-          : isDisabled || isOutsideMonth
-            ? '$colors.text.muted'
-            : '$colors.text.default'
+          : isBetween
+            ? '$colors.status.info.fg'
+            : isDisabled || isOutsideMonth
+              ? '$colors.text.muted'
+              : '$colors.text.default'
       }
       opacity={isDisabled ? 0.5 : 1}
       cursor={isDisabled ? 'not-allowed' : 'pointer'}
-      {...(isSelected || isDisabled ? {} : { _hover: DAY_HOVER })}
+      {...(isSelected || isBetween || isDisabled ? {} : { _hover: DAY_HOVER })}
     >
       {date.getDate()}
     </Box>
@@ -72,14 +80,16 @@ export function renderThemedDay(info: {
  * `role="grid"` with full keyboard nav (arrows day-by-day, PageUp/Down month,
  * Home/End week, Enter/Space select), locale-aware labels, controlled or
  * uncontrolled. The kit themes the grid surface and paints each day (selected,
- * today ring, outside-month + disabled muted) through `renderDay`; pass your own
- * `renderDay` to fully override the cell.
+ * today ring, outside-month + disabled muted, range ends solid and the days
+ * between tinted) through `renderDay`; pass your own `renderDay` to fully
+ * override the cell. `mode="range"` picks a start and an end date.
  *
  * ```tsx
  * <Calendar defaultValue={new Date()} onValueChange={setDate} />
+ * <Calendar mode="range" onValueChange={setRange} />
  * ```
  */
-export function Calendar({ style, renderDay, ...rest }: CalendarProps) {
+export function Calendar({ style, renderDay, ...rest }: CalendarProps | RangeCalendarProps) {
   const mergedStyle = useMemo<CSSProperties>(
     () => (style !== undefined ? { ...CALENDAR_GRID_STYLE, ...style } : CALENDAR_GRID_STYLE),
     [style],

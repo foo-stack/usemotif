@@ -1,10 +1,4 @@
-import {
-  cloneElement,
-  isValidElement,
-  useMemo,
-  type ReactElement,
-  type ReactNode,
-} from 'react';
+import { cloneElement, isValidElement, useMemo, type ReactElement, type ReactNode } from 'react';
 import { Modal, Pressable, TextInput, View, type ViewStyle } from 'react-native';
 import { addMonths, isSameDay, nextRange, rangeFlags, type DateRange } from './_date-math.js';
 
