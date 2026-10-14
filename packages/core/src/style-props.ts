@@ -545,6 +545,10 @@ export const PSEUDO_STATE_PROP_NAMES = [
   '_checked',
   '_selected',
   '_expanded',
+  '_invalid',
+  '_pressed',
+  '_focusWithin',
+  '_readOnly',
 ] as const;
 
 export type PseudoStatePropName = (typeof PSEUDO_STATE_PROP_NAMES)[number];
@@ -574,6 +578,13 @@ export function isPseudoStateProp(key: string): key is PseudoStatePropName {
  * `_expanded` covers the open state of a disclosure trigger - accordion /
  * collapsible / popover trigger (`[aria-expanded="true"]`), so the trigger can
  * recolour or rotate a chevron purely from its own ARIA state.
+ *
+ * `_invalid` reads `[aria-invalid="true"]` rather than `:invalid`, which
+ * matches an empty required field before the user has touched it. `_pressed`
+ * is a toggle button's `[aria-pressed="true"]`; a pointer press is `_active`.
+ * `_readOnly` reads the `readonly` attribute or `[aria-readonly="true"]`
+ * rather than `:read-only`, which matches every element that is not
+ * editable, a plain `div` included.
  */
 export const PSEUDO_SELECTOR: Readonly<Record<PseudoStatePropName, string>> = {
   _hover: ':hover',
@@ -583,6 +594,10 @@ export const PSEUDO_SELECTOR: Readonly<Record<PseudoStatePropName, string>> = {
   _checked: '&:checked, &[aria-checked="true"]',
   _selected: '&[aria-selected="true"]',
   _expanded: '&[aria-expanded="true"]',
+  _invalid: '&[aria-invalid="true"]',
+  _pressed: '&[aria-pressed="true"]',
+  _focusWithin: ':focus-within',
+  _readOnly: '&[readonly], &[aria-readonly="true"]',
 };
 
 /**
