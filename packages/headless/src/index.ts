@@ -312,6 +312,7 @@ export type {
   MenuRootProps,
   MenuTriggerProps,
   MultiSelectRootProps,
+  MultiTreeViewProps,
   NavigationMenuItem,
   NavigationMenuProps,
   PaginationProps,
@@ -347,6 +348,8 @@ export type {
   TooltipRootProps,
   TooltipTriggerProps,
   TreeNode,
+  TreeNodeInfo,
+  TreeViewBaseProps,
   TreeViewProps,
   UseControllableStateOptions,
 } from './client.js';

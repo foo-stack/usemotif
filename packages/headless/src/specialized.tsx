@@ -632,84 +632,185 @@ export interface TreeNode<T = unknown> {
   readonly label: ReactNode;
   readonly data?: T;
   readonly children?: ReadonlyArray<TreeNode<T>>;
+  /** A branch whose `children` are not loaded yet: expanding it calls
+   * `loadChildren`. */
+  readonly hasChildren?: boolean;
   readonly disabled?: boolean;
 }
 
-export interface TreeViewProps<T = unknown> {
+/** What `renderNode` is told about one node. */
+export interface TreeNodeInfo<T = unknown> {
+  node: TreeNode<T>;
+  depth: number;
+  isExpanded: boolean;
+  isSelected: boolean;
+  isFocused: boolean;
+  /** Its children are being loaded by `loadChildren`. */
+  isLoading: boolean;
+  toggle: () => void;
+  select: () => void;
+}
+
+/** Props both selection modes share. */
+export interface TreeViewBaseProps<T = unknown> {
   data: ReadonlyArray<TreeNode<T>>;
+  /** Initially-expanded ids. */
+  defaultExpanded?: ReadonlyArray<string>;
+  /**
+   * Loads the children of a node marked `hasChildren` the first time it is
+   * expanded; add them to `data` when they arrive. While the promise is
+   * pending the node reports `isLoading` and `aria-busy`. A rejection
+   * collapses the node so expanding it again retries.
+   */
+  loadChildren?: (node: TreeNode<T>) => void | Promise<void>;
+  /** Render fn for each node. */
+  renderNode: (info: TreeNodeInfo<T>) => ReactElement;
+  style?: CSSProperties;
+  'aria-label'?: string;
+}
+
+export interface TreeViewProps<T = unknown> extends TreeViewBaseProps<T> {
+  /** One selected node. The default. */
+  selectionMode?: 'single';
   /** Currently-selected node id. */
   value?: string;
   defaultValue?: string;
   onValueChange?: (next: string) => void;
-  /** Initially-expanded ids. */
-  defaultExpanded?: ReadonlyArray<string>;
-  /** Render fn for each node. */
-  renderNode: (info: {
-    node: TreeNode<T>;
-    depth: number;
-    isExpanded: boolean;
-    isSelected: boolean;
-    isFocused: boolean;
-    toggle: () => void;
-    select: () => void;
-  }) => ReactElement;
-  style?: CSSProperties;
-  'aria-label'?: string;
+}
+
+/** Several selected nodes: activating a node toggles it in or out. */
+export interface MultiTreeViewProps<T = unknown> extends TreeViewBaseProps<T> {
+  selectionMode: 'multiple';
+  value?: ReadonlyArray<string>;
+  defaultValue?: ReadonlyArray<string>;
+  onValueChange?: (next: ReadonlyArray<string>) => void;
 }
 
 interface FlatNode<T> {
   readonly node: TreeNode<T>;
   readonly depth: number;
-  readonly parentExpanded: boolean;
 }
 
 function flatten<T>(
   nodes: ReadonlyArray<TreeNode<T>>,
-  expanded: Set<string>,
+  expanded: ReadonlySet<string>,
   depth = 0,
-  parentExpanded = true,
 ): FlatNode<T>[] {
   const out: FlatNode<T>[] = [];
   for (const n of nodes) {
-    out.push({ node: n, depth, parentExpanded });
+    out.push({ node: n, depth });
     if (n.children !== undefined && expanded.has(n.id)) {
-      out.push(...flatten(n.children, expanded, depth + 1, parentExpanded));
+      out.push(...flatten(n.children, expanded, depth + 1));
     }
   }
   return out;
 }
 
-export function TreeView<T>(props: TreeViewProps<T>): ReactElement {
-  const {
-    data,
-    value: controlled,
-    defaultValue,
-    onValueChange,
-    defaultExpanded = [],
-    renderNode,
-    style,
-    ...aria
-  } = props;
+function isBranch(node: TreeNode<unknown>): boolean {
+  return node.children !== undefined || node.hasChildren === true;
+}
+
+const NO_IDS: ReadonlyArray<string> = [];
+
+/**
+ * An accessible tree: arrow keys move and expand, Enter or Space selects.
+ * Pass `selectionMode="multiple"` to select several nodes, and
+ * `loadChildren` to load branches on demand.
+ */
+export function TreeView<T>(props: TreeViewProps<T> | MultiTreeViewProps<T>): ReactElement {
+  return props.selectionMode === 'multiple' ? <MultiTree {...props} /> : <SingleTree {...props} />;
+}
+
+function SingleTree<T>(props: TreeViewProps<T>): ReactElement {
+  const { value, defaultValue, onValueChange, selectionMode: _mode, ...base } = props;
   // Prop-presence detection: a controlled tree cleared to `value={undefined}`
   // must stay controlled-and-empty, not fall back to stale internal state.
   const [selected, setSelected] = useControllableState({
-    value: controlled,
+    value,
     defaultValue,
     onChange: onValueChange,
     controlled: 'value' in props,
   });
+  return (
+    <TreeBody
+      {...base}
+      initialFocus={selected}
+      multiselectable={false}
+      isSelected={(id) => selected === id}
+      activate={setSelected}
+    />
+  );
+}
 
-  const [expanded, setExpanded] = useState<Set<string>>(new Set(defaultExpanded));
-  const toggle = useCallback((id: string) => {
-    setExpanded((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  }, []);
-  const [focusedId, setFocusedId] = useState<string | undefined>(selected);
+function MultiTree<T>(props: MultiTreeViewProps<T>): ReactElement {
+  const { value, defaultValue = NO_IDS, onValueChange, selectionMode: _mode, ...base } = props;
+  const [selected, setSelected] = useControllableState({
+    value,
+    defaultValue,
+    onChange: onValueChange,
+    controlled: 'value' in props,
+  });
+  const current = selected ?? NO_IDS;
+  return (
+    <TreeBody
+      {...base}
+      initialFocus={current[0]}
+      multiselectable
+      isSelected={(id) => current.includes(id)}
+      activate={(id) =>
+        setSelected(current.includes(id) ? current.filter((x) => x !== id) : [...current, id])
+      }
+    />
+  );
+}
 
+interface TreeBodyProps<T> extends TreeViewBaseProps<T> {
+  initialFocus: string | undefined;
+  multiselectable: boolean;
+  isSelected: (id: string) => boolean;
+  activate: (id: string) => void;
+}
+
+function TreeBody<T>({
+  data,
+  defaultExpanded = [],
+  loadChildren,
+  renderNode,
+  style,
+  initialFocus,
+  multiselectable,
+  isSelected,
+  activate,
+  ...aria
+}: TreeBodyProps<T>): ReactElement {
+  const [expanded, setExpanded] = useState<ReadonlySet<string>>(() => new Set(defaultExpanded));
+  const [loading, setLoading] = useState<ReadonlySet<string>>(() => new Set());
+  const setIn = (set: ReadonlySet<string>, id: string, on: boolean): ReadonlySet<string> => {
+    if (set.has(id) === on) return set;
+    const next = new Set(set);
+    if (on) next.add(id);
+    else next.delete(id);
+    return next;
+  };
+
+  const toggle = (node: TreeNode<T>): void => {
+    const opening = !expanded.has(node.id);
+    setExpanded((prev) => setIn(prev, node.id, opening));
+    if (!opening || node.children !== undefined || node.hasChildren !== true) return;
+    if (loadChildren === undefined || loading.has(node.id)) return;
+    setLoading((prev) => setIn(prev, node.id, true));
+    Promise.resolve()
+      .then(() => loadChildren(node))
+      .then(
+        () => setLoading((prev) => setIn(prev, node.id, false)),
+        () => {
+          setLoading((prev) => setIn(prev, node.id, false));
+          setExpanded((prev) => setIn(prev, node.id, false));
+        },
+      );
+  };
+
+  const [focusedId, setFocusedId] = useState<string | undefined>(initialFocus);
   const flat = useMemo(() => flatten(data, expanded), [data, expanded]);
   const focusedIndex = flat.findIndex((f) => f.node.id === focusedId);
 
@@ -746,15 +847,13 @@ export function TreeView<T>(props: TreeViewProps<T>): ReactElement {
       }
       case 'ArrowRight':
         e.preventDefault();
-        if (current.node.children !== undefined && !expanded.has(current.node.id)) {
-          toggle(current.node.id);
-        }
+        if (isBranch(current.node) && !expanded.has(current.node.id)) toggle(current.node);
         break;
       case 'ArrowLeft':
         e.preventDefault();
-        if (current.node.children !== undefined && expanded.has(current.node.id)) {
+        if (isBranch(current.node) && expanded.has(current.node.id)) {
           // Expanded parent → collapse it.
-          toggle(current.node.id);
+          toggle(current.node);
         } else {
           // Collapsed node or leaf → move focus to the parent (the nearest
           // preceding item at a shallower depth), per the APG tree pattern.
@@ -774,25 +873,34 @@ export function TreeView<T>(props: TreeViewProps<T>): ReactElement {
         // Don't select a disabled node - it advertises aria-disabled, so
         // firing selection would contradict what AT announces (native guards
         // this too).
-        if (current.node.disabled !== true) setSelected(current.node.id);
+        if (current.node.disabled !== true) activate(current.node.id);
         break;
     }
   }
 
   return (
-    <div ref={treeRef} role="tree" onKeyDown={onKeyDown} style={style} {...aria}>
+    <div
+      ref={treeRef}
+      role="tree"
+      aria-multiselectable={multiselectable || undefined}
+      onKeyDown={onKeyDown}
+      style={style}
+      {...aria}
+    >
       {flat.map(({ node, depth }) => {
         const isExpanded = expanded.has(node.id);
-        const isSelected = selected === node.id;
+        const selected = isSelected(node.id);
         const isFocused = focusedId === node.id;
+        const isLoading = loading.has(node.id);
         return (
           <div
             key={node.id}
             ref={isFocused ? focusedItemRef : undefined}
             role="treeitem"
             aria-level={depth + 1}
-            aria-expanded={node.children !== undefined ? isExpanded : undefined}
-            aria-selected={isSelected}
+            aria-expanded={isBranch(node) ? isExpanded : undefined}
+            aria-selected={selected}
+            aria-busy={isLoading || undefined}
             aria-disabled={node.disabled || undefined}
             tabIndex={node.id === tabbableId ? 0 : -1}
             onFocus={() => setFocusedId(node.id)}
@@ -801,11 +909,12 @@ export function TreeView<T>(props: TreeViewProps<T>): ReactElement {
               node,
               depth,
               isExpanded,
-              isSelected,
+              isSelected: selected,
               isFocused,
-              toggle: () => toggle(node.id),
+              isLoading,
+              toggle: () => toggle(node),
               select: () => {
-                if (node.disabled !== true) setSelected(node.id);
+                if (node.disabled !== true) activate(node.id);
               },
             })}
           </div>

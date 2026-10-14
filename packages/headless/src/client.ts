@@ -179,7 +179,15 @@ export type {
 } from './datetime.js';
 
 export { ColorPicker, FileUpload, TreeView } from './specialized.js';
-export type { ColorPickerProps, FileUploadProps, TreeNode, TreeViewProps } from './specialized.js';
+export type {
+  ColorPickerProps,
+  FileUploadProps,
+  MultiTreeViewProps,
+  TreeNode,
+  TreeNodeInfo,
+  TreeViewBaseProps,
+  TreeViewProps,
+} from './specialized.js';
 
 export { Breadcrumb, NavigationMenu, Pagination, Stepper, Toolbar } from './navigation.js';
 export type {

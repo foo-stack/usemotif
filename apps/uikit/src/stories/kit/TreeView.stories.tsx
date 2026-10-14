@@ -65,3 +65,20 @@ export const States: Story = {
     </Box>
   ),
 };
+
+const PICKED = ['card', 'readme'];
+
+/** `selectionMode="multiple"`: every picked row fills. */
+export const Multiple: Story = {
+  render: () => (
+    <Box maxWidth={320}>
+      <TreeView
+        data={FILES}
+        defaultExpanded={ALL_BRANCHES}
+        selectionMode="multiple"
+        defaultValue={PICKED}
+        aria-label="Files"
+      />
+    </Box>
+  ),
+};

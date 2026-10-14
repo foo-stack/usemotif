@@ -1,8 +1,8 @@
 ---
 title: TreeView
-description: A themed tree over the headless TreeView - the ARIA tree pattern with roving focus, arrow-key expand, collapse, and navigation, and single selection, controlled or uncontrolled.
+description: A themed tree over the headless TreeView - the ARIA tree pattern with roving focus, arrow-key expand, collapse, and navigation, and single or multiple selection, controlled or uncontrolled, with children loaded on demand.
 diataxis: reference
-covers: ['TreeView', 'TreeViewProps', 'TreeNode']
+covers: ['TreeView', 'TreeViewProps', 'TreeNode', 'MultiTreeViewProps']
 last_verified: 2026-10-14
 ---
 
@@ -36,8 +36,9 @@ collapses an open branch or moves to the parent; Enter or Space selects. A disab
 selected.
 
 The kit surface is a bordered, `lg`-radius box on `surface.raised`. Each row is indented 16px per
-level and shows a disclosure chevron when the node has children. Clicking a row selects it,
-and clicking its chevron also toggles the branch. The selected row fills with `action.primary` in
+level and shows a disclosure chevron when the node has children, loaded or not. Clicking a row
+selects it; clicking its chevron only toggles the branch. A branch whose children are loading
+shows muted "Loading" text. The selected row fills with `action.primary` in
 `text.inverse`, and a disabled row renders in `text.muted`.
 
 ## Install
@@ -75,7 +76,7 @@ Controlled selection:
 <ApiSignature
   name="TreeView"
   status="stable"
-  signature={`function TreeView<T>(props: TreeViewProps<T>): JSX.Element`}
+  signature={`function TreeView<T>(props: TreeViewProps<T> | MultiTreeViewProps<T>): JSX.Element`}
   params={[
     {
       name: 'data',
@@ -105,8 +106,19 @@ Controlled selection:
       description: 'Ids of the branches that start expanded.',
     },
     {
+      name: 'selectionMode',
+      type: "'single' | 'multiple'",
+      default: "'single'",
+      description: 'Select one node, or several; every selected row fills. In multiple mode `value`, `defaultValue` and `onValueChange` use `readonly string[]`, activating a node toggles it, and the tree carries `aria-multiselectable`.',
+    },
+    {
+      name: 'loadChildren',
+      type: '(node: TreeNode<T>) => void | Promise<void>',
+      description: 'Loads the children of a node marked `hasChildren` the first time it expands; add them to `data` when they arrive. While pending the node is `aria-busy` and `renderNode` gets `isLoading`. A rejected load collapses the node so expanding it again retries.',
+    },
+    {
       name: 'renderNode',
-      type: '(info: { node: TreeNode<T>; depth: number; isExpanded: boolean; isSelected: boolean; isFocused: boolean; toggle: () => void; select: () => void }) => ReactElement',
+      type: '(info: TreeNodeInfo<T>) => ReactElement',
       description: 'Replace the themed row. The headless `treeitem` wrapper, focus, and keyboard handling stay in place.',
     },
     {

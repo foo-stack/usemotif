@@ -67,7 +67,12 @@ export {
   type CommandPaletteProps,
   type Command,
 } from './CommandPalette.js';
-export { TreeView, type TreeViewProps, type TreeNode } from './TreeView.js';
+export {
+  TreeView,
+  type MultiTreeViewProps,
+  type TreeViewProps,
+  type TreeNode,
+} from './TreeView.js';
 export { Stat, type StatProps, type StatTrend } from './Stat.js';
 export { EmptyState, type EmptyStateProps } from './EmptyState.js';
 export {

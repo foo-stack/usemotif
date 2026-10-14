@@ -176,3 +176,62 @@ describe('Native TreeView - selection', () => {
     expect(onValueChange).toHaveBeenCalledWith('b');
   });
 });
+
+describe('Native TreeView - lazy children and multiple selection', () => {
+  function host(id: string): HTMLElement {
+    return container.querySelector<HTMLElement>(`[testID="${id}"]`)!;
+  }
+
+  it('loads a hasChildren node on first expand, flagging it as loading', async () => {
+    let resolve!: () => void;
+    const load = vi.fn(
+      () =>
+        new Promise<void>((r) => {
+          resolve = r;
+        }),
+    );
+    const loadingSeen: boolean[] = [];
+    const lazy = (loaded: boolean): ReadonlyArray<TreeNode> => [
+      {
+        id: 'docs',
+        label: 'docs',
+        hasChildren: true,
+        ...(loaded ? { children: [{ id: 'guide', label: 'guide' }] } : {}),
+      },
+    ];
+    const node = (info: Parameters<typeof renderNode>[0] & { isLoading: boolean }) => {
+      if (info.node.id === 'docs') loadingSeen.push(info.isLoading);
+      return renderNode(info);
+    };
+    render(<TreeView data={lazy(false)} loadChildren={load} renderNode={node} />);
+    await act(async () => {
+      host('docs').click();
+    });
+    expect(load).toHaveBeenCalledTimes(1);
+    expect(loadingSeen.at(-1)).toBe(true);
+    render(<TreeView data={lazy(true)} loadChildren={load} renderNode={node} />);
+    await act(async () => {
+      resolve();
+    });
+    expect(loadingSeen.at(-1)).toBe(false);
+    expect(host('guide')).not.toBeNull();
+  });
+
+  it('toggles membership in multiple mode', () => {
+    const onValueChange = vi.fn();
+    render(
+      <TreeView
+        selectionMode="multiple"
+        defaultValue={['README.md']}
+        onValueChange={onValueChange}
+        data={tree}
+        renderNode={renderNode}
+      />,
+    );
+    expect(host('README.md').getAttribute('data-selected')).toBe('true');
+    act(() => host('src').click());
+    expect(onValueChange).toHaveBeenLastCalledWith(['README.md', 'src']);
+    act(() => host('README.md').click());
+    expect(onValueChange).toHaveBeenLastCalledWith(['src']);
+  });
+});
