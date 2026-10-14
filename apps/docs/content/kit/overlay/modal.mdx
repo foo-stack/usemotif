@@ -3,7 +3,7 @@ title: Modal
 description: A themed, animated modal over the headless Dialog - focus trap, scrim, and Escape - that presents as a centered dialog on wide viewports and a bottom sheet on narrow ones.
 diataxis: reference
 covers: ['Modal', 'ModalContentProps']
-last_verified: 2026-10-14
+last_verified: 2026-10-15
 ---
 
 import {
@@ -119,6 +119,12 @@ The headless `Dialog.Root`.
       type: "'dialog' | 'alertdialog'",
       default: "'dialog'",
       description: 'The surface role. For a confirmation, use [AlertDialog](/kit/overlay/alert-dialog).',
+    },
+    {
+      name: 'modal',
+      type: 'boolean',
+      default: 'true',
+      description: '`false` leaves the page usable while open: no background `inert` or scroll lock, no `aria-modal`, a click-through layer around the surface, and no focus trap. Focus still moves in on open and back on close, and Escape and a press outside still close it. On React Native the dialog stays in RN\'s `Modal`, which blocks touches behind it; `false` only stops marking it modal to assistive tech.',
     },
     {
       name: 'children',
