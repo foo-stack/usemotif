@@ -51,9 +51,16 @@ const primitiveTokens = {
  * keeps the literal token shape, so `extendTheme` over a preset, and a
  * `MotifCustomTheme` augmented with one, see real `$`-paths.
  */
-function buildTheme<C extends TokenScale<string>>(name: string, semantic: { readonly colors: C }) {
+function buildTheme<C extends TokenScale<string>>(
+  name: string,
+  colorScheme: 'light' | 'dark',
+  semantic: { readonly colors: C },
+) {
   return {
     name,
+    colorScheme,
+    // The page background, so the mobile browser bar runs into the page.
+    themeColor: '$colors.surface.base',
     tokens: {
       // Primitive scales - shared.
       ...primitiveTokens,
@@ -66,7 +73,7 @@ function buildTheme<C extends TokenScale<string>>(name: string, semantic: { read
   } satisfies Theme;
 }
 
-export const lightTheme = buildTheme('light', {
+export const lightTheme = buildTheme('light', 'light', {
   colors: {
     // `interactive` is the hover / highlight fill for rows and triggers that
     // sit on a panel - menu items, listbox options, calendar days. It is a
@@ -115,7 +122,7 @@ export const lightTheme = buildTheme('light', {
   },
 });
 
-export const darkTheme = buildTheme('dark', {
+export const darkTheme = buildTheme('dark', 'dark', {
   colors: {
     // `interactive` - see the light theme. Here it must step *up* off the
     // `raised` panel rather than down, so it is a lighter grey than either
@@ -166,7 +173,7 @@ export const darkTheme = buildTheme('dark', {
  * from the shared palette, so it composes with the default presets and their
  * sub-themes.
  */
-export const highContrastLightTheme = buildTheme('high-contrast-light', {
+export const highContrastLightTheme = buildTheme('high-contrast-light', 'light', {
   colors: {
     surface: {
       base: '$colors.white',
@@ -208,7 +215,7 @@ export const highContrastLightTheme = buildTheme('high-contrast-light', {
  * controls carrying dark labels, held to the same 7:1 and 3:1 thresholds as
  * the light variant.
  */
-export const highContrastDarkTheme = buildTheme('high-contrast-dark', {
+export const highContrastDarkTheme = buildTheme('high-contrast-dark', 'dark', {
   colors: {
     surface: {
       base: '$colors.black',

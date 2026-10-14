@@ -4,9 +4,9 @@ import type { FontFace, ReducedMotionMode, Theme, ThemeRootStyles, TokenMap } fr
  * Construct a theme. A pass-through factory that preserves the literal
  * `tokens` shape, so a caller can derive `$`-reference types from it.
  *
- * `fonts`, `root`, and `reducedMotion` are optional web-only emission
- * hints picked up by `<ThemeProvider>` (see {@link Theme}). They have
- * no effect on native.
+ * `fonts`, `root`, `reducedMotion`, `colorScheme`, and `themeColor` are
+ * optional web-only hints picked up by `<ThemeProvider>` (see
+ * {@link Theme}). They have no effect on native.
  */
 // The `Omit` in the return type is load-bearing and looks removable.
 // `Theme` declares `tokens: TokenMap`, so intersecting it with
@@ -22,6 +22,8 @@ export function createTheme<T extends TokenMap>(def: {
   readonly fonts?: readonly FontFace[];
   readonly root?: ThemeRootStyles;
   readonly reducedMotion?: ReducedMotionMode;
+  readonly colorScheme?: 'light' | 'dark';
+  readonly themeColor?: string;
 }): Omit<Theme, 'tokens'> & { readonly tokens: T } {
   return def;
 }
@@ -50,8 +52,8 @@ export type MergeTokens<B, O> = {
 /**
  * Derive a theme from `base`, deep-merging `tokens` over the base tokens. The
  * result keeps both literal shapes, so `$`-paths from the base and the
- * overrides both reach the style props. `fonts`, `root`, and `reducedMotion`
- * replace the base's when given. Neither input is modified.
+ * overrides both reach the style props. `fonts`, `root`, `reducedMotion`,
+ * `colorScheme`, and `themeColor` replace the base's when given. Neither input is modified.
  *
  * @example
  * ```ts
@@ -73,6 +75,8 @@ export function extendTheme<
     readonly fonts?: readonly FontFace[];
     readonly root?: ThemeRootStyles;
     readonly reducedMotion?: ReducedMotionMode;
+    readonly colorScheme?: 'light' | 'dark';
+    readonly themeColor?: string;
   },
 ): Omit<Theme, 'tokens'> & { readonly tokens: MergeTokens<B, O> } {
   const { tokens, ...rest } = def;
