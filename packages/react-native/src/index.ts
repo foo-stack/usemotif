@@ -6,7 +6,7 @@
 
 export const PACKAGE_NAME = '@usemotif/react-native';
 
-export { configureBreakpoints, createTheme, getBreakpoints } from '@usemotif/core';
+export { configureBreakpoints, createTheme, extendTheme, getBreakpoints } from '@usemotif/core';
 export type {
   BreakpointName,
   MotifComponent,
