@@ -112,6 +112,7 @@ export type {
   ToastContent,
   ToastFn,
   ToastItem,
+  ToastPlacement,
   ToastPromiseMessages,
   ToasterProps,
 } from './Toast.js';
