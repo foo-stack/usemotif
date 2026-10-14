@@ -5,6 +5,8 @@ import {
   liftPseudoOverriddenBaseProps,
   resolveResponsiveStylesToVars,
   resolveStylesToVars,
+  buildPseudoCss,
+  resolvePseudoElementBag,
 } from '@usemotif/core';
 import { describe, expect, it } from 'vitest';
 import { extractWeb } from './extract-web.js';
@@ -463,5 +465,38 @@ describe('extractWeb - cssLayer (#319)', () => {
     expect(extractWeb(fakeStaticAnalysis(props), {})).toEqual(
       extractWeb(fakeStaticAnalysis(props)),
     );
+  });
+});
+
+describe('extractWeb - pseudo-element parity with the runtime', () => {
+  // The runtime Box builds these rules with resolvePseudoElementBag, keys them
+  // '::before' / '::after', and emits before after; the compiler must agree
+  // byte for byte so compiled and runtime elements share one class.
+  function analysis(bags: Record<string, Record<string, unknown>>): CallSiteAnalysis {
+    return {
+      ...fakeStaticAnalysis({}),
+      pseudoStateProps: Object.entries(bags).map(([name, style]) => ({
+        name,
+        pseudo: name === '_before' ? '::before' : '::after',
+        style,
+      })),
+    };
+  }
+
+  it('emits ::before and ::after with the runtime class and CSS, content defaulted', () => {
+    const before = { content: '"\\2022"', color: '$colors.text.muted', mr: 4 };
+    const after = { bg: '$colors.surface.muted' };
+    const rules = [
+      { pseudo: '::before', style: resolvePseudoElementBag(before) },
+      { pseudo: '::after', style: resolvePseudoElementBag(after) },
+    ];
+    const expectedClass = hashPseudoRules(rules);
+    // Attribute order is after-then-before here; the runtime order wins.
+    const actual = extractWeb(analysis({ _after: after, _before: before }));
+    expect(actual.className).toBe(expectedClass);
+    expect(actual.css).toBe(buildPseudoCss(expectedClass, rules));
+    expect(actual.css).toContain('::before');
+    expect(actual.css).toContain('content: ""');
+    expect(actual.consumedProps).toEqual(['_after', '_before']);
   });
 });

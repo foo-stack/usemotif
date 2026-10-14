@@ -1,5 +1,11 @@
 import * as t from '@babel/types';
-import { isMotionProp, isStyleProp, PSEUDO_SELECTOR, type MotionPropName } from '@usemotif/core';
+import {
+  isMotionProp,
+  isStyleProp,
+  PSEUDO_ELEMENT_SELECTOR,
+  PSEUDO_SELECTOR,
+  type MotionPropName,
+} from '@usemotif/core';
 import { evaluateLiteral, type ScopeLike } from './literal.js';
 import type { PrimitiveInfo } from './primitives.js';
 import type {
@@ -15,7 +21,12 @@ import type {
  * and runtime can never drift - every selector member is `&`-scoped and
  * `buildPseudoCss` replaces `&` with the generated class selector.
  */
-const PSEUDO_STATE_PROPS: Readonly<Record<string, string>> = PSEUDO_SELECTOR;
+const PSEUDO_STATE_PROPS: Readonly<Record<string, string>> = {
+  ...PSEUDO_SELECTOR,
+  // `_before` / `_after` ride the same path; their `::before` / `::after`
+  // selectors are the ones the runtime keys its rules by.
+  ...PSEUDO_ELEMENT_SELECTOR,
+};
 
 /**
  * Classify a JSX opening element's attributes for static extraction.

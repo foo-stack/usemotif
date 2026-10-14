@@ -136,7 +136,12 @@ export type {
   ScrollOffsetPair,
 } from './scroll-offset.js';
 
-export { resolveResponsiveStylesToVars, resolveStyles, resolveStylesToVars } from './style.js';
+export {
+  resolvePseudoElementBag,
+  resolveResponsiveStylesToVars,
+  resolveStyles,
+  resolveStylesToVars,
+} from './style.js';
 export type {
   AtRule,
   ResolveResponsiveOptions,

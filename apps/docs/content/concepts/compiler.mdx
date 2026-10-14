@@ -3,7 +3,7 @@ title: Compiler
 description: Motif's compiler is progressive - it statically extracts what it can and falls back to the runtime for everything else. The runtime works without a compiler at all; the compiler is purely an optimisation.
 diataxis: explanation
 covers: ['extractWeb', 'extractNative', 'analyzeStripSafety', 'evaluateStyledConfig']
-last_verified: 2026-06-22
+last_verified: 2026-10-14
 ---
 
 import { ArticleMeta, Callout, CodeBlock, Eyebrow, Lede } from '../../components/index.js';
@@ -65,6 +65,8 @@ For the bags the compiler can extract, the output depends on the build target.
 - One CSS rule per unique style bag, hashed into a class name.
 - Media-query wrappers for responsive slots.
 - `:hover` / `:focus` / `:active` / `:disabled` rules for the pseudo-state namespaces.
+- `::before` / `::after` rules for literal `_before` / `_after` bags, with the same default
+  `content` the runtime gives them, so an element using them can still become a plain tag.
 - A `<style>` block injected into the bundle entry, plus a hashed-class map the runtime reads
   to know which classes already exist.
 
