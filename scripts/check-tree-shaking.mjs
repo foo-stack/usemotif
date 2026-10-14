@@ -53,7 +53,8 @@ const targets = [
     code: `import { Box } from '@usemotif/react';\nconsole.log(Box);\n`,
     // Bumped by cascade-layer support: `Box` now reads the active layer and
     // can emit base props as a class instead of inline styles.
-    budget: 11500, // gzip bytes
+    // Bumped when state bags took responsive values (nested at-rules).
+    budget: 11600, // gzip bytes
   },
   {
     name: '@usemotif/react - Button only',
@@ -63,7 +64,8 @@ const targets = [
     // every package inherits through `resolveToken` / `tokenRefToCssVar`.
     // Bumped by cascade-layer support: `Box` now reads the active layer and
     // can emit base props as a class instead of inline styles.
-    budget: 12400,
+    // Bumped when state bags took responsive values (nested at-rules).
+    budget: 12500,
   },
   {
     name: '@usemotif/react-native - Box only',
@@ -139,7 +141,8 @@ const targets = [
     // Bumped by cascade-layer support: `Box` now reads the active layer and
     // can emit base props as a class instead of inline styles.
     // Bumped by the `gradients` scale joining core's known scale names.
-    budget: 6400,
+    // Bumped when state bags took responsive values (nested at-rules).
+    budget: 6600,
   },
   {
     name: '@usemotif/ui - Card only',
@@ -153,7 +156,8 @@ const targets = [
     // paths. `var X = function (p) {}` is a few bytes wider than
     // `function X(p) {}`; nothing new is pulled in.
     // Bumped when Box's `layout` animation took `layoutTransition` timing.
-    budget: 12350,
+    // Bumped when state bags took responsive values (nested at-rules).
+    budget: 12450,
   },
   {
     name: '@usemotif/ui - Modal only',
@@ -224,7 +228,8 @@ const targets = [
     code: `import { Radio } from '@usemotif/ui';\nconsole.log(Radio);\n`,
     // Radio + RadioGroup are pure primitives (a `_checked` <Box as="input"> plus
     // a small name-sharing context) - no headless, so they hug the same floor.
-    budget: 11800,
+    // Bumped when state bags took responsive values (nested at-rules).
+    budget: 11900,
   },
   {
     name: '@usemotif/ui - Popover only',
@@ -542,13 +547,15 @@ const targets = [
     // NOT pull any `@usemotif/headless` behaviour. Stat takes its styling from
     // `statRecipe` and `statDeltaRecipe`, so the recipe data (every trend's
     // colour) ships with it; that is about 70 B over the hand-inlined version.
-    budget: 11900,
+    // Bumped when state bags took responsive values (nested at-rules).
+    budget: 12000,
   },
   {
     name: '@usemotif/ui - EmptyState only',
     code: `import { EmptyState } from '@usemotif/ui';\nconsole.log(EmptyState);\n`,
     // Pure presentational (Box + Text, no headless) - display floor.
-    budget: 11800,
+    // Bumped when state bags took responsive values (nested at-rules).
+    budget: 11900,
   },
   {
     name: '@usemotif/ui - Timeline only',
@@ -565,13 +572,15 @@ const targets = [
     name: '@usemotif/ui - AvatarGroup only',
     code: `import { AvatarGroup } from '@usemotif/ui';\nconsole.log(AvatarGroup);\n`,
     // Composes the Avatar primitive (no headless) - display floor.
-    budget: 12200,
+    // Bumped when state bags took responsive values (nested at-rules).
+    budget: 12300,
   },
   {
     name: '@usemotif/ui - Chip only',
     code: `import { Chip } from '@usemotif/ui';\nconsole.log(Chip);\n`,
     // Pure presentational (Box, no headless) - display floor.
-    budget: 11800,
+    // Bumped when state bags took responsive values (nested at-rules).
+    budget: 11900,
   },
   {
     name: '@usemotif/ui - Banner only',
@@ -580,7 +589,8 @@ const targets = [
     // Bumped by cascade-layer support: `Box` now reads the active layer and
     // can emit base props as a class instead of inline styles.
     // Bumped when Box's `layout` animation took `layoutTransition` timing.
-    budget: 12100,
+    // Bumped when state bags took responsive values (nested at-rules).
+    budget: 12200,
   },
   {
     name: '@usemotif/ui - FormField only',
@@ -588,7 +598,8 @@ const targets = [
     // Box + Text + a cloneElement, no headless - display floor. Nudged when
     // Box's pseudo-element resolver moved into core so the compiler could
     // share it (a couple of bytes).
-    budget: 11900,
+    // Bumped when state bags took responsive values (nested at-rules).
+    budget: 12000,
   },
   {
     name: '@usemotif/ui - SegmentedControl only',

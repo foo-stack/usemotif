@@ -112,6 +112,21 @@ the `readonly` attribute rather than `:read-only`, which matches every element t
 editable. `_pressed` is a toggle's on state; a pointer held down is `_active`. On native, Box
 ignores these four, as it does `_checked`, `_selected` and `_expanded`.
 
+### Responsive values inside a state
+
+A value inside a state bag can be responsive, in any of the three syntaxes. On the web the
+breakpoint or container query nests around the state selector:
+
+<CodeBlock lang="tsx" code={`<Box
+  bg="$colors.surface.raised"
+  _hover={{ bg: { base: '$colors.surface.muted', md: '$colors.surface.interactive' } }}
+/>
+// .m-x:hover { background-color: var(--colors-surface-muted); }
+// @media (min-width: 768px) { .m-x:hover { background-color: var(--colors-surface-interactive); } }`} />
+
+The compiler extracts these the same way, to the same class. On React Native, `Pressable` resolves
+a state bag at the current viewport and container width, as it does its other props.
+
 ## Pseudo-element props
 
 Style bags applied to generated content. Two pseudo-elements are exposed.
