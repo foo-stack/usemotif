@@ -107,6 +107,12 @@ const id = toast({
       description: 'Most toasts shown at once. Past it the oldest are dropped.',
     },
     {
+      name: 'swipeToDismiss',
+      type: 'boolean',
+      default: 'true',
+      description: 'Let a sideways swipe or drag dismiss a toast. A short, slow drag springs back.',
+    },
+    {
       name: 'exitDurationMs',
       type: 'number',
       default: '0',
