@@ -219,3 +219,32 @@ export type {
   VariantContext,
   VariantProps,
 } from '@usemotif/react-native';
+
+export {
+  Direction,
+  DirectionContext,
+  getMotionDriver,
+  PresenceContext,
+  registerMotionDriver,
+  registerVirtualListImpl,
+  SVG_PRIMITIVES,
+  useBreakpointWidths,
+  useDirection,
+  usePresence,
+  useThemeSetting,
+} from '@usemotif/react-native';
+export type {
+  DirectionProps,
+  MotionPhase,
+  MotionValueWidenedProp,
+  MotionValueWideningOf,
+  PresenceContextValue,
+  ResolvedTheme,
+  SvgPrimitives,
+  SyncStorage,
+  ThemeContextValue,
+  ThemeMode,
+  UseThemeSettingOptions,
+  UseThemeSettingResult,
+  VirtualListImpl,
+} from '@usemotif/react-native';
