@@ -79,12 +79,13 @@ See [`Direction`](/reference/direction) for setting the writing direction of a s
 
 ## Pseudo-state props
 
-Style bags applied when a pseudo-class is true. Four states are exposed.
+Style bags applied when a pseudo-class or ARIA state is true. Eleven states are exposed.
 
 <CodeBlock lang="ts" code={`import { PSEUDO_STATE_PROP_NAMES } from '@usemotif/core';
 
 PSEUDO_STATE_PROP_NAMES;
-// ['_hover', '_focus', '_active', '_disabled', '_checked', '_selected', '_expanded'] as const`} />
+// ['_hover', '_focus', '_active', '_disabled', '_checked', '_selected', '_expanded',
+//  '_invalid', '_pressed', '_focusWithin', '_readOnly'] as const`} />
 
 | Prop | Pseudo |
 | --- | --- |
@@ -95,11 +96,21 @@ PSEUDO_STATE_PROP_NAMES;
 | `_checked` | `:checked`, `[aria-checked="true"]` (checkbox / switch / radio) |
 | `_selected` | `[aria-selected="true"]` (active tab / listbox option) |
 | `_expanded` | `[aria-expanded="true"]` (open accordion / collapsible / popover trigger) |
+| `_invalid` | `[aria-invalid="true"]` (a field that failed validation) |
+| `_pressed` | `[aria-pressed="true"]` (a toggle button that is on) |
+| `_focusWithin` | `:focus-within` (focus is on the element or inside it) |
+| `_readOnly` | `[readonly]`, `[aria-readonly="true"]` |
 
 On web, the runtime emits one CSS rule per unique pseudo-state bag, hashed into a class. On
 native, the bags drive `Pressable`'s state callbacks. `_checked` / `_selected` / `_expanded` cover
 the interactive ARIA states form and composite-widget elements expose - so a styled toggle, tab, or
 disclosure trigger can react to its own checked / selected / open state in pure CSS, with no JS.
+
+Two of the newer states read attributes on purpose. `_invalid` is `[aria-invalid]` rather than
+`:invalid`, which matches an empty required field before anyone has typed in it, and `_readOnly` is
+the `readonly` attribute rather than `:read-only`, which matches every element that is not
+editable. `_pressed` is a toggle's on state; a pointer held down is `_active`. On native, Box
+ignores these four, as it does `_checked`, `_selected` and `_expanded`.
 
 ## Pseudo-element props
 

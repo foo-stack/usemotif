@@ -352,6 +352,25 @@ describe('motif babel plugin - binding resolution', () => {
     expect(css).toMatch(/\[aria-expanded="true"\]\s*\{[^}]*background-color:\s*olive/);
   });
 
+  it('extracts _invalid, _pressed, _focusWithin and _readOnly, and strips the Box', () => {
+    const { code, css } = transform(`
+      import { Box } from '@usemotif/react';
+      const X = () => (
+        <Box
+          _invalid={{ borderColor: 'red' }}
+          _pressed={{ backgroundColor: 'navy' }}
+          _focusWithin={{ outlineColor: 'blue' }}
+          _readOnly={{ opacity: 0.6 }}
+        />
+      );
+    `);
+    expect(code).toMatch(/<div className=/);
+    expect(css).toMatch(/\[aria-invalid="true"\]\s*\{[^}]*border-color:\s*red/);
+    expect(css).toMatch(/\[aria-pressed="true"\]\s*\{[^}]*background-color:\s*navy/);
+    expect(css).toMatch(/:focus-within\s*\{[^}]*outline-color:\s*blue/);
+    expect(css).toMatch(/\[readonly\][^{]*\{[^}]*opacity:\s*0\.6/);
+  });
+
   it('keeps a static prop conflicting with a dynamic prop on the JSX (no precedence inversion)', () => {
     const { code } = transform(`
       import { Box } from '@usemotif/react';

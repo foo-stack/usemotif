@@ -2,6 +2,7 @@ import {
   type MotifComponent,
   PSEUDO_ELEMENT_SELECTOR,
   PSEUDO_SELECTOR,
+  PSEUDO_STATE_PROP_NAMES,
   STYLE_PROP_NAMES,
   buildAnimationCss,
   buildAnimationShorthand,
@@ -19,6 +20,7 @@ import {
   type MotionValueWideningOf,
   type PseudoElementStyleBag,
   type PseudoElementStyleProps,
+  type PseudoStatePropName,
   type StateStyleBag,
   type StateStyleProps,
   type StyleProps,
@@ -244,6 +246,10 @@ export const Box: MotifComponent<BoxProps, ReactElement | null> = function (prop
     _checked,
     _selected,
     _expanded,
+    _invalid,
+    _pressed,
+    _focusWithin,
+    _readOnly,
     _before,
     _after,
     enterStyle,
@@ -278,6 +284,10 @@ export const Box: MotifComponent<BoxProps, ReactElement | null> = function (prop
     _checked !== undefined ||
     _selected !== undefined ||
     _expanded !== undefined ||
+    _invalid !== undefined ||
+    _pressed !== undefined ||
+    _focusWithin !== undefined ||
+    _readOnly !== undefined ||
     _before !== undefined ||
     _after !== undefined;
   const hasMotion =
@@ -343,13 +353,19 @@ export const Box: MotifComponent<BoxProps, ReactElement | null> = function (prop
   const selectorRules =
     hasPseudo || exitStyle !== undefined
       ? buildSelectorRules(
-          _hover,
-          _focus,
-          _active,
-          _disabled,
-          _checked,
-          _selected,
-          _expanded,
+          {
+            _hover,
+            _focus,
+            _active,
+            _disabled,
+            _checked,
+            _selected,
+            _expanded,
+            _invalid,
+            _pressed,
+            _focusWithin,
+            _readOnly,
+          },
           _before,
           _after,
           exitStyle,
@@ -540,59 +556,21 @@ function BoxWithDrag(props: BoxProps) {
 }
 
 function buildSelectorRules(
-  hover: StateStyleBag | undefined,
-  focus: StateStyleBag | undefined,
-  active: StateStyleBag | undefined,
-  disabled: StateStyleBag | undefined,
-  checked: StateStyleBag | undefined,
-  selected: StateStyleBag | undefined,
-  expanded: StateStyleBag | undefined,
+  states: { readonly [K in PseudoStatePropName]: StateStyleBag | undefined },
   before: PseudoElementStyleBag | undefined,
   after: PseudoElementStyleBag | undefined,
   exit: ExitStyleBag | undefined,
 ): PseudoRule[] {
   const rules: PseudoRule[] = [];
-  if (hover !== undefined) {
-    rules.push({
-      pseudo: PSEUDO_SELECTOR._hover,
-      style: resolveStylesToVars(hover as Record<string, unknown>).style,
-    });
-  }
-  if (focus !== undefined) {
-    rules.push({
-      pseudo: PSEUDO_SELECTOR._focus,
-      style: resolveStylesToVars(focus as Record<string, unknown>).style,
-    });
-  }
-  if (active !== undefined) {
-    rules.push({
-      pseudo: PSEUDO_SELECTOR._active,
-      style: resolveStylesToVars(active as Record<string, unknown>).style,
-    });
-  }
-  if (disabled !== undefined) {
-    rules.push({
-      pseudo: PSEUDO_SELECTOR._disabled,
-      style: resolveStylesToVars(disabled as Record<string, unknown>).style,
-    });
-  }
-  if (checked !== undefined) {
-    rules.push({
-      pseudo: PSEUDO_SELECTOR._checked,
-      style: resolveStylesToVars(checked as Record<string, unknown>).style,
-    });
-  }
-  if (selected !== undefined) {
-    rules.push({
-      pseudo: PSEUDO_SELECTOR._selected,
-      style: resolveStylesToVars(selected as Record<string, unknown>).style,
-    });
-  }
-  if (expanded !== undefined) {
-    rules.push({
-      pseudo: PSEUDO_SELECTOR._expanded,
-      style: resolveStylesToVars(expanded as Record<string, unknown>).style,
-    });
+  // The name list's order is the emit order the compiler's PSEUDO_ORDER mirrors.
+  for (const name of PSEUDO_STATE_PROP_NAMES) {
+    const bag = states[name];
+    if (bag !== undefined) {
+      rules.push({
+        pseudo: PSEUDO_SELECTOR[name],
+        style: resolveStylesToVars(bag as Record<string, unknown>).style,
+      });
+    }
   }
   if (before !== undefined) {
     rules.push({
