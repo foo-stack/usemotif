@@ -161,6 +161,12 @@ interface GestureHandlerModule {
 
 let cachedGestureHandler: GestureHandlerModule | null | undefined;
 
+/** Test-only: stand in for the two peers, which no test runtime can load. */
+export function _setPeersForTesting(reanimated: unknown, gestureHandler: unknown): void {
+  cachedModule = reanimated as ReanimatedModule | null;
+  cachedGestureHandler = gestureHandler as GestureHandlerModule | null;
+}
+
 function loadGestureHandler(): GestureHandlerModule | null {
   if (cachedGestureHandler !== undefined) return cachedGestureHandler;
   try {
@@ -743,13 +749,21 @@ export const reanimatedDriver: MotionDriver = {
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [supported]);
 
-    if (!supported || gesture === null || gh?.GestureDetector === undefined) {
+    // One component per gesture: a new component type on every render would
+    // remount the dragged subtree when `isDragging` flips at gesture start,
+    // detaching the gesture it is in the middle of.
+    const GestureDetector = gh?.GestureDetector;
+    const Wrapper = useMemo<ComponentType<{ children: ReactNode }> | null>(
+      () =>
+        gesture === null || GestureDetector === undefined
+          ? null
+          : ({ children }) => createElement(GestureDetector, { gesture }, children),
+      [gesture, GestureDetector],
+    );
+
+    if (!supported || Wrapper === null) {
       return null;
     }
-
-    const GestureDetector = gh.GestureDetector;
-    const Wrapper: ComponentType<{ children: ReactNode }> = ({ children }) =>
-      createElement(GestureDetector, { gesture }, children);
 
     return {
       dragProps: {},
