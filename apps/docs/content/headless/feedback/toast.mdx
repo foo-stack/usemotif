@@ -2,8 +2,8 @@
 title: Toast
 description: Transient notifications announced through an aria-live region. Mount a Toaster once, push messages with useToast.
 diataxis: reference
-covers: ['Toast', 'Toaster', 'ToasterProps', 'ToastItem', 'useToast']
-last_verified: 2026-05-15
+covers: ['Toast', 'Toaster', 'ToasterProps', 'ToastItem', 'useToast', 'ToastFn', 'ToastContent', 'ToastPromiseMessages']
+last_verified: 2026-10-14
 ---
 
 import {
@@ -85,6 +85,12 @@ function SaveButton() {
       description: 'Default auto-dismiss time in milliseconds for new toasts.',
     },
     {
+      name: 'maxVisible',
+      type: 'number',
+      default: 'Infinity (4 on React Native)',
+      description: 'Most toasts shown at once. Past it the oldest are dropped.',
+    },
+    {
       name: 'style',
       type: 'CSSProperties',
       description: 'Inline style for the default container - ignored when `renderToasts` is set.',
@@ -97,11 +103,28 @@ function SaveButton() {
 <ApiSignature
   name="useToast"
   status="stable"
-  signature={`function useToast(): { toast: (input: ToastInput) => string; dismiss: (id: string) => void; toasts: ToastItem[] }`}
+  signature={`function useToast(): { toast: ToastFn; dismiss: (id: string) => void; toasts: ToastItem[] }`}
 />
 
 Returns the toast controls. `toast(input)` queues a notification and returns its id; `dismiss(id)`
 removes one early; `toasts` is the current queue. Must be called inside a `Toaster`.
+
+### toast.promise
+
+<CodeBlock lang="tsx" code={`const { toast } = useToast();
+
+toast.promise(saveDraft(), {
+  loading: { title: 'Saving draft' },
+  success: (draft) => ({ title: \`Saved "\${draft.name}"\` }),
+  error: (err) => ({ title: 'Could not save', description: String(err) }),
+});`} />
+
+Shows `loading`, then turns that same toast into `success` or `error` when the promise settles.
+The loading toast stays until then unless it sets its own `duration`. The error toast is assertive
+(`type: 'foreground'`) unless it says otherwise, and `success` and `error` may be functions of the
+value or the error. It returns the promise, so the caller still handles the result. Pass
+`{ id }` as a third argument to reuse a toast already on screen. Works the same on React Native.
+
 
 ### ToastItem
 

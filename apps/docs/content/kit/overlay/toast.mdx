@@ -101,6 +101,12 @@ const id = toast({
       description: 'Milliseconds before a toast auto-dismisses when it sets no `duration` of its own.',
     },
     {
+      name: 'maxVisible',
+      type: 'number',
+      default: 'Infinity',
+      description: 'Most toasts shown at once. Past it the oldest are dropped.',
+    },
+    {
       name: 'exitDurationMs',
       type: 'number',
       default: '0',
@@ -126,7 +132,7 @@ supplies the list and its layout.
     {
       name: 'toast',
       type: "(input: Omit<ToastItem, 'id'> & { id?: string }) => string",
-      description: 'Show a toast and return its id. Passing the id of a toast already on screen updates it in place.',
+      description: 'Show a toast and return its id. Passing the id of a toast already on screen updates it in place. `toast.promise(promise, { loading, success, error })` shows one toast that updates as the promise settles; see the [headless page](/headless/feedback/toast#toastpromise).',
     },
     {
       name: 'dismiss',
