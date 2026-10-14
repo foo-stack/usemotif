@@ -2,8 +2,8 @@
 title: Tooltip
 description: A text affordance shown on hover or keyboard focus. Bound to the trigger through aria-describedby; never holds interactive content.
 diataxis: reference
-covers: ['Tooltip', 'TooltipRootProps', 'TooltipTriggerProps', 'TooltipContentProps']
-last_verified: 2026-10-14
+covers: ['Tooltip', 'TooltipProviderProps', 'TooltipRootProps', 'TooltipTriggerProps', 'TooltipContentProps']
+last_verified: 2026-10-15
 ---
 
 import {
@@ -56,6 +56,28 @@ is wrong - a hover affordance cannot be operated by keyboard or touch users. Rea
 </Tooltip.Root>`} />
 
 ## API
+
+### Tooltip.Provider
+
+<ApiSignature
+  name="Tooltip.Provider"
+  status="stable"
+  signature={`function Tooltip.Provider(props: TooltipProviderProps): JSX.Element`}
+  params={[
+    {
+      name: 'skipDelayDuration',
+      type: 'number',
+      default: '300',
+      description: 'How long after the last tooltip in the group closes the next one still opens at once, in ms.',
+    },
+  ]}
+/>
+
+Wrap a set of tooltips, such as a toolbar's, in one Provider. The first tooltip waits its
+`openDelay`; once it is showing, moving to a neighbour opens that one at once and hides the first,
+so the user can scan the row without waiting at each button. When no tooltip in the group has been
+open for `skipDelayDuration`, the delay applies again. On React Native the Provider renders its
+children unchanged, since native tooltips open on press.
 
 ### Tooltip.Root
 
