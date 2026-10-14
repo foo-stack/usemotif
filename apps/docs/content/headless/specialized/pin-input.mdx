@@ -1,0 +1,113 @@
+---
+title: PinInput
+description: A one-time-code input with a box per character - auto-advance, paste-to-fill, and platform one-time-code autofill.
+diataxis: reference
+covers: ['PinInput', 'PinInputProps', 'PinType']
+last_verified: 2026-10-14
+---
+
+import { ApiSignature, ArticleMeta, CodeBlock, Eyebrow, Lede } from '../../../components/index.js';
+
+<Eyebrow>Headless / Specialized</Eyebrow>
+
+# PinInput
+
+<Lede>
+  PinInput takes a verification code one character per box. Typing moves to the next box,
+  pasting or autofilling a code fills them all, and Backspace steps back.
+</Lede>
+
+<ArticleMeta />
+
+## What it is
+
+A `role="group"` of `length` single-character inputs sharing one string value. Characters the
+`type` does not accept are dropped as they are typed or pasted. When every box is filled,
+`onComplete` fires once with the code.
+
+On the web the first box carries `autocomplete="one-time-code"`, so a code the browser or the
+operating system offers lands whole and spreads across the boxes; numeric codes also ask for
+the numeric keyboard. On React Native the boxes are `TextInput`s with the number pad, and the
+first carries `textContentType="oneTimeCode"` and `autoComplete="sms-otp"`.
+
+## Install
+
+<CodeBlock lang="bash" code={`yarn add @usemotif/headless`} />
+
+<CodeBlock lang="tsx" code={`import { PinInput } from '@usemotif/headless';`} />
+
+## API
+
+<ApiSignature
+  name="PinInput"
+  status="stable"
+  signature={`function PinInput(props: PinInputProps): JSX.Element`}
+  params={[
+    {
+      name: 'length',
+      type: 'number',
+      default: '6',
+      description: 'How many characters the code has, and so how many boxes.',
+    },
+    {
+      name: 'type',
+      type: "'numeric' | 'alphanumeric'",
+      default: "'numeric'",
+      description: 'Which characters are accepted. Anything else is dropped.',
+    },
+    {
+      name: 'value / defaultValue / onValueChange',
+      type: 'string / string / (value: string) => void',
+      description: 'The code so far, controlled or uncontrolled.',
+    },
+    {
+      name: 'onComplete',
+      type: '(value: string) => void',
+      description: 'Called once with the code when every box is filled.',
+    },
+    {
+      name: 'mask',
+      type: 'boolean',
+      default: 'false',
+      description: 'Hide the characters, as in a password field.',
+    },
+    {
+      name: 'disabled',
+      type: 'boolean',
+      description: 'Disables every box.',
+    },
+    {
+      name: 'aria-label / aria-labelledby',
+      type: 'string',
+      description: 'Names the group, for example "Verification code".',
+    },
+    {
+      name: 'style / inputStyle',
+      type: 'CSSProperties',
+      description: 'Inline styles for the group and for each box.',
+    },
+  ]}
+/>
+
+## Keyboard
+
+| Key | Action |
+| --- | --- |
+| A character | Fill this box and move to the next |
+| Backspace | Clear this box, or the one before an empty box, and move back |
+| Arrow Left / Right | Move between boxes |
+| Paste | Fill from this box onward |
+
+## Accessibility
+
+Each box is labelled "Character N of M", and the group takes your `aria-label`, so a screen
+reader announces both the code's purpose and the position. Do not hide the label visually
+without giving the group a name some other way.
+
+## Example
+
+<CodeBlock lang="tsx" code={`<PinInput
+  length={6}
+  aria-label="Verification code"
+  onComplete={(code) => verify(code)}
+/>`} />

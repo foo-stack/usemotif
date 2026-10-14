@@ -4,6 +4,7 @@ const meta: MetaFile = {
   index: 'Specialized',
   'color-picker': 'ColorPicker',
   'file-upload': 'FileUpload',
+  'pin-input': 'PinInput',
   'tree-view': 'TreeView',
 };
 
