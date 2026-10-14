@@ -6,7 +6,7 @@ import {
   type ComboboxOption,
 } from '@usemotif/headless';
 import { Box } from 'usemotif';
-import { LIST_STYLE, renderThemedOption } from './_list-surface.js';
+import { LIST_STYLE, renderThemedOption, renderThemedGroupLabel } from './_list-surface.js';
 
 export type SelectOption = ComboboxOption;
 
@@ -98,7 +98,11 @@ export function Select({
           {selected !== undefined ? selected.label : placeholder}
         </Box>
       </HeadlessSelect.Trigger>
-      <HeadlessSelect.List style={LIST_STYLE} renderOption={renderThemedOption} />
+      <HeadlessSelect.List
+        style={LIST_STYLE}
+        renderOption={renderThemedOption}
+        renderGroupLabel={renderThemedGroupLabel}
+      />
     </HeadlessSelect.Root>
   );
 }

@@ -3,7 +3,7 @@ title: Combobox
 description: A themed autocomplete over the headless Combobox - a text input that filters a listbox as you type - and Search, the same control inside a search landmark.
 diataxis: reference
 covers: ['Combobox', 'Search', 'ComboboxProps', 'ComboboxItem']
-last_verified: 2026-10-14
+last_verified: 2026-10-15
 ---
 
 import {
@@ -62,6 +62,10 @@ As site search:
 <CodeBlock lang="tsx" code={`import { Search } from '@usemotif/ui';
 
 <Search options={pages} onValueChange={openPage} placeholder="Search docs" />`} />
+
+
+Options with a `group` are listed under themed headings, in order; see
+[option groups](/headless/selection/combobox#option-groups).
 
 ## API
 

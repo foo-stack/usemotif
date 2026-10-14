@@ -39,3 +39,21 @@ export function renderThemedOption(
     </Box>
   );
 }
+
+/** The themed heading over a group of options. */
+export function renderThemedGroupLabel(group: string): ReactNode {
+  return (
+    <Box
+      px="$space.3"
+      pt="$space.2"
+      pb="$space.1"
+      fontSize="$fontSizes.xs"
+      fontWeight={600}
+      color="$colors.text.muted"
+      textTransform="uppercase"
+      letterSpacing="$letterSpacings.wide"
+    >
+      {group}
+    </Box>
+  );
+}

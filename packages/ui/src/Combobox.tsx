@@ -7,7 +7,7 @@ import {
 } from '@usemotif/headless';
 import type { ReactNode } from 'react';
 import { Box, type BoxProps } from 'usemotif';
-import { LIST_STYLE, renderThemedOption } from './_list-surface.js';
+import { LIST_STYLE, renderThemedOption, renderThemedGroupLabel } from './_list-surface.js';
 
 export type ComboboxItem = ComboboxOption;
 
@@ -101,6 +101,7 @@ export function Combobox({ placeholder = 'Search...', width = 240, ...rest }: Co
         {...listProps(rest)}
         style={LIST_STYLE}
         renderOption={renderThemedOption}
+        renderGroupLabel={renderThemedGroupLabel}
       />
     </HeadlessCombobox.Root>
   );
@@ -128,6 +129,7 @@ export function Search({ placeholder = 'Search...', width = 280, ...rest }: Comb
         {...listProps(rest)}
         style={LIST_STYLE}
         renderOption={renderThemedOption}
+        renderGroupLabel={renderThemedGroupLabel}
       />
     </HeadlessSearch.Root>
   );

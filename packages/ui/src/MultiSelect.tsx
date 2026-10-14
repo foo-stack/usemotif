@@ -3,7 +3,7 @@
 import { MultiSelect as HeadlessMultiSelect, type ComboboxOption } from '@usemotif/headless';
 import type { ReactNode } from 'react';
 import { Box, type BoxProps } from 'usemotif';
-import { LIST_STYLE } from './_list-surface.js';
+import { LIST_STYLE, renderThemedGroupLabel } from './_list-surface.js';
 
 export interface MultiSelectProps {
   readonly options: ReadonlyArray<ComboboxOption>;
@@ -148,7 +148,11 @@ export function MultiSelect({
           }
         </HeadlessMultiSelect.Input>
       </Box>
-      <HeadlessMultiSelect.List style={LIST_STYLE} renderOption={renderThemedMultiOption} />
+      <HeadlessMultiSelect.List
+        style={LIST_STYLE}
+        renderOption={renderThemedMultiOption}
+        renderGroupLabel={renderThemedGroupLabel}
+      />
     </HeadlessMultiSelect.Root>
   );
 }

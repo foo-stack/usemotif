@@ -30,6 +30,8 @@ export interface ListboxOptionsProps<T> {
   readonly scrollRef: RefObject<HTMLElement | null>;
   /** Fixed row height in px. Omitted, it is measured from the first row. */
   readonly itemHeight?: number | undefined;
+  /** Renders a group's heading. Defaults to the group name. */
+  readonly renderGroupLabel?: ((group: string) => ReactNode) | undefined;
 }
 
 /** Lists this long render only the rows in view. */
@@ -54,6 +56,11 @@ export function optionId(idPrefix: string, index: number): string {
  * From 50 options the rows window themselves against `scrollRef`, which assumes
  * uniform row heights. A highlight change scrolls its row into view, so the
  * `aria-activedescendant` target is always rendered.
+ *
+ * Options with a `group` are wrapped, run by run, in a `role="group"` labelled
+ * by a heading. Their indexes stay flat, so the keyboard moves straight
+ * through. A grouped list renders every row: its headings break the uniform
+ * row height windowing relies on.
  */
 export function ListboxOptions<T>({
   options,
@@ -65,8 +72,10 @@ export function ListboxOptions<T>({
   renderOption,
   scrollRef,
   itemHeight,
+  renderGroupLabel,
 }: ListboxOptionsProps<T>): ReactElement {
-  const windowed = options.length >= WINDOW_THRESHOLD;
+  const grouped = options.some((o) => o.group !== undefined);
+  const windowed = !grouped && options.length >= WINDOW_THRESHOLD;
   // 0 until the first row is measured; -1 when it can't be (no layout).
   const [measured, setMeasured] = useState(0);
   const rowHeight = itemHeight ?? Math.max(measured, 0);
@@ -123,16 +132,12 @@ export function ListboxOptions<T>({
     else if (highlightedIndex >= end) shown.push(highlightedIndex);
   }
 
-  const out: ReactNode[] = [];
-  let next = 0;
-  for (const i of shown) {
-    if (i > next) out.push(<Spacer key={`gap-${next}`} height={(i - next) * rowHeight} />);
-    next = i + 1;
+  const row = (i: number): ReactElement => {
     const opt = options[i]!;
     const id = optionId(idPrefix, i);
     const highlighted = highlightedIndex === i;
     const selected = isSelected(opt.value);
-    out.push(
+    return (
       <div
         key={id}
         id={id}
@@ -150,13 +155,54 @@ export function ListboxOptions<T>({
         {renderOption !== undefined
           ? renderOption(opt, { highlighted, selected, index: i })
           : opt.label}
-      </div>,
+      </div>
     );
+  };
+
+  if (grouped) return <>{groupRuns(options, idPrefix, row, renderGroupLabel)}</>;
+
+  const out: ReactNode[] = [];
+  let next = 0;
+  for (const i of shown) {
+    if (i > next) out.push(<Spacer key={`gap-${next}`} height={(i - next) * rowHeight} />);
+    next = i + 1;
+    out.push(row(i));
   }
   if (next < options.length) {
     out.push(<Spacer key={`gap-${next}`} height={(options.length - next) * rowHeight} />);
   }
   return <>{out}</>;
+}
+
+/** Wraps each consecutive run of a group's options in a labelled group. */
+function groupRuns<T>(
+  options: ReadonlyArray<ComboboxOption<T>>,
+  idPrefix: string,
+  row: (i: number) => ReactElement,
+  renderGroupLabel: ((group: string) => ReactNode) | undefined,
+): ReactNode[] {
+  const blocks: ReactNode[] = [];
+  let i = 0;
+  while (i < options.length) {
+    const group = options[i]!.group;
+    const rows: ReactElement[] = [];
+    let j = i;
+    for (; j < options.length && options[j]!.group === group; j++) rows.push(row(j));
+    if (group === undefined) blocks.push(...rows);
+    else {
+      const labelId = `${idPrefix}-group-${i}`;
+      blocks.push(
+        <div key={labelId} role="group" aria-labelledby={labelId}>
+          <div id={labelId} role="presentation">
+            {renderGroupLabel !== undefined ? renderGroupLabel(group) : group}
+          </div>
+          {rows}
+        </div>,
+      );
+    }
+    i = j;
+  }
+  return blocks;
 }
 
 function Spacer({ height }: { height: number }): ReactElement {

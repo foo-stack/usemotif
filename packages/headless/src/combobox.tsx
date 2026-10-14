@@ -52,6 +52,9 @@ export interface ComboboxOption<T = string> {
   readonly value: T;
   readonly label: string;
   readonly disabled?: boolean;
+  /** A heading the option is listed under. Consecutive options with the same
+   * group share one labelled group. */
+  readonly group?: string;
 }
 
 interface ComboboxContextValue<T = string> {
@@ -276,6 +279,7 @@ function ComboboxList<T>({
   emptyMessage = 'No options',
   loadingMessage = 'Loading...',
   itemHeight,
+  renderGroupLabel,
 }: {
   placement?: Placement;
   offset?: number;
@@ -283,6 +287,8 @@ function ComboboxList<T>({
   /** Row height in px for long lists, which render only the rows in view.
    * Omitted, it is measured from the first row; rows must share one height. */
   itemHeight?: number;
+  /** Renders a group's heading, for options with a `group`. Defaults to the name. */
+  renderGroupLabel?: (group: string) => ReactNode;
   /** Override how each option renders. */
   renderOption?: (
     option: ComboboxOption<T>,
@@ -348,6 +354,7 @@ function ComboboxList<T>({
             renderOption={renderOption}
             scrollRef={floatingRef}
             itemHeight={itemHeight}
+            renderGroupLabel={renderGroupLabel}
           />
         )}
       </div>
@@ -822,6 +829,7 @@ function MultiSelectList<T>({
   renderOption,
   emptyMessage = 'No options',
   itemHeight,
+  renderGroupLabel,
 }: {
   placement?: Placement;
   offset?: number;
@@ -829,6 +837,8 @@ function MultiSelectList<T>({
   /** Row height in px for long lists, which render only the rows in view.
    * Omitted, it is measured from the first row; rows must share one height. */
   itemHeight?: number;
+  /** Renders a group's heading, for options with a `group`. Defaults to the name. */
+  renderGroupLabel?: (group: string) => ReactNode;
   renderOption?: (
     option: ComboboxOption<T>,
     info: {
@@ -887,6 +897,7 @@ function MultiSelectList<T>({
             renderOption={renderOption}
             scrollRef={floatingRef}
             itemHeight={itemHeight}
+            renderGroupLabel={renderGroupLabel}
           />
         )}
       </div>
