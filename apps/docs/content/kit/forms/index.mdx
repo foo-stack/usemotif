@@ -1,0 +1,78 @@
+---
+title: Forms
+description: The kit's form controls - toggles, sliders, pickers, dropdowns, and a file drop zone. Themed, keyboard-accessible, and controlled or uncontrolled.
+diataxis: explanation
+covers:
+  [
+    'Checkbox',
+    'Radio',
+    'RadioGroup',
+    'Switch',
+    'Slider',
+    'RangeSlider',
+    'RatingInput',
+    'SegmentedControl',
+    'Select',
+    'MultiSelect',
+    'Combobox',
+    'Search',
+    'DatePicker',
+    'Calendar',
+    'TimeInput',
+    'ColorPicker',
+    'FileUpload',
+  ]
+last_verified: 2026-10-14
+---
+
+import { ArticleMeta, Callout, Eyebrow, Lede } from '../../../components/index.js';
+
+<Eyebrow>UI kit / Forms</Eyebrow>
+
+# Forms
+
+<Lede>
+  The input half of the kit. These components collect a value - a choice, a number, a date, a
+  colour, a file - and most of them wrap a headless behaviour, so keyboard and ARIA wiring come
+  with the theme.
+</Lede>
+
+<ArticleMeta />
+
+## The pieces
+
+| Component                                          | Use it for                                                                |
+| -------------------------------------------------- | ------------------------------------------------------------------------- |
+| [Checkbox](/kit/forms/checkbox)                    | A native checkbox input with a themed box and tick.                       |
+| [Radio](/kit/forms/radio)                          | Native radio inputs, grouped by `RadioGroup` under one shared `name`.     |
+| [Switch](/kit/forms/switch)                        | An on/off toggle - a checkbox input with `role="switch"`.                 |
+| [Slider](/kit/forms/slider)                        | A single value picked along a horizontal track.                           |
+| [RangeSlider](/kit/forms/range-slider)             | A low and high value picked with two thumbs on one track.                 |
+| [RatingInput](/kit/forms/rating-input)             | A star rating with click-to-set and arrow-key control.                    |
+| [SegmentedControl](/kit/forms/segmented-control)   | A single choice from a short row of segments.                             |
+| [Select](/kit/forms/select)                        | A button-triggered dropdown that picks one option.                        |
+| [MultiSelect](/kit/forms/multi-select)             | Several options picked from a list, shown as removable chips.             |
+| [Combobox](/kit/forms/combobox)                    | A text input that filters a list as you type. `Search` is its sibling.    |
+| [DatePicker](/kit/forms/date-picker)               | A trigger button that opens a calendar in a popover.                      |
+| [Calendar](/kit/forms/calendar)                    | An always-visible month grid for picking a day.                           |
+| [TimeInput](/kit/forms/time-input)                 | A native time field, to the minute or the second.                         |
+| [ColorPicker](/kit/forms/color-picker)             | An HSV colour picker with hue, optional alpha, and a format toggle.       |
+| [FileUpload](/kit/forms/file-upload)               | A drag-and-drop zone that also opens the file picker on click.            |
+
+## Native inputs or headless behaviours
+
+Checkbox, Radio, and Switch are real `<input>` elements styled with motif style props. They take
+every standard input attribute, submit with a native form, and need no controlled state. Their
+checked styling is pure CSS through the `_checked` pseudo-state.
+
+SegmentedControl is self-contained, with its own `radiogroup` keyboard handling and no headless
+dependency.
+
+Everything else wraps a component from `@usemotif/headless`. The headless layer owns focus,
+keyboard navigation, and ARIA state; the kit passes it themed styles that read the token CSS
+variables, so the controls follow the active theme in light and dark.
+
+<Callout variant="info" title="Related">
+  [FormField](/kit/display/form-field) - pairs any of these controls with a label and a help or
+  error line. [Headless](/headless) - the unstyled behaviours, for a control you theme yourself.
+</Callout>

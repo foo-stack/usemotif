@@ -1,0 +1,122 @@
+---
+title: MultiSelect
+description: A themed multi-select over the headless MultiSelect - picked options show as removable chips, the list filters as you type, and maxSelections caps the count.
+diataxis: reference
+covers: ['MultiSelect', 'MultiSelectProps']
+last_verified: 2026-10-14
+---
+
+import {
+  ApiSignature,
+  ArticleMeta,
+  Callout,
+  CodeBlock,
+  Eyebrow,
+  Lede,
+} from '../../../components/index.js';
+
+<Eyebrow>UI kit / Forms</Eyebrow>
+
+# MultiSelect
+
+<Lede>
+  MultiSelect picks any number of options from a list. Each pick becomes a chip in the field, with
+  a button to remove it, and typing in the field filters the list.
+</Lede>
+
+<ArticleMeta />
+
+## What it is
+
+The headless [MultiSelect](/headless/selection/multi-select) behaviour with a themed field, chips,
+and list. Clicking an option toggles it: a picked option is removed again. Backspace in an empty
+input removes the last chip. Once `maxSelections` is reached, further picks do nothing.
+
+The kit field is a wrapping row in `surface.raised` with a `border.default` border, at least 40px
+tall, holding the chips and a borderless text input. Each chip is a small `surface.muted` pill
+with a remove button labelled "Remove". In the listbox, picked options carry a check mark in
+`action.primary` and the highlighted row takes `surface.interactive`.
+
+## Install
+
+<CodeBlock lang="bash" code={`yarn add @usemotif/ui`} />
+
+<CodeBlock lang="tsx" code={`import { MultiSelect } from '@usemotif/ui';`} />
+
+## Usage
+
+<CodeBlock lang="tsx" code={`import { MultiSelect } from '@usemotif/ui';
+
+const langs = [
+  { value: 'ts', label: 'TypeScript' },
+  { value: 'rs', label: 'Rust' },
+  { value: 'go', label: 'Go' },
+];
+
+<MultiSelect options={langs} defaultValue={['ts']} onValueChange={setLangs} />`} />
+
+Controlled, capped at three:
+
+<CodeBlock lang="tsx" code={`import { MultiSelect } from '@usemotif/ui';
+
+<MultiSelect
+  options={tags}
+  value={picked}
+  onValueChange={setPicked}
+  maxSelections={3}
+  placeholder="Add a tag"
+  width={360}
+/>`} />
+
+## API
+
+<ApiSignature
+  name="MultiSelect"
+  status="stable"
+  signature={`function MultiSelect(props: MultiSelectProps): JSX.Element`}
+  params={[
+    {
+      name: 'options',
+      type: 'ReadonlyArray<ComboboxOption>',
+      required: true,
+      description: 'The choices. Each is `{ value, label, disabled? }`.',
+    },
+    {
+      name: 'value',
+      type: 'ReadonlyArray<string>',
+      description: 'Controlled selection. Pass with `onValueChange`.',
+    },
+    {
+      name: 'defaultValue',
+      type: 'ReadonlyArray<string>',
+      description: 'Initial selection when uncontrolled.',
+    },
+    {
+      name: 'onValueChange',
+      type: '(next: ReadonlyArray<string>) => void',
+      description: 'Called with the full selection after each add or remove.',
+    },
+    {
+      name: 'placeholder',
+      type: 'string',
+      default: "'Add...'",
+      description: 'Placeholder for the text input in the field.',
+    },
+    {
+      name: 'maxSelections',
+      type: 'number',
+      description: 'Caps the number of picked options.',
+    },
+    {
+      name: 'width',
+      type: 'number | string',
+      default: '280',
+      description: 'Width of the field. A number is pixels.',
+    },
+  ]}
+/>
+
+<Callout variant="info" title="Related">
+  [MultiSelect (headless)](/headless/selection/multi-select) - the unstyled behaviour, with a
+  select-all control. [Select](/kit/forms/select) to pick exactly one.
+</Callout>

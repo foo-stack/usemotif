@@ -1,0 +1,121 @@
+---
+title: Select
+description: A themed single-select dropdown over the headless Select - a trigger button and a listbox with full keyboard navigation and click-outside dismissal.
+diataxis: reference
+covers: ['Select', 'SelectProps', 'SelectOption']
+last_verified: 2026-10-14
+---
+
+import {
+  ApiSignature,
+  ArticleMeta,
+  Callout,
+  CodeBlock,
+  Eyebrow,
+  Lede,
+} from '../../../components/index.js';
+
+<Eyebrow>UI kit / Forms</Eyebrow>
+
+# Select
+
+<Lede>
+  Select picks one option from a list that opens under a trigger button. The trigger shows the
+  chosen option's label, or a placeholder until something is picked.
+</Lede>
+
+<ArticleMeta />
+
+## What it is
+
+The headless [Select](/headless/selection/select) behaviour with a themed trigger and list. The
+headless layer wires `aria-haspopup` and `aria-expanded` on the trigger, keyboard navigation in
+the listbox, and dismissal on an outside click.
+
+The kit trigger is a button in `surface.raised` with a `border.default` border and a
+chevron on the right. While open, the border turns `action.primary` and the chevron flips. The
+listbox is a raised, rounded panel up to 260px tall that scrolls; the highlighted row takes
+`surface.interactive` and the selected row is bold.
+
+## Install
+
+<CodeBlock lang="bash" code={`yarn add @usemotif/ui`} />
+
+<CodeBlock lang="tsx" code={`import { Select } from '@usemotif/ui';`} />
+
+## Usage
+
+<CodeBlock lang="tsx" code={`import { Select } from '@usemotif/ui';
+
+<Select
+  options={[
+    { value: 'utc', label: 'UTC' },
+    { value: 'pst', label: 'Pacific' },
+  ]}
+  defaultValue="utc"
+  onValueChange={setZone}
+/>`} />
+
+Controlled, with a placeholder and a disabled option:
+
+<CodeBlock lang="tsx" code={`import { Select, type SelectOption } from '@usemotif/ui';
+
+const plans: SelectOption[] = [
+  { value: 'free', label: 'Free' },
+  { value: 'team', label: 'Team' },
+  { value: 'enterprise', label: 'Enterprise', disabled: true },
+];
+
+<Select options={plans} value={plan} onValueChange={setPlan} placeholder="Choose a plan" width={320} />`} />
+
+## API
+
+<ApiSignature
+  name="Select"
+  status="stable"
+  signature={`function Select(props: SelectProps): JSX.Element`}
+  params={[
+    {
+      name: 'options',
+      type: 'ReadonlyArray<SelectOption>',
+      required: true,
+      description: 'The choices. Each is `{ value, label, disabled? }`.',
+    },
+    {
+      name: 'value',
+      type: 'string',
+      description: 'Controlled selected value. Pass with `onValueChange`.',
+    },
+    {
+      name: 'defaultValue',
+      type: 'string',
+      description: 'Initially selected value when uncontrolled.',
+    },
+    {
+      name: 'onValueChange',
+      type: '(value: string | undefined) => void',
+      description: 'Called with the new value when an option is picked.',
+    },
+    {
+      name: 'placeholder',
+      type: 'string',
+      default: "'Select...'",
+      description: 'Trigger text while nothing is selected.',
+    },
+    {
+      name: 'width',
+      type: 'number | string',
+      default: '240',
+      description: 'Width of the trigger. A number is pixels.',
+    },
+  ]}
+/>
+
+`SelectOption` is the headless `ComboboxOption`: `value: string`, `label: string`, and an optional
+`disabled: boolean`.
+
+<Callout variant="info" title="Related">
+  [Select (headless)](/headless/selection/select) - the unstyled behaviour.
+  [Combobox](/kit/forms/combobox) to filter a long list by typing.
+  [MultiSelect](/kit/forms/multi-select) to pick more than one.
+</Callout>

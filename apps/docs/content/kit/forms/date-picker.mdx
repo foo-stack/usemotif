@@ -1,0 +1,146 @@
+---
+title: DatePicker
+description: A themed date picker over the headless DatePicker - a trigger button that opens a popover holding the themed calendar, controlled or uncontrolled.
+diataxis: reference
+covers: ['DatePicker', 'DatePickerProps']
+last_verified: 2026-10-14
+---
+
+import {
+  ApiSignature,
+  ArticleMeta,
+  Callout,
+  CodeBlock,
+  Eyebrow,
+  Lede,
+} from '../../../components/index.js';
+
+<Eyebrow>UI kit / Forms</Eyebrow>
+
+# DatePicker
+
+<Lede>
+  DatePicker shows the chosen date on a button. Clicking it opens a calendar in a popover, and
+  picking a day closes it again.
+</Lede>
+
+<ArticleMeta />
+
+## What it is
+
+The headless [DatePicker](/headless/datetime/date-picker) behaviour with a themed trigger,
+popover, and calendar. The headless layer puts a [Calendar](/kit/forms/calendar) inside a
+`Popover`, formats the trigger label with `Intl.DateTimeFormat` in the medium date style, and
+closes the popover when a day is picked.
+
+The kit supplies four defaults, and each one is used only when you leave the matching prop out:
+
+- `triggerStyle` - a rounded button at least 180px wide, in `surface.default` with a
+  `border.default` border
+- `popoverStyle` - a raised, rounded panel with a shadow
+- `style` - the calendar grid, 252px wide with no border of its own
+- `renderDay` - the same themed day cells as the kit Calendar
+
+`DatePickerProps` is the headless `DatePickerProps`, which extends `CalendarProps`, so every
+calendar prop reaches the inner grid.
+
+## Install
+
+<CodeBlock lang="bash" code={`yarn add @usemotif/ui`} />
+
+<CodeBlock lang="tsx" code={`import { DatePicker } from '@usemotif/ui';`} />
+
+## Usage
+
+<CodeBlock lang="tsx" code={`import { DatePicker } from '@usemotif/ui';
+
+<DatePicker placeholder="Pick a date" onValueChange={setDate} />`} />
+
+Controlled, with past days disabled:
+
+<CodeBlock lang="tsx" code={`import { DatePicker } from '@usemotif/ui';
+
+<DatePicker
+  value={due}
+  onValueChange={setDue}
+  isDisabled={(d) => d < startOfToday}
+  weekStartsOn={1}
+/>`} />
+
+## API
+
+<ApiSignature
+  name="DatePicker"
+  status="stable"
+  signature={`function DatePicker(props: DatePickerProps): JSX.Element`}
+  params={[
+    {
+      name: 'value',
+      type: 'Date | undefined',
+      description: 'Controlled selected day. Pass with `onValueChange`.',
+    },
+    {
+      name: 'defaultValue',
+      type: 'Date',
+      description: 'Initially selected day when uncontrolled.',
+    },
+    {
+      name: 'onValueChange',
+      type: '(next: Date) => void',
+      description: 'Called with the picked day.',
+    },
+    {
+      name: 'placeholder',
+      type: 'string',
+      default: "'Pick a date'",
+      description: 'Trigger label while no day is selected.',
+    },
+    {
+      name: 'locale',
+      type: 'string',
+      description: "Locale for the trigger label and the calendar. Defaults to the runtime's locale.",
+    },
+    {
+      name: 'isDisabled',
+      type: '(date: Date) => boolean',
+      description: 'Return `true` to mark a day disabled.',
+    },
+    {
+      name: 'weekStartsOn',
+      type: '0 | 1 | 2 | 3 | 4 | 5 | 6',
+      default: '0',
+      description: 'First day of the week, where 0 is Sunday.',
+    },
+    {
+      name: 'renderTrigger',
+      type: '(info: { label: string; onClick: () => void }) => ReactNode',
+      description: 'Replaces the trigger button. `onClick` toggles the popover.',
+    },
+    {
+      name: 'triggerStyle',
+      type: 'CSSProperties',
+      description: "Inline styles for the default trigger. Replaces the kit's trigger style.",
+    },
+    {
+      name: 'popoverStyle',
+      type: 'CSSProperties',
+      description: "Inline styles for the popover. Replaces the kit's popover style.",
+    },
+    {
+      name: 'style',
+      type: 'CSSProperties',
+      description: "Inline styles for the calendar grid. Replaces the kit's grid style.",
+    },
+    {
+      name: 'renderDay',
+      type: '(info: { date, isSelected, isToday, isOutsideMonth, isDisabled }) => ReactNode',
+      description: 'Replaces the themed day cell. `date` is a `Date`; the rest are booleans.',
+    },
+  ]}
+/>
+
+<Callout variant="info" title="Related">
+  [DatePicker (headless)](/headless/datetime/date-picker) - the unstyled behaviour.
+  [Calendar](/kit/forms/calendar) for an always-visible grid. [TimeInput](/kit/forms/time-input)
+  for a time of day.
+</Callout>

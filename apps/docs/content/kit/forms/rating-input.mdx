@@ -1,0 +1,111 @@
+---
+title: RatingInput
+description: A themed star rating over the headless RatingInput - role="slider", click to set, arrow keys to adjust, optional half steps.
+diataxis: reference
+covers: ['RatingInput', 'RatingInputProps']
+last_verified: 2026-10-14
+---
+
+import {
+  ApiSignature,
+  ArticleMeta,
+  Callout,
+  CodeBlock,
+  Eyebrow,
+  Lede,
+} from '../../../components/index.js';
+
+<Eyebrow>UI kit / Forms</Eyebrow>
+
+# RatingInput
+
+<Lede>
+  RatingInput collects a score as a row of stars. Click a star to set the rating, or focus the row
+  and use the arrow keys.
+</Lede>
+
+<ArticleMeta />
+
+## What it is
+
+The headless [RatingInput](/headless/numeric/rating-input) behaviour with themed stars. The
+headless layer renders a `role="slider"` row with `aria-valuenow` from 0 to `count`. Arrow keys
+step the value, Home sets it to 0, and End sets it to `count`.
+
+The kit draws each item as a 22px star with a 4px gap. A filled star uses the `status.warning`
+foreground colour; an empty one is an outline in `border.strong`.
+
+With `allowHalf`, the value moves in steps of 0.5: arrow keys step by half a star, and clicking
+the left half of a star sets the half value.
+
+## Install
+
+<CodeBlock lang="bash" code={`yarn add @usemotif/ui`} />
+
+<CodeBlock lang="tsx" code={`import { RatingInput } from '@usemotif/ui';`} />
+
+## Usage
+
+<CodeBlock lang="tsx" code={`import { RatingInput } from '@usemotif/ui';
+
+<RatingInput defaultValue={3} aria-label="Rate this recipe" onValueChange={setStars} />`} />
+
+Controlled, out of ten, with half steps:
+
+<CodeBlock lang="tsx" code={`import { RatingInput } from '@usemotif/ui';
+
+<RatingInput value={score} onValueChange={setScore} count={10} allowHalf aria-label="Score" />`} />
+
+## API
+
+<ApiSignature
+  name="RatingInput"
+  status="stable"
+  signature={`function RatingInput(props: RatingInputProps): JSX.Element`}
+  params={[
+    {
+      name: 'value',
+      type: 'number',
+      description: 'Controlled rating. Pass with `onValueChange`.',
+    },
+    {
+      name: 'defaultValue',
+      type: 'number',
+      default: '0',
+      description: 'Initial rating when uncontrolled.',
+    },
+    {
+      name: 'onValueChange',
+      type: '(next: number) => void',
+      description: 'Called with the new rating on click or key press.',
+    },
+    {
+      name: 'count',
+      type: 'number',
+      default: '5',
+      description: 'Number of stars, and the highest rating.',
+    },
+    {
+      name: 'allowHalf',
+      type: 'boolean',
+      default: 'false',
+      description: 'Allows ratings in steps of 0.5.',
+    },
+    {
+      name: 'disabled',
+      type: 'boolean',
+      default: 'false',
+      description: 'Ignores input and removes the row from the tab order.',
+    },
+    {
+      name: 'aria-label',
+      type: 'string',
+      description: 'Accessible name for the rating.',
+    },
+  ]}
+/>
+
+<Callout variant="info" title="Related">
+  [RatingInput (headless)](/headless/numeric/rating-input) - the unstyled behaviour, with your own
+  `renderItem`.
+</Callout>

@@ -1,0 +1,88 @@
+---
+title: TimeInput
+description: A themed time field over the headless TimeInput - a native time input with the platform's time UI, to the minute or the second.
+diataxis: reference
+covers: ['TimeInput', 'TimeInputProps']
+last_verified: 2026-10-14
+---
+
+import {
+  ApiSignature,
+  ArticleMeta,
+  Callout,
+  CodeBlock,
+  Eyebrow,
+  Lede,
+} from '../../../components/index.js';
+
+<Eyebrow>UI kit / Forms</Eyebrow>
+
+# TimeInput
+
+<Lede>
+  TimeInput collects a time of day. It is a native `<input type="time">`, so the browser supplies
+  the time UI, keyboard entry, and form submission.
+</Lede>
+
+<ArticleMeta />
+
+## What it is
+
+The headless [TimeInput](/headless/datetime/time-input) with a token theme. The headless layer
+renders the native input, generates an `id` with `useId`, and sets `step` to 1 when `precision`
+is `'second'` so the field shows seconds. The value is a string such as `'09:30'`, or
+`'09:30:15'` at second precision.
+
+The kit adds padding, a large radius, a `border.default` border, `surface.default` background, and
+`text.default` colour, all through the token CSS variables. A `style` you pass merges over them.
+
+Every standard input attribute except `type` passes through (`value`, `defaultValue`, `onChange`,
+`min`, `max`, `step`, `name`, `required`, `disabled`, and the rest), as `TimeInputProps` is the
+headless `TimeInputProps`.
+
+## Install
+
+<CodeBlock lang="bash" code={`yarn add @usemotif/ui`} />
+
+<CodeBlock lang="tsx" code={`import { TimeInput } from '@usemotif/ui';`} />
+
+## Usage
+
+<CodeBlock lang="tsx" code={`import { TimeInput } from '@usemotif/ui';
+
+<TimeInput defaultValue="09:30" onChange={(e) => setTime(e.currentTarget.value)} />`} />
+
+To the second, inside business hours:
+
+<CodeBlock lang="tsx" code={`import { TimeInput } from '@usemotif/ui';
+
+<TimeInput precision="second" min="09:00" max="17:00" name="start" aria-label="Start time" />`} />
+
+## API
+
+<ApiSignature
+  name="TimeInput"
+  status="stable"
+  signature={`function TimeInput(props: TimeInputProps): JSX.Element`}
+  params={[
+    {
+      name: 'precision',
+      type: "'minute' | 'second'",
+      default: "'minute'",
+      description: "Whether the field includes seconds. `'second'` sets `step` to 1 unless you pass one.",
+    },
+    {
+      name: 'style',
+      type: 'CSSProperties',
+      description: "Inline styles, merged over the kit's themed field style.",
+    },
+  ]}
+/>
+
+`TimeInputProps` also accepts every `InputHTMLAttributes<HTMLInputElement>` attribute except
+`type`, which is fixed to `time`.
+
+<Callout variant="info" title="Related">
+  [TimeInput (headless)](/headless/datetime/time-input) - the unstyled input.
+  [DatePicker](/kit/forms/date-picker) for a calendar date.
+</Callout>

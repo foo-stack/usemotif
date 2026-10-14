@@ -1,0 +1,90 @@
+---
+title: Checkbox
+description: A themed checkbox - a real native input with a token-coloured box and tick, driven by the checked pseudo-state with no controlled state required.
+diataxis: reference
+covers: ['Checkbox', 'CheckboxProps']
+last_verified: 2026-10-14
+---
+
+import {
+  ApiSignature,
+  ArticleMeta,
+  Callout,
+  CodeBlock,
+  Eyebrow,
+  Lede,
+} from '../../../components/index.js';
+
+<Eyebrow>UI kit / Forms</Eyebrow>
+
+# Checkbox
+
+<Lede>
+  Checkbox is a native `<input type="checkbox">` with a themed look. It is keyboard- and
+  form-native, so it works controlled, uncontrolled, or inside a plain form submit.
+</Lede>
+
+<ArticleMeta />
+
+## What it is
+
+A `Box` rendered as an `<input type="checkbox">`, 18px square with a thin `border.strong` border
+and a small radius. The native chrome is reset with `appearance: none`. When the input is checked,
+the `_checked` pseudo-state fills it with `action.primary` and paints a white tick, all in CSS.
+
+Every standard input attribute (`checked`, `defaultChecked`, `onChange`, `name`, `value`,
+`disabled`, `required`, and the rest) passes through to the element. Checkbox omits `size`, and
+replaces `style` with a version that merges over its own reset styles.
+
+## Install
+
+<CodeBlock lang="bash" code={`yarn add @usemotif/ui`} />
+
+<CodeBlock lang="tsx" code={`import { Checkbox } from '@usemotif/ui';`} />
+
+## Usage
+
+<CodeBlock lang="tsx" code={`import { Checkbox } from '@usemotif/ui';
+
+<label>
+  <Checkbox defaultChecked name="terms" /> I agree to the terms
+</label>`} />
+
+Controlled, and marked invalid when the form rejects it:
+
+<CodeBlock lang="tsx" code={`import { Checkbox } from '@usemotif/ui';
+
+<Checkbox
+  checked={agreed}
+  invalid={submitted && !agreed}
+  onChange={(e) => setAgreed(e.currentTarget.checked)}
+  aria-label="Agree to the terms"
+/>`} />
+
+## API
+
+<ApiSignature
+  name="Checkbox"
+  status="stable"
+  signature={`function Checkbox(props: CheckboxProps): JSX.Element`}
+  params={[
+    {
+      name: 'invalid',
+      type: 'boolean',
+      description: 'Marks the control invalid by setting `aria-invalid`.',
+    },
+    {
+      name: 'style',
+      type: 'CSSProperties',
+      description: "Inline styles, merged over the control's own reset styles.",
+    },
+  ]}
+/>
+
+`CheckboxProps` also accepts every `InputHTMLAttributes<HTMLInputElement>` attribute except `size`.
+`type` is set to `checkbox`.
+
+<Callout variant="info" title="Related">
+  [Checkbox (headless)](/headless/selection/checkbox) - the unstyled checkbox, with an
+  indeterminate state. [FormField](/kit/display/form-field) to add a label and help text.
+</Callout>

@@ -1,0 +1,126 @@
+---
+title: Calendar
+description: A themed month calendar over the headless Calendar - a focusable grid with full keyboard navigation, locale-aware labels, and themed day cells.
+diataxis: reference
+covers: ['Calendar', 'CalendarProps']
+last_verified: 2026-10-14
+---
+
+import {
+  ApiSignature,
+  ArticleMeta,
+  Callout,
+  CodeBlock,
+  Eyebrow,
+  Lede,
+} from '../../../components/index.js';
+
+<Eyebrow>UI kit / Forms</Eyebrow>
+
+# Calendar
+
+<Lede>
+  Calendar is an always-visible month grid for picking a day. Click a day, or move through the
+  grid with the keyboard and press Enter.
+</Lede>
+
+<ArticleMeta />
+
+## What it is
+
+The headless [Calendar](/headless/datetime/calendar) behaviour with a themed surface and day
+cells. The headless layer renders a focusable `role="grid"`, owns each cell's `gridcell` role and
+`aria-selected`, and handles the keyboard: arrows move a day, PageUp and PageDown move a month,
+Home and End jump within the week, and Enter or Space selects. Weekday and month labels follow
+`locale`.
+
+The kit grid is a 280px raised panel with a `border.default` border and rounded corners. Each day
+is painted by a default `renderDay`:
+
+- the selected day fills with `action.primary`, its number in `text.inverse`
+- today gets an `action.primary` ring
+- days outside the month and disabled days render muted, disabled ones at half opacity
+
+`CalendarProps` is the headless `CalendarProps`, so every headless prop reaches the kit component.
+A `style` you pass merges over the kit's grid style, and a `renderDay` you pass replaces the
+themed cell entirely.
+
+## Install
+
+<CodeBlock lang="bash" code={`yarn add @usemotif/ui`} />
+
+<CodeBlock lang="tsx" code={`import { Calendar } from '@usemotif/ui';`} />
+
+## Usage
+
+<CodeBlock lang="tsx" code={`import { Calendar } from '@usemotif/ui';
+
+<Calendar defaultValue={new Date()} onValueChange={setDate} />`} />
+
+Weeks starting on Monday, with weekends disabled:
+
+<CodeBlock lang="tsx" code={`import { Calendar } from '@usemotif/ui';
+
+<Calendar
+  value={date}
+  onValueChange={setDate}
+  weekStartsOn={1}
+  locale="en-GB"
+  isDisabled={(d) => d.getDay() === 0 || d.getDay() === 6}
+/>`} />
+
+## API
+
+<ApiSignature
+  name="Calendar"
+  status="stable"
+  signature={`function Calendar(props: CalendarProps): JSX.Element`}
+  params={[
+    {
+      name: 'value',
+      type: 'Date | undefined',
+      description: 'Controlled selected day. Pass with `onValueChange`.',
+    },
+    {
+      name: 'defaultValue',
+      type: 'Date',
+      description: 'Initially selected day when uncontrolled.',
+    },
+    {
+      name: 'onValueChange',
+      type: '(next: Date) => void',
+      description: 'Called with the day picked by click or keyboard.',
+    },
+    {
+      name: 'locale',
+      type: 'string',
+      description: "Locale for weekday and month labels. Defaults to the runtime's locale.",
+    },
+    {
+      name: 'isDisabled',
+      type: '(date: Date) => boolean',
+      description: 'Return `true` to mark a day disabled.',
+    },
+    {
+      name: 'weekStartsOn',
+      type: '0 | 1 | 2 | 3 | 4 | 5 | 6',
+      default: '0',
+      description: 'First day of the week, where 0 is Sunday.',
+    },
+    {
+      name: 'style',
+      type: 'CSSProperties',
+      description: "Inline styles for the grid, merged over the kit's panel style.",
+    },
+    {
+      name: 'renderDay',
+      type: '(info: { date, isSelected, isToday, isOutsideMonth, isDisabled }) => ReactNode',
+      description: 'Replaces the themed day cell. `date` is a `Date`; the rest are booleans.',
+    },
+  ]}
+/>
+
+<Callout variant="info" title="Related">
+  [Calendar (headless)](/headless/datetime/calendar) - the unstyled grid.
+  [DatePicker](/kit/forms/date-picker) for a calendar that opens from a button.
+</Callout>
