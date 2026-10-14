@@ -6,6 +6,7 @@ import {
   resolveTransition,
   springToCssTiming,
   type AnimationValue,
+  type LayoutTransition,
   type MotionStyleProps,
   type MotionValueWideningOf,
   type StateStyleProps,
@@ -73,6 +74,17 @@ export type BoxProps = {
      * values.
      */
     layout?: boolean | 'position' | 'size';
+    /**
+     * Duration and easing of the `layout` animation, as literals or
+     * `$durations` / `$easings` tokens resolved against the active theme.
+     * Defaults to 300ms ease-in-out.
+     *
+     * @example
+     * ```tsx
+     * <Box layout layoutTransition={{ duration: '$durations.5', easing: '$easings.decelerate' }} />
+     * ```
+     */
+    layoutTransition?: LayoutTransition;
     /**
      * Make the Box draggable. `true` enables free 2D drag; `'x'` /
      * `'y'` locks the drag to a single axis. Internally wires
@@ -158,6 +170,7 @@ export const Box: MotifComponent<BoxProps, ReactElement | null> = function (prop
     animation,
     animateOnly,
     layout: _layout,
+    layoutTransition: _layoutTransition,
     drag: _drag,
     dragConstraints: _dragConstraints,
     dragElastic: _dragElastic,
@@ -558,7 +571,7 @@ function resolveTokenStringIfNeeded(
     theme,
   );
   if (resolved === undefined) return value;
-  const tokens = resolved.split(/\s+/).filter(Boolean);
+  const tokens = splitTransitionTokens(resolved);
   return scale === 'durations' ? (tokens[1] ?? value) : (tokens[2] ?? value);
 }
 
@@ -626,10 +639,24 @@ export function useResolvedBoxStyle(
  * omits `layout`.
  */
 function BoxWithLayoutNative(props: BoxProps) {
-  const { layout, style: userStyle, ...rest } = props;
+  const { layout, layoutTransition, style: userStyle, ...rest } = props;
   const kind: LayoutAnimationKind =
     layout === true || layout === undefined ? 'all' : (layout as LayoutAnimationKind);
-  const { onLayout, style } = useLayoutAnimation({ kind });
+  const theme = useTheme();
+  const duration = layoutTransition?.duration;
+  const easing = layoutTransition?.easing;
+  const { onLayout, style } = useLayoutAnimation({
+    kind,
+    ...(duration !== undefined
+      ? {
+          duration:
+            parseDurationMs(resolveTokenStringIfNeeded(duration, theme, 'durations'), 300) / 1000,
+        }
+      : {}),
+    ...(easing !== undefined
+      ? { easing: resolveTokenStringIfNeeded(easing, theme, 'easings') }
+      : {}),
+  });
 
   // Compose user style with the animation transform. Native style can
   // be an array - preserve that shape so consumers' arrays still
