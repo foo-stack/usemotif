@@ -74,6 +74,7 @@ export type KnownScaleName =
   | 'lineHeights'
   | 'letterSpacings'
   | 'shadows'
+  | 'gradients'
   | 'zIndices'
   | 'borderWidths'
   | 'opacities'

@@ -13,6 +13,7 @@ const KNOWN_SCALES: readonly ScaleName[] = [
   'lineHeights',
   'letterSpacings',
   'shadows',
+  'gradients',
   'zIndices',
   'borderWidths',
   'opacities',

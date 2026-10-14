@@ -79,6 +79,7 @@ export function tokenRefToCssVar(ref: TokenRef, defaultScale?: string): string |
     'lineHeights',
     'letterSpacings',
     'shadows',
+    'gradients',
     'zIndices',
     'borderWidths',
     'opacities',

@@ -138,7 +138,8 @@ const targets = [
     // every package inherits through `resolveToken` / `tokenRefToCssVar`.
     // Bumped by cascade-layer support: `Box` now reads the active layer and
     // can emit base props as a class instead of inline styles.
-    budget: 6300,
+    // Bumped by the `gradients` scale joining core's known scale names.
+    budget: 6400,
   },
   {
     name: '@usemotif/ui - Card only',

@@ -123,6 +123,7 @@ export type ScaleName =
   | 'lineHeights'
   | 'letterSpacings'
   | 'shadows'
+  | 'gradients'
   | 'zIndices'
   | 'borderWidths'
   | 'opacities'
