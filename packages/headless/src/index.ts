@@ -54,6 +54,9 @@ import {
   MenuItem,
   MenuRoot,
   MenuSeparator,
+  MenuSub,
+  MenuSubContent,
+  MenuSubTrigger,
   MenuTrigger,
   MultiSelectChips,
   MultiSelectInput,
@@ -86,7 +89,7 @@ import {
  *
  * This is also where the reuse between namespaces is resolved. `AlertDialog`,
  * `Drawer` and `Sheet` share four of Dialog's parts, `Accordion` shares two of
- * Collapsible's, `ContextMenu` shares Menu's separator, `Search` shares
+ * Collapsible's, `ContextMenu` shares Menu's item, separator and submenu parts, `Search` shares
  * Combobox's input and list, and `Select` shares its list alone. Sharing a part
  * means sharing the identical client reference, not a copy.
  */
@@ -151,6 +154,9 @@ export const Menu = {
   Content: MenuContent,
   Item: MenuItem,
   Separator: MenuSeparator,
+  Sub: MenuSub,
+  SubTrigger: MenuSubTrigger,
+  SubContent: MenuSubContent,
 };
 
 export const ContextMenu = {
@@ -159,6 +165,9 @@ export const ContextMenu = {
   Content: ContextMenuContent,
   Item: ContextMenuItem,
   Separator: ContextMenuSeparator,
+  Sub: MenuSub,
+  SubTrigger: MenuSubTrigger,
+  SubContent: MenuSubContent,
 };
 
 export const Collapsible = {
@@ -251,6 +260,8 @@ export type {
   AccordionRootProps,
   AdaptProps,
   BreadcrumbProps,
+  CalendarBaseProps,
+  CalendarDayInfo,
   CalendarProps,
   CheckboxProps,
   CollapsibleRootProps,
@@ -263,7 +274,9 @@ export type {
   ContextMenuContentProps,
   ContextMenuRootProps,
   ContextMenuTriggerProps,
+  DatePickerOptions,
   DatePickerProps,
+  DateRange,
   DialogCloseProps,
   DialogContentProps,
   DialogDescriptionProps,
@@ -277,6 +290,9 @@ export type {
   HoverCardTriggerProps,
   MenuContentProps,
   MenuItemProps,
+  MenuSubContentProps,
+  MenuSubProps,
+  MenuSubTriggerProps,
   MenuRootProps,
   MenuTriggerProps,
   MultiSelectRootProps,
@@ -291,6 +307,8 @@ export type {
   ProgressProps,
   RadioGroupProps,
   RadioProps,
+  RangeCalendarProps,
+  RangeDatePickerProps,
   RangeSliderProps,
   RatingInputProps,
   SelectRootProps,

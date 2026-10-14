@@ -139,6 +139,8 @@ export type {
 
 export { Container } from './Container.js';
 export type { ContainerProps } from './Container.js';
+export { useContainerInfo } from './container-context.js';
+export type { ContainerContextValue } from './container-context.js';
 
 export { Image } from './Image.js';
 export type { ImageProps } from './Image.js';
@@ -219,6 +221,7 @@ export {
 export { useThemeSetting } from './useThemeSetting.js';
 export type {
   ResolvedTheme,
+  SyncStorage,
   ThemeMode,
   UseThemeSettingOptions,
   UseThemeSettingResult,

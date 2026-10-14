@@ -2,8 +2,8 @@
 title: DatePicker
 description: A Calendar opened from a trigger via a popover. The date-field pattern for forms.
 diataxis: reference
-covers: ['DatePicker', 'DatePickerProps']
-last_verified: 2026-05-15
+covers: ['DatePicker', 'DatePickerProps', 'RangeDatePickerProps', 'DatePickerOptions']
+last_verified: 2026-10-14
 ---
 
 import {
@@ -50,12 +50,18 @@ should always be visible, reach for Calendar directly.
 <ApiSignature
   name="DatePicker"
   status="stable"
-  signature={`function DatePicker(props: DatePickerProps): JSX.Element`}
+  signature={`function DatePicker(props: DatePickerProps | RangeDatePickerProps): JSX.Element`}
   params={[
+    {
+      name: 'mode',
+      type: "'single' | 'range'",
+      default: "'single'",
+      description: 'Pick one date, or a start and an end date. In range mode the popover stays open after the first pick and closes after the second.',
+    },
     {
       name: 'value / defaultValue / onValueChange',
       type: 'Date / Date / (next: Date) => void',
-      description: 'The selected date, controlled or uncontrolled.',
+      description: 'The selected date, controlled or uncontrolled. In range mode these take and report a `DateRange`; see Calendar.',
     },
     {
       name: 'renderTrigger',
@@ -65,7 +71,7 @@ should always be visible, reach for Calendar directly.
     {
       name: 'placeholder',
       type: 'string',
-      default: '"Pick a date"',
+      default: '"Pick a date" ("Pick dates" in range mode)',
       description: 'Trigger text shown when no date is selected.',
     },
     {
@@ -85,6 +91,14 @@ should always be visible, reach for Calendar directly.
     },
   ]}
 />
+
+## Range mode
+
+<CodeBlock lang="tsx" code={`<DatePicker mode="range" value={range} onValueChange={setRange} />`} />
+
+The trigger shows the start date alone while the second date is still to be picked, then both
+dates through `Intl.DateTimeFormat.formatRange`, which shortens a shared month or year. On React
+Native the label is the `format` callback applied to each date, joined with " - ".
 
 ## Accessibility
 

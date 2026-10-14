@@ -1,4 +1,5 @@
 import {
+  isKeyframe,
   type MotifComponent,
   resolveAnimationToken,
   resolveStyles,
@@ -17,6 +18,7 @@ import { type ReactElement, createElement, useRef, type ReactNode } from 'react'
 import { Animated, StyleSheet, View, type ViewProps, type ViewStyle } from 'react-native';
 import { BoxWithEnterNative } from './_box-enter.js';
 import { BoxWithExitNative } from './_box-exit.js';
+import { BoxWithKeyframesNative } from './_box-keyframes.js';
 import { BoxWithMotionValuesNative } from './_box-motion-values.js';
 import { splitMotionValueProps } from './_motion-bindings.js';
 import { sanitizeNativeStyle } from './_native-style.js';
@@ -249,6 +251,42 @@ export const Box: MotifComponent<BoxProps, ReactElement | null> = function (prop
   }
 
   const box = boxSheet(baseStyle);
+
+  if (
+    typeof animation === 'object' &&
+    isKeyframe(animation.name) &&
+    animation.name.frames !== undefined
+  ) {
+    const { durationMs, easing } = parseEntryTiming(undefined, animation, theme);
+    const delay = animation.delay;
+    const count = animation.iterationCount ?? 1;
+    return createElement(
+      BoxWithKeyframesNative,
+      {
+        passThrough: passThrough as ViewProps,
+        baseStyle,
+        box,
+        userStyle,
+        keyframe: { ...animation.name, frames: animation.name.frames },
+        timing: {
+          durationMs,
+          delayMs:
+            delay === undefined
+              ? 0
+              : parseDurationMs(resolveTokenStringIfNeeded(delay, theme, 'durations'), 0),
+          iterations: count === 'infinite' ? Infinity : Math.max(0, count),
+          direction: animation.direction ?? 'normal',
+          fillMode: animation.fillMode ?? 'none',
+        },
+        easing,
+        paused: animation.playState === 'paused',
+        animatedHost: styleContainsAnimatedValue(userStyle as ViewStyle | ViewStyle[] | undefined),
+        theme,
+      },
+      children,
+    );
+  }
+
   const finalStyle: ViewStyle[] =
     userStyle === undefined
       ? [box]
@@ -475,8 +513,8 @@ function parseEntryTiming(
     }
   }
   if (animation !== undefined) {
-    // Object form: native has no @keyframes-driven animation, so the
-    // entry driver just borrows the `duration` / `easing` slots.
+    // Object form: the timing slots. The keyframe stops themselves run
+    // through BoxWithKeyframesNative on the plain render path.
     if (typeof animation === 'object') {
       const duration = animation.duration ?? '200ms';
       const easing = animation.easing ?? 'ease';
@@ -524,12 +562,12 @@ function resolveTokenStringIfNeeded(
   return scale === 'durations' ? (tokens[1] ?? value) : (tokens[2] ?? value);
 }
 
-function parseDurationMs(value: string): number {
+function parseDurationMs(value: string, fallback = 200): number {
   const ms = /^([\d.]+)ms$/.exec(value);
   if (ms !== null) return Number(ms[1]);
   const s = /^([\d.]+)s$/.exec(value);
   if (s !== null) return Number(s[1]) * 1000;
-  return 200;
+  return fallback;
 }
 
 /**

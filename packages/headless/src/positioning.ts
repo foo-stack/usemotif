@@ -92,12 +92,16 @@ export function useFloatingPosition(
   return { position, floatingRef };
 }
 
+/** An element whose subtree is not "outside", or a test for one. */
+export type ClickOutsideIgnore = React.RefObject<HTMLElement | null> | ((target: Node) => boolean);
+
 /**
  * Hook: dismiss when the user clicks outside the given element.
  * `enabled` toggles the listener; `onDismiss` fires on outside click.
  *
- * `ignore` lists extra elements (a single ref or an array) whose clicks
- * count as "inside" - typically the trigger that toggles this surface.
+ * `ignore` lists extra elements (a single ref, a test, or an array of
+ * either) whose clicks count as "inside" - typically the trigger that toggles
+ * this surface.
  * The listener fires on `mousedown`, which runs before the trigger's own
  * `click` toggle; without ignoring the trigger, the two fight (mousedown
  * dismisses, then the trigger's click re-opens) and the surface reopens
@@ -108,7 +112,7 @@ export function useClickOutside(
   enabled: boolean,
   ref: React.RefObject<HTMLElement | null>,
   onDismiss: () => void,
-  ignore?: React.RefObject<HTMLElement | null> | ReadonlyArray<React.RefObject<HTMLElement | null>>,
+  ignore?: ClickOutsideIgnore | ReadonlyArray<ClickOutsideIgnore>,
 ): void {
   useEffect(() => {
     if (!enabled) return;
@@ -118,7 +122,7 @@ export function useClickOutside(
       if (el !== null && el.contains(target)) return;
       const ignoreList = ignore === undefined ? [] : Array.isArray(ignore) ? ignore : [ignore];
       for (const r of ignoreList) {
-        if (r.current?.contains(target)) return;
+        if (typeof r === 'function' ? r(target) : r.current?.contains(target)) return;
       }
       onDismiss();
     }

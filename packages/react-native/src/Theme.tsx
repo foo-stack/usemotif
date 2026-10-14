@@ -60,7 +60,7 @@ export function ThemeProvider({ themes, active, breakpoints, children }: ThemePr
     configureBreakpoints(breakpoints);
   }
   const value: ThemeContextValue = useMemo(
-    () => ({ themes, active, breakpoints: widths }),
+    () => ({ themes, active, chain: [active], breakpoints: widths }),
     [themes, active, widths],
   );
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
@@ -108,9 +108,15 @@ export function Theme({ name, children }: ThemeProps) {
   // Breakpoint widths are app-level, not per-theme - inherit the parent's
   // (or the global when orphaned) so nested scopes resolve against the same set.
   const widths = outer?.breakpoints ?? getBreakpoints();
+  const outerChain = outer?.chain;
   const value: ThemeContextValue = useMemo(
-    () => ({ themes: outer?.themes ?? [], active: name, breakpoints: widths }),
-    [outer?.themes, name, widths],
+    () => ({
+      themes: outer?.themes ?? [],
+      active: name,
+      chain: [...(outerChain ?? []), name],
+      breakpoints: widths,
+    }),
+    [outer?.themes, outerChain, name, widths],
   );
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }

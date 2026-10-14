@@ -77,7 +77,11 @@ const targets = [
     code: `import { Box } from '@usemotif/react-native';\nconsole.log(Box);\n`,
     // Bumped by decimal token-key resolution in core (`$space.1.5`), which
     // every package inherits through `resolveToken` / `tokenRefToCssVar`.
-    budget: 13500,
+    // Raised again when Box gained keyframe animation: the stop sampler and
+    // frame clock add about 1.5 KB. Colours parse through RN's
+    // `processColor` rather than core's colour-space module, which would
+    // have cost another 3 KB.
+    budget: 15000,
   },
   {
     name: '@usemotif/headless - Dialog only',

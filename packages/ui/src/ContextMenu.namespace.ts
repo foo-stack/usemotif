@@ -1,5 +1,6 @@
 import { ContextMenu as Headless } from '@usemotif/headless';
 import { ContextMenuContent, ContextMenuItem, ContextMenuSeparator } from './ContextMenu.js';
+import { MenuSubContent, MenuSubTrigger } from './MenuSub.js';
 
 /**
  * Namespace assembly, deliberately in its own module and deliberately without
@@ -16,4 +17,7 @@ export const ContextMenu = {
   Content: ContextMenuContent,
   Item: ContextMenuItem,
   Separator: ContextMenuSeparator,
+  Sub: Headless.Sub,
+  SubTrigger: MenuSubTrigger,
+  SubContent: MenuSubContent,
 };

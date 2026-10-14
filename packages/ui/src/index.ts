@@ -27,6 +27,7 @@ export {
 export { Select, type SelectProps, type SelectOption } from './Select.js';
 export { Menu } from './Menu.namespace.js';
 export { type MenuItemPropsThemed } from './Menu.js';
+export { type MenuSubTriggerPropsThemed } from './MenuSub.js';
 export { Slider, type SliderProps } from './Slider.js';
 export { Progress, type ProgressProps } from './Progress.js';
 export { Drawer, Sheet } from './Drawer.namespace.js';
@@ -57,8 +58,8 @@ export {
   type CollapsibleTriggerProps,
   type CollapsibleContentProps,
 } from './Collapsible.js';
-export { Calendar, type CalendarProps } from './Calendar.js';
-export { DatePicker, type DatePickerProps } from './DatePicker.js';
+export { Calendar, type CalendarProps, type RangeCalendarProps } from './Calendar.js';
+export { DatePicker, type DatePickerProps, type RangeDatePickerProps } from './DatePicker.js';
 export {
   CommandPalette,
   useCommandPaletteShortcut,

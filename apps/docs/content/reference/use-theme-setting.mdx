@@ -1,9 +1,9 @@
 ---
 title: useThemeSetting
-description: Auto dark/light mode hook for web. Reads the user's persisted override, falls back to prefers-color-scheme, and subscribes to OS changes.
+description: Auto dark/light mode hook for web. Reads the user's persisted override from localStorage or a store you pass, falls back to prefers-color-scheme, and subscribes to OS changes.
 diataxis: reference
-covers: ['useThemeSetting', 'ThemeMode', 'ResolvedTheme', 'UseThemeSettingOptions', 'UseThemeSettingResult']
-last_verified: 2026-05-15
+covers: ['useThemeSetting', 'ThemeMode', 'ResolvedTheme', 'UseThemeSettingOptions', 'UseThemeSettingResult', 'SyncStorage']
+last_verified: 2026-10-14
 ---
 
 import { ApiSignature, ArticleMeta, CodeBlock, Eyebrow } from '../../components/index.js';
@@ -19,7 +19,13 @@ import { ApiSignature, ArticleMeta, CodeBlock, Eyebrow } from '../../components/
       name: 'options.storageKey',
       type: 'string | null',
       description:
-        'localStorage key used to persist the user override. Set to null to disable persistence (when the host app already owns theme state and only needs the system-preference subscription). Defaults to "motif:theme".',
+        'Key the user override is persisted under. Set to null to disable persistence (when the host app already owns theme state and only needs the system-preference subscription). Defaults to "motif:theme".',
+    },
+    {
+      name: 'options.storage',
+      type: 'SyncStorage | null',
+      description:
+        'Where the override is persisted: any object with synchronous getItem, setItem and removeItem. Set to null to disable persistence. Defaults to window.localStorage.',
     },
     {
       name: 'options.defaultResolved',
@@ -34,12 +40,12 @@ import { ApiSignature, ArticleMeta, CodeBlock, Eyebrow } from '../../components/
 
 ## Description
 
-Reads the user's persisted override from `localStorage` (if any), falls back to
+Reads the user's persisted override from `localStorage` or the `storage` you pass, falls back to
 `prefers-color-scheme`, and subscribes to OS-level changes via `matchMedia`. Designed to pair
 with `<ThemeProvider>` to produce an automatic light/dark experience without per-page wiring.
 
-Web only. The hook reads `window.matchMedia` and `window.localStorage`; on native, supply your
-own preference store and pass the result to `<ThemeProvider active>` directly.
+This page describes the web hook, which reads `window.matchMedia`. React Native has a hook of
+the same name that reads `Appearance` instead and takes the same `storage` option.
 
 ## UseThemeSettingResult
 
@@ -52,7 +58,8 @@ own preference store and pass the result to `<ThemeProvider active>` directly.
 - **`mode`** - the user's selected mode. `'system'` until they explicitly choose.
 - **`resolved`** - the concrete theme to render. Equal to `mode` unless `mode === 'system'`, in
   which case it is the OS preference.
-- **`set(next)`** - updates the mode. Persists to `localStorage` when `storageKey` is set.
+- **`set(next)`** - updates the mode, and persists it unless `storage` or `storageKey` is
+  `null`. Setting `'system'` removes the stored key.
 
 ## Types
 
@@ -62,7 +69,43 @@ type ResolvedTheme = 'light' | 'dark';
 interface UseThemeSettingOptions {
   readonly storageKey?: string | null;
   readonly defaultResolved?: ResolvedTheme;
+  readonly storage?: SyncStorage | null;
+}
+
+interface SyncStorage {
+  getItem(key: string): string | null;
+  setItem(key: string, value: string): void;
+  removeItem(key: string): void;
 }`} />
+
+## Custom storage
+
+Pass `storage` to keep the override somewhere other than `localStorage`, such as a cookie
+the server can read to render the right theme on first paint. Create the store once, outside
+the component, so the hook does not re-read it on every render.
+
+<CodeBlock lang="tsx" code={`import { useThemeSetting, type SyncStorage } from '@usemotif/react';
+
+const cookieStorage: SyncStorage = {
+  getItem: (key) =>
+    document.cookie
+      .split('; ')
+      .find((entry) => entry.startsWith(key + '='))
+      ?.slice(key.length + 1) ?? null,
+  setItem: (key, value) => {
+    document.cookie = key + '=' + value + '; path=/; max-age=31536000';
+  },
+  removeItem: (key) => {
+    document.cookie = key + '=; path=/; max-age=0';
+  },
+};
+
+function useAppTheme() {
+  return useThemeSetting({ storage: cookieStorage });
+}`} />
+
+The stored value is read in a client effect, never during render, so the first render matches
+the server whatever store is passed.
 
 ## SSR behaviour
 

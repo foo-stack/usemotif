@@ -16943,6 +16943,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "usemotif@workspace:packages/usemotif"
   dependencies:
+    "@types/node": "npm:^25.6.0"
     "@types/react": "npm:^19.2.14"
     "@usemotif/core": "workspace:*"
     "@usemotif/react": "workspace:*"

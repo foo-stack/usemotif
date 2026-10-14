@@ -3,7 +3,7 @@ title: keyframes
 description: Define a named CSS animation keyframe sequence. Returns a typed Keyframe brand that motion props accept as a token-like value.
 diataxis: reference
 covers: ['keyframes']
-last_verified: 2026-05-15
+last_verified: 2026-10-14
 ---
 
 import { ApiSignature, ArticleMeta, CodeBlock, Eyebrow } from '../../components/index.js';
@@ -39,12 +39,13 @@ component; defining it inline allocates on every render.
 ## KeyframeDef
 
 <CodeBlock lang="ts" code={`interface KeyframeDef {
-  readonly [selector: string]: StyleBag;
+  readonly [selector: string]: Record<string, string | number>;
 }`} />
 
-Selectors are the literal CSS keyframe selectors: `'0%'`, `'50%'`, `'100%'`, `'from'`, `'to'`.
-Values are style bags identical to the shape accepted by style props - token references,
-literals, and shorthands all work.
+Selectors are the literal CSS keyframe selectors: `'0%'`, `'50%'`, `'100%'`, `'from'`, `'to'`,
+or a comma list such as `'0%, 100%'`. Values are CSS properties in camelCase (`opacity`,
+`transform`, `backgroundColor`) with literal values or token references. Style-prop shorthands
+such as `bg` and `p` are not expanded here.
 
 ## Example
 
@@ -76,8 +77,18 @@ The runtime emits the `@keyframes` rule once per unique definition and hashes th
 A hundred toasts sharing the same `slideIn` produce one keyframe rule, one class on each toast,
 and no duplication.
 
-On native, the `animation` prop routes through React Native's animation drivers (or Reanimated if
-installed). The `Keyframe` shape is the same; the runtime adapts.
+## On React Native
+
+Native has no `@keyframes` rule, so `Box` runs the stops itself on the JavaScript thread, honouring
+`duration`, `delay`, `easing`, `iterationCount`, `direction`, `fillMode` and `playState`.
+
+- **Interpolated:** numbers, colours, lengths that share a unit, and `transform` lists whose
+  functions appear in the same order at each stop.
+- **Switched halfway:** every other value, as CSS does for discrete properties.
+- **Token references** resolve against the active theme. `Npx` lengths become plain numbers.
+- **Not run on native:** a string `name`, which refers to a CSS rule native cannot read, and an
+  `animation` on a `Box` that also sets `enterStyle`, `exitStyle` or a motion value, where those
+  keep precedence.
 
 ## Related
 

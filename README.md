@@ -105,7 +105,7 @@ Server Component directly. The full setup is in the
 
 motif ships under the `@usemotif/*` scope, which began at `1.0.0` - the
 deliberate v1, after two namespace renames the docs call v2 and v3 - and is now
-at `1.5.0`. The legacy `@motif-js/*` packages remain on npm, frozen, with
+at `1.6.0`. The legacy `@motif-js/*` packages remain on npm, frozen, with
 deprecation notices. To move an existing project,
 run `npx @usemotif/migrate rename-v3` or follow the
 [migration guides](https://usemotif.dev/migrating/v2-to-v3).

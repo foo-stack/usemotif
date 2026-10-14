@@ -2,7 +2,7 @@
 title: DatePicker
 description: A themed date picker over the headless DatePicker - a trigger button that opens a popover holding the themed calendar, controlled or uncontrolled.
 diataxis: reference
-covers: ['DatePicker', 'DatePickerProps']
+covers: ['DatePicker', 'DatePickerProps', 'RangeDatePickerProps']
 last_verified: 2026-10-14
 ---
 
@@ -72,8 +72,14 @@ Controlled, with past days disabled:
 <ApiSignature
   name="DatePicker"
   status="stable"
-  signature={`function DatePicker(props: DatePickerProps): JSX.Element`}
+  signature={`function DatePicker(props: DatePickerProps | RangeDatePickerProps): JSX.Element`}
   params={[
+    {
+      name: 'mode',
+      type: "'single' | 'range'",
+      default: "'single'",
+      description: 'Pick one date, or a start and an end date (`value`, `defaultValue` and `onValueChange` then use `{ start: Date; end: Date | null }`). The popover stays open after the first pick and closes after the second; the trigger shows both dates.',
+    },
     {
       name: 'value',
       type: 'Date | undefined',
@@ -133,8 +139,8 @@ Controlled, with past days disabled:
     },
     {
       name: 'renderDay',
-      type: '(info: { date, isSelected, isToday, isOutsideMonth, isDisabled }) => ReactNode',
-      description: 'Replaces the themed day cell. `date` is a `Date`; the rest are booleans.',
+      type: '(info: { date, isSelected, isToday, isOutsideMonth, isDisabled, isRangeStart, isRangeEnd, isInRange }) => ReactNode',
+      description: 'Replaces the themed day cell. `date` is a `Date`; the rest are booleans, the range flags `false` outside range mode.',
     },
   ]}
 />

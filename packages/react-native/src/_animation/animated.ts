@@ -661,7 +661,7 @@ function parseCubicBezier(easing: string): [number, number, number, number] | nu
   return [nums[0], nums[1], nums[2], nums[3]];
 }
 
-function mapEasing(easing: string): (t: number) => number {
+export function mapEasing(easing: string): (t: number) => number {
   switch (easing) {
     case 'linear': {
       return Easing.linear;
