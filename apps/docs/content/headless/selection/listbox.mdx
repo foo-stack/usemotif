@@ -61,6 +61,11 @@ option rows it shares. Options are the Combobox's `{ value, label, disabled? }` 
       description: 'Override how each option renders.',
     },
     {
+      name: 'itemHeight',
+      type: 'number',
+      description: 'Row height in px for long lists. Omitted, it is measured from the first row. See [Long lists](/headless/selection/combobox#long-lists).',
+    },
+    {
       name: 'disabled / aria-label / aria-labelledby / style',
       type: 'boolean / string / string / CSSProperties',
       description: 'Disable the whole list, name it, and style it.',
