@@ -128,6 +128,7 @@ export default defineConfig({
     'src/Select.tsx',
     'src/Menu.tsx',
     'src/MenuSub.tsx',
+    'src/MenuItems.tsx',
     'src/Slider.tsx',
     'src/Progress.tsx',
     'src/Drawer.tsx',

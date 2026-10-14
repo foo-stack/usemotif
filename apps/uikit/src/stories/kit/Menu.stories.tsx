@@ -81,3 +81,32 @@ export const WithSubmenu: Story = {
     </Box>
   ),
 };
+
+/** Checkbox and radio rows with a label: the check and dot mark what is on. */
+export const WithCheckboxAndRadio: Story = {
+  render: () => (
+    <Box pb={260} display="flex" justifyContent="center">
+      <Menu.Root defaultOpen>
+        <Menu.Trigger>
+          <Button>View</Button>
+        </Menu.Trigger>
+        <Menu.Content>
+          <Menu.CheckboxItem defaultChecked closeOnSelect={false}>
+            Word wrap
+          </Menu.CheckboxItem>
+          <Menu.CheckboxItem closeOnSelect={false}>Minimap</Menu.CheckboxItem>
+          <Menu.Separator />
+          <Menu.Label>Sort by</Menu.Label>
+          <Menu.RadioGroup defaultValue="name">
+            <Menu.RadioItem value="name" closeOnSelect={false}>
+              Name
+            </Menu.RadioItem>
+            <Menu.RadioItem value="date" closeOnSelect={false}>
+              Date modified
+            </Menu.RadioItem>
+          </Menu.RadioGroup>
+        </Menu.Content>
+      </Menu.Root>
+    </Box>
+  ),
+};

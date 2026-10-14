@@ -643,6 +643,48 @@ describe('Menu - themed dropdown with asChild items', () => {
   });
 });
 
+describe('Menu checkbox, radio and label items', () => {
+  it('draws a check and a dot, follows clicks, and shares the parts with ContextMenu', () => {
+    expect(ContextMenu.CheckboxItem).toBe(Menu.CheckboxItem);
+    expect(ContextMenu.RadioItem).toBe(Menu.RadioItem);
+    render(
+      <Menu.Root defaultOpen>
+        <Menu.Trigger>
+          <button>View</button>
+        </Menu.Trigger>
+        <Menu.Content>
+          <Menu.CheckboxItem defaultChecked closeOnSelect={false}>
+            Wrap
+          </Menu.CheckboxItem>
+          <Menu.Label>Sort by</Menu.Label>
+          <Menu.RadioGroup defaultValue="name">
+            <Menu.RadioItem value="name" closeOnSelect={false}>
+              Name
+            </Menu.RadioItem>
+            <Menu.RadioItem value="date" closeOnSelect={false}>
+              Date
+            </Menu.RadioItem>
+          </Menu.RadioGroup>
+        </Menu.Content>
+      </Menu.Root>,
+    );
+    const item = (role: string, name: string): Element =>
+      Array.from(document.querySelectorAll(`[role="${role}"]`)).find((e) =>
+        e.textContent?.endsWith(name),
+      )!;
+    expect(item('menuitemcheckbox', 'Wrap').textContent).toBe('✓Wrap');
+    expect(look(item('menuitemcheckbox', 'Wrap'))).not.toBe('|');
+    expect(item('menuitemradio', 'Name').textContent).toBe('●Name');
+    expect(item('menuitemradio', 'Date').textContent).toBe('Date');
+    click(item('menuitemcheckbox', 'Wrap'));
+    expect(item('menuitemcheckbox', 'Wrap').textContent).toBe('Wrap');
+    click(item('menuitemradio', 'Date'));
+    expect(item('menuitemradio', 'Date').textContent).toBe('●Date');
+    expect(item('menuitemradio', 'Name').textContent).toBe('Name');
+    expect(document.body.textContent).toContain('Sort by');
+  });
+});
+
 describe('Slider - themed range input over the headless slider', () => {
   it('exposes the slider role + value and responds to arrow keys', () => {
     render(<Slider defaultValue={40} aria-label="Volume" />);

@@ -178,6 +178,20 @@ click, Arrow Right, Enter or Space; `ContextMenu.SubContent` is the same raised 
 Arrow Left or Escape closes it, and choosing an item inside closes the whole menu. The kit's
 Menu and ContextMenu share these parts.
 
+### ContextMenu.CheckboxItem, ContextMenu.RadioGroup, ContextMenu.RadioItem, ContextMenu.Label
+
+Stateful rows with a fixed indicator column: a check on a checked checkbox item, a dot on the
+selected radio item, so labels line up either way. `ContextMenu.Label` is a small muted heading the
+arrow keys skip. The props are the headless ones without `style` and `asChild`; see
+[Menu (headless)](/headless/menu/menu#menucheckboxitem-menuradiogroup-menuradioitem-menulabel).
+
+<CodeBlock lang="tsx" code={`<ContextMenu.CheckboxItem defaultChecked>Word wrap</ContextMenu.CheckboxItem>
+<ContextMenu.Label>Sort by</ContextMenu.Label>
+<ContextMenu.RadioGroup defaultValue="name">
+  <ContextMenu.RadioItem value="name">Name</ContextMenu.RadioItem>
+  <ContextMenu.RadioItem value="date">Date modified</ContextMenu.RadioItem>
+</ContextMenu.RadioGroup>`} />
+
 <CodeBlock lang="tsx" code={`<ContextMenu.Sub>
   <ContextMenu.SubTrigger>Share</ContextMenu.SubTrigger>
   <ContextMenu.SubContent>
