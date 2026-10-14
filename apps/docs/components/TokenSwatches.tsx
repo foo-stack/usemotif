@@ -91,7 +91,15 @@ export function TokenSwatches() {
             <Box color="$colors.text.muted">Light</Box>
             <Box color="$colors.text.muted">Dark</Box>
             {rowsFor(group).map((row) => [
-              <Box key={`${row.path}-name`} as="code" fontSize="$fontSizes.xs" minWidth={0}>
+              <Box
+                key={`${row.path}-name`}
+                as="code"
+                fontSize="$fontSizes.xs"
+                minWidth={0}
+                // Long paths (`action.primary.hover`) would run into the swatch
+                // column on a phone; let them break at any character instead.
+                style={{ overflowWrap: 'anywhere' }}
+              >
                 {row.path}
               </Box>,
               <Swatch key={`${row.path}-light`} color={row.light} />,
