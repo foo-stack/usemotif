@@ -125,6 +125,7 @@ function onMultiChange(next: ReadonlyArray<string>): void {
 // Hoisted: an inline `defaultValue={new Date(...)}` object prop would trip the
 // lint. A fixed date keeps the selected-cell assertion deterministic.
 const NO_OPTIONS: ReadonlyArray<SelectOption> = [];
+const SLIDER_MARKS = [{ value: 0, label: 'Low' }, { value: 50 }, { value: 100, label: 'High' }];
 const CAL_DEFAULT = new Date(2024, 0, 15);
 const CAL_RANGE = { start: new Date(2024, 0, 10), end: new Date(2024, 0, 12) };
 
@@ -952,6 +953,31 @@ describe('NavigationMenu - themed nav bar over the headless landmark', () => {
     expect(nav.querySelector('[aria-current="page"]')).not.toBeNull();
     // The active link is themed distinctly from the inactive one.
     expect(look(links[0]!)).not.toBe(look(links[1]!));
+  });
+});
+
+describe('Slider marks and a vertical RangeSlider', () => {
+  it('themes the ticks and labels, and leaves room for the labels', () => {
+    render(<Slider defaultValue={50} marks={SLIDER_MARKS} aria-label="Volume" />);
+    const ticks = Array.from(container.querySelectorAll<HTMLElement>('[aria-hidden="true"]'));
+    expect(ticks.length).toBe(3);
+    expect(ticks[0]!.style.borderRadius).not.toBe('');
+    expect(ticks[0]!.textContent).toBe('Low');
+    expect(container.querySelector<HTMLElement>('[role="slider"]')!.style.marginBottom).toBe(
+      '22px',
+    );
+  });
+
+  it('turns the track upright for orientation="vertical"', () => {
+    render(
+      <RangeSlider orientation="vertical" width={160} defaultValue={[20, 80]} aria-label="Range" />,
+    );
+    const track = container.querySelector<HTMLElement>('[data-orientation="vertical"]')!;
+    expect(track.style.width).toBe('6px');
+    expect(track.style.height).toBe('160px');
+    const thumbs = container.querySelectorAll<HTMLElement>('[role="slider"]');
+    expect(thumbs[0]!.style.bottom).toBe('20%');
+    expect(thumbs[0]!.style.left).toBe('50%');
   });
 });
 

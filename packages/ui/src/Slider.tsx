@@ -5,10 +5,11 @@ import {
   type SliderProps as HeadlessSliderProps,
 } from '@usemotif/headless';
 import { useMemo, type CSSProperties } from 'react';
+import { labelRoom, MARK_LABEL_STYLE, MARK_STYLE } from './_slider-marks.js';
 
 export interface SliderProps extends Omit<
   HeadlessSliderProps,
-  'style' | 'thumbStyle' | 'fillStyle' | 'orientation'
+  'style' | 'thumbStyle' | 'fillStyle' | 'orientation' | 'markStyle' | 'markLabelStyle'
 > {
   /** Track length (number → px). Default 200. */
   readonly width?: number | string;
@@ -56,10 +57,18 @@ export function Slider({ width = 200, ...rest }: SliderProps) {
       background: 'var(--colors-surface-muted, #e5e7eb)',
       opacity: disabled ? 0.5 : 1,
       cursor: disabled ? 'not-allowed' : 'pointer',
+      ...labelRoom(rest.marks, 'horizontal'),
     }),
-    [width, disabled],
+    [width, disabled, rest.marks],
   );
   return (
-    <HeadlessSlider {...rest} style={trackStyle} fillStyle={FILL_STYLE} thumbStyle={THUMB_STYLE} />
+    <HeadlessSlider
+      {...rest}
+      style={trackStyle}
+      fillStyle={FILL_STYLE}
+      thumbStyle={THUMB_STYLE}
+      markStyle={MARK_STYLE.horizontal}
+      markLabelStyle={MARK_LABEL_STYLE.horizontal}
+    />
   );
 }
