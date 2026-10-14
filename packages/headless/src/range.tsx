@@ -14,6 +14,9 @@ import {
   type Ref,
 } from 'react';
 import { clamp, snap } from './_range-math.js';
+import { markValueText, type SliderMark } from './_slider-marks.js';
+
+export type { SliderMark } from './_slider-marks.js';
 import { useControllableState } from './use-controllable-state.js';
 
 /**
@@ -41,6 +44,12 @@ export interface SliderProps {
   thumbStyle?: CSSProperties;
   /** Inline style for the filled track. */
   fillStyle?: CSSProperties;
+  /** Points to mark along the track, each with an optional label. */
+  marks?: ReadonlyArray<SliderMark>;
+  /** Inline style for each mark. */
+  markStyle?: CSSProperties;
+  /** Inline style for each mark's label. */
+  markLabelStyle?: CSSProperties;
 }
 export const Slider = forwardRef(function Slider(
   {
@@ -55,6 +64,9 @@ export const Slider = forwardRef(function Slider(
     style,
     thumbStyle,
     fillStyle,
+    marks,
+    markStyle,
+    markLabelStyle,
     ...aria
   }: SliderProps,
   ref: Ref<HTMLDivElement>,
@@ -156,6 +168,7 @@ export const Slider = forwardRef(function Slider(
       aria-valuemax={max}
       aria-disabled={disabled || undefined}
       aria-orientation={orientation}
+      aria-valuetext={markValueText(marks, value)}
       onKeyDown={onKeyDown}
       onPointerDown={onPointerDown}
       style={{
@@ -174,6 +187,14 @@ export const Slider = forwardRef(function Slider(
           ...fillStyle,
         }}
       />
+      <Marks
+        marks={marks}
+        orientation={orientation}
+        percentOf={(v) => ((v - min) / (max - min)) * 100}
+        isActive={(v) => v <= value}
+        markStyle={markStyle}
+        markLabelStyle={markLabelStyle}
+      />
       <div
         style={{
           position: 'absolute',
@@ -184,6 +205,46 @@ export const Slider = forwardRef(function Slider(
     </div>
   );
 });
+
+/**
+ * The marks along a track: decorative (`aria-hidden`), since the slider itself
+ * announces its value. `data-active` flags those inside the filled range.
+ */
+function Marks({
+  marks,
+  orientation,
+  percentOf,
+  isActive,
+  markStyle,
+  markLabelStyle,
+}: {
+  marks: ReadonlyArray<SliderMark> | undefined;
+  orientation: 'horizontal' | 'vertical';
+  percentOf: (value: number) => number;
+  isActive: (value: number) => boolean;
+  markStyle: CSSProperties | undefined;
+  markLabelStyle: CSSProperties | undefined;
+}): ReactElement | null {
+  if (marks === undefined || marks.length === 0) return null;
+  return (
+    <>
+      {marks.map((mark) => (
+        <div
+          key={mark.value}
+          aria-hidden
+          data-active={isActive(mark.value) || undefined}
+          style={{
+            position: 'absolute',
+            [orientation === 'horizontal' ? 'left' : 'bottom']: `${percentOf(mark.value)}%`,
+            ...markStyle,
+          }}
+        >
+          {mark.label !== undefined ? <span style={markLabelStyle}>{mark.label}</span> : null}
+        </div>
+      ))}
+    </>
+  );
+}
 
 // ─────────── RangeSlider ──────────────────────────────────────────
 
@@ -203,6 +264,15 @@ export interface RangeSliderProps {
   thumbStyle?: CSSProperties;
   /** Inline style for the filled segment between the two thumbs. */
   fillStyle?: CSSProperties;
+  /** Lay the track out vertically, the low thumb at the bottom. Defaults to
+   * `'horizontal'`. */
+  orientation?: 'horizontal' | 'vertical';
+  /** Points to mark along the track, each with an optional label. */
+  marks?: ReadonlyArray<SliderMark>;
+  /** Inline style for each mark. */
+  markStyle?: CSSProperties;
+  /** Inline style for each mark's label. */
+  markLabelStyle?: CSSProperties;
 }
 export function RangeSlider({
   value: controlled,
@@ -215,6 +285,10 @@ export function RangeSlider({
   style,
   thumbStyle,
   fillStyle,
+  orientation = 'horizontal',
+  marks,
+  markStyle,
+  markLabelStyle,
   ...aria
 }: RangeSliderProps): ReactElement {
   const [value, commit] = useControllableState<[number, number]>({
@@ -250,6 +324,8 @@ export function RangeSlider({
     'aria-valuenow': number;
     'aria-valuemin': number;
     'aria-valuemax': number;
+    'aria-orientation': 'horizontal' | 'vertical';
+    'aria-valuetext': string | undefined;
     onKeyDown: (e: KeyboardEvent<HTMLDivElement>) => void;
   } {
     return {
@@ -258,6 +334,8 @@ export function RangeSlider({
       'aria-valuenow': value[idx],
       'aria-valuemin': idx === 0 ? min : value[0],
       'aria-valuemax': idx === 1 ? max : value[1],
+      'aria-orientation': orientation,
+      'aria-valuetext': markValueText(marks, value[idx]),
       onKeyDown: (e) => {
         if (disabled) return;
         const next: [number, number] = [...value];
@@ -284,23 +362,37 @@ export function RangeSlider({
   // handlers carry the slider role + arrow-key nav; the inline left/width is the
   // visual placement consumers theme over via thumbStyle / fillStyle.
   const pct = (v: number): number => ((v - min) / (max - min)) * 100;
+  const start = orientation === 'horizontal' ? 'left' : 'bottom';
+  const length = orientation === 'horizontal' ? 'width' : 'height';
   return (
-    <div style={{ position: 'relative', userSelect: 'none', ...style }} {...aria}>
+    <div
+      data-orientation={orientation}
+      style={{ position: 'relative', userSelect: 'none', ...style }}
+      {...aria}
+    >
       <div
         style={{
           position: 'absolute',
-          left: `${pct(value[0])}%`,
-          width: `${pct(value[1]) - pct(value[0])}%`,
+          [start]: `${pct(value[0])}%`,
+          [length]: `${pct(value[1]) - pct(value[0])}%`,
           ...fillStyle,
         }}
       />
+      <Marks
+        marks={marks}
+        orientation={orientation}
+        percentOf={pct}
+        isActive={(v) => v >= value[0] && v <= value[1]}
+        markStyle={markStyle}
+        markLabelStyle={markLabelStyle}
+      />
       <div
         {...thumbHandlers(0)}
-        style={{ position: 'absolute', left: `${pct(value[0])}%`, ...thumbStyle }}
+        style={{ position: 'absolute', [start]: `${pct(value[0])}%`, ...thumbStyle }}
       />
       <div
         {...thumbHandlers(1)}
-        style={{ position: 'absolute', left: `${pct(value[1])}%`, ...thumbStyle }}
+        style={{ position: 'absolute', [start]: `${pct(value[1])}%`, ...thumbStyle }}
       />
     </div>
   );

@@ -345,3 +345,56 @@ describe('RatingInput', () => {
     expect(onValueChange).not.toHaveBeenCalled();
   });
 });
+
+describe('Slider and RangeSlider marks', () => {
+  const marks = [{ value: 0, label: 'Off' }, { value: 50, label: 'Half' }, { value: 100 }];
+
+  function markEls(): HTMLElement[] {
+    return Array.from(container.querySelectorAll<HTMLElement>('[aria-hidden="true"]'));
+  }
+
+  it('places marks by percent, flags the filled ones, and renders their labels', () => {
+    render(<Slider defaultValue={50} marks={marks} aria-label="Volume" />);
+    const els = markEls();
+    expect(els.map((m) => m.style.left)).toEqual(['0%', '50%', '100%']);
+    expect(els.map((m) => m.hasAttribute('data-active'))).toEqual([true, true, false]);
+    expect(els.map((m) => m.textContent)).toEqual(['Off', 'Half', '']);
+  });
+
+  it('names a value that sits on a string-labelled mark', () => {
+    render(<Slider defaultValue={50} marks={marks} aria-label="Volume" />);
+    const slider = container.querySelector('[role="slider"]')!;
+    expect(slider.getAttribute('aria-valuetext')).toBe('Half');
+    act(() => {
+      slider.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+    });
+    expect(slider.hasAttribute('aria-valuetext')).toBe(false);
+  });
+
+  it('places vertical marks from the bottom', () => {
+    render(<Slider orientation="vertical" defaultValue={0} marks={marks} aria-label="Level" />);
+    expect(markEls().map((m) => m.style.bottom)).toEqual(['0%', '50%', '100%']);
+  });
+
+  it('flags the marks inside a RangeSlider range', () => {
+    render(<RangeSlider defaultValue={[40, 100]} marks={marks} aria-label="Price" />);
+    expect(markEls().map((m) => m.hasAttribute('data-active'))).toEqual([false, true, true]);
+  });
+});
+
+describe('vertical RangeSlider', () => {
+  it('places the fill and thumbs from the bottom and reports the orientation', () => {
+    render(<RangeSlider orientation="vertical" defaultValue={[20, 60]} aria-label="Range" />);
+    const thumbs = Array.from(container.querySelectorAll<HTMLElement>('[role="slider"]'));
+    expect(thumbs.map((t) => t.style.bottom)).toEqual(['20%', '60%']);
+    expect(thumbs.map((t) => t.style.left)).toEqual(['', '']);
+    expect(thumbs.map((t) => t.getAttribute('aria-orientation'))).toEqual(['vertical', 'vertical']);
+    const fill = container.querySelector<HTMLElement>('[data-orientation="vertical"] > div')!;
+    expect(fill.style.bottom).toBe('20%');
+    expect(fill.style.height).toBe('40%');
+    act(() => {
+      thumbs[1]!.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }));
+    });
+    expect(thumbs[1]!.getAttribute('aria-valuenow')).toBe('61');
+  });
+});

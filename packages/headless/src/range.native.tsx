@@ -6,7 +6,9 @@ import {
   type LayoutChangeEvent,
   type ViewStyle,
 } from 'react-native';
+import { nativeText } from './_native-text.js';
 import { clamp, snap } from './_range-math.js';
+import { markValueText, type SliderMark } from './_slider-marks.js';
 import { useControllableState } from './use-controllable-state.js';
 
 /**
@@ -33,6 +35,10 @@ export interface SliderProps {
   style?: ViewStyle;
   thumbStyle?: ViewStyle;
   fillStyle?: ViewStyle;
+  /** Points to mark along the track, each with an optional label. */
+  marks?: ReadonlyArray<SliderMark>;
+  markStyle?: ViewStyle;
+  markLabelStyle?: ViewStyle;
 }
 export function Slider({
   value: controlled,
@@ -47,6 +53,9 @@ export function Slider({
   style,
   thumbStyle,
   fillStyle,
+  marks,
+  markStyle,
+  markLabelStyle,
 }: SliderProps): ReactElement {
   const [value, commit] = useControllableState({
     value: controlled,
@@ -87,7 +96,7 @@ export function Slider({
   return (
     <View
       accessibilityRole="adjustable"
-      accessibilityValue={{ min, max, now: value }}
+      accessibilityValue={withText({ min, max, now: value }, markValueText(marks, value))}
       accessibilityLabel={accessibilityLabel}
       accessibilityState={{ disabled }}
       onLayout={onLayout}
@@ -106,6 +115,13 @@ export function Slider({
           fillStyle as ViewStyle,
         ]}
       />
+      <Marks
+        marks={marks}
+        orientation={orientation}
+        percentOf={(v) => ((v - min) / (max - min)) * 100}
+        markStyle={markStyle}
+        markLabelStyle={markLabelStyle}
+      />
       <View
         style={[
           { position: 'absolute' },
@@ -116,6 +132,49 @@ export function Slider({
         ]}
       />
     </View>
+  );
+}
+
+function withText<T extends object>(value: T, text: string | undefined): T & { text?: string } {
+  return text === undefined ? value : { ...value, text };
+}
+
+/** The marks along a track: hidden from assistive technology, which hears the value. */
+function Marks({
+  marks,
+  orientation,
+  percentOf,
+  markStyle,
+  markLabelStyle,
+}: {
+  marks: ReadonlyArray<SliderMark> | undefined;
+  orientation: 'horizontal' | 'vertical';
+  percentOf: (value: number) => number;
+  markStyle: ViewStyle | undefined;
+  markLabelStyle: ViewStyle | undefined;
+}): ReactElement | null {
+  if (marks === undefined || marks.length === 0) return null;
+  return (
+    <>
+      {marks.map((mark) => (
+        <View
+          key={mark.value}
+          accessibilityElementsHidden
+          importantForAccessibility="no-hide-descendants"
+          style={[
+            { position: 'absolute' },
+            orientation === 'horizontal'
+              ? { left: `${percentOf(mark.value)}%` }
+              : { bottom: `${percentOf(mark.value)}%` },
+            markStyle as ViewStyle,
+          ]}
+        >
+          {mark.label !== undefined ? (
+            <View style={markLabelStyle}>{nativeText(mark.label)}</View>
+          ) : null}
+        </View>
+      ))}
+    </>
   );
 }
 
@@ -131,6 +190,12 @@ export interface RangeSliderProps {
   disabled?: boolean;
   accessibilityLabel?: string;
   style?: ViewStyle;
+  /** Lays the thumbs out in a column when `'vertical'`. Defaults to `'horizontal'`. */
+  orientation?: 'horizontal' | 'vertical';
+  /** Points to mark along the track, each with an optional label. */
+  marks?: ReadonlyArray<SliderMark>;
+  markStyle?: ViewStyle;
+  markLabelStyle?: ViewStyle;
 }
 export function RangeSlider({
   value: controlled,
@@ -142,6 +207,10 @@ export function RangeSlider({
   disabled = false,
   accessibilityLabel,
   style,
+  orientation = 'horizontal',
+  marks,
+  markStyle,
+  markLabelStyle,
 }: RangeSliderProps): ReactElement {
   const [value, commit] = useControllableState<[number, number]>({
     value: controlled,
@@ -169,11 +238,27 @@ export function RangeSlider({
   return (
     <View
       accessibilityLabel={accessibilityLabel}
-      style={[{ position: 'relative', flexDirection: 'row' }, style as ViewStyle]}
+      style={[
+        {
+          position: 'relative',
+          flexDirection: orientation === 'horizontal' ? 'row' : 'column-reverse',
+        },
+        style as ViewStyle,
+      ]}
     >
+      <Marks
+        marks={marks}
+        orientation={orientation}
+        percentOf={(v) => ((v - min) / (max - min)) * 100}
+        markStyle={markStyle}
+        markLabelStyle={markLabelStyle}
+      />
       <Pressable
         accessibilityRole="adjustable"
-        accessibilityValue={{ min, max: value[1], now: value[0] }}
+        accessibilityValue={withText(
+          { min, max: value[1], now: value[0] },
+          markValueText(marks, value[0]),
+        )}
         accessibilityState={{ disabled }}
         accessibilityActions={[{ name: 'increment' as const }, { name: 'decrement' as const }]}
         onAccessibilityAction={(e) => {
@@ -183,7 +268,10 @@ export function RangeSlider({
       />
       <Pressable
         accessibilityRole="adjustable"
-        accessibilityValue={{ min: value[0], max, now: value[1] }}
+        accessibilityValue={withText(
+          { min: value[0], max, now: value[1] },
+          markValueText(marks, value[1]),
+        )}
         accessibilityState={{ disabled }}
         accessibilityActions={[{ name: 'increment' as const }, { name: 'decrement' as const }]}
         onAccessibilityAction={(e) => {
