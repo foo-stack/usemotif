@@ -2,8 +2,8 @@
 title: Menu
 description: An accessible dropdown menu with arrow-key navigation. Trigger, panel, items, separators - the full keyboard contract.
 diataxis: reference
-covers: ['Menu', 'MenuRootProps', 'MenuTriggerProps', 'MenuContentProps', 'MenuItemProps']
-last_verified: 2026-05-15
+covers: ['Menu', 'MenuRootProps', 'MenuTriggerProps', 'MenuContentProps', 'MenuItemProps', 'MenuSubProps', 'MenuSubTriggerProps', 'MenuSubContentProps']
+last_verified: 2026-10-14
 ---
 
 import {
@@ -172,6 +172,29 @@ focuses the first enabled item, and the arrow keys move between items from there
 
 A `role="separator"` divider between item groups. Takes an optional `style`.
 
+### Menu.Sub, Menu.SubTrigger, Menu.SubContent
+
+A submenu. `Menu.Sub` groups a `Menu.SubTrigger`, which is an item of the surrounding menu, with
+the `Menu.SubContent` it opens beside it. Submenus nest, and one submenu per menu level is open
+at a time.
+
+<CodeBlock lang="tsx" code={`<Menu.Sub>
+  <Menu.SubTrigger>Share</Menu.SubTrigger>
+  <Menu.SubContent>
+    <Menu.Item onSelect={emailLink}>Email link</Menu.Item>
+    <Menu.Item onSelect={copyLink}>Copy link</Menu.Item>
+  </Menu.SubContent>
+</Menu.Sub>`} />
+
+- **`Menu.SubTrigger`** takes `disabled`, `style`, `asChild` and `children`, like `Menu.Item`.
+  Hovering or clicking it opens the submenu without moving focus.
+- **`Menu.SubContent`** takes `offset` (px between trigger and panel, default `0`), `style` and
+  `children`. Choosing an item inside closes the whole menu and returns focus to the trigger,
+  and clicks inside an open submenu never count as outside the menu.
+
+`ContextMenu.Sub`, `ContextMenu.SubTrigger` and `ContextMenu.SubContent` are the same parts. On
+React Native a submenu expands inline within the menu sheet.
+
 ## Keyboard
 
 | Key | Action |
@@ -179,8 +202,10 @@ A `role="separator"` divider between item groups. Takes an optional `style`.
 | Arrow Down / Up on the trigger | Open the menu |
 | Arrow Down / Up in the panel | Move focus between items, wrapping |
 | Home / End | Focus the first / last enabled item |
-| Enter / Space | Activate the focused item |
-| Escape | Close, returning focus to the trigger |
+| Enter / Space | Activate the focused item, or open the focused submenu |
+| Arrow Right on a submenu trigger | Open the submenu and focus its first item |
+| Arrow Left in a submenu | Close the submenu, returning focus to its trigger |
+| Escape | Close the innermost open menu, returning focus to its trigger |
 
 ## Accessibility
 

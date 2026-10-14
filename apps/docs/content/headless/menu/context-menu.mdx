@@ -3,7 +3,7 @@ title: ContextMenu
 description: A Menu opened by right-click, at the pointer's position. Same keyboard model as Menu; a region trigger instead of a button.
 diataxis: reference
 covers: ['ContextMenu', 'ContextMenuRootProps', 'ContextMenuTriggerProps', 'ContextMenuContentProps']
-last_verified: 2026-05-15
+last_verified: 2026-10-14
 ---
 
 import {
@@ -113,8 +113,20 @@ position comes from the click coordinates, not from a `placement` prop.
 
 ### ContextMenu.Item
 
-Same shape as [Menu.Item](/headless/menu/menu#menuitem) - `onSelect`, `disabled`, `style`,
-`children`. Activation closes the menu.
+The same component as [Menu.Item](/headless/menu/menu#menuitem) - `onSelect`, `disabled`,
+`style`, `asChild`, `children`. Activation closes the menu.
+
+### ContextMenu.Sub, ContextMenu.SubTrigger, ContextMenu.SubContent
+
+The same submenu parts as [Menu.Sub](/headless/menu/menu#menusub-menusubtrigger-menusubcontent),
+with the same keyboard and pointer behaviour.
+
+<CodeBlock lang="tsx" code={`<ContextMenu.Sub>
+  <ContextMenu.SubTrigger>Move to</ContextMenu.SubTrigger>
+  <ContextMenu.SubContent>
+    <ContextMenu.Item onSelect={archive}>Archive</ContextMenu.Item>
+  </ContextMenu.SubContent>
+</ContextMenu.Sub>`} />
 
 ## Accessibility
 

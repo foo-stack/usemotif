@@ -2,7 +2,7 @@
 title: Menu
 description: A themed dropdown menu over the headless Menu - role="menu" with arrow-key navigation that skips disabled items, and Escape or click-outside dismissal.
 diataxis: reference
-covers: ['Menu', 'MenuItemPropsThemed']
+covers: ['Menu', 'MenuItemPropsThemed', 'MenuSubTriggerPropsThemed']
 last_verified: 2026-10-14
 ---
 
@@ -197,6 +197,20 @@ projects the item semantics onto its own themed row.
 />
 
 A `role="separator"` hairline in `border.default`. It takes no props.
+
+### Menu.Sub, Menu.SubTrigger, Menu.SubContent
+
+A submenu. `Menu.SubTrigger` is themed like an item with a trailing chevron and opens on hover,
+click, Arrow Right, Enter or Space; `Menu.SubContent` is the same raised card as the menu.
+Arrow Left or Escape closes it, and choosing an item inside closes the whole menu. The kit's
+Menu and ContextMenu share these parts.
+
+<CodeBlock lang="tsx" code={`<Menu.Sub>
+  <Menu.SubTrigger>Share</Menu.SubTrigger>
+  <Menu.SubContent>
+    <Menu.Item onSelect={emailLink}>Email link</Menu.Item>
+  </Menu.SubContent>
+</Menu.Sub>`} />
 
 <Callout variant="info" title="Related">
   [Menu (headless)](/headless/menu/menu) - the unstyled behaviour.
