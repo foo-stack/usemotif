@@ -39,8 +39,13 @@ export type {
 
 export { AlertDialogContent, AlertDialogRoot } from './AlertDialog.js';
 
-export { TooltipContent, TooltipRoot, TooltipTrigger } from './Tooltip.js';
-export type { TooltipContentProps, TooltipRootProps, TooltipTriggerProps } from './Tooltip.js';
+export { TooltipContent, TooltipProvider, TooltipRoot, TooltipTrigger } from './Tooltip.js';
+export type {
+  TooltipContentProps,
+  TooltipProviderProps,
+  TooltipRootProps,
+  TooltipTriggerProps,
+} from './Tooltip.js';
 
 export { PopoverClose, PopoverContent, PopoverRoot, PopoverTrigger } from './Popover.js';
 export type {

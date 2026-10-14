@@ -13,6 +13,7 @@ import { TooltipContent } from './Tooltip.js';
  * A re-export from a module of its own shakes away when unused.
  */
 export const Tooltip = {
+  Provider: Headless.Provider,
   Root: Headless.Root,
   Trigger: Headless.Trigger,
   Content: TooltipContent,

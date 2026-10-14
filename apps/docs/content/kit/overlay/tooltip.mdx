@@ -3,7 +3,7 @@ title: Tooltip
 description: A themed hint bubble over the headless Tooltip - opens on hover or focus after a delay, describes its trigger through aria-describedby, and re-themes in light and dark.
 diataxis: reference
 covers: ['Tooltip']
-last_verified: 2026-10-14
+last_verified: 2026-10-15
 ---
 
 import {
@@ -64,6 +64,14 @@ import { IconButton } from 'usemotif';
   </Tooltip.Trigger>
   <Tooltip.Content>Copy link</Tooltip.Content>
 </Tooltip.Root>`} />
+
+For a row of tooltips, such as a toolbar's, wrap them in `Tooltip.Provider`: after the first one
+opens, moving to a neighbour shows it at once instead of waiting the delay again. See the
+[headless Tooltip](/headless/overlay/tooltip#tooltipprovider) for `skipDelayDuration`.
+
+<CodeBlock lang="tsx" code={`<Tooltip.Provider>
+  <HStack gap="$space.1">{tools}</HStack>
+</Tooltip.Provider>`} />
 
 ## API
 

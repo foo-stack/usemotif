@@ -80,6 +80,7 @@ import {
   TabsRoot,
   TabsTab,
   TooltipContent,
+  TooltipProvider,
   TooltipRoot,
   TooltipTrigger,
 } from './client.js';
@@ -134,6 +135,7 @@ export const Sheet = {
 };
 
 export const Tooltip = {
+  Provider: TooltipProvider,
   Root: TooltipRoot,
   Trigger: TooltipTrigger,
   Content: TooltipContent,
@@ -362,6 +364,7 @@ export type {
   ToggleProps,
   ToolbarProps,
   TooltipContentProps,
+  TooltipProviderProps,
   TooltipRootProps,
   TooltipTriggerProps,
   TreeNode,
