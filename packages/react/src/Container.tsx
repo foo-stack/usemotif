@@ -1,6 +1,7 @@
 import type { MotifComponent } from '@usemotif/core';
-import type { ReactElement, CSSProperties } from 'react';
+import { useCallback, useContext, useMemo, type ReactElement, type CSSProperties } from 'react';
 import { Box, type BoxProps } from './Box.js';
+import { ContainerStoreContext, createContainerStore } from './container-context.js';
 
 export interface ContainerProps extends BoxProps {
   /**
@@ -20,7 +21,8 @@ export interface ContainerProps extends BoxProps {
 
 /**
  * Establishes a containment context so descendants can target it with
- * container-query responsive keys (`@<bp>` or `@<name>.<bp>`).
+ * container-query responsive keys (`@<bp>` or `@<name>.<bp>`), and read its
+ * measured width with `useContainerInfo()`.
  *
  * @example
  *
@@ -36,10 +38,28 @@ export const Container: MotifComponent<ContainerProps, ReactElement | null> = fu
   name,
   type = 'inline-size',
   style,
+  ref: userRef,
   ...rest
 }: ContainerProps) {
+  const parent = useContext(ContainerStoreContext);
+  const store = useMemo(() => createContainerStore(name, parent), [name, parent]);
+  const ref = useCallback(
+    (node: HTMLElement | null) => {
+      store.attach(node);
+      if (typeof userRef === 'function') userRef(node);
+      else if (userRef !== null && userRef !== undefined) {
+        (userRef as { current: HTMLElement | null }).current = node;
+      }
+    },
+    [store, userRef],
+  );
+
   const containerStyle: CSSProperties = { containerType: type, ...style };
   if (name !== undefined) containerStyle.containerName = name;
 
-  return <Box {...rest} style={containerStyle} />;
+  return (
+    <ContainerStoreContext.Provider value={store}>
+      <Box {...rest} ref={ref} style={containerStyle} />
+    </ContainerStoreContext.Provider>
+  );
 };
