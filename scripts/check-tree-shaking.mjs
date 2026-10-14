@@ -55,7 +55,9 @@ const targets = [
     // can emit base props as a class instead of inline styles.
     // Bumped when state bags took responsive values (nested at-rules).
     // Bumped when the group states joined core's selector map and Box marks a group.
-    budget: 11700, // gzip bytes
+    // Lowered when the forms components' `forwardRef` calls were marked pure,
+    // so the forms module stopped riding along with every Box import.
+    budget: 10900, // gzip bytes
   },
   {
     name: '@usemotif/react - Button only',
@@ -67,7 +69,9 @@ const targets = [
     // can emit base props as a class instead of inline styles.
     // Bumped when state bags took responsive values (nested at-rules).
     // Bumped when the group states joined core's selector map and Box marks a group.
-    budget: 12600,
+    // Lowered when the forms components' `forwardRef` calls were marked pure,
+    // so the forms module stopped riding along with every Box import.
+    budget: 12100,
   },
   {
     name: '@usemotif/react-native - Box only',
@@ -86,7 +90,9 @@ const targets = [
     // `processColor` rather than core's colour-space module, which would
     // have cost another 3 KB.
     // Bumped when the group states joined core's selector map and Box marks a group.
-    budget: 15200,
+    // Lowered when the forms components' `forwardRef` calls were marked pure,
+    // so the forms module stopped riding along with every Box import.
+    budget: 14300,
   },
   {
     name: '@usemotif/headless - Dialog only',
