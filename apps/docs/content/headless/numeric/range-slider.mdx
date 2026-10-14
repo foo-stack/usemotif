@@ -77,6 +77,11 @@ drag or a keypress can narrow the range but never invert it.
       description: 'Inline style for the track wrapper.',
     },
     {
+      name: 'thumbStyle / fillStyle',
+      type: 'CSSProperties',
+      description: 'Inline styles for both thumbs and for the filled segment between them. On React Native they take a `ViewStyle`.',
+    },
+    {
       name: 'orientation',
       type: "'horizontal' | 'vertical'",
       default: "'horizontal'",
@@ -94,6 +99,14 @@ drag or a keypress can narrow the range but never invert it.
     },
   ]}
 />
+
+## Pointer and touch
+
+On the web, pressing anywhere on the track moves the nearest thumb to the pointer and drags it
+until release. When both thumbs sit on the same value, the side pressed decides which one moves.
+On React Native each thumb is its own drag target, driven by `useDrag` from
+`@usemotif/react-native`. Either way the dragged thumb stops at the other one rather than passing
+it.
 
 ## Keyboard
 

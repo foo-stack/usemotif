@@ -124,33 +124,10 @@ export const Slider = forwardRef(function Slider(
   useEffect(() => () => dragCleanupRef.current?.(), []);
 
   function onPointerDown(e: PointerEvent<HTMLDivElement>): void {
-    if (disabled) return;
-    const track = trackRef.current;
-    if (track === null) return;
-    track.setPointerCapture(e.pointerId);
-    const update = (clientX: number, clientY: number): void => {
-      const rect = track.getBoundingClientRect();
-      const ratio =
-        orientation === 'horizontal'
-          ? (clientX - rect.left) / rect.width
-          : 1 - (clientY - rect.top) / rect.height;
-      setValue(min + ratio * (max - min));
-    };
-    update(e.clientX, e.clientY);
-    const onMove = (mv: globalThis.PointerEvent): void => update(mv.clientX, mv.clientY);
-    const cleanup = (): void => {
-      track.removeEventListener('pointermove', onMove);
-      track.removeEventListener('pointerup', onUp);
-      track.removeEventListener('pointercancel', onUp);
-      dragCleanupRef.current = null;
-    };
-    const onUp = (): void => cleanup();
-    track.addEventListener('pointermove', onMove);
-    track.addEventListener('pointerup', onUp);
-    // `pointercancel` (common on touch) must also tear down, or the move
-    // listener leaks until GC.
-    track.addEventListener('pointercancel', onUp);
-    dragCleanupRef.current = cleanup;
+    if (disabled || trackRef.current === null) return;
+    dragCleanupRef.current = trackPointer(trackRef.current, e, orientation, (ratio) =>
+      setValue(min + ratio * (max - min)),
+    );
   }
 
   return (
@@ -205,6 +182,41 @@ export const Slider = forwardRef(function Slider(
     </div>
   );
 });
+
+/**
+ * Captures the pointer on `track` and reports where along it the pointer sits,
+ * 0 at the start and 1 at the end, from the press until it is released or
+ * cancelled. Returns the teardown, for a slider unmounted mid-drag.
+ */
+function trackPointer(
+  track: HTMLElement,
+  e: PointerEvent<HTMLElement>,
+  orientation: 'horizontal' | 'vertical',
+  onRatio: (ratio: number) => void,
+): () => void {
+  track.setPointerCapture(e.pointerId);
+  const report = (clientX: number, clientY: number): void => {
+    const rect = track.getBoundingClientRect();
+    onRatio(
+      orientation === 'horizontal'
+        ? (clientX - rect.left) / rect.width
+        : 1 - (clientY - rect.top) / rect.height,
+    );
+  };
+  report(e.clientX, e.clientY);
+  const onMove = (mv: globalThis.PointerEvent): void => report(mv.clientX, mv.clientY);
+  const cleanup = (): void => {
+    track.removeEventListener('pointermove', onMove);
+    track.removeEventListener('pointerup', cleanup);
+    // `pointercancel` (common on touch) must also tear down, or the move
+    // listener leaks until GC.
+    track.removeEventListener('pointercancel', cleanup);
+  };
+  track.addEventListener('pointermove', onMove);
+  track.addEventListener('pointerup', cleanup);
+  track.addEventListener('pointercancel', cleanup);
+  return cleanup;
+}
 
 /**
  * The marks along a track: decorative (`aria-hidden`), since the slider itself
@@ -317,6 +329,30 @@ export function RangeSlider({
     },
     [commit, min, max, step, value],
   );
+  const valueRef = useRef(value);
+  valueRef.current = value;
+  const trackRef = useRef<HTMLDivElement | null>(null);
+  const dragCleanupRef = useRef<(() => void) | null>(null);
+  useEffect(() => () => dragCleanupRef.current?.(), []);
+
+  // A press on the track takes the nearest thumb, or on a tie the one on the
+  // side the pointer is, and drags it until release.
+  function onPointerDown(e: PointerEvent<HTMLDivElement>): void {
+    if (disabled || trackRef.current === null) return;
+    let idx: 0 | 1 | undefined;
+    dragCleanupRef.current = trackPointer(trackRef.current, e, orientation, (ratio) => {
+      const v = min + ratio * (max - min);
+      const cur = valueRef.current;
+      if (idx === undefined) {
+        const toLow = Math.abs(v - cur[0]);
+        const toHigh = Math.abs(v - cur[1]);
+        idx = toLow < toHigh ? 0 : toHigh < toLow ? 1 : v < cur[0] ? 0 : 1;
+      }
+      const next: [number, number] = [...cur];
+      next[idx] = v;
+      setValue(next);
+    });
+  }
 
   function thumbHandlers(idx: 0 | 1): {
     role: 'slider';
@@ -366,8 +402,10 @@ export function RangeSlider({
   const length = orientation === 'horizontal' ? 'width' : 'height';
   return (
     <div
+      ref={trackRef}
       data-orientation={orientation}
-      style={{ position: 'relative', userSelect: 'none', ...style }}
+      onPointerDown={onPointerDown}
+      style={{ position: 'relative', userSelect: 'none', touchAction: 'none', ...style }}
       {...aria}
     >
       <div
