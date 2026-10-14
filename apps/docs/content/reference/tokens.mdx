@@ -1,9 +1,9 @@
 ---
 title: Tokens
-description: The default token presets shipped by @usemotif/tokens - lightTheme, darkTheme, and the fourteen primitive scales they're built from.
+description: The default token presets shipped by @usemotif/tokens - lightTheme, darkTheme, their high-contrast variants, and the primitive scales they're built from.
 diataxis: reference
-covers: ['lightTheme', 'darkTheme', 'colors', 'space', 'sizes', 'radii', 'borderWidths', 'fontFamilies', 'fontSizes', 'fontWeights', 'lineHeights', 'letterSpacings', 'shadows', 'durations', 'easings', 'opacities', 'zIndices', 'animations']
-last_verified: 2026-05-18
+covers: ['lightTheme', 'darkTheme', 'highContrastLightTheme', 'highContrastDarkTheme', 'colors', 'space', 'sizes', 'radii', 'borderWidths', 'fontFamilies', 'fontSizes', 'fontWeights', 'lineHeights', 'letterSpacings', 'shadows', 'durations', 'easings', 'opacities', 'zIndices', 'animations']
+last_verified: 2026-10-14
 ---
 
 import { ApiSignature, ArticleMeta, CodeBlock, Eyebrow } from '../../components/index.js';
@@ -12,7 +12,8 @@ import { ApiSignature, ArticleMeta, CodeBlock, Eyebrow } from '../../components/
 
 # Tokens
 
-The `@usemotif/tokens` package ships two ready-to-use themes and the sixteen primitive scales
+The `@usemotif/tokens` package ships four ready-to-use themes (light, dark, and a high-contrast
+variant of each) and the sixteen primitive scales
 they are built from. Reach for it when you want a working design system today; build your own
 with [`createTheme`](/reference/create-theme) when you want full ownership of the values.
 
@@ -56,6 +57,41 @@ dark mode inverts to `950`/`300`/`800`.
 import { lightTheme, darkTheme } from '@usemotif/tokens';
 
 <ThemeProvider themes={[lightTheme, darkTheme]} active="light">
+  {children}
+</ThemeProvider>`} />
+
+### High contrast
+
+<ApiSignature
+  name="highContrastLightTheme"
+  status="stable"
+  signature={`const highContrastLightTheme: Theme`}
+/>
+
+<ApiSignature
+  name="highContrastDarkTheme"
+  status="stable"
+  signature={`const highContrastDarkTheme: Theme`}
+/>
+
+The same semantic surface again, rebound for users who need stronger contrast. Every text
+colour reaches 7:1 (WCAG AAA) on every surface, every solid control's label reaches 7:1 on its
+fill and hover fill, every status text reaches 7:1 on its tint, and every border reaches 3:1 on
+the surfaces it sits on. A test in `@usemotif/tokens` resolves each of those pairs to its
+colour and fails if any falls short. Both are built only from the shared palette, so they mix
+with the default presets: register them alongside and switch with `active`.
+
+<CodeBlock lang="tsx" code={`import {
+  darkTheme,
+  highContrastDarkTheme,
+  highContrastLightTheme,
+  lightTheme,
+} from '@usemotif/tokens';
+
+<ThemeProvider
+  themes={[lightTheme, darkTheme, highContrastLightTheme, highContrastDarkTheme]}
+  active="high-contrast-light"
+>
   {children}
 </ThemeProvider>`} />
 

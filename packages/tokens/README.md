@@ -21,6 +21,12 @@ import { lightTheme, darkTheme } from '@usemotif/tokens';
 </ThemeProvider>;
 ```
 
+High-contrast variants of both, held to WCAG AAA (7:1 text, 3:1 borders), ship beside them:
+
+```tsx
+import { highContrastDarkTheme, highContrastLightTheme } from '@usemotif/tokens';
+```
+
 Or extend them with your own brand:
 
 ```tsx
