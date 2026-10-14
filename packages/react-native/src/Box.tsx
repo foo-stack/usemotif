@@ -85,6 +85,8 @@ export type BoxProps = {
      * ```
      */
     layoutTransition?: LayoutTransition;
+    /** Web-only: marks a group for `_groupHover` and its peers. Ignored on native. */
+    group?: boolean;
     /**
      * Make the Box draggable. `true` enables free 2D drag; `'x'` /
      * `'y'` locks the drag to a single axis. Internally wires
@@ -168,6 +170,10 @@ export const Box: MotifComponent<BoxProps, ReactElement | null> = function (prop
     _pressed: _ignoredPressed,
     _focusWithin: _ignoredFocusWithin,
     _readOnly: _ignoredReadOnly,
+    _groupHover: _ignoredGroupHover,
+    _groupFocus: _ignoredGroupFocus,
+    _groupActive: _ignoredGroupActive,
+    group: _ignoredGroup,
     enterStyle,
     exitStyle,
     transition,

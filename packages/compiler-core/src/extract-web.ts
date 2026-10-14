@@ -113,9 +113,12 @@ const PSEUDO_ORDER: Readonly<Record<string, number>> = {
   _pressed: 8,
   _focusWithin: 9,
   _readOnly: 10,
-  _before: 11,
-  _after: 12,
-  exitStyle: 13,
+  _groupHover: 11,
+  _groupFocus: 12,
+  _groupActive: 13,
+  _before: 14,
+  _after: 15,
+  exitStyle: 16,
 };
 
 /**

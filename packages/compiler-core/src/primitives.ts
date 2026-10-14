@@ -58,12 +58,21 @@ export interface PrimitiveInfo {
 const MOTION_NON_STRIPPABLE: readonly string[] = ['enterStyle', 'layout', 'layoutTransition'];
 
 /**
+ * `group` renders the marker attribute the `_group*` states key on. The
+ * stripped element would carry `group` itself instead, so keep the wrapper.
+ */
+const GROUP_NON_STRIPPABLE: readonly string[] = ['group'];
+
+/**
  * Block-strip set shared by every strippable primitive. `_before` and
  * `_after` are not in it: a literal bag is extracted to a `::before` /
  * `::after` rule, and a dynamic one makes the element non-static, which
  * keeps the wrapper by itself.
  */
-const BASE_NON_STRIPPABLE: ReadonlySet<string> = new Set(MOTION_NON_STRIPPABLE);
+const BASE_NON_STRIPPABLE: ReadonlySet<string> = new Set([
+  ...MOTION_NON_STRIPPABLE,
+  ...GROUP_NON_STRIPPABLE,
+]);
 /** Text adds `lines`; the Stack family adds `stagger`. Each is a single
  * shared instance (read-only - only `.has()` is called) so the three Stack
  * variants don't allocate three identical sets. */
@@ -130,6 +139,10 @@ export const PRIMITIVE_INFO: Readonly<Record<string, PrimitiveInfo>> = {
       '_pressed',
       '_focusWithin',
       '_readOnly',
+      '_groupHover',
+      '_groupFocus',
+      '_groupActive',
+      'group',
       'onPress',
       'disabled',
     ]),

@@ -111,6 +111,14 @@ describe('analyzeStripSafety - runtime-owned props keep the wrapper', () => {
   });
 
   // The FLIP runs in the runtime Box; a stripped `<div layout>` would not animate.
+  it('bails on group, which renders a marker attribute at runtime', () => {
+    expectBail(`<Box group p={4} />`, 'Box', 'blocked-prop:group');
+  });
+
+  it('strips a child that only uses group states', () => {
+    expectSafe(`<Box _groupHover={{ color: 'red' }} />`, 'Box');
+  });
+
   it('bails on layout and layoutTransition', () => {
     expectBail(`<Box p={4} layout />`, 'Box', 'blocked-prop:layout');
     expectBail(`<Stack layout="position" />`, 'Stack', 'blocked-prop:layout');

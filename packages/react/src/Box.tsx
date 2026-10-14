@@ -1,5 +1,6 @@
 import {
   type MotifComponent,
+  GROUP_ATTRIBUTE,
   PSEUDO_ELEMENT_SELECTOR,
   PSEUDO_SELECTOR,
   PSEUDO_STATE_PROP_NAMES,
@@ -148,6 +149,18 @@ export type BoxProps = ResponsiveStyleProps &
      */
     layoutTransition?: LayoutTransition;
     /**
+     * Mark this Box as a group, so descendants can style themselves by its
+     * state with `_groupHover`, `_groupFocus`, and `_groupActive`.
+     *
+     * @example
+     * ```tsx
+     * <Box group>
+     *   <Text _groupHover={{ color: '$colors.action.primary.bg' }}>Read more</Text>
+     * </Box>
+     * ```
+     */
+    group?: boolean;
+    /**
      * Native-only layout callback. Accepted as `undefined` so handles
      * built for both platforms (`useScrollTarget`, `useLayoutAnimation`)
      * spread onto a web Box, and never forwarded to the DOM.
@@ -251,6 +264,10 @@ export const Box: MotifComponent<BoxProps, ReactElement | null> = function (prop
     _pressed,
     _focusWithin,
     _readOnly,
+    _groupHover,
+    _groupFocus,
+    _groupActive,
+    group,
     _before,
     _after,
     enterStyle,
@@ -289,6 +306,9 @@ export const Box: MotifComponent<BoxProps, ReactElement | null> = function (prop
     _pressed !== undefined ||
     _focusWithin !== undefined ||
     _readOnly !== undefined ||
+    _groupHover !== undefined ||
+    _groupFocus !== undefined ||
+    _groupActive !== undefined ||
     _before !== undefined ||
     _after !== undefined;
   const hasMotion =
@@ -310,6 +330,9 @@ export const Box: MotifComponent<BoxProps, ReactElement | null> = function (prop
   // present, so the no-MV path pays only one `for...in` traversal.
   const { motionBindings, restWithoutMv } = splitMotionValueProps(rest as Record<string, unknown>);
   const hasMotionValues = motionBindings.length > 0;
+  // Before the fast path, which a bare `<Box group>` takes. `rest` is this
+  // render's own object, so writing to it is safe; non-style keys pass through.
+  if (group === true) restWithoutMv[GROUP_ATTRIBUTE] = '';
 
   // Compiled-output fast path: when the build tool's motif plugin has
   // already extracted every style prop, `rest` carries no style props and
@@ -366,6 +389,9 @@ export const Box: MotifComponent<BoxProps, ReactElement | null> = function (prop
             _pressed,
             _focusWithin,
             _readOnly,
+            _groupHover,
+            _groupFocus,
+            _groupActive,
           },
           _before,
           _after,
