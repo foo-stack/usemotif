@@ -156,3 +156,89 @@ export const darkTheme: Theme = buildTheme('dark', {
     },
   },
 });
+
+/**
+ * High-contrast light: the default light layout with every pair pushed to
+ * WCAG AAA. Body, muted, and subtle text reach 7:1 on every surface, solid
+ * controls reach 7:1 between fill and label, and borders reach 3:1. Built only
+ * from the shared palette, so it composes with the default presets and their
+ * sub-themes.
+ */
+export const highContrastLightTheme: Theme = buildTheme('high-contrast-light', {
+  colors: {
+    surface: {
+      base: '$colors.white',
+      muted: '$colors.gray.50',
+      raised: '$colors.white',
+      sunken: '$colors.gray.100',
+      interactive: '$colors.gray.100',
+      inverse: '$colors.black',
+    },
+    text: {
+      default: '$colors.black',
+      muted: '$colors.gray.800',
+      subtle: '$colors.gray.700',
+      inverse: '$colors.white',
+    },
+    border: {
+      default: '$colors.gray.700',
+      muted: '$colors.gray.600',
+      strong: '$colors.gray.900',
+    },
+    action: {
+      primary: { bg: '$colors.blue.800', fg: '$colors.white', hover: '$colors.blue.900' },
+      danger: { bg: '$colors.red.800', fg: '$colors.white', hover: '$colors.red.900' },
+      success: { bg: '$colors.green.900', fg: '$colors.white', hover: '$colors.green.950' },
+      neutral: { bg: '$colors.gray.200', fg: '$colors.black', hover: '$colors.gray.300' },
+    },
+    status: {
+      neutral: { tint: '$colors.gray.50', fg: '$colors.gray.900', border: '$colors.gray.700' },
+      info: { tint: '$colors.blue.50', fg: '$colors.blue.900', border: '$colors.blue.700' },
+      success: { tint: '$colors.green.50', fg: '$colors.green.900', border: '$colors.green.700' },
+      warning: { tint: '$colors.amber.50', fg: '$colors.amber.900', border: '$colors.amber.700' },
+      danger: { tint: '$colors.red.50', fg: '$colors.red.900', border: '$colors.red.700' },
+    },
+  },
+});
+
+/**
+ * High-contrast dark: a black canvas with light text and light solid
+ * controls carrying dark labels, held to the same 7:1 and 3:1 thresholds as
+ * the light variant.
+ */
+export const highContrastDarkTheme: Theme = buildTheme('high-contrast-dark', {
+  colors: {
+    surface: {
+      base: '$colors.black',
+      muted: '$colors.gray.950',
+      raised: '$colors.gray.950',
+      sunken: '$colors.black',
+      interactive: '$colors.gray.800',
+      inverse: '$colors.white',
+    },
+    text: {
+      default: '$colors.white',
+      muted: '$colors.gray.200',
+      subtle: '$colors.gray.300',
+      inverse: '$colors.black',
+    },
+    border: {
+      default: '$colors.gray.400',
+      muted: '$colors.gray.500',
+      strong: '$colors.gray.200',
+    },
+    action: {
+      primary: { bg: '$colors.blue.300', fg: '$colors.black', hover: '$colors.blue.200' },
+      danger: { bg: '$colors.red.300', fg: '$colors.black', hover: '$colors.red.200' },
+      success: { bg: '$colors.green.300', fg: '$colors.black', hover: '$colors.green.200' },
+      neutral: { bg: '$colors.gray.800', fg: '$colors.white', hover: '$colors.gray.700' },
+    },
+    status: {
+      neutral: { tint: '$colors.gray.950', fg: '$colors.gray.200', border: '$colors.gray.400' },
+      info: { tint: '$colors.blue.950', fg: '$colors.blue.200', border: '$colors.blue.400' },
+      success: { tint: '$colors.green.950', fg: '$colors.green.200', border: '$colors.green.400' },
+      warning: { tint: '$colors.amber.950', fg: '$colors.amber.200', border: '$colors.amber.400' },
+      danger: { tint: '$colors.red.950', fg: '$colors.red.200', border: '$colors.red.400' },
+    },
+  },
+});
