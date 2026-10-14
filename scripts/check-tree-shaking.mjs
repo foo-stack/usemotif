@@ -579,8 +579,10 @@ const targets = [
   {
     name: '@usemotif/ui - FormField only',
     code: `import { FormField } from '@usemotif/ui';\nconsole.log(FormField);\n`,
-    // Box + Text + a cloneElement, no headless - display floor.
-    budget: 11800,
+    // Box + Text + a cloneElement, no headless - display floor. Nudged when
+    // Box's pseudo-element resolver moved into core so the compiler could
+    // share it (a couple of bytes).
+    budget: 11900,
   },
   {
     name: '@usemotif/ui - SegmentedControl only',
