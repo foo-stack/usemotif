@@ -8,7 +8,13 @@ import {
   type ReactElement,
   type ReactNode,
 } from 'react';
-import { ScrollView as RNScrollView, StyleSheet, type ViewStyle } from 'react-native';
+import {
+  RefreshControl,
+  ScrollView as RNScrollView,
+  StyleSheet,
+  type LayoutChangeEvent,
+  type ViewStyle,
+} from 'react-native';
 import { Box, useResolvedBoxStyleObject, type BoxProps } from './Box.js';
 
 /**
@@ -112,6 +118,17 @@ export interface ScrollViewProps extends BoxProps {
   /** Ref to motif's scroll publisher. Pass a `useRef<MotifScrollViewRef>(null)`
    * and hand the same ref to `useScroll({ container: ref })`. */
   ref?: Ref<MotifScrollViewRef>;
+  /**
+   * Called when scrolling comes within `onEndReachedThreshold` of the end,
+   * once per content length, so an infinite list loads its next page once.
+   */
+  onEndReached?: () => void;
+  /** How near the end `onEndReached` fires, in visible lengths. Defaults to `0.5`. */
+  onEndReachedThreshold?: number;
+  /** Pull to refresh: shows the platform's refresh control and calls this on a pull. */
+  onRefresh?: () => void;
+  /** Whether the refresh indicator shows. Set it while the refresh runs. */
+  refreshing?: boolean;
 }
 export const ScrollView: MotifComponent<ScrollViewProps, ReactElement | null> = function ({
   direction = 'vertical',
@@ -121,6 +138,10 @@ export const ScrollView: MotifComponent<ScrollViewProps, ReactElement | null> = 
   onScroll: consumerOnScroll,
   scrollEventThrottle = 16,
   ref,
+  onEndReached,
+  onEndReachedThreshold = 0.5,
+  onRefresh,
+  refreshing = false,
   ...rest
 }: ScrollViewProps): ReactElement {
   // Box style props split across two RN slots: sizing/flex/positioning
@@ -151,8 +172,28 @@ export const ScrollView: MotifComponent<ScrollViewProps, ReactElement | null> = 
 
   useImperativeHandle(ref, (): MotifScrollViewRef => ({ __publisher: publisher }), [publisher]);
 
+  // Mirrors FlatList: once per content length, and for content that does not
+  // fill the view, which is only known once both sizes have been reported.
+  const horizontal = direction === 'horizontal';
+  const metrics = useRef({ offset: 0, size: -1, visible: 0, lastEnd: -1 });
+  const checkEnd = (): void => {
+    const m = metrics.current;
+    if (onEndReached === undefined || m.visible === 0 || m.size < 0) return;
+    if (
+      m.size - m.offset - m.visible <= m.visible * onEndReachedThreshold &&
+      m.size !== m.lastEnd
+    ) {
+      m.lastEnd = m.size;
+      onEndReached();
+    }
+  };
+
   const onScroll = (event: NativeScrollEventLike): void => {
     const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
+    metrics.current.offset = horizontal ? contentOffset.x : contentOffset.y;
+    metrics.current.size = horizontal ? contentSize.width : contentSize.height;
+    metrics.current.visible = horizontal ? layoutMeasurement.width : layoutMeasurement.height;
+    checkEnd();
     publisher.__push({
       scrollX: contentOffset.x,
       scrollY: contentOffset.y,
@@ -174,6 +215,27 @@ export const ScrollView: MotifComponent<ScrollViewProps, ReactElement | null> = 
       contentContainerStyle={sheet.content}
       onScroll={onScroll}
       scrollEventThrottle={scrollEventThrottle}
+      {...(onEndReached !== undefined
+        ? {
+            onLayout: (e: LayoutChangeEvent) => {
+              const { width, height } = e.nativeEvent.layout;
+              metrics.current.visible = horizontal ? width : height;
+              checkEnd();
+              (passThrough.onLayout as ((ev: LayoutChangeEvent) => void) | undefined)?.(e);
+            },
+            onContentSizeChange: (width: number, height: number) => {
+              metrics.current.size = horizontal ? width : height;
+              checkEnd();
+              (passThrough.onContentSizeChange as ((w: number, h: number) => void) | undefined)?.(
+                width,
+                height,
+              );
+            },
+          }
+        : {})}
+      {...(onRefresh !== undefined
+        ? { refreshControl: <RefreshControl refreshing={refreshing} onRefresh={onRefresh} /> }
+        : {})}
       {...(stickyIndices.length > 0 ? { stickyHeaderIndices: stickyIndices } : {})}
     >
       {children}

@@ -1,7 +1,8 @@
 'use client';
 
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { useRef, type CSSProperties, type ReactElement } from 'react';
+import { useEffect, useRef, type CSSProperties, type ReactElement } from 'react';
+import { checkEndReached } from '../_end-reached.js';
 import type { VirtualListImpl, VirtualListProps } from '../scroll.js';
 
 /**
@@ -41,8 +42,24 @@ const SCROLL_STYLE: CSSProperties = {
 };
 
 function TanstackVirtualList<T>(props: VirtualListProps<T>): ReactElement {
-  const { data, renderItem, keyOf, itemHeight = 32, style, ...rest } = props;
+  const {
+    data,
+    renderItem,
+    keyOf,
+    itemHeight = 32,
+    style,
+    onEndReached,
+    onEndReachedThreshold = 0.5,
+    ...rest
+  } = props;
   const parentRef = useRef<HTMLDivElement>(null);
+  const lastEnd = useRef(-1);
+  const check = (): void => {
+    if (onEndReached !== undefined && parentRef.current !== null) {
+      checkEndReached(parentRef.current, false, onEndReachedThreshold, lastEnd, onEndReached);
+    }
+  };
+  useEffect(check);
 
   const rowVirtualizer = useVirtualizer({
     count: data.length,
@@ -60,7 +77,7 @@ function TanstackVirtualList<T>(props: VirtualListProps<T>): ReactElement {
   void rest;
 
   return (
-    <div ref={parentRef} style={{ ...SCROLL_STYLE, ...style }}>
+    <div ref={parentRef} onScroll={check} style={{ ...SCROLL_STYLE, ...style }}>
       <div style={{ height: totalSize, width: '100%', position: 'relative' }}>
         {virtualItems.map((virtualRow) => {
           const item = data[virtualRow.index]!;

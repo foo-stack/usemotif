@@ -2,7 +2,15 @@
 
 import type { MotifComponent } from '@usemotif/core';
 
-import type { CSSProperties, ReactElement, ReactNode } from 'react';
+import {
+  useEffect,
+  useRef,
+  type CSSProperties,
+  type ReactElement,
+  type ReactNode,
+  type UIEvent,
+} from 'react';
+import { checkEndReached } from './_end-reached.js';
 import { Box, type BoxProps } from './Box.js';
 
 /**
@@ -20,14 +28,47 @@ export interface ScrollViewProps extends BoxProps {
   /** Hide the scrollbar visually (still scrollable + accessible). */
   hideScrollbar?: boolean;
   children?: ReactNode;
+  /**
+   * Called when scrolling comes within `onEndReachedThreshold` of the end,
+   * once per content length, so an infinite list loads its next page once.
+   */
+  onEndReached?: () => void;
+  /** How near the end `onEndReached` fires, in visible lengths. Defaults to `0.5`. */
+  onEndReachedThreshold?: number;
+  /** Native-only pull to refresh. Accepted here so shared code typechecks; ignored on web. */
+  onRefresh?: () => void;
+  /** Native-only: whether the refresh indicator shows. Ignored on web. */
+  refreshing?: boolean;
 }
 export const ScrollView: MotifComponent<ScrollViewProps, ReactElement | null> = function ({
   direction = 'vertical',
   hideScrollbar = false,
   children,
   style,
+  onEndReached,
+  onEndReachedThreshold = 0.5,
+  onRefresh: _onRefresh,
+  refreshing: _refreshing,
+  ref,
+  onScroll,
   ...rest
 }: ScrollViewProps): ReactElement {
+  const el = useRef<HTMLElement | null>(null);
+  const lastEnd = useRef(-1);
+  const check = (): void => {
+    if (onEndReached !== undefined && el.current !== null) {
+      checkEndReached(
+        el.current,
+        direction === 'horizontal',
+        onEndReachedThreshold,
+        lastEnd,
+        onEndReached,
+      );
+    }
+  };
+  // After every render too: content that does not fill the view never scrolls.
+  useEffect(check);
+
   const overflow: CSSProperties =
     direction === 'horizontal'
       ? { overflowX: 'auto', overflowY: 'hidden' }
@@ -48,6 +89,17 @@ export const ScrollView: MotifComponent<ScrollViewProps, ReactElement | null> = 
           ...style,
         } as CSSProperties
       }
+      ref={(node: HTMLElement | null) => {
+        el.current = node;
+        if (typeof ref === 'function') ref(node);
+        else if (ref !== null && ref !== undefined) {
+          (ref as { current: HTMLElement | null }).current = node;
+        }
+      }}
+      onScroll={(e: UIEvent<HTMLElement>) => {
+        check();
+        onScroll?.(e);
+      }}
       {...rest}
     >
       {children}

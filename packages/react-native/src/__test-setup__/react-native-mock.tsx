@@ -85,6 +85,7 @@ export const Text = makeHost('Text', 'span');
 export const Image = makeHost('Image', 'img');
 export const TextInput = makeHost('TextInput', 'input');
 export const Modal = makeHost('Modal', 'div', true);
+export const RefreshControl = makeHost('RefreshControl', 'div');
 
 /**
  * ScrollView shim - surfaces the `stickyHeaderIndices` prop as a
