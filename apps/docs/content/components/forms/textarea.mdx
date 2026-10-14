@@ -3,7 +3,7 @@ title: TextArea
 description: A multi-line text input. Shares Input's Field-context wiring; adds a `rows` prop and a vertical resize handle.
 diataxis: reference
 covers: ['TextArea', 'TextAreaProps']
-last_verified: 2026-05-15
+last_verified: 2026-10-14
 ---
 
 import {
@@ -55,6 +55,17 @@ vertically by default; the `rows` prop sets the initial height.
       description: 'Initial visible row count. The control stays resizable vertically past this height.',
     },
     {
+      name: 'autoResize',
+      type: 'boolean',
+      default: 'false',
+      description: 'Grow and shrink with the content, starting at `rows` lines. Turns off the manual resize handle.',
+    },
+    {
+      name: 'maxRows',
+      type: 'number',
+      description: 'With `autoResize`, the most lines shown before the text scrolls.',
+    },
+    {
       name: 'invalid',
       type: 'boolean',
       description: 'Marks the control invalid. Falls back to the Field context value when omitted.',
@@ -95,6 +106,15 @@ Controlled standalone:
   onChange={(e) => setNote(e.target.value)}
   rows={6}
 />`} />
+
+Growing with its content, from two lines to eight:
+
+<CodeBlock lang="tsx" code={`<TextArea autoResize rows={2} maxRows={8} placeholder="Write a reply" />`} />
+
+On the web this is `field-sizing: content`, bounded by a `min-height` and `max-height` in `lh`
+units, so it sizes correctly in the server render. Browsers without `field-sizing` get a measured
+height, set from the content on mount and on every input. On React Native the height follows
+`onContentSizeChange`, with rows counted at 24px, and the text scrolls once `maxRows` is reached.
 
 <Callout variant="info" title="Related">
   [Input](/components/forms/input) for single-line text. [Field](/components/forms/field) supplies

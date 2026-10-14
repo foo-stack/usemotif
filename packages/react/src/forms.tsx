@@ -9,6 +9,7 @@ import {
   isValidElement,
   useContext,
   useId,
+  useRef,
   useState,
   type CSSProperties,
   type InputHTMLAttributes,
@@ -17,6 +18,7 @@ import {
   type Ref,
   type TextareaHTMLAttributes,
 } from 'react';
+import { useIsomorphicLayoutEffect } from './_use-isomorphic-layout-effect.js';
 import { Box, type BoxProps } from './Box.js';
 import { Pressable } from './Pressable.js';
 import { Text, type TextProps } from './Text.js';
@@ -300,20 +302,82 @@ export const Input = /* @__PURE__ */ forwardRef(function Input(
 
 export interface TextAreaProps extends Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, 'size'> {
   invalid?: boolean;
+  /** Visible lines; with `autoResize`, the height it starts at. Defaults to 3. */
   rows?: number;
+  /** Grow and shrink with the content, from `rows` lines up to `maxRows`. */
+  autoResize?: boolean;
+  /** With `autoResize`, the most lines shown before the text scrolls. */
+  maxRows?: number;
 }
+
+/** Vertical padding plus borders of the themed field, in px. */
+const FIELD_CHROME = 18;
+
+let fieldSizing: boolean | undefined;
+function supportsFieldSizing(): boolean {
+  fieldSizing ??= typeof CSS !== 'undefined' && CSS.supports('field-sizing', 'content');
+  return fieldSizing;
+}
+
+/** Without `field-sizing`, size the box to its content by hand. */
+function fitToContent(el: HTMLTextAreaElement): void {
+  el.style.height = 'auto';
+  el.style.height = `${el.scrollHeight + el.offsetHeight - el.clientHeight}px`;
+}
+
+/**
+ * A themed multi-line input. `autoResize` grows it with its content between
+ * `rows` and `maxRows` lines, through `field-sizing: content` where the
+ * browser has it and a measured height where it does not.
+ *
+ * @example
+ * ```tsx
+ * <TextArea autoResize rows={2} maxRows={8} placeholder="Write a reply" />
+ * ```
+ */
 export const TextArea = /* @__PURE__ */ forwardRef(function TextArea(
-  { invalid, disabled, rows = 3, style, ...rest }: TextAreaProps,
+  {
+    invalid,
+    disabled,
+    rows = 3,
+    autoResize = false,
+    maxRows,
+    style,
+    onInput,
+    ...rest
+  }: TextAreaProps,
   ref: Ref<HTMLTextAreaElement>,
 ): ReactElement {
   const ctx = useFieldContext();
   const isInvalid = invalid ?? ctx?.invalid ?? false;
   const isDisabled = disabled ?? ctx?.disabled ?? false;
+  const own = useRef<HTMLTextAreaElement | null>(null);
+  const measured = autoResize && typeof window !== 'undefined' && !supportsFieldSizing();
+  useIsomorphicLayoutEffect(() => {
+    if (measured && own.current !== null) fitToContent(own.current);
+  }, [measured, rest.value]);
+  const sizing: CSSProperties = autoResize
+    ? ({
+        fieldSizing: 'content',
+        resize: 'none',
+        boxSizing: 'border-box',
+        minHeight: `calc(${rows}lh + ${FIELD_CHROME}px)`,
+        ...(maxRows !== undefined ? { maxHeight: `calc(${maxRows}lh + ${FIELD_CHROME}px)` } : {}),
+      } as CSSProperties)
+    : { resize: 'vertical' };
   return (
     <textarea
-      ref={ref}
+      ref={(node) => {
+        own.current = node;
+        if (typeof ref === 'function') ref(node);
+        else if (ref !== null) (ref as { current: HTMLTextAreaElement | null }).current = node;
+      }}
       rows={rows}
-      style={{ ...inputStyle(isInvalid, isDisabled), resize: 'vertical', ...style }}
+      style={{ ...inputStyle(isInvalid, isDisabled), ...sizing, ...style }}
+      onInput={(e) => {
+        if (measured) fitToContent(e.currentTarget);
+        onInput?.(e);
+      }}
       {...pickAriaProps(ctx)}
       {...(isDisabled ? { disabled: true } : {})}
       {...rest}
