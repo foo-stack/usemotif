@@ -202,11 +202,7 @@ function Content({ style, children }: ContextMenuContentProps): ReactElement | n
  * server graph, where each one is already a client reference. Internal: the
  * barrel re-exports by name and does not list these.
  */
-export {
-  Root as ContextMenuRoot,
-  Trigger as ContextMenuTrigger,
-  Content as ContextMenuContent,
-};
+export { Root as ContextMenuRoot, Trigger as ContextMenuTrigger, Content as ContextMenuContent };
 
 export const ContextMenuItem = MenuItem;
 

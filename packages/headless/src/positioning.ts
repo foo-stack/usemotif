@@ -93,9 +93,7 @@ export function useFloatingPosition(
 }
 
 /** An element whose subtree is not "outside", or a test for one. */
-export type ClickOutsideIgnore =
-  | React.RefObject<HTMLElement | null>
-  | ((target: Node) => boolean);
+export type ClickOutsideIgnore = React.RefObject<HTMLElement | null> | ((target: Node) => boolean);
 
 /**
  * Hook: dismiss when the user clicks outside the given element.

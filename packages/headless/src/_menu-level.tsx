@@ -45,14 +45,17 @@ export function useMenuLevel(part: string): MenuLevel {
   return level;
 }
 
-function enabledItems(level: MenuLevel): { el: HTMLElement; i: number }[] {
+function enabledItems(level: Pick<MenuLevel, 'itemsRef'>): { el: HTMLElement; i: number }[] {
   return inDomOrder(level.itemsRef.current)
     .map((el) => ({ el, i: level.itemsRef.current.indexOf(el) }))
     .filter((it) => it.el.getAttribute('aria-disabled') !== 'true');
 }
 
 /** Focuses the level's first enabled item, or `fallback` when every item is disabled. */
-export function focusFirstItem(level: MenuLevel, fallback: HTMLElement | null): void {
+export function focusFirstItem(
+  level: Pick<MenuLevel, 'itemsRef' | 'setActiveIndex'>,
+  fallback: HTMLElement | null,
+): void {
   const first = enabledItems(level)[0];
   if (first === undefined) {
     // Focus the panel itself so its onKeyDown still receives Escape.
@@ -99,7 +102,10 @@ export function navigateMenu(e: KeyboardEvent<HTMLElement>, level: MenuLevel): b
 }
 
 /** Registers `ref`'s element as an item of `level` for as long as it is mounted. */
-export function useMenuItemRegistration(level: MenuLevel, ref: RefObject<HTMLElement | null>): void {
+export function useMenuItemRegistration(
+  level: MenuLevel,
+  ref: RefObject<HTMLElement | null>,
+): void {
   // Keyed on the stable itemsRef so it registers once rather than splicing
   // the item out and back in on every render.
   const { itemsRef } = level;
