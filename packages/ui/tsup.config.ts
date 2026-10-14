@@ -127,6 +127,7 @@ export default defineConfig({
     'src/Accordion.tsx',
     'src/Select.tsx',
     'src/Menu.tsx',
+    'src/MenuSub.tsx',
     'src/Slider.tsx',
     'src/Progress.tsx',
     'src/Drawer.tsx',

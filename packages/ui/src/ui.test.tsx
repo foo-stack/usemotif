@@ -608,6 +608,38 @@ describe('Menu - themed dropdown with asChild items', () => {
     expect(menuPicked).toBe('rename');
     expect(document.querySelector('[role="menu"]')).toBeNull();
   });
+
+  it('opens a themed submenu from a themed trigger, under Menu and ContextMenu alike', () => {
+    expect(ContextMenu.Sub).toBe(Menu.Sub);
+    expect(ContextMenu.SubTrigger).toBe(Menu.SubTrigger);
+    expect(ContextMenu.SubContent).toBe(Menu.SubContent);
+    menuPicked = '';
+    render(
+      <Menu.Root defaultOpen>
+        <Menu.Trigger>
+          <button data-testid="menu-trigger">Actions</button>
+        </Menu.Trigger>
+        <Menu.Content>
+          <Menu.Sub>
+            <Menu.SubTrigger>Share</Menu.SubTrigger>
+            <Menu.SubContent>
+              <Menu.Item onSelect={pickRename}>Email</Menu.Item>
+            </Menu.SubContent>
+          </Menu.Sub>
+        </Menu.Content>
+      </Menu.Root>,
+    );
+    const trigger = document.querySelector('[aria-haspopup="menu"][role="menuitem"]')!;
+    expect(look(trigger)).not.toBe('|');
+    expect(trigger.textContent).toBe('Share›');
+    click(trigger);
+    const panels = document.querySelectorAll('[role="menu"]');
+    expect(panels.length).toBe(2);
+    expect(look(panels[1]!.firstElementChild!)).not.toBe('|');
+    click(panels[1]!.querySelector('[role="menuitem"]')!);
+    expect(menuPicked).toBe('rename');
+    expect(document.querySelector('[role="menu"]')).toBeNull();
+  });
 });
 
 describe('Slider - themed range input over the headless slider', () => {
