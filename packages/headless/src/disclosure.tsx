@@ -218,6 +218,7 @@ interface TabsContextValue {
   readonly setValue: (v: string) => void;
   readonly idPrefix: string;
   readonly orientation: 'horizontal' | 'vertical';
+  readonly activationMode: 'automatic' | 'manual';
 }
 const TabsContext = createContext<TabsContextValue | null>(null);
 function useTabsContext(component: string): TabsContextValue {
@@ -232,6 +233,12 @@ export interface TabsRootProps {
   defaultValue?: string;
   onValueChange?: (v: string) => void;
   orientation?: 'horizontal' | 'vertical';
+  /**
+   * `'automatic'` (the default) selects a tab as the arrow keys reach it.
+   * `'manual'` only moves focus, and Enter or Space selects, for panels that
+   * are slow to render.
+   */
+  activationMode?: 'automatic' | 'manual';
   children?: ReactNode;
 }
 function TabsRoot(props: TabsRootProps): ReactElement {
@@ -240,6 +247,7 @@ function TabsRoot(props: TabsRootProps): ReactElement {
     defaultValue,
     onValueChange,
     orientation = 'horizontal',
+    activationMode = 'automatic',
     children,
   } = props;
   // Prop-presence detection so `value={undefined}` stays controlled (empty).
@@ -252,7 +260,7 @@ function TabsRoot(props: TabsRootProps): ReactElement {
   const value = rawValue ?? '';
   const idPrefix = useId();
   return (
-    <TabsContext.Provider value={{ value, setValue, idPrefix, orientation }}>
+    <TabsContext.Provider value={{ value, setValue, idPrefix, orientation, activationMode }}>
       {children}
     </TabsContext.Provider>
   );
@@ -307,9 +315,13 @@ function TabsTab({
     );
     if (tabs.length === 0) return;
     const cur = tabs.indexOf(ref.current!);
-    const next = tabs[(cur + direction + tabs.length) % tabs.length]!;
-    next.focus();
-    next.click();
+    reach(tabs[(cur + direction + tabs.length) % tabs.length]);
+  }
+
+  /** Focus a tab, and select it too unless activation is manual. */
+  function reach(tab: HTMLButtonElement | null | undefined): void {
+    tab?.focus();
+    if (ctx.activationMode === 'automatic') tab?.click();
   }
 
   function onKeyDown(e: KeyboardEvent<HTMLButtonElement>): void {
@@ -333,16 +345,12 @@ function TabsTab({
     if (e.key === 'Home') {
       e.preventDefault();
       const list = ref.current?.parentElement;
-      const first = list?.querySelector<HTMLButtonElement>('[role="tab"]:not([disabled])');
-      first?.focus();
-      first?.click();
+      reach(list?.querySelector<HTMLButtonElement>('[role="tab"]:not([disabled])'));
     } else if (e.key === 'End') {
       e.preventDefault();
       const list = ref.current?.parentElement;
       const tabs = list?.querySelectorAll<HTMLButtonElement>('[role="tab"]:not([disabled])');
-      const last = tabs?.[tabs.length - 1];
-      last?.focus();
-      last?.click();
+      reach(tabs?.[tabs.length - 1]);
     }
   }
 

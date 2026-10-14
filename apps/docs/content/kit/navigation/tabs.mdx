@@ -3,7 +3,7 @@ title: Tabs
 description: Themed tabs over the headless Tabs - roving focus, arrow-key and Home or End navigation, and an active tab styled from aria-selected in pure CSS.
 diataxis: reference
 covers: ['Tabs']
-last_verified: 2026-10-14
+last_verified: 2026-10-15
 ---
 
 import {
@@ -107,6 +107,12 @@ The headless `Tabs.Root`.
       name: 'onValueChange',
       type: '(v: string) => void',
       description: 'Called with the value of the newly selected tab.',
+    },
+    {
+      name: 'activationMode',
+      type: '"automatic" | "manual"',
+      default: '"automatic"',
+      description: 'Whether an arrow key selects the tab it reaches (`automatic`), or only focuses it, leaving Enter or Space to select (`manual`). Use manual when a panel is slow to render. React Native accepts it and selects on press either way.',
     },
     {
       name: 'orientation',

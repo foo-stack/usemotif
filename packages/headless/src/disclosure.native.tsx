@@ -218,6 +218,8 @@ export interface TabsRootProps {
   defaultValue?: string;
   onValueChange?: (v: string) => void;
   orientation?: 'horizontal' | 'vertical';
+  /** Keyboard activation on web. Accepted for shared code; touch selects on press either way. */
+  activationMode?: 'automatic' | 'manual';
   children?: ReactNode;
 }
 function TabsRoot({
