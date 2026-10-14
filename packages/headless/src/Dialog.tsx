@@ -18,6 +18,7 @@ import {
   type ReactNode,
 } from 'react';
 import { mergeRefs } from './_compose-refs.js';
+import { useClickOutside } from './positioning.js';
 import { useExitTransition } from './_use-exit-transition.js';
 import { useControllableState } from './use-controllable-state.js';
 
@@ -64,6 +65,7 @@ interface DialogContextValue {
   readonly descriptionId: string;
   readonly triggerRef: React.RefObject<HTMLElement | null>;
   readonly role: 'dialog' | 'alertdialog';
+  readonly modal: boolean;
   /** Whether a DialogTitle / DialogDescription is currently mounted, so
    * Content only points aria-labelledby / aria-describedby at ids that
    * actually exist (a dangling reference is an ARIA error). */
@@ -90,6 +92,13 @@ export interface DialogRootProps {
   /** Use `'alertdialog'` for destructive confirmations (overrides
    * the default `'dialog'` role). */
   role?: 'dialog' | 'alertdialog';
+  /**
+   * `false` leaves the page usable while the dialog is open: no background
+   * `inert` or scroll lock, no `aria-modal`, and Tab can leave the dialog.
+   * Focus still moves in on open and back on close, and Escape and a click
+   * outside still close it. Defaults to `true`.
+   */
+  modal?: boolean;
   children?: ReactNode;
 }
 function Root({
@@ -97,6 +106,7 @@ function Root({
   defaultOpen = false,
   onOpenChange,
   role = 'dialog',
+  modal = true,
   children,
 }: DialogRootProps): ReactElement {
   const [open, setOpen] = useControllableState({
@@ -128,6 +138,7 @@ function Root({
       descriptionId: `${reactId}-description`,
       triggerRef,
       role,
+      modal,
       hasTitle: titleCount > 0,
       hasDescription: descriptionCount > 0,
       registerTitle,
@@ -138,6 +149,7 @@ function Root({
       setOpen,
       reactId,
       role,
+      modal,
       titleCount,
       descriptionCount,
       registerTitle,
@@ -175,6 +187,15 @@ function Trigger({ children }: DialogTriggerProps): ReactElement {
   });
 }
 
+/** A layer that only places the dialog: transparent, click-through, and
+ * leaving the page behind it interactive and scrollable. */
+const NON_MODAL_OVERLAY = {
+  scrim: 'transparent',
+  isolateBackground: false,
+  lockScroll: false,
+  style: { pointerEvents: 'none' },
+} as const;
+
 export interface DialogContentProps {
   /** Allow Escape to close. Defaults to true. */
   dismissOnEscape?: boolean;
@@ -209,26 +230,38 @@ function Content({
     ctx.open,
     exitDurationMs,
   );
+  const { setOpen, modal } = ctx;
+  const close = useCallback(() => setOpen(false), [setOpen]);
+  // A modal dialog's scrim takes the outside click; a non-modal one has no
+  // scrim, so a press anywhere else closes it. The trigger toggles on its own.
+  useClickOutside(
+    !modal && ctx.open && dismissOnScrimClick,
+    elementRef as React.RefObject<HTMLElement | null>,
+    close,
+    ctx.triggerRef,
+  );
   if (!shouldRender) return null;
   return (
-    <Overlay {...(dismissOnScrimClick ? { onScrimClick: () => ctx.setOpen(false) } : {})}>
+    <Overlay
+      {...(modal ? (dismissOnScrimClick ? { onScrimClick: close } : {}) : NON_MODAL_OVERLAY)}
+    >
       <FocusScope
         // eslint-disable-next-line jsx-a11y/no-autofocus
         autoFocus
         restoreFocus
-        trapFocus
-        {...(dismissOnEscape ? { onEscape: () => ctx.setOpen(false) } : {})}
+        trapFocus={modal}
+        {...(dismissOnEscape ? { onEscape: close } : {})}
       >
         <div
           ref={(node) => {
             elementRef.current = node;
           }}
           role={ctx.role}
-          aria-modal="true"
+          aria-modal={modal || undefined}
           aria-labelledby={ctx.hasTitle ? ctx.titleId : undefined}
           aria-describedby={ctx.hasDescription ? ctx.descriptionId : undefined}
           {...(phase === 'exiting' ? { 'data-motif-state': 'exiting' } : {})}
-          style={style}
+          style={modal ? style : { pointerEvents: 'auto', ...style }}
         >
           {/* Publish the presence phase so a WAAPI-driven descendant surface
               (`<Box exitStyle>`) can register + play its exit off-thread; the

@@ -32,6 +32,7 @@ interface DialogContextValue {
   readonly titleId: string;
   readonly descriptionId: string;
   readonly role: 'dialog' | 'alertdialog';
+  readonly modal: boolean;
   /** Resolved description *text* (not its id) for accessibilityHint. */
   readonly descriptionText: string | undefined;
   readonly setDescriptionText: (text: string | undefined) => void;
@@ -50,6 +51,12 @@ export interface DialogRootProps {
   defaultOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
   role?: 'dialog' | 'alertdialog';
+  /**
+   * `false` stops marking the dialog modal to assistive tech
+   * (`accessibilityViewIsModal`). RN's `Modal` still covers the screen, so
+   * touches behind it stay blocked on native. Defaults to `true`.
+   */
+  modal?: boolean;
   children?: ReactNode;
 }
 function Root({
@@ -57,6 +64,7 @@ function Root({
   defaultOpen = false,
   onOpenChange,
   role = 'dialog',
+  modal = true,
   children,
 }: DialogRootProps): ReactElement {
   const [open, setOpen] = useControllableState({
@@ -75,6 +83,7 @@ function Root({
         titleId: `${reactId}-title`,
         descriptionId: `${reactId}-description`,
         role,
+        modal,
         descriptionText,
         setDescriptionText,
       }}
@@ -163,7 +172,7 @@ function Content({
             assistive tech. accessibilityRole maps to ctx.role. */}
         <View
           accessibilityRole={ctx.role === 'alertdialog' ? 'alert' : 'none'}
-          accessibilityViewIsModal
+          accessibilityViewIsModal={ctx.modal}
           accessibilityLabelledBy={ctx.titleId}
           accessibilityHint={ctx.descriptionText}
           style={style as ViewStyle}
