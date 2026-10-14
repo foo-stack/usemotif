@@ -2,7 +2,11 @@
 import { act, useEffect } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { useThemeSetting, type UseThemeSettingResult } from './useThemeSetting.js';
+import {
+  useThemeSetting,
+  type SyncStorage,
+  type UseThemeSettingResult,
+} from './useThemeSetting.js';
 
 let container: HTMLElement;
 let root: Root;
@@ -187,5 +191,79 @@ describe('useThemeSetting (web)', () => {
     // After the effect, resolved syncs to the OS value.
     expect(probe.current().resolved).toBe('dark');
     void mq;
+  });
+
+  describe('custom storage', () => {
+    function memoryStorage(initial: Record<string, string> = {}): SyncStorage & {
+      data: Map<string, string>;
+    } {
+      const data = new Map(Object.entries(initial));
+      return {
+        data,
+        getItem: (key) => data.get(key) ?? null,
+        setItem: (key, value) => {
+          data.set(key, value);
+        },
+        removeItem: (key) => {
+          data.delete(key);
+        },
+      };
+    }
+
+    it('restores the override from the custom store on mount', () => {
+      installMatchMedia(false);
+      const storage = memoryStorage({ 'motif:theme': 'dark' });
+      const probe = captureHook({ storage });
+      expect(probe.current().mode).toBe('dark');
+      expect(probe.current().resolved).toBe('dark');
+    });
+
+    it('writes to the custom store and leaves localStorage alone', () => {
+      installMatchMedia(false);
+      const storage = memoryStorage();
+      const probe = captureHook({ storage });
+      act(() => probe.current().set('dark'));
+      expect(storage.data.get('motif:theme')).toBe('dark');
+      expect(window.localStorage.getItem('motif:theme')).toBeNull();
+      act(() => probe.current().set('system'));
+      expect(storage.data.has('motif:theme')).toBe(false);
+    });
+
+    it('uses storageKey with the custom store', () => {
+      installMatchMedia(false);
+      const storage = memoryStorage();
+      const probe = captureHook({ storage, storageKey: 'app:mode' });
+      act(() => probe.current().set('light'));
+      expect(storage.data.get('app:mode')).toBe('light');
+    });
+
+    it('persists nothing when storage is null', () => {
+      installMatchMedia(false);
+      window.localStorage.setItem('motif:theme', 'dark');
+      const probe = captureHook({ storage: null });
+      expect(probe.current().mode).toBe('system');
+      act(() => probe.current().set('light'));
+      expect(window.localStorage.getItem('motif:theme')).toBe('dark');
+    });
+
+    it('falls back to system when the custom store throws', () => {
+      installMatchMedia(true);
+      const storage: SyncStorage = {
+        getItem: () => {
+          throw new Error('blocked');
+        },
+        setItem: () => {
+          throw new Error('blocked');
+        },
+        removeItem: () => {
+          throw new Error('blocked');
+        },
+      };
+      const probe = captureHook({ storage });
+      expect(probe.current().mode).toBe('system');
+      expect(probe.current().resolved).toBe('dark');
+      act(() => probe.current().set('light'));
+      expect(probe.current().resolved).toBe('light');
+    });
   });
 });
