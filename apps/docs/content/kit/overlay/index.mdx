@@ -1,0 +1,65 @@
+---
+title: Overlay
+description: The kit's overlay components - modal and confirm dialogs, drawers, floating panels, menus, a command palette, and toasts. Themed surfaces over the headless overlay behaviours.
+diataxis: explanation
+covers:
+  [
+    'Modal',
+    'AlertDialog',
+    'Drawer',
+    'Sheet',
+    'Popover',
+    'HoverCard',
+    'Tooltip',
+    'Menu',
+    'ContextMenu',
+    'CommandPalette',
+    'Toaster',
+    'useToast',
+  ]
+last_verified: 2026-10-14
+---
+
+import { ArticleMeta, Callout, Eyebrow, Lede } from '../../../components/index.js';
+
+<Eyebrow>UI kit / Overlay</Eyebrow>
+
+# Overlay
+
+<Lede>
+  The layer above the page. These components render into a portal over the rest of your UI - a
+  modal, a drawer, a floating panel, a menu, a toast - and every one wraps a headless behaviour, so
+  focus, dismissal, and ARIA wiring come with the theme.
+</Lede>
+
+<ArticleMeta />
+
+## The pieces
+
+| Component                                      | Use it for                                                                     |
+| ---------------------------------------------- | ------------------------------------------------------------------------------ |
+| [Modal](/kit/overlay/modal)                    | A centered dialog that becomes a bottom sheet on narrow viewports.             |
+| [AlertDialog](/kit/overlay/alert-dialog)       | A confirmation that needs an explicit choice; a scrim click does not close it. |
+| [Drawer and Sheet](/kit/overlay/drawer)        | A panel that slides in from an edge. Sheet is pinned to the bottom.            |
+| [Popover](/kit/overlay/popover)                | A floating panel anchored to a trigger, opened by click.                       |
+| [HoverCard](/kit/overlay/hover-card)           | An interactive preview card that opens on hover or focus.                      |
+| [Tooltip](/kit/overlay/tooltip)                | A short, non-interactive hint bubble.                                          |
+| [Menu](/kit/overlay/menu)                      | A dropdown list of actions under a trigger.                                    |
+| [ContextMenu](/kit/overlay/context-menu)       | A list of actions opened at the cursor by a right-click.                       |
+| [CommandPalette](/kit/overlay/command-palette) | A fuzzy-searchable command launcher in a modal.                                |
+| [Toast](/kit/overlay/toast)                    | Transient notifications, pushed from anywhere with `useToast`.                 |
+
+## Headless parts and themed parts
+
+The compound overlays are namespaces such as `Modal.Root` and `Modal.Content`. The parts that hold
+state or wire a trigger (`Root`, `Trigger`, `Close`) are the headless parts, re-exported
+unchanged, so their props are the headless props. The parts you see (`Content`, `Title`,
+`Description`, `Item`, `Separator`) are kit components that wrap the headless boundary around a
+themed surface, so they re-theme in light and dark.
+
+CommandPalette and Toaster are single components rather than namespaces: the kit renders the
+whole surface and takes the headless root's props.
+
+<Callout variant="info" title="Related">
+  [Headless](/headless) - the unstyled overlay behaviours, for a surface you theme yourself.
+</Callout>

@@ -1,0 +1,92 @@
+---
+title: Toolbar
+description: A themed toolbar over the headless Toolbar - role="toolbar" with arrow-key focus movement across its buttons, horizontal or vertical, on a bordered surface.
+diataxis: reference
+covers: ['Toolbar', 'ToolbarProps']
+last_verified: 2026-10-14
+---
+
+import {
+  ApiSignature,
+  ArticleMeta,
+  Callout,
+  CodeBlock,
+  Eyebrow,
+  Lede,
+} from '../../../components/index.js';
+
+<Eyebrow>UI kit / Navigation</Eyebrow>
+
+# Toolbar
+
+<Lede>
+  Toolbar groups a set of controls, such as formatting buttons, into one strip. Arrow keys move
+  focus between the controls inside it.
+</Lede>
+
+<ArticleMeta />
+
+## What it is
+
+The headless [Toolbar](/headless/navigation/toolbar) on a themed surface. It renders a
+`role="toolbar"` element with `aria-orientation`. ArrowRight and ArrowLeft (ArrowDown and ArrowUp
+when vertical) move focus to the next or previous enabled button or focusable element and wrap;
+Home and End jump to the first and last.
+
+The kit surface is an inline-flex strip with 4px padding and gap, an `lg` radius, a
+`border.default` border, and a `surface.default` background, read from the token CSS variables.
+Put [Button](/components/interactive/button) or [IconButton](/components/interactive/icon-button) primitives
+inside.
+
+## Install
+
+<CodeBlock lang="bash" code={`yarn add @usemotif/ui`} />
+
+<CodeBlock lang="tsx" code={`import { Toolbar } from '@usemotif/ui';`} />
+
+## Usage
+
+<CodeBlock lang="tsx" code={`import { Toolbar } from '@usemotif/ui';
+import { IconButton } from 'usemotif';
+
+<Toolbar aria-label="Formatting">
+  <IconButton aria-label="Bold">
+    <BoldIcon />
+  </IconButton>
+  <IconButton aria-label="Italic">
+    <ItalicIcon />
+  </IconButton>
+  <IconButton aria-label="Underline">
+    <UnderlineIcon />
+  </IconButton>
+</Toolbar>`} />
+
+## API
+
+<ApiSignature
+  name="Toolbar"
+  status="stable"
+  signature={`function Toolbar(props: ToolbarProps): JSX.Element`}
+  params={[
+    {
+      name: 'orientation',
+      type: "'horizontal' | 'vertical'",
+      default: "'horizontal'",
+      description: 'Lay the controls out in a row or a column, and pick which arrow keys move focus.',
+    },
+    {
+      name: 'aria-label',
+      type: 'string',
+      description: 'Accessible name for the toolbar.',
+    },
+    {
+      name: 'children',
+      type: 'ReactNode',
+      description: 'The controls.',
+    },
+  ]}
+/>
+
+<Callout variant="info" title="Related">
+  [Toolbar (headless)](/headless/navigation/toolbar) - the unstyled behaviour.
+</Callout>

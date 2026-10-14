@@ -1,0 +1,245 @@
+---
+title: Modal
+description: A themed, animated modal over the headless Dialog - focus trap, scrim, and Escape - that presents as a centered dialog on wide viewports and a bottom sheet on narrow ones.
+diataxis: reference
+covers: ['Modal', 'ModalContentProps']
+last_verified: 2026-10-14
+---
+
+import {
+  ApiSignature,
+  ArticleMeta,
+  Callout,
+  CodeBlock,
+  Eyebrow,
+  Lede,
+} from '../../../components/index.js';
+
+<Eyebrow>UI kit / Overlay</Eyebrow>
+
+# Modal
+
+<Lede>
+  Modal is the kit's dialog. It traps focus, closes on Escape or a scrim click, and labels itself
+  from its title and description. On a narrow viewport the same modal presents as a bottom sheet,
+  sharing one open state.
+</Lede>
+
+<ArticleMeta />
+
+## What it is
+
+The headless [Dialog](/headless/overlay/dialog) with a themed surface. `Modal.Content` wraps
+[Adapt](/headless/overlay/adapt): above the `below` breakpoint (default `sm`) it renders a
+centered dialog, and below it a drawer anchored to `side` (default `bottom`). The trigger, title,
+description, and close parts work the same in both presentations.
+
+The surface is a `surface.raised` card, 280px to 480px wide, with a `border.muted` border and
+`lg` radius. It mounts with a short fade and upward slide through the active motion driver.
+
+## Install
+
+<CodeBlock lang="bash" code={`yarn add @usemotif/ui`} />
+
+<CodeBlock lang="tsx" code={`import { Modal } from '@usemotif/ui';`} />
+
+## Anatomy
+
+<CodeBlock lang="tsx" code={`<Modal.Root>
+  <Modal.Trigger>
+    <Button>Open</Button>
+  </Modal.Trigger>
+  <Modal.Content>
+    <Modal.Title>Title</Modal.Title>
+    <Modal.Description>Supporting copy.</Modal.Description>
+    <Modal.Close>
+      <Button>Cancel</Button>
+    </Modal.Close>
+  </Modal.Content>
+</Modal.Root>`} />
+
+## Usage
+
+<CodeBlock lang="tsx" code={`import { Modal } from '@usemotif/ui';
+import { Button, Input } from 'usemotif';
+
+<Modal.Root>
+  <Modal.Trigger>
+    <Button>Rename project</Button>
+  </Modal.Trigger>
+  <Modal.Content>
+    <Modal.Title>Rename project</Modal.Title>
+    <Modal.Description>The new name shows everywhere the project is linked.</Modal.Description>
+    <Input defaultValue="Atlas" />
+    <Modal.Close>
+      <Button>Save</Button>
+    </Modal.Close>
+  </Modal.Content>
+</Modal.Root>`} />
+
+Controlled, staying a dialog down to the `md` breakpoint:
+
+<CodeBlock lang="tsx" code={`const [open, setOpen] = useState(false);
+
+<Modal.Root open={open} onOpenChange={setOpen}>
+  <Modal.Content below="md">
+    <Modal.Title>Session expired</Modal.Title>
+  </Modal.Content>
+</Modal.Root>`} />
+
+## API
+
+### Modal.Root
+
+The headless `Dialog.Root`.
+
+<ApiSignature
+  name="Modal.Root"
+  status="stable"
+  signature={`function Modal.Root(props: DialogRootProps): JSX.Element`}
+  params={[
+    {
+      name: 'open',
+      type: 'boolean',
+      description: 'Controlled open state. Pass alongside `onOpenChange`.',
+    },
+    {
+      name: 'defaultOpen',
+      type: 'boolean',
+      default: 'false',
+      description: 'Initial open state when uncontrolled.',
+    },
+    {
+      name: 'onOpenChange',
+      type: '(open: boolean) => void',
+      description: 'Called when the open state changes, from the trigger, a close part, Escape, or a scrim click.',
+    },
+    {
+      name: 'role',
+      type: "'dialog' | 'alertdialog'",
+      default: "'dialog'",
+      description: 'The surface role. For a confirmation, use [AlertDialog](/kit/overlay/alert-dialog).',
+    },
+    {
+      name: 'children',
+      type: 'ReactNode',
+      description: 'The Trigger and Content parts.',
+    },
+  ]}
+/>
+
+### Modal.Trigger
+
+The headless `Dialog.Trigger`.
+
+<ApiSignature
+  name="Modal.Trigger"
+  status="stable"
+  signature={`function Modal.Trigger(props: DialogTriggerProps): JSX.Element`}
+  params={[
+    {
+      name: 'children',
+      type: 'ReactElement',
+      required: true,
+      description: 'A single element. It is cloned to toggle the modal on click and to carry `aria-expanded` and `aria-haspopup`.',
+    },
+  ]}
+/>
+
+### Modal.Content
+
+<ApiSignature
+  name="Modal.Content"
+  status="stable"
+  signature={`function Modal.Content(props: ModalContentProps): JSX.Element | null`}
+  params={[
+    {
+      name: 'below',
+      type: 'BreakpointName | number',
+      default: "'sm'",
+      description: 'Present as a drawer when the viewport is narrower than this breakpoint name or pixel width.',
+    },
+    {
+      name: 'above',
+      type: 'BreakpointName | number',
+      description: 'Also require the viewport to be at least this wide for the drawer presentation, which makes a band with `below`.',
+    },
+    {
+      name: 'side',
+      type: "'left' | 'right' | 'top' | 'bottom'",
+      default: "'bottom'",
+      description: 'The edge the drawer anchors to when the modal presents as one.',
+    },
+    {
+      name: 'dismissOnEscape',
+      type: 'boolean',
+      default: 'true',
+      description: 'Allow Escape to close the modal.',
+    },
+    {
+      name: 'dismissOnScrimClick',
+      type: 'boolean',
+      default: 'true',
+      description: 'Allow a click on the scrim to close the modal.',
+    },
+    {
+      name: 'exitDurationMs',
+      type: 'number',
+      default: '200',
+      description: 'How long the surface stays mounted after close so an exit transition can play.',
+    },
+    {
+      name: 'style',
+      type: 'CSSProperties',
+      description: 'Inline style for the headless `role="dialog"` wrapper around the themed surface.',
+    },
+    {
+      name: 'children',
+      type: 'ReactNode',
+      description: 'The modal body - Title, Description, Close, and your content.',
+    },
+  ]}
+/>
+
+### Modal.Title / Modal.Description
+
+<ApiSignature
+  name="Modal.Title"
+  status="stable"
+  signature={`function Modal.Title(props: { children?: ReactNode }): JSX.Element`}
+  params={[
+    {
+      name: 'children',
+      type: 'ReactNode',
+      description: 'The title text, in the `lg` size at semibold weight.',
+    },
+  ]}
+/>
+
+`Modal.Description` takes the same single `children` prop and renders it in the `sm` size and
+`text.muted`. Both bind their generated ids into the surface's `aria-labelledby` and
+`aria-describedby`.
+
+### Modal.Close
+
+The headless `Dialog.Close`.
+
+<ApiSignature
+  name="Modal.Close"
+  status="stable"
+  signature={`function Modal.Close(props: DialogCloseProps): JSX.Element`}
+  params={[
+    {
+      name: 'children',
+      type: 'ReactElement',
+      required: true,
+      description: 'A single element. It is cloned to close the modal on click.',
+    },
+  ]}
+/>
+
+<Callout variant="info" title="Related">
+  [Dialog (headless)](/headless/overlay/dialog) and [Adapt](/headless/overlay/adapt) - the
+  behaviours underneath. [AlertDialog](/kit/overlay/alert-dialog) for a confirmation.
+  [Drawer and Sheet](/kit/overlay/drawer) for a panel that is always edge-anchored.
+</Callout>

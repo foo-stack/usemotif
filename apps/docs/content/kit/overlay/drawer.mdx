@@ -1,0 +1,279 @@
+---
+title: Drawer and Sheet
+description: Themed, animated edge panels over the headless Drawer and Sheet - a side-anchored modal that slides in from left, right, top, or bottom, and a sheet pinned to the bottom.
+diataxis: reference
+covers: ['Drawer', 'Sheet', 'DrawerContentProps', 'SheetContentProps']
+last_verified: 2026-10-14
+---
+
+import {
+  ApiSignature,
+  ArticleMeta,
+  Callout,
+  CodeBlock,
+  Eyebrow,
+  Lede,
+} from '../../../components/index.js';
+
+<Eyebrow>UI kit / Overlay</Eyebrow>
+
+# Drawer and Sheet
+
+<Lede>
+  Drawer is a modal panel anchored to one edge of the viewport. It slides in from its `side` when
+  it opens and back out when it closes. Sheet is the same panel fixed to the bottom edge.
+</Lede>
+
+<ArticleMeta />
+
+## What it is
+
+The headless [Drawer](/headless/overlay/drawer) and [Sheet](/headless/overlay/sheet), both
+side-anchored Dialogs: focus trap, scrim, and Escape or scrim-click dismissal. The two namespaces
+share every part except `Content`, where Drawer takes a `side` and Sheet does not.
+
+The kit panel is a `surface.raised` surface with a `border.muted` border. A left or right drawer is
+360px wide (at most 90vw) and full height; a top or bottom one is full width. Only the corners that
+face into the viewport are rounded. The slide runs through the active motion driver.
+
+## Install
+
+<CodeBlock lang="bash" code={`yarn add @usemotif/ui`} />
+
+<CodeBlock lang="tsx" code={`import { Drawer, Sheet } from '@usemotif/ui';`} />
+
+## Anatomy
+
+<CodeBlock lang="tsx" code={`<Drawer.Root>
+  <Drawer.Trigger>
+    <Button>Open</Button>
+  </Drawer.Trigger>
+  <Drawer.Content side="right">
+    <Drawer.Title>Title</Drawer.Title>
+    <Drawer.Description>Supporting copy.</Drawer.Description>
+    <Drawer.Close>
+      <Button>Close</Button>
+    </Drawer.Close>
+  </Drawer.Content>
+</Drawer.Root>`} />
+
+`Sheet` has the same six parts: `Sheet.Root`, `Sheet.Trigger`, `Sheet.Content`, `Sheet.Title`,
+`Sheet.Description`, and `Sheet.Close`.
+
+## Usage
+
+<CodeBlock lang="tsx" code={`import { Drawer } from '@usemotif/ui';
+import { Button } from 'usemotif';
+
+<Drawer.Root>
+  <Drawer.Trigger>
+    <Button>Menu</Button>
+  </Drawer.Trigger>
+  <Drawer.Content side="left">
+    <Drawer.Title>Navigation</Drawer.Title>
+    <NavLinks />
+  </Drawer.Content>
+</Drawer.Root>`} />
+
+A bottom sheet of actions:
+
+<CodeBlock lang="tsx" code={`import { Sheet } from '@usemotif/ui';
+import { Button } from 'usemotif';
+
+<Sheet.Root>
+  <Sheet.Trigger>
+    <Button>Share</Button>
+  </Sheet.Trigger>
+  <Sheet.Content>
+    <Sheet.Title>Share this file</Sheet.Title>
+    <Sheet.Description>Anyone with the link can view it.</Sheet.Description>
+    <Sheet.Close>
+      <Button>Done</Button>
+    </Sheet.Close>
+  </Sheet.Content>
+</Sheet.Root>`} />
+
+## API
+
+### Drawer.Root / Sheet.Root
+
+The headless `Drawer.Root`, a `Dialog.Root`.
+
+<ApiSignature
+  name="Drawer.Root"
+  status="stable"
+  signature={`function Drawer.Root(props: DialogRootProps): JSX.Element`}
+  params={[
+    {
+      name: 'open',
+      type: 'boolean',
+      description: 'Controlled open state. Pass alongside `onOpenChange`.',
+    },
+    {
+      name: 'defaultOpen',
+      type: 'boolean',
+      default: 'false',
+      description: 'Initial open state when uncontrolled.',
+    },
+    {
+      name: 'onOpenChange',
+      type: '(open: boolean) => void',
+      description: 'Called when the open state changes.',
+    },
+    {
+      name: 'role',
+      type: "'dialog' | 'alertdialog'",
+      default: "'dialog'",
+      description: 'The panel role.',
+    },
+    {
+      name: 'children',
+      type: 'ReactNode',
+      description: 'The Trigger and Content parts.',
+    },
+  ]}
+/>
+
+### Drawer.Trigger / Sheet.Trigger
+
+The headless `Dialog.Trigger`.
+
+<ApiSignature
+  name="Drawer.Trigger"
+  status="stable"
+  signature={`function Drawer.Trigger(props: DialogTriggerProps): JSX.Element`}
+  params={[
+    {
+      name: 'children',
+      type: 'ReactElement',
+      required: true,
+      description: 'A single element. It is cloned to open the panel on click and to carry `aria-expanded` and `aria-haspopup`.',
+    },
+  ]}
+/>
+
+### Drawer.Content
+
+<ApiSignature
+  name="Drawer.Content"
+  status="stable"
+  signature={`function Drawer.Content(props: DrawerContentProps): JSX.Element | null`}
+  params={[
+    {
+      name: 'side',
+      type: "'left' | 'right' | 'top' | 'bottom'",
+      default: "'right'",
+      description: 'The edge the panel anchors to and slides in from.',
+    },
+    {
+      name: 'dismissOnEscape',
+      type: 'boolean',
+      default: 'true',
+      description: 'Allow Escape to close the panel.',
+    },
+    {
+      name: 'dismissOnScrimClick',
+      type: 'boolean',
+      default: 'true',
+      description: 'Allow a click on the scrim to close the panel.',
+    },
+    {
+      name: 'exitDurationMs',
+      type: 'number',
+      default: '250',
+      description: 'How long the panel stays mounted after close so its slide-out can play.',
+    },
+    {
+      name: 'style',
+      type: 'CSSProperties',
+      description: 'Inline style merged over the headless positioning of the `role="dialog"` wrapper.',
+    },
+    {
+      name: 'children',
+      type: 'ReactNode',
+      description: 'The panel body.',
+    },
+  ]}
+/>
+
+### Sheet.Content
+
+`SheetContentProps` is `DrawerContentProps` without `side`: the sheet is always anchored to the
+bottom.
+
+<ApiSignature
+  name="Sheet.Content"
+  status="stable"
+  signature={`function Sheet.Content(props: SheetContentProps): JSX.Element | null`}
+  params={[
+    {
+      name: 'exitDurationMs',
+      type: 'number',
+      default: '250',
+      description: 'How long the sheet stays mounted after close so its slide-out can play.',
+    },
+    {
+      name: 'dismissOnEscape',
+      type: 'boolean',
+      default: 'true',
+      description: 'Allow Escape to close the sheet.',
+    },
+    {
+      name: 'dismissOnScrimClick',
+      type: 'boolean',
+      default: 'true',
+      description: 'Allow a click on the scrim to close the sheet.',
+    },
+    {
+      name: 'style',
+      type: 'CSSProperties',
+      description: 'Inline style merged over the headless positioning of the wrapper.',
+    },
+    {
+      name: 'children',
+      type: 'ReactNode',
+      description: 'The sheet body.',
+    },
+  ]}
+/>
+
+### Title, Description, and Close
+
+`Drawer.Title` and `Sheet.Title` are the same component, as are the two `Description` parts. Each
+takes a single `children` prop: the title renders in the `lg` size at semibold weight, the
+description in the `sm` size and `text.muted`, and both bind into the panel's ARIA labelling.
+
+<ApiSignature
+  name="Drawer.Title"
+  status="stable"
+  signature={`function Drawer.Title(props: { children?: ReactNode }): JSX.Element`}
+  params={[
+    {
+      name: 'children',
+      type: 'ReactNode',
+      description: 'The title text.',
+    },
+  ]}
+/>
+
+`Drawer.Close` and `Sheet.Close` are the headless `Dialog.Close`.
+
+<ApiSignature
+  name="Drawer.Close"
+  status="stable"
+  signature={`function Drawer.Close(props: DialogCloseProps): JSX.Element`}
+  params={[
+    {
+      name: 'children',
+      type: 'ReactElement',
+      required: true,
+      description: 'A single element. It is cloned to close the panel on click.',
+    },
+  ]}
+/>
+
+<Callout variant="info" title="Related">
+  [Drawer (headless)](/headless/overlay/drawer) and [Sheet (headless)](/headless/overlay/sheet) -
+  the unstyled behaviours. [Modal](/kit/overlay/modal) for a centered dialog that becomes a sheet
+  on narrow viewports.
+</Callout>

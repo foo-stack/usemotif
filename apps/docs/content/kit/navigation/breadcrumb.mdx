@@ -1,0 +1,121 @@
+---
+title: Breadcrumb
+description: A themed breadcrumb trail over the headless Breadcrumb - a nav landmark with an ordered list, aria-current="page" on the last crumb, and a muted chevron between items.
+diataxis: reference
+covers: ['Breadcrumb', 'BreadcrumbProps', 'BreadcrumbItemProps']
+last_verified: 2026-10-14
+---
+
+import {
+  ApiSignature,
+  ArticleMeta,
+  Callout,
+  CodeBlock,
+  Eyebrow,
+  Lede,
+} from '../../../components/index.js';
+
+<Eyebrow>UI kit / Navigation</Eyebrow>
+
+# Breadcrumb
+
+<Lede>
+  Breadcrumb shows where the current page sits in the site: each ancestor as a link, ending in the
+  page itself as plain text.
+</Lede>
+
+<ArticleMeta />
+
+## What it is
+
+The headless [Breadcrumb](/headless/navigation/breadcrumb) with themed crumbs. It renders a `nav`
+landmark (labelled `Breadcrumb` by default) around an ordered list, wraps each child in a list
+item, and puts `aria-current="page"` on the last one. The separators between items are
+`aria-hidden`.
+
+A crumb with an `href` is a link in `text.muted` that darkens to `text.default` on hover. A crumb
+without one is the current page, in `text.default` at medium weight. The default separator is a
+muted chevron, and the trail renders at 14px.
+
+## Install
+
+<CodeBlock lang="bash" code={`yarn add @usemotif/ui`} />
+
+<CodeBlock lang="tsx" code={`import { Breadcrumb } from '@usemotif/ui';`} />
+
+## Anatomy
+
+<CodeBlock lang="tsx" code={`<Breadcrumb>
+  <Breadcrumb.Item href="/">Root</Breadcrumb.Item>
+  <Breadcrumb.Item>Current page</Breadcrumb.Item>
+</Breadcrumb>`} />
+
+## Usage
+
+<CodeBlock lang="tsx" code={`import { Breadcrumb } from '@usemotif/ui';
+
+<Breadcrumb>
+  <Breadcrumb.Item href="/">Home</Breadcrumb.Item>
+  <Breadcrumb.Item href="/library">Library</Breadcrumb.Item>
+  <Breadcrumb.Item>Data</Breadcrumb.Item>
+</Breadcrumb>`} />
+
+With a custom separator and label:
+
+<CodeBlock lang="tsx" code={`<Breadcrumb separator="/" aria-label="You are here">
+  <Breadcrumb.Item href="/docs">Docs</Breadcrumb.Item>
+  <Breadcrumb.Item>Install</Breadcrumb.Item>
+</Breadcrumb>`} />
+
+## API
+
+### Breadcrumb
+
+<ApiSignature
+  name="Breadcrumb"
+  status="stable"
+  signature={`function Breadcrumb(props: BreadcrumbProps): JSX.Element`}
+  params={[
+    {
+      name: 'aria-label',
+      type: 'string',
+      default: "'Breadcrumb'",
+      description: 'Accessible name for the `nav` landmark.',
+    },
+    {
+      name: 'separator',
+      type: 'ReactNode',
+      description: 'Rendered between items. Defaults to a muted chevron.',
+    },
+    {
+      name: 'children',
+      type: 'ReactNode',
+      description: 'The `Breadcrumb.Item` crumbs, in order from the root.',
+    },
+  ]}
+/>
+
+### Breadcrumb.Item
+
+<ApiSignature
+  name="Breadcrumb.Item"
+  status="stable"
+  signature={`function Breadcrumb.Item(props: BreadcrumbItemProps): JSX.Element`}
+  params={[
+    {
+      name: 'href',
+      type: 'string',
+      description: 'Render the crumb as a link to this URL. Omit it for the current page.',
+    },
+    {
+      name: 'children',
+      type: 'ReactNode',
+      description: 'The crumb label.',
+    },
+  ]}
+/>
+
+<Callout variant="info" title="Related">
+  [Breadcrumb (headless)](/headless/navigation/breadcrumb) - the unstyled behaviour.
+  [NavigationMenu](/kit/navigation/navigation-menu) for top-level site links.
+</Callout>

@@ -1,0 +1,198 @@
+---
+title: CommandPalette
+description: A themed command launcher over the headless CommandPalette - a modal search box with fuzzy filtering, sections, recent commands, and full keyboard control.
+diataxis: reference
+covers: ['CommandPalette', 'CommandPaletteProps', 'Command', 'useCommandPaletteShortcut']
+last_verified: 2026-10-14
+---
+
+import {
+  ApiSignature,
+  ArticleMeta,
+  Callout,
+  CodeBlock,
+  Eyebrow,
+  Lede,
+} from '../../../components/index.js';
+
+<Eyebrow>UI kit / Overlay</Eyebrow>
+
+# CommandPalette
+
+<Lede>
+  CommandPalette is a search box for actions. The user opens it with a shortcut, types a few
+  letters, and runs a command from the filtered list without reaching for the mouse.
+</Lede>
+
+<ArticleMeta />
+
+## What it is
+
+The headless [CommandPalette](/headless/menu/command-palette) rendered inside the headless
+Dialog, so it traps focus and closes on Escape or a scrim click. The input is a
+`role="combobox"` and the results a `role="listbox"`. ArrowDown and ArrowUp move the highlight,
+Home and End jump to the ends, and Enter runs the highlighted command, which also closes the
+palette.
+
+Typing filters the `commands` by fuzzy match against each `label` and its `keywords`, best match
+first. With an empty input the commands keep your order, grouped by `section`; commands without a
+section fall under "Commands", and recently run commands are lifted to the top under "Recent".
+
+The kit draws the whole surface: a `surface.raised` panel 560px wide (at most 92vw), a borderless
+search input with a hairline beneath it, and command rows that show the command's `icon`, `label`,
+and `shortcut`. The highlighted row takes `surface.interactive`; a disabled one renders in
+`text.muted`.
+
+## Install
+
+<CodeBlock lang="bash" code={`yarn add @usemotif/ui`} />
+
+<CodeBlock lang="tsx" code={`import { CommandPalette, useCommandPaletteShortcut } from '@usemotif/ui';`} />
+
+## Usage
+
+<CodeBlock lang="tsx" code={`import { CommandPalette, useCommandPaletteShortcut, type Command } from '@usemotif/ui';
+import { useCallback, useState } from 'react';
+
+const commands: Command[] = [
+  { id: 'new', label: 'New file', section: 'File', shortcut: ['Mod', 'N'], onSelect: newFile },
+  { id: 'open', label: 'Open file', section: 'File', keywords: ['load'], onSelect: openFile },
+  { id: 'theme', label: 'Toggle theme', section: 'View', onSelect: toggleTheme },
+];
+
+function Palette() {
+  const [open, setOpen] = useState(false);
+  const toggle = useCallback(() => setOpen((v) => !v), []);
+  useCommandPaletteShortcut('mod+k', toggle);
+  return <CommandPalette commands={commands} open={open} onOpenChange={setOpen} />;
+}`} />
+
+## API
+
+<ApiSignature
+  name="CommandPalette"
+  status="stable"
+  signature={`function CommandPalette(props: CommandPaletteProps): JSX.Element`}
+  params={[
+    {
+      name: 'commands',
+      type: 'ReadonlyArray<Command>',
+      required: true,
+      description: 'The commands to search and run.',
+    },
+    {
+      name: 'open',
+      type: 'boolean',
+      description: 'Controlled open state. Pass alongside `onOpenChange`.',
+    },
+    {
+      name: 'defaultOpen',
+      type: 'boolean',
+      default: 'false',
+      description: 'Initial open state when uncontrolled.',
+    },
+    {
+      name: 'onOpenChange',
+      type: '(open: boolean) => void',
+      description: 'Called when the palette opens or closes.',
+    },
+    {
+      name: 'placeholder',
+      type: 'string',
+      default: "'Type a command...'",
+      description: 'Placeholder for the search input.',
+    },
+    {
+      name: 'emptyMessage',
+      type: 'ReactNode',
+      default: "'No matching commands'",
+      description: 'Shown when the filter matches nothing.',
+    },
+    {
+      name: 'renderItem',
+      type: '(command: Command, info: { highlighted: boolean; isRecent: boolean; index: number }) => ReactNode',
+      description: 'Replace the themed row. The headless option wrapper and activation stay in place.',
+    },
+    {
+      name: 'recents',
+      type: 'ReadonlyArray<string>',
+      description: 'Controlled list of recent command ids. Internal when omitted.',
+    },
+    {
+      name: 'onRecentsChange',
+      type: '(next: ReadonlyArray<string>) => void',
+      description: 'Called with the new recents list after a command runs.',
+    },
+    {
+      name: 'maxRecents',
+      type: 'number',
+      default: '5',
+      description: 'How many recent ids are kept.',
+    },
+    {
+      name: 'matcher',
+      type: '(input: string, command: Command) => number | null',
+      description: 'Replace the fuzzy matcher. Return `null` for no match, or a score where higher ranks first.',
+    },
+    {
+      name: 'dismissOnEscape',
+      type: 'boolean',
+      default: 'true',
+      description: 'Allow Escape to close the palette.',
+    },
+    {
+      name: 'dismissOnScrimClick',
+      type: 'boolean',
+      default: 'true',
+      description: 'Allow a click on the scrim to close the palette.',
+    },
+  ]}
+/>
+
+### Command
+
+<ApiSignature
+  name="Command"
+  status="stable"
+  signature={`interface Command`}
+  params={[
+    { name: 'id', type: 'string', required: true, description: 'Stable id, used for recents.' },
+    { name: 'label', type: 'string', required: true, description: 'The row text, and the main fuzzy-match target.' },
+    { name: 'onSelect', type: '() => void', required: true, description: 'Runs when the command is chosen.' },
+    { name: 'section', type: 'string', description: 'Section heading. Defaults to "Commands".' },
+    { name: 'keywords', type: 'ReadonlyArray<string>', description: 'Extra terms the filter matches against.' },
+    { name: 'shortcut', type: 'ReadonlyArray<string>', description: "Key hints shown at the end of the row, for example `['Mod', 'K']`." },
+    { name: 'icon', type: 'ReactNode', description: 'Shown at the start of the row.' },
+    { name: 'disabled', type: 'boolean', description: 'Listed but cannot be run.' },
+  ]}
+/>
+
+### useCommandPaletteShortcut
+
+<ApiSignature
+  name="useCommandPaletteShortcut"
+  status="stable"
+  signature={`function useCommandPaletteShortcut(combo: string, handler: () => void): void`}
+  params={[
+    {
+      name: 'combo',
+      type: 'string',
+      required: true,
+      description: "A shortcut such as `'mod+k'`. `mod` is Command on macOS and Ctrl elsewhere.",
+    },
+    {
+      name: 'handler',
+      type: '() => void',
+      required: true,
+      description: 'Called on the matching keydown, after `preventDefault()`. Pass a stable function so the listener is not re-bound every render.',
+    },
+  ]}
+/>
+
+The kit re-exports this hook from `@usemotif/headless`. The palette does not bind a shortcut on its
+own: open it from the hook or from any button.
+
+<Callout variant="info" title="Related">
+  [CommandPalette (headless)](/headless/menu/command-palette) - the unstyled behaviour.
+  [Combobox](/kit/forms/combobox) to filter options for a form field.
+</Callout>

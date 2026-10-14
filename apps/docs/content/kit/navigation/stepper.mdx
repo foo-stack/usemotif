@@ -1,0 +1,114 @@
+---
+title: Stepper
+description: A themed step indicator over the headless Stepper - a numbered, status-coloured circle and label per step, horizontal or vertical, with aria-current="step" on the active one.
+diataxis: reference
+covers: ['Stepper', 'StepperProps', 'StepperStep']
+last_verified: 2026-10-14
+---
+
+import {
+  ApiSignature,
+  ArticleMeta,
+  Callout,
+  CodeBlock,
+  Eyebrow,
+  Lede,
+} from '../../../components/index.js';
+
+<Eyebrow>UI kit / Navigation</Eyebrow>
+
+# Stepper
+
+<Lede>
+  Stepper shows where someone is in a fixed sequence - a checkout, an onboarding flow, a setup
+  wizard. It is an indicator: the steps display progress and are not clickable.
+</Lede>
+
+<ArticleMeta />
+
+## What it is
+
+The headless [Stepper](/headless/navigation/stepper) with themed steps. It renders an ordered
+list, one item per step, and puts `aria-current="step"` on the active one. A step's status comes
+from its own `status` field, except that the step whose `id` equals `current` is always `active`.
+A step with no status is `pending`.
+
+Each kit step is a 28px circle and a label. The circle shows the step number, a check mark when
+complete, or `!` on error, and takes its colour from the status: `action.primary` when active,
+the `status.success` tint when complete, the `status.danger` tint on error, and `surface.muted`
+when pending. The active label is semibold.
+
+## Install
+
+<CodeBlock lang="bash" code={`yarn add @usemotif/ui`} />
+
+<CodeBlock lang="tsx" code={`import { Stepper } from '@usemotif/ui';`} />
+
+## Usage
+
+<CodeBlock lang="tsx" code={`import { Stepper } from '@usemotif/ui';
+
+<Stepper
+  current="ship"
+  steps={[
+    { id: 'cart', label: 'Cart', status: 'complete' },
+    { id: 'ship', label: 'Shipping' },
+    { id: 'pay', label: 'Payment' },
+  ]}
+/>`} />
+
+Vertical, with a failed step:
+
+<CodeBlock lang="tsx" code={`<Stepper
+  orientation="vertical"
+  steps={[
+    { id: 'upload', label: 'Upload', status: 'complete' },
+    { id: 'verify', label: 'Verify', status: 'error' },
+    { id: 'publish', label: 'Publish' },
+  ]}
+/>`} />
+
+## API
+
+<ApiSignature
+  name="Stepper"
+  status="stable"
+  signature={`function Stepper(props: StepperProps): JSX.Element`}
+  params={[
+    {
+      name: 'steps',
+      type: 'ReadonlyArray<StepperStep>',
+      required: true,
+      description: 'The steps, in order.',
+    },
+    {
+      name: 'current',
+      type: 'string',
+      description: "The active step's id. It overrides that step's own `status`.",
+    },
+    {
+      name: 'orientation',
+      type: "'horizontal' | 'vertical'",
+      default: "'horizontal'",
+      description: 'Lay the steps out in a row or a column.',
+    },
+  ]}
+/>
+
+### StepperStep
+
+<ApiSignature
+  name="StepperStep"
+  status="stable"
+  signature={`interface StepperStep`}
+  params={[
+    { name: 'id', type: 'string', required: true, description: 'Stable id, matched against `current`.' },
+    { name: 'label', type: 'ReactNode', required: true, description: 'Text beside the circle.' },
+    { name: 'status', type: "'pending' | 'active' | 'complete' | 'error'", default: "'pending'", description: 'The step state when it is not `current`.' },
+  ]}
+/>
+
+<Callout variant="info" title="Related">
+  [Stepper (headless)](/headless/navigation/stepper) - the same step logic with your own rendering.
+  [Progress](/kit/display/progress) for continuous progress rather than discrete steps.
+</Callout>

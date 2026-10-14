@@ -1,0 +1,165 @@
+---
+title: Toast
+description: Themed toast notifications over the headless Toaster - mount Toaster once, push toasts from anywhere with useToast, and each one auto-dismisses as a live-region announcement.
+diataxis: reference
+covers: ['Toaster', 'useToast', 'ThemedToasterProps', 'ToastItem']
+last_verified: 2026-10-14
+---
+
+import {
+  ApiSignature,
+  ArticleMeta,
+  Callout,
+  CodeBlock,
+  Eyebrow,
+  Lede,
+} from '../../../components/index.js';
+
+<Eyebrow>UI kit / Overlay</Eyebrow>
+
+# Toast
+
+<Lede>
+  Toasts are short notices that appear in a corner and go away on their own: "Saved", "Link
+  copied", "Upload failed". Mount `Toaster` once near the root of your app, then call `toast()` from
+  any component below it.
+</Lede>
+
+<ArticleMeta />
+
+## What it is
+
+The headless [Toaster](/headless/feedback/toast) with themed cards. The headless layer holds the
+queue, dismisses each toast after its `duration`, and gives each card its own live region: a
+`'background'` toast is a polite `role="status"`, a `'foreground'` toast an assertive
+`role="alert"`.
+
+The kit renders the queue as a column fixed 16px from the bottom-right corner of the viewport.
+Each toast is a `surface.raised` card, 260px to 380px wide, showing the `title` in semibold, the
+`description` in `text.muted`, and the `action` node beneath them. The column itself lets clicks
+through; only the cards are interactive.
+
+## Install
+
+<CodeBlock lang="bash" code={`yarn add @usemotif/ui`} />
+
+<CodeBlock lang="tsx" code={`import { Toaster, useToast } from '@usemotif/ui';`} />
+
+## Usage
+
+Wrap the app once:
+
+<CodeBlock lang="tsx" code={`import { Toaster } from '@usemotif/ui';
+
+<Toaster defaultDuration={4000}>
+  <App />
+</Toaster>`} />
+
+Push a toast from any component inside it:
+
+<CodeBlock lang="tsx" code={`import { useToast } from '@usemotif/ui';
+import { Button } from 'usemotif';
+
+function SaveButton() {
+  const { toast } = useToast();
+  return (
+    <Button onPress={() => toast({ title: 'Saved', description: 'Your changes are live.' })}>
+      Save
+    </Button>
+  );
+}`} />
+
+An error that stays until dismissed, with an action:
+
+<CodeBlock lang="tsx" code={`const { toast, dismiss } = useToast();
+
+const id = toast({
+  title: 'Upload failed',
+  type: 'foreground',
+  duration: Infinity,
+  action: <Button onPress={() => dismiss(id)}>Dismiss</Button>,
+});`} />
+
+## API
+
+### Toaster
+
+<ApiSignature
+  name="Toaster"
+  status="stable"
+  signature={`function Toaster(props: ThemedToasterProps): JSX.Element`}
+  params={[
+    {
+      name: 'children',
+      type: 'ReactNode',
+      description: 'Your app. `useToast` works anywhere inside it.',
+    },
+    {
+      name: 'defaultDuration',
+      type: 'number',
+      default: '5000',
+      description: 'Milliseconds before a toast auto-dismisses when it sets no `duration` of its own.',
+    },
+    {
+      name: 'exitDurationMs',
+      type: 'number',
+      default: '0',
+      description: 'Inherited from the headless props. The kit renders its own toast list, which the headless Toaster does not hold mounted for an exit, so dismissed toasts unmount immediately whatever this is set to.',
+    },
+  ]}
+/>
+
+`ThemedToasterProps` is the headless `ToasterProps` without `renderToasts` and `style`: the kit
+supplies the list and its layout.
+
+### useToast
+
+<ApiSignature
+  name="useToast"
+  status="stable"
+  signature={`function useToast(): {
+  toast: (input: Omit<ToastItem, 'id'> & { id?: string }) => string;
+  dismiss: (id: string) => void;
+  toasts: ToastItem[];
+}`}
+  params={[
+    {
+      name: 'toast',
+      type: "(input: Omit<ToastItem, 'id'> & { id?: string }) => string",
+      description: 'Show a toast and return its id. Passing the id of a toast already on screen updates it in place.',
+    },
+    {
+      name: 'dismiss',
+      type: '(id: string) => void',
+      description: 'Remove a toast now.',
+    },
+    {
+      name: 'toasts',
+      type: 'ToastItem[]',
+      description: 'The toasts currently in the queue.',
+    },
+  ]}
+/>
+
+`useToast` throws when it is called outside a `Toaster`.
+
+### ToastItem
+
+<ApiSignature
+  name="ToastItem"
+  status="stable"
+  signature={`interface ToastItem`}
+  params={[
+    { name: 'id', type: 'string', required: true, description: 'Assigned by `toast()` unless you pass one.' },
+    { name: 'title', type: 'ReactNode', description: 'The bold first line.' },
+    { name: 'description', type: 'ReactNode', description: 'Secondary text under the title.' },
+    { name: 'action', type: 'ReactNode', description: 'A node rendered at the bottom of the card, such as a button.' },
+    { name: 'duration', type: 'number', description: "Milliseconds before auto-dismiss. Falls back to the Toaster's `defaultDuration`; `Infinity` keeps it until dismissed." },
+    { name: 'type', type: "'foreground' | 'background'", default: "'background'", description: 'Announcement priority: `role="alert"` for foreground, `role="status"` for background.' },
+  ]}
+/>
+
+<Callout variant="info" title="Related">
+  [Toast (headless)](/headless/feedback/toast) - the unstyled toaster and `Toast` part, for a
+  custom list. [Alert](/kit/display/alert) for a message that stays in the page.
+</Callout>

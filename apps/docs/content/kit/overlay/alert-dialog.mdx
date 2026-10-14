@@ -1,0 +1,220 @@
+---
+title: AlertDialog
+description: A themed confirmation dialog over the headless AlertDialog - role="alertdialog", focus trap, and no scrim-click dismissal, so the user has to choose.
+diataxis: reference
+covers: ['AlertDialog', 'AlertDialogContentProps']
+last_verified: 2026-10-14
+---
+
+import {
+  ApiSignature,
+  ArticleMeta,
+  Callout,
+  CodeBlock,
+  Eyebrow,
+  Lede,
+} from '../../../components/index.js';
+
+<Eyebrow>UI kit / Overlay</Eyebrow>
+
+# AlertDialog
+
+<Lede>
+  AlertDialog guards a destructive or irreversible action. It looks like a Modal but announces
+  itself as an `alertdialog`, and a click on the scrim does not close it: the user confirms or
+  cancels.
+</Lede>
+
+<ArticleMeta />
+
+## What it is
+
+The headless [AlertDialog](/headless/overlay/alert-dialog), a Dialog whose root defaults its role
+to `alertdialog` and whose content defaults `dismissOnScrimClick` to `false`. Escape still closes
+it. Focus is trapped inside and restored to the trigger on close.
+
+The kit surface is a centered `surface.raised` card, 280px to 420px wide, that fades and scales in
+on open and back out on close. Unlike [Modal](/kit/overlay/modal), it does not change into a sheet
+on narrow viewports.
+
+## Install
+
+<CodeBlock lang="bash" code={`yarn add @usemotif/ui`} />
+
+<CodeBlock lang="tsx" code={`import { AlertDialog } from '@usemotif/ui';`} />
+
+## Anatomy
+
+<CodeBlock lang="tsx" code={`<AlertDialog.Root>
+  <AlertDialog.Trigger>
+    <Button>Delete</Button>
+  </AlertDialog.Trigger>
+  <AlertDialog.Content>
+    <AlertDialog.Title>Title</AlertDialog.Title>
+    <AlertDialog.Description>Supporting copy.</AlertDialog.Description>
+    <AlertDialog.Close>
+      <Button>Cancel</Button>
+    </AlertDialog.Close>
+  </AlertDialog.Content>
+</AlertDialog.Root>`} />
+
+## Usage
+
+<CodeBlock lang="tsx" code={`import { AlertDialog } from '@usemotif/ui';
+import { Button, HStack } from 'usemotif';
+
+<AlertDialog.Root>
+  <AlertDialog.Trigger>
+    <Button intent="danger">Delete account</Button>
+  </AlertDialog.Trigger>
+  <AlertDialog.Content>
+    <AlertDialog.Title>Delete account?</AlertDialog.Title>
+    <AlertDialog.Description>This cannot be undone.</AlertDialog.Description>
+    <HStack gap="$space.2" justifyContent="flex-end">
+      <AlertDialog.Close>
+        <Button variant="ghost">Cancel</Button>
+      </AlertDialog.Close>
+      <AlertDialog.Close>
+        <Button intent="danger" onClick={deleteAccount}>Delete</Button>
+      </AlertDialog.Close>
+    </HStack>
+  </AlertDialog.Content>
+</AlertDialog.Root>`} />
+
+## API
+
+### AlertDialog.Root
+
+The headless `AlertDialog.Root`.
+
+<ApiSignature
+  name="AlertDialog.Root"
+  status="stable"
+  signature={`function AlertDialog.Root(props: DialogRootProps): JSX.Element`}
+  params={[
+    {
+      name: 'open',
+      type: 'boolean',
+      description: 'Controlled open state. Pass alongside `onOpenChange`.',
+    },
+    {
+      name: 'defaultOpen',
+      type: 'boolean',
+      default: 'false',
+      description: 'Initial open state when uncontrolled.',
+    },
+    {
+      name: 'onOpenChange',
+      type: '(open: boolean) => void',
+      description: 'Called when the open state changes.',
+    },
+    {
+      name: 'role',
+      type: "'dialog' | 'alertdialog'",
+      default: "'alertdialog'",
+      description: 'The surface role.',
+    },
+    {
+      name: 'children',
+      type: 'ReactNode',
+      description: 'The Trigger and Content parts.',
+    },
+  ]}
+/>
+
+### AlertDialog.Trigger
+
+The headless `Dialog.Trigger`.
+
+<ApiSignature
+  name="AlertDialog.Trigger"
+  status="stable"
+  signature={`function AlertDialog.Trigger(props: DialogTriggerProps): JSX.Element`}
+  params={[
+    {
+      name: 'children',
+      type: 'ReactElement',
+      required: true,
+      description: 'A single element. It is cloned to open the dialog on click and to carry `aria-expanded` and `aria-haspopup`.',
+    },
+  ]}
+/>
+
+### AlertDialog.Content
+
+<ApiSignature
+  name="AlertDialog.Content"
+  status="stable"
+  signature={`function AlertDialog.Content(props: AlertDialogContentProps): JSX.Element | null`}
+  params={[
+    {
+      name: 'dismissOnEscape',
+      type: 'boolean',
+      default: 'true',
+      description: 'Allow Escape to close the dialog.',
+    },
+    {
+      name: 'dismissOnScrimClick',
+      type: 'boolean',
+      default: 'false',
+      description: 'Allow a click on the scrim to close the dialog. Off, so closing takes an explicit choice.',
+    },
+    {
+      name: 'exitDurationMs',
+      type: 'number',
+      default: '200',
+      description: 'How long the surface stays mounted after close so its exit transition can play.',
+    },
+    {
+      name: 'style',
+      type: 'CSSProperties',
+      description: 'Inline style for the headless `role="alertdialog"` wrapper around the themed surface.',
+    },
+    {
+      name: 'children',
+      type: 'ReactNode',
+      description: 'Title, Description, the actions, and any other content.',
+    },
+  ]}
+/>
+
+### AlertDialog.Title / AlertDialog.Description
+
+<ApiSignature
+  name="AlertDialog.Title"
+  status="stable"
+  signature={`function AlertDialog.Title(props: { children?: ReactNode }): JSX.Element`}
+  params={[
+    {
+      name: 'children',
+      type: 'ReactNode',
+      description: 'The title text, in the `lg` size at semibold weight.',
+    },
+  ]}
+/>
+
+`AlertDialog.Description` takes the same single `children` prop and renders it in the `sm` size
+and `text.muted`. Both are bound into the surface's `aria-labelledby` and `aria-describedby`.
+
+### AlertDialog.Close
+
+The headless `Dialog.Close`.
+
+<ApiSignature
+  name="AlertDialog.Close"
+  status="stable"
+  signature={`function AlertDialog.Close(props: DialogCloseProps): JSX.Element`}
+  params={[
+    {
+      name: 'children',
+      type: 'ReactElement',
+      required: true,
+      description: 'A single element. It is cloned to close the dialog on click, after its own `onClick` runs.',
+    },
+  ]}
+/>
+
+<Callout variant="info" title="Related">
+  [AlertDialog (headless)](/headless/overlay/alert-dialog) - the unstyled behaviour.
+  [Modal](/kit/overlay/modal) for a dialog that a scrim click may close.
+</Callout>
