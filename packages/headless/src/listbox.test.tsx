@@ -149,3 +149,23 @@ describe('Listbox', () => {
     expect(selected()).toEqual(['Apple']);
   });
 });
+
+describe('Listbox - long lists', () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it('renders only the rows in view and follows End', () => {
+    vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockImplementation(
+      function (this: HTMLElement) {
+        return this.getAttribute('role') === 'listbox' ? 100 : 0;
+      },
+    );
+    const many = Array.from({ length: 500 }, (_, i) => ({ value: i, label: `Row ${i}` }));
+    render(<Listbox aria-label="Rows" options={many} itemHeight={20} />);
+    // The 5 rows in view plus 8 overscan.
+    expect(container.querySelectorAll('[role="option"]')).toHaveLength(13);
+    act(() => list().focus());
+    key('End');
+    expect(active()).toBe('Row 499');
+    expect(list().scrollTop).toBe(500 * 20 - 100);
+  });
+});

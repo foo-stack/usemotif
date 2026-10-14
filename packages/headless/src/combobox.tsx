@@ -275,10 +275,14 @@ function ComboboxList<T>({
   renderOption,
   emptyMessage = 'No options',
   loadingMessage = 'Loading...',
+  itemHeight,
 }: {
   placement?: Placement;
   offset?: number;
   style?: CSSProperties;
+  /** Row height in px for long lists, which render only the rows in view.
+   * Omitted, it is measured from the first row; rows must share one height. */
+  itemHeight?: number;
   /** Override how each option renders. */
   renderOption?: (
     option: ComboboxOption<T>,
@@ -342,6 +346,8 @@ function ComboboxList<T>({
               ctx.setOpen(false);
             }}
             renderOption={renderOption}
+            scrollRef={floatingRef}
+            itemHeight={itemHeight}
           />
         )}
       </div>
@@ -815,10 +821,14 @@ function MultiSelectList<T>({
   style,
   renderOption,
   emptyMessage = 'No options',
+  itemHeight,
 }: {
   placement?: Placement;
   offset?: number;
   style?: CSSProperties;
+  /** Row height in px for long lists, which render only the rows in view.
+   * Omitted, it is measured from the first row; rows must share one height. */
+  itemHeight?: number;
   renderOption?: (
     option: ComboboxOption<T>,
     info: {
@@ -867,33 +877,17 @@ function MultiSelectList<T>({
             {emptyMessage}
           </div>
         ) : (
-          ctx.filteredOptions.map((opt, i) => {
-            const optionId = `${ctx.listboxId}-option-${i}`;
-            const highlighted = ctx.highlightedIndex === i;
-            const selected = ctx.isSelected(opt.value);
-            const handleClick = (): void => {
-              if (opt.disabled === true) return;
-              ctx.toggleValue(opt.value);
-            };
-            return (
-              <div
-                key={optionId}
-                id={optionId}
-                role="option"
-                aria-selected={selected}
-                aria-disabled={opt.disabled || undefined}
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  handleClick();
-                }}
-                onMouseEnter={() => ctx.setHighlightedIndex(i)}
-              >
-                {renderOption !== undefined
-                  ? renderOption(opt, { highlighted, selected, index: i })
-                  : opt.label}
-              </div>
-            );
-          })
+          <ListboxOptions
+            options={ctx.filteredOptions}
+            idPrefix={ctx.listboxId}
+            highlightedIndex={ctx.highlightedIndex}
+            onHighlight={ctx.setHighlightedIndex}
+            isSelected={ctx.isSelected}
+            onPick={(opt) => ctx.toggleValue(opt.value)}
+            renderOption={renderOption}
+            scrollRef={floatingRef}
+            itemHeight={itemHeight}
+          />
         )}
       </div>
     </Portal>

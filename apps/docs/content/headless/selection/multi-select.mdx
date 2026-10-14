@@ -3,7 +3,7 @@ title: MultiSelect
 description: A pick-several control - a chip input over a filterable listbox, with max-selection caps and an optional select-all.
 diataxis: reference
 covers: ['MultiSelect', 'MultiSelectRootProps']
-last_verified: 2026-05-15
+last_verified: 2026-10-14
 ---
 
 import {
@@ -121,8 +121,9 @@ chip-input affordance.
 ### MultiSelect.List
 
 The multi-selectable listbox - `role="listbox"` with `aria-multiselectable="true"`. Takes the same
-`renderOption`, `placement`, `offset`, and `emptyMessage` props as
-[Combobox.List](/headless/selection/combobox#comboboxlist).
+`renderOption`, `placement`, `offset`, `emptyMessage`, and `itemHeight` props as
+[Combobox.List](/headless/selection/combobox#comboboxlist), and windows long lists the same way
+([Long lists](/headless/selection/combobox#long-lists)).
 
 ### MultiSelect.SelectAll
 

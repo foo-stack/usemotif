@@ -6,7 +6,7 @@
 import { act, type ReactNode } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { ComboboxList, ComboboxRoot } from './combobox.native.js';
+import { ComboboxList, ComboboxRoot, MultiSelectList, MultiSelectRoot } from './combobox.native.js';
 
 let container: HTMLElement;
 let root: Root;
@@ -68,5 +68,26 @@ describe('native Combobox async options', () => {
       </ComboboxRoot>,
     );
     expect(list()).toBe('No options');
+  });
+});
+
+describe('native option lists', () => {
+  it('render through FlatList, which renders only the rows near the view', () => {
+    render(
+      <ComboboxRoot options={remote} defaultOpen>
+        <ComboboxList />
+      </ComboboxRoot>,
+    );
+    const flat = container.querySelector('[data-motif-host="FlatList"]');
+    expect(flat?.textContent).toBe('AlphaBeta');
+  });
+
+  it('MultiSelect too, with its empty message when nothing matches', () => {
+    render(
+      <MultiSelectRoot options={[]} defaultOpen>
+        <MultiSelectList emptyMessage="None" />
+      </MultiSelectRoot>,
+    );
+    expect(container.querySelector('[data-motif-host="FlatList"]')?.textContent).toBe('None');
   });
 });

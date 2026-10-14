@@ -480,3 +480,139 @@ describe('Combobox - async options', () => {
     expect(findOptions().map((o) => o.textContent)).toEqual(['Rust']);
   });
 });
+
+describe('long lists render only the rows in view', () => {
+  const many = Array.from({ length: 1000 }, (_, i) => ({ value: `v${i}`, label: `Item ${i}` }));
+
+  // jsdom has no layout: give the listbox a 100px view and each row 20px.
+  function layout(): void {
+    vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockImplementation(
+      function (this: HTMLElement) {
+        return this.getAttribute('role') === 'listbox' ? 100 : 0;
+      },
+    );
+    vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockImplementation(
+      function (this: HTMLElement) {
+        return this.getAttribute('role') === 'option' ? 20 : 0;
+      },
+    );
+  }
+
+  afterEach(() => vi.restoreAllMocks());
+
+  function openCombobox(itemHeight?: number): HTMLInputElement {
+    render(
+      <Combobox.Root options={many}>
+        <Combobox.Input />
+        <Combobox.List {...(itemHeight !== undefined ? { itemHeight } : {})} />
+      </Combobox.Root>,
+    );
+    const input = container.querySelector<HTMLInputElement>('[role="combobox"]')!;
+    input.focus();
+    press(input, 'ArrowDown');
+    return input;
+  }
+
+  it('windows a long list, keeping the scroll extent and the set size', () => {
+    layout();
+    openCombobox(20);
+    const rows = findOptions();
+    // The 5 rows in view plus 8 overscan.
+    expect(rows).toHaveLength(13);
+    expect(rows[0]!.getAttribute('aria-setsize')).toBe('1000');
+    expect(rows[0]!.getAttribute('aria-posinset')).toBe('1');
+    const spacer = document.querySelector<HTMLElement>('[role="listbox"] > [aria-hidden="true"]')!;
+    expect(spacer.style.height).toBe(`${(1000 - rows.length) * 20}px`);
+  });
+
+  it('measures the row height when none is given', () => {
+    layout();
+    openCombobox();
+    expect(findOptions()).toHaveLength(13);
+  });
+
+  it('scrolls the highlighted row into view, so the active descendant is rendered', () => {
+    layout();
+    const input = openCombobox(20);
+    for (let i = 0; i < 40; i++) press(input, 'ArrowDown');
+    const active = input.getAttribute('aria-activedescendant')!;
+    expect(active.endsWith('-option-40')).toBe(true);
+    expect(document.getElementById(active)).not.toBeNull();
+    const list = document.querySelector<HTMLElement>('[role="listbox"]')!;
+    expect(list.scrollTop).toBe(41 * 20 - 100);
+  });
+
+  it('renders every row when nothing can be measured', () => {
+    openCombobox();
+    expect(findOptions()).toHaveLength(1000);
+  });
+
+  it('leaves short lists as they were', () => {
+    layout();
+    render(
+      <Combobox.Root options={langs}>
+        <Combobox.Input />
+        <Combobox.List itemHeight={20} />
+      </Combobox.Root>,
+    );
+    press(container.querySelector<HTMLInputElement>('[role="combobox"]')!, 'ArrowDown');
+    expect(findOptions()).toHaveLength(langs.length);
+    expect(findOptions()[0]!.hasAttribute('aria-setsize')).toBe(false);
+    expect(document.querySelector('[role="listbox"] > [aria-hidden="true"]')).toBeNull();
+  });
+
+  it('windows MultiSelect and keeps toggling by pointer', () => {
+    layout();
+    const onValueChange = vi.fn();
+    render(
+      <MultiSelect.Root options={many} onValueChange={onValueChange}>
+        <MultiSelect.Input />
+        <MultiSelect.List itemHeight={20} />
+      </MultiSelect.Root>,
+    );
+    const input = container.querySelector<HTMLInputElement>('[role="combobox"]')!;
+    input.focus();
+    press(input, 'ArrowDown');
+    const rows = findOptions();
+    expect(rows).toHaveLength(13);
+    act(() => {
+      rows[2]!.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
+    });
+    expect(onValueChange).toHaveBeenCalledWith(['v2']);
+  });
+});
+
+describe('long lists - the highlighted row', () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it('stays rendered, in place, after the list scrolls away from it', () => {
+    vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockImplementation(
+      function (this: HTMLElement) {
+        return this.getAttribute('role') === 'listbox' ? 100 : 0;
+      },
+    );
+    const many = Array.from({ length: 1000 }, (_, i) => ({ value: `v${i}`, label: `Item ${i}` }));
+    render(
+      <Combobox.Root options={many}>
+        <Combobox.Input />
+        <Combobox.List itemHeight={20} />
+      </Combobox.Root>,
+    );
+    const input = container.querySelector<HTMLInputElement>('[role="combobox"]')!;
+    input.focus();
+    press(input, 'ArrowDown');
+    press(input, 'ArrowDown');
+    const list = document.querySelector<HTMLElement>('[role="listbox"]')!;
+    act(() => {
+      list.scrollTop = 10_000;
+      list.dispatchEvent(new Event('scroll'));
+    });
+    const active = document.getElementById(input.getAttribute('aria-activedescendant')!);
+    expect(active?.textContent).toBe('Item 1');
+    // Spacers either side keep every row at its offset: 1 row, the highlight, then rows 2 on.
+    const kids = Array.from(list.children) as HTMLElement[];
+    expect(kids[0]!.style.height).toBe('20px');
+    expect(kids[1]).toBe(active);
+    expect(kids[2]!.style.height).toBe(`${(492 - 2) * 20}px`);
+  });
+});
