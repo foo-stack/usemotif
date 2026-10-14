@@ -508,3 +508,112 @@ describe('Toaster maxVisible and toast.promise', () => {
     expect(toasts[0]!.getAttribute('role')).toBe('alert');
   });
 });
+
+describe('swipe to dismiss', () => {
+  let api: ReturnType<typeof useToast> | null = null;
+  function Api(): null {
+    api = useToast();
+    return null;
+  }
+  let clock = 0;
+
+  beforeEach(() => {
+    clock = 0;
+    vi.spyOn(performance, 'now').mockImplementation(() => clock);
+    Element.prototype.setPointerCapture = () => {};
+    Element.prototype.releasePointerCapture = () => {};
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  function pointer(el: Element, type: string, clientX: number): void {
+    const ev = new Event(type, { bubbles: true, cancelable: true });
+    Object.defineProperty(ev, 'pointerId', { value: 1 });
+    Object.defineProperty(ev, 'clientX', { value: clientX });
+    Object.defineProperty(ev, 'clientY', { value: 0 });
+    act(() => {
+      el.dispatchEvent(ev);
+    });
+  }
+
+  /** Drags slowly (100 ms per step) so only distance can dismiss. */
+  function slowSwipe(el: Element, to: number): void {
+    pointer(el, 'pointerdown', 0);
+    for (let x = 20; x <= to; x += 20) {
+      clock += 100;
+      pointer(el, 'pointermove', x);
+    }
+    clock += 100;
+    pointer(el, 'pointerup', to);
+  }
+
+  function show(props: { swipeToDismiss?: boolean } = {}): HTMLElement {
+    render(
+      <Toaster {...props}>
+        <Api />
+      </Toaster>,
+    );
+    act(() => {
+      api!.toast({ title: 'Saved', duration: Infinity });
+    });
+    return listToasts()[0] as HTMLElement;
+  }
+
+  it('dismisses a toast swiped past the distance, following the finger on the way', () => {
+    const toast = show();
+    expect(toast.style.touchAction).toBe('pan-y');
+    pointer(toast, 'pointerdown', 0);
+    clock += 100;
+    pointer(toast, 'pointermove', 40);
+    expect(toast.style.transform).toBe('translateX(40px)');
+    expect(Number(toast.style.opacity)).toBeLessThan(1);
+    for (let x = 60; x <= 120; x += 20) {
+      clock += 100;
+      pointer(toast, 'pointermove', x);
+    }
+    clock += 100;
+    pointer(toast, 'pointerup', 120);
+    expect(listToasts()).toEqual([]);
+  });
+
+  it('keeps a toast after a short, slow swipe', () => {
+    const toast = show();
+    slowSwipe(toast, 60);
+    expect(listToasts().length).toBe(1);
+  });
+
+  it('dismisses on a fast flick however short', () => {
+    const toast = show();
+    pointer(toast, 'pointerdown', 0);
+    clock += 10;
+    pointer(toast, 'pointermove', 30);
+    pointer(toast, 'pointerup', 30);
+    expect(listToasts()).toEqual([]);
+  });
+
+  it('does nothing with swipeToDismiss={false}', () => {
+    const toast = show({ swipeToDismiss: false });
+    expect(toast.style.touchAction).toBe('');
+    slowSwipe(toast, 200);
+    expect(listToasts().length).toBe(1);
+  });
+
+  it('leaves presses on the dismiss button to the button', () => {
+    const toast = show();
+    const button = toast.querySelector('button')!;
+    pointer(button, 'pointerdown', 0);
+    clock += 10;
+    pointer(button, 'pointermove', 30);
+    pointer(button, 'pointerup', 30);
+    expect(listToasts().length).toBe(1);
+    act(() => button.click());
+    expect(listToasts()).toEqual([]);
+  });
+
+  it('attaches nothing to a toast with no onDismiss', () => {
+    render(<Toast item={{ id: 'x', title: 'Inline' }} />);
+    expect((listToasts()[0] as HTMLElement).style.touchAction).toBe('');
+  });
+});
