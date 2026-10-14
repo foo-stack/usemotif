@@ -1,6 +1,6 @@
 {
   "name": "@usemotif/example-desktop-electron",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "private": true,
   "description": "Electron shell loading the desktop-web build - proves the shared <DemoScreen/> renders in a real desktop window.",
   "type": "module",

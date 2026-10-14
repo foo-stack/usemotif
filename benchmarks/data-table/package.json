@@ -1,6 +1,6 @@
 {
   "name": "@usemotif-bench/data-table",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "private": true,
   "description": "Adversarial cross-platform benchmarks: 100x12 data table, deep tree mount, dynamic theme switch - the workloads where atomic-CSS libraries crack.",
   "type": "module",

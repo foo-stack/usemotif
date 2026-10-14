@@ -1,5 +1,13 @@
 # usemotif
 
+## 1.8.0
+
+### Patch Changes
+
+- @usemotif/core@1.8.0
+- @usemotif/react@1.8.0
+- @usemotif/react-native@1.8.0
+
 ## 1.7.0
 
 ### Minor Changes

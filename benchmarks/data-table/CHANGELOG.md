@@ -1,5 +1,12 @@
 # @usemotif-bench/data-table
 
+## 0.0.10
+
+### Patch Changes
+
+- @usemotif/core@1.8.0
+- @usemotif/react@1.8.0
+
 ## 0.0.9
 
 ### Patch Changes
