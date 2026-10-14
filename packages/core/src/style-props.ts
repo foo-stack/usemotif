@@ -1,5 +1,5 @@
 import type { MotifTokens, ScalePath, StrictTokens } from './token-path.js';
-import type { ScaleName } from './types.js';
+import type { ResolvedStyle, ScaleName } from './types.js';
 
 /**
  * Typed object form of the `fontVariationSettings` style prop. Maps
@@ -742,6 +742,9 @@ export type TransitionValue = string | TransitionObject | readonly TransitionObj
 export interface Keyframe {
   readonly name: string;
   readonly css: string;
+  /** The definition the block was rendered from. Native reads it to run the
+   * animation, since it has no `@keyframes` rule to hand the work to. */
+  readonly frames?: { readonly [stop: string]: ResolvedStyle };
   /** Brand. Use `isKeyframe(value)` to check. */
   readonly [keyframeBrand]: true;
 }

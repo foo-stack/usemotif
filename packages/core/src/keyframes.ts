@@ -50,7 +50,7 @@ export function keyframesToCss(
  */
 export function makeKeyframe(def: KeyframeDef): Keyframe {
   const { name, css } = keyframesToCss(def);
-  return { name, css, [keyframeBrand]: true };
+  return { name, css, frames: def, [keyframeBrand]: true };
 }
 
 function renderKeyframeBody(def: KeyframeDef): string {
