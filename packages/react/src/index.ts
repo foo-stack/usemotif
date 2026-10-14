@@ -219,6 +219,7 @@ export {
 export { useThemeSetting } from './useThemeSetting.js';
 export type {
   ResolvedTheme,
+  SyncStorage,
   ThemeMode,
   UseThemeSettingOptions,
   UseThemeSettingResult,

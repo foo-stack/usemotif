@@ -16,9 +16,17 @@ export type ResolvedTheme = 'light' | 'dark';
 const MEDIA_QUERY = '(prefers-color-scheme: dark)';
 const DEFAULT_STORAGE_KEY = 'motif:theme';
 
+// Reading `window.localStorage` throws when storage is blocked (sandboxed
+// iframes, some private modes), so the default is looked up lazily, inside
+// the callers' try blocks.
+function storageFor(storage: SyncStorage | null | undefined): SyncStorage | null {
+  if (storage !== undefined) return storage;
+  return typeof window === 'undefined' ? null : window.localStorage;
+}
+
 export interface UseThemeSettingOptions {
   /**
-   * `localStorage` key used to persist the user override. Set to `null`
+   * Key the user override is persisted under in `storage`. Set to `null`
    * to disable persistence (useful when the host app already owns
    * theme state and only needs the system-preference subscription).
    * Defaults to `'motif:theme'`.
@@ -31,6 +39,21 @@ export interface UseThemeSettingOptions {
    * Defaults to `'light'`.
    */
   readonly defaultResolved?: ResolvedTheme;
+  /**
+   * Where the user override is persisted. Pass any object with synchronous
+   * `getItem` / `setItem` / `removeItem` (a cookie or in-memory store, a
+   * namespaced wrapper). `null` disables persistence. Defaults to
+   * `window.localStorage`. Pass a stable object: a new one each render
+   * re-reads the stored mode on every render.
+   */
+  readonly storage?: SyncStorage | null;
+}
+
+/** The synchronous store `useThemeSetting` persists the user override to. */
+export interface SyncStorage {
+  getItem(key: string): string | null;
+  setItem(key: string, value: string): void;
+  removeItem(key: string): void;
 }
 
 export interface UseThemeSettingResult {
@@ -38,13 +61,13 @@ export interface UseThemeSettingResult {
   readonly mode: ThemeMode;
   /** The concrete theme to render. Equal to `mode` unless `mode === 'system'`. */
   readonly resolved: ResolvedTheme;
-  /** Update the mode; persists to `localStorage` if `storageKey` is set. */
+  /** Update the mode; persists to `storage` unless `storage` or `storageKey` is `null`. */
   readonly set: (next: ThemeMode) => void;
 }
 
 /**
  * Auto dark/light mode hook for web. Reads the user's persisted
- * override from `localStorage` (if any), falls back to
+ * override from `storage` (default `localStorage`), falls back to
  * `prefers-color-scheme`, and subscribes to OS-level changes via
  * `matchMedia`.
  *
@@ -70,7 +93,7 @@ export interface UseThemeSettingResult {
  * time and pass it back in via `defaultResolved`.
  */
 export function useThemeSetting(options: UseThemeSettingOptions = {}): UseThemeSettingResult {
-  const { storageKey = DEFAULT_STORAGE_KEY, defaultResolved = 'light' } = options;
+  const { storageKey = DEFAULT_STORAGE_KEY, defaultResolved = 'light', storage } = options;
 
   // First-render values - deliberately deterministic for hydration.
   // The effect below replaces them with the real client values.
@@ -83,7 +106,7 @@ export function useThemeSetting(options: UseThemeSettingOptions = {}): UseThemeS
     // Restore the user override.
     if (storageKey !== null) {
       try {
-        const stored = window.localStorage.getItem(storageKey);
+        const stored = storageFor(storage)?.getItem(storageKey);
         if (stored === 'light' || stored === 'dark' || stored === 'system') {
           setMode(stored);
         }
@@ -103,18 +126,18 @@ export function useThemeSetting(options: UseThemeSettingOptions = {}): UseThemeS
     return () => {
       mq.removeEventListener('change', onChange);
     };
-  }, [storageKey]);
+  }, [storage, storageKey]);
 
   const set = useCallback(
     (next: ThemeMode) => {
       setMode(next);
       if (storageKey === null) return;
-      if (typeof window === 'undefined') return;
       try {
+        const target = storageFor(storage);
         if (next === 'system') {
-          window.localStorage.removeItem(storageKey);
+          target?.removeItem(storageKey);
         } else {
-          window.localStorage.setItem(storageKey, next);
+          target?.setItem(storageKey, next);
         }
       } catch {
         // Storage write failed (quota, private mode). The in-memory
@@ -122,7 +145,7 @@ export function useThemeSetting(options: UseThemeSettingOptions = {}): UseThemeS
         // reload reverts to the system default.
       }
     },
-    [storageKey],
+    [storage, storageKey],
   );
 
   const resolved: ResolvedTheme = mode === 'system' ? systemResolved : mode;
