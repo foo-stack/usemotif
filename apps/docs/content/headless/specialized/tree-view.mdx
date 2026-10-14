@@ -2,8 +2,8 @@
 title: TreeView
 description: A nested, expandable, keyboard-navigable tree. The WAI-ARIA tree pattern over a recursive node structure.
 diataxis: reference
-covers: ['TreeView', 'TreeViewProps', 'TreeNode']
-last_verified: 2026-05-15
+covers: ['TreeView', 'TreeViewProps', 'TreeNode', 'MultiTreeViewProps', 'TreeViewBaseProps', 'TreeNodeInfo']
+last_verified: 2026-10-14
 ---
 
 import {
@@ -47,7 +47,7 @@ are managed for you; the markup of each row is yours.
 <ApiSignature
   name="TreeView"
   status="stable"
-  signature={`function TreeView<T>(props: TreeViewProps<T>): JSX.Element`}
+  signature={`function TreeView<T>(props: TreeViewProps<T> | MultiTreeViewProps<T>): JSX.Element`}
   params={[
     {
       name: 'data',
@@ -59,7 +59,7 @@ are managed for you; the markup of each row is yours.
       name: 'renderNode',
       type: '(info) => ReactElement',
       required: true,
-      description: 'Renders one node. `info` carries `node`, `depth`, `isExpanded`, `isSelected`, `isFocused`, `toggle`, and `select`.',
+      description: 'Renders one node. `info` carries `node`, `depth`, `isExpanded`, `isSelected`, `isFocused`, `isLoading`, `toggle`, and `select`.',
     },
     {
       name: 'value / defaultValue / onValueChange',
@@ -71,6 +71,17 @@ are managed for you; the markup of each row is yours.
       type: 'readonly string[]',
       default: '[]',
       description: 'Node ids expanded on first render.',
+    },
+    {
+      name: 'selectionMode',
+      type: "'single' | 'multiple'",
+      default: "'single'",
+      description: 'Select one node, or several. In multiple mode `value`, `defaultValue` and `onValueChange` use `readonly string[]`, activating a node toggles it, and the tree carries `aria-multiselectable`.',
+    },
+    {
+      name: 'loadChildren',
+      type: '(node: TreeNode<T>) => void | Promise<void>',
+      description: 'Loads the children of a node marked `hasChildren` the first time it expands; add them to `data` when they arrive. While pending the node is `aria-busy` and `renderNode` gets `isLoading`. A rejected load collapses the node so expanding it again retries.',
     },
     {
       name: 'aria-label',
@@ -92,8 +103,24 @@ are managed for you; the markup of each row is yours.
   label: ReactNode;
   data?: T;                            // your own payload
   children?: readonly TreeNode<T>[];   // presence makes it a branch
+  hasChildren?: boolean;               // a branch whose children loadChildren fetches
   disabled?: boolean;
 }`} />
+
+### Loading children on demand
+
+<CodeBlock lang="tsx" code={`const [tree, setTree] = useState(rootsWithHasChildren);
+
+<TreeView
+  data={tree}
+  loadChildren={async (node) => {
+    const children = await fetchChildren(node.id);
+    setTree((t) => withChildren(t, node.id, children));
+  }}
+  renderNode={({ node, isLoading, toggle }) => (
+    <button onClick={toggle}>{node.label}{isLoading ? ' (loading)' : null}</button>
+  )}
+/>`} />
 
 ## Keyboard
 
