@@ -1,5 +1,12 @@
 # @usemotif/compiler-babel
 
+## 1.8.0
+
+### Patch Changes
+
+- @usemotif/core@1.8.0
+- @usemotif/compiler-core@1.8.0
+
 ## 1.7.0
 
 ### Patch Changes

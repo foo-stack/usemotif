@@ -1,6 +1,6 @@
 {
   "name": "@usemotif/recipes",
-  "version": "1.7.0",
+  "version": "1.8.0",
   "description": "Ready-made styled() configs for motif-js - themed, variant-driven component recipes as plain data.",
   "homepage": "https://github.com/foo-stack/usemotif/tree/main/packages/recipes#readme",
   "bugs": "https://github.com/foo-stack/usemotif/issues",

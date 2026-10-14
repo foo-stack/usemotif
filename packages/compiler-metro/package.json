@@ -1,6 +1,6 @@
 {
   "name": "@usemotif/compiler-metro",
-  "version": "1.7.0",
+  "version": "1.8.0",
   "description": "Metro transformer for motif-js static style extraction in React Native.",
   "homepage": "https://github.com/foo-stack/usemotif/tree/main/packages/compiler-metro#readme",
   "bugs": "https://github.com/foo-stack/usemotif/issues",

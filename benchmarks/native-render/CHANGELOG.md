@@ -1,5 +1,12 @@
 # @usemotif-bench/native-render
 
+## 0.0.15
+
+### Patch Changes
+
+- @usemotif/core@1.8.0
+- @usemotif/react-native@1.8.0
+
 ## 0.0.14
 
 ### Patch Changes

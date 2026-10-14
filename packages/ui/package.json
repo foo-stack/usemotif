@@ -1,6 +1,6 @@
 {
   "name": "@usemotif/ui",
-  "version": "1.7.0",
+  "version": "1.8.0",
   "description": "Batteries-included themed component kit for motif-js - install-and-go components composed over the primitives, headless behaviours, and recipes.",
   "homepage": "https://github.com/foo-stack/usemotif/tree/main/packages/ui#readme",
   "bugs": "https://github.com/foo-stack/usemotif/issues",
