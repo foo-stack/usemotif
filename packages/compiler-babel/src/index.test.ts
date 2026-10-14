@@ -1,7 +1,11 @@
 import { transformSync } from '@babel/core';
 import { configureBreakpoints, resolveResponsiveStylesToVars } from '@usemotif/core';
 import { afterEach, describe, expect, it } from 'vitest';
-import motifBabelPlugin, { type AggressiveReport, type MotifBabelOptions } from './index.js';
+import motifBabelPlugin, {
+  type AggressiveReport,
+  type BailEvent,
+  type MotifBabelOptions,
+} from './index.js';
 
 interface TransformResult {
   readonly code: string;
@@ -1475,5 +1479,69 @@ describe('motif babel plugin - configurable breakpoints', () => {
        const X = () => <Box p={{ base: '$2', md: '$4' }} />;`;
     const withEmpty = transform(source, {});
     expect(withEmpty.css).toContain('@media (min-width: 768px)');
+  });
+});
+
+describe('motif babel plugin - onBail', () => {
+  function bails(source: string): BailEvent[] {
+    const events: BailEvent[] = [];
+    transform(source, { onBail: (e) => events.push(e) });
+    return events;
+  }
+
+  it('reports an element whose style props are all dynamic, with the props', () => {
+    const events = bails(`import { Box } from '@usemotif/react';
+export const A = ({ pad }) => <Box p={pad} />;`);
+    expect(events).toHaveLength(1);
+    expect(events[0]).toMatchObject({
+      filename: expect.stringContaining('test.tsx'),
+      line: 2,
+      element: 'Box',
+      reason: 'dynamic-props',
+      props: ['p'],
+    });
+  });
+
+  it('names the spread when a spread hides the props', () => {
+    const events = bails(`import { Box } from '@usemotif/react';
+const rest = {};
+export const A = () => <Box p={8} {...rest} />;`);
+    expect(events).toHaveLength(1);
+    expect(events[0]).toMatchObject({ element: 'Box', reason: 'has-spread', line: 3 });
+  });
+
+  it('reports a kept wrapper, with the dynamic props, when only some props are static', () => {
+    const events = bails(`import { Box } from '@usemotif/react';
+export const A = ({ pad }) => <Box p={pad} bg="red" />;`);
+    expect(events).toHaveLength(1);
+    expect(events[0]).toMatchObject({
+      element: 'Box',
+      reason: 'non-static-classification',
+      props: ['p'],
+    });
+  });
+
+  it('reports a kept wrapper with the strip-safety reason for a ref', () => {
+    const events = bails(`import { Box } from '@usemotif/react';
+export const A = ({ r }) => <Box p={8} ref={r} />;`);
+    expect(events).toHaveLength(1);
+    expect(events[0]).toMatchObject({ element: 'Box', reason: 'ref-attribute' });
+  });
+
+  it('reports nothing for an element that is fully extracted and stripped', () => {
+    expect(
+      bails(`import { Box } from '@usemotif/react';
+export const A = () => <Box p={8} bg="red" />;`),
+    ).toEqual([]);
+  });
+
+  it('leaves the output unchanged whether or not onBail is set', () => {
+    const source = `import { Box } from '@usemotif/react';
+const rest = {};
+export const A = ({ pad }) => <><Box p={pad} /><Box p={8} {...rest} /><Box p={8} /></>;`;
+    const withBail = transform(source, { onBail: () => {} });
+    const without = transform(source);
+    expect(withBail.code).toBe(without.code);
+    expect(withBail.css).toBe(without.css);
   });
 });
