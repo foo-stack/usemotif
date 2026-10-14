@@ -3,7 +3,7 @@ title: Popover
 description: A themed floating panel over the headless Popover - anchored to its trigger, opened by click, and dismissed by Escape or a click outside.
 diataxis: reference
 covers: ['Popover']
-last_verified: 2026-10-14
+last_verified: 2026-10-15
 ---
 
 import {
@@ -73,6 +73,15 @@ import { Button } from 'usemotif';
     </Popover.Close>
   </Popover.Content>
 </Popover.Root>`} />
+
+To point at the trigger, put `Popover.Arrow` first inside `Popover.Content`. The kit's arrow takes the
+raised surface, with its border, and follows the surface when it flips or shifts. See the
+[headless Popover](/headless/overlay/popover#popoverarrow) for its props.
+
+<CodeBlock lang="tsx" code={`<Popover.Content>
+  <Popover.Arrow />
+  ...
+</Popover.Content>`} />
 
 ## API
 

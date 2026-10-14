@@ -1,6 +1,10 @@
 'use client';
 
-import { Popover as HeadlessPopover, type PopoverContentProps } from '@usemotif/headless';
+import {
+  Popover as HeadlessPopover,
+  type FloatingArrowProps,
+  type PopoverContentProps,
+} from '@usemotif/headless';
 import { Box } from 'usemotif';
 
 /**
@@ -45,4 +49,16 @@ function PopoverContent({ children, ...rest }: PopoverContentProps) {
  * Parts exported flat so `src/index.ts` can assemble the namespace in the
  * server graph. Internal: the barrel does not re-export these by name.
  */
-export { PopoverContent };
+/** The themed arrow: the surface's colour, with its border. Put it first inside `Popover.Content`. */
+function PopoverArrow({ style, ...rest }: FloatingArrowProps) {
+  return (
+    <HeadlessPopover.Arrow
+      size={10}
+      borderColor="var(--colors-border-default, #d1d5db)"
+      {...rest}
+      style={{ background: 'var(--colors-surface-raised, #fff)', ...style }}
+    />
+  );
+}
+
+export { PopoverArrow, PopoverContent };

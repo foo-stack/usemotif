@@ -1,5 +1,5 @@
 import { Popover as Headless } from '@usemotif/headless';
-import { PopoverContent } from './Popover.js';
+import { PopoverArrow, PopoverContent } from './Popover.js';
 
 /**
  * Namespace assembly, deliberately in its own module and deliberately without a
@@ -16,5 +16,6 @@ export const Popover = {
   Root: Headless.Root,
   Trigger: Headless.Trigger,
   Content: PopoverContent,
+  Arrow: PopoverArrow,
   Close: Headless.Close,
 };

@@ -21,7 +21,8 @@ import {
 } from 'react';
 import { mergeRefs } from './_compose-refs.js';
 import { useExitTransition } from './_use-exit-transition.js';
-import { computePosition } from './positioning.js';
+import { ArrowContext } from './_arrow.js';
+import { computePosition, type PlacedPosition } from './positioning.js';
 
 /**
  * Tooltip - text affordance shown on hover or keyboard focus.
@@ -280,7 +281,12 @@ function Content({
   children,
 }: TooltipContentProps): ReactElement | null {
   const ctx = useTooltipContext('Tooltip.Content');
-  const [position, setPosition] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
+  const [placed, setPlaced] = useState<PlacedPosition>({
+    top: 0,
+    left: 0,
+    placement: ctx.placement,
+    arrow: 0,
+  });
   const contentRef = useRef<HTMLDivElement>(null);
   const { shouldRender, phase, elementRef, ExitBoundary } = useExitTransition(
     ctx.open,
@@ -301,15 +307,20 @@ function Content({
     const trigger = ctx.triggerRef.current;
     const content = contentRef.current;
     if (trigger === null || content === null) return;
-    const { top, left } = computePosition(
-      trigger.getBoundingClientRect(),
-      { width: content.offsetWidth, height: content.offsetHeight },
-      ctx.placement,
-      offset,
+    setPlaced(
+      computePosition(
+        trigger.getBoundingClientRect(),
+        { width: content.offsetWidth, height: content.offsetHeight },
+        ctx.placement,
+        offset,
+      ),
     );
-    setPosition({ top, left });
   }, [ctx.open, ctx.placement, ctx.triggerRef, offset]);
 
+  const anchor = useMemo(
+    () => ({ placement: placed.placement, offset: placed.arrow }),
+    [placed.placement, placed.arrow],
+  );
   if (!shouldRender) return null;
   return (
     <Portal>
@@ -326,8 +337,8 @@ function Content({
         // over the tip. (Keepalive-on-hover belongs to HoverCard.)
         style={{
           position: 'absolute',
-          top: position.top,
-          left: position.left,
+          top: placed.top,
+          left: placed.left,
           zIndex: 1100,
           pointerEvents: 'none',
           ...userStyle,
@@ -336,7 +347,9 @@ function Content({
         {/* Publish the presence phase so a WAAPI-driven descendant surface
             registers + plays its exit off-thread; the CSS path rides
             `data-motif-state` + `transitionend` on this element. */}
-        <ExitBoundary>{children}</ExitBoundary>
+        <ArrowContext.Provider value={anchor}>
+          <ExitBoundary>{children}</ExitBoundary>
+        </ArrowContext.Provider>
       </div>
     </Portal>
   );

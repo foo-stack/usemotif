@@ -1,6 +1,10 @@
 'use client';
 
-import { HoverCard as HeadlessHoverCard, type HoverCardContentProps } from '@usemotif/headless';
+import {
+  HoverCard as HeadlessHoverCard,
+  type FloatingArrowProps,
+  type HoverCardContentProps,
+} from '@usemotif/headless';
 import { Box } from 'usemotif';
 
 /**
@@ -47,4 +51,16 @@ function HoverCardContent({ children, ...rest }: HoverCardContentProps) {
  * Parts exported flat so `src/index.ts` can assemble the namespace in the
  * server graph. Internal: the barrel does not re-export these by name.
  */
-export { HoverCardContent };
+/** The themed arrow: the surface's colour, with its border. Put it first inside `HoverCard.Content`. */
+function HoverCardArrow({ style, ...rest }: FloatingArrowProps) {
+  return (
+    <HeadlessHoverCard.Arrow
+      size={10}
+      borderColor="var(--colors-border-default, #d1d5db)"
+      {...rest}
+      style={{ background: 'var(--colors-surface-raised, #fff)', ...style }}
+    />
+  );
+}
+
+export { HoverCardArrow, HoverCardContent };

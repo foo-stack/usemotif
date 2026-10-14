@@ -47,6 +47,8 @@ export type {
   TooltipTriggerProps,
 } from './Tooltip.js';
 
+export { FloatingArrow } from './_arrow.js';
+export type { FloatingArrowProps } from './_arrow.js';
 export { PopoverClose, PopoverContent, PopoverRoot, PopoverTrigger } from './Popover.js';
 export type {
   PopoverCloseProps,

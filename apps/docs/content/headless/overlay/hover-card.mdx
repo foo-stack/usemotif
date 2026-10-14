@@ -2,8 +2,8 @@
 title: HoverCard
 description: A hover-triggered floating panel for interactive content - profile previews, link cards. A hover bridge keeps it open as the cursor crosses.
 diataxis: reference
-covers: ['HoverCard', 'HoverCardRootProps', 'HoverCardTriggerProps', 'HoverCardContentProps']
-last_verified: 2026-10-14
+covers: ['HoverCard', 'HoverCardRootProps', 'HoverCardTriggerProps', 'HoverCardContentProps', 'FloatingArrowProps']
+last_verified: 2026-10-15
 ---
 
 import {
@@ -132,6 +132,27 @@ and nothing focusable; a HoverCard holds content the user can act on.
     },
   ]}
 />
+
+### HoverCard.Arrow
+
+<ApiSignature
+  name="HoverCard.Arrow"
+  status="stable"
+  signature={`function HoverCard.Arrow(props: FloatingArrowProps): JSX.Element | null`}
+  params={[
+    { name: 'size', type: 'number', default: '8', description: 'Width of the square the arrow is cut from, in px.' },
+    { name: 'borderColor', type: 'string', description: 'Draws the arrow\'s two outer edges in this colour, to continue a bordered surface.' },
+    { name: 'borderWidth', type: 'number', default: '1', description: 'Border width with `borderColor`, in px.' },
+    { name: 'style', type: 'CSSProperties', description: 'Style for the arrow, usually its `background`.' },
+  ]}
+/>
+
+An arrow on the edge facing the trigger, pointing at the trigger's centre. It is a square turned 45
+degrees and straddling the edge, so render it first inside `HoverCard.Content` with the surface's
+background, and the surface covers its inner half. It moves to the other edge when the surface
+flips, and stays on the trigger when the surface shifts along the viewport edge. It carries
+`aria-hidden` and `data-side` (`top`, `bottom`, `left`, or `right`), for styling by side. On React
+Native it renders nothing, since native overlays open as modals with no anchored edge.
 
 ## Accessibility
 
