@@ -1,5 +1,11 @@
 # @usemotif/recipes
 
+## 1.6.0
+
+### Minor Changes
+
+- ddaef6e: Add `alertRecipe`, `bannerRecipe`, `chipRecipe`, `statRecipe`, and `statDeltaRecipe` to `@usemotif/recipes`. The kit's Alert, Banner, Chip, and Stat now take their styling from these recipes, the way Card and Badge already do. Their rendered output is unchanged.
+
 ## 1.5.0
 
 ## 1.4.0

@@ -1,5 +1,11 @@
 # @usemotif/example-desktop-tauri
 
+## 0.0.7
+
+### Patch Changes
+
+- @usemotif/example-desktop-web@0.0.7
+
 ## 0.0.6
 
 ### Patch Changes

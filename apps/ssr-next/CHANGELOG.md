@@ -1,5 +1,22 @@
 # @motif-js/ssr-next
 
+## 0.0.17
+
+### Patch Changes
+
+- Updated dependencies [0f15ad0]
+- Updated dependencies [ddc08ae]
+- Updated dependencies [f07a5c7]
+- Updated dependencies [ddaef6e]
+- Updated dependencies [d9d0ff6]
+- Updated dependencies [3fe366c]
+- Updated dependencies [a3f3d7c]
+- Updated dependencies [fbf4759]
+  - @usemotif/headless@1.6.0
+  - @usemotif/ui@1.6.0
+  - @usemotif/react@1.6.0
+  - @usemotif/tokens@1.6.0
+
 ## 0.0.16
 
 ### Patch Changes

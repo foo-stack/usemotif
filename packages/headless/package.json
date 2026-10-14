@@ -1,6 +1,6 @@
 {
   "name": "@usemotif/headless",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "description": "Accessible headless behavior components for motif-js.",
   "homepage": "https://github.com/foo-stack/usemotif/tree/main/packages/headless#readme",
   "bugs": "https://github.com/foo-stack/usemotif/issues",

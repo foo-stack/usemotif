@@ -1,6 +1,6 @@
 {
   "name": "@usemotif/react",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "description": "DOM bindings for motif-js: Box / Stack / Pressable / styled() targeting React + react-dom.",
   "homepage": "https://github.com/foo-stack/usemotif/tree/main/packages/react#readme",
   "bugs": "https://github.com/foo-stack/usemotif/issues",

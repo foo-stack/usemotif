@@ -1,6 +1,6 @@
 {
   "name": "@usemotif-bench/rn-startup",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "private": true,
   "description": "React Native startup-time bench scaffold for motif-js. Real measurements need a device; see README.md.",
   "type": "module",

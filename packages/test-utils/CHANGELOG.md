@@ -1,5 +1,12 @@
 # @usemotif/test-utils
 
+## 1.6.0
+
+### Patch Changes
+
+- Updated dependencies [3fe366c]
+  - @usemotif/core@1.6.0
+
 ## 1.5.0
 
 ### Patch Changes

@@ -1,6 +1,6 @@
 {
   "name": "@usemotif/playground-bare-rn",
-  "version": "0.0.13",
+  "version": "0.0.14",
   "private": true,
   "description": "Bare React Native demo of motif-js native primitives - same App.tsx as the Expo playground, but on top of plain react-native (no Expo runtime). Proves the library works outside the Expo sandbox.",
   "main": "index.js",
