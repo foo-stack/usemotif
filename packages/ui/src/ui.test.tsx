@@ -126,6 +126,10 @@ function onMultiChange(next: ReadonlyArray<string>): void {
 // lint. A fixed date keeps the selected-cell assertion deterministic.
 const NO_OPTIONS: ReadonlyArray<SelectOption> = [];
 const SLIDER_MARKS = [{ value: 0, label: 'Low' }, { value: 50 }, { value: 100, label: 'High' }];
+const LAZY_TREE: ReadonlyArray<TreeNode> = [{ id: 'docs', label: 'docs', hasChildren: true }];
+function neverLoads(): Promise<void> {
+  return new Promise(() => {});
+}
 const CAL_DEFAULT = new Date(2024, 0, 15);
 const CAL_RANGE = { start: new Date(2024, 0, 10), end: new Date(2024, 0, 12) };
 
@@ -1279,6 +1283,50 @@ describe('TreeView - themed ARIA tree over the headless behaviour', () => {
     // Clicking the row selects it (row onClick → headless select).
     click(paint);
     expect(leaf.getAttribute('aria-selected')).toBe('true');
+  });
+});
+
+describe('TreeView chevron, loading and multiple selection', () => {
+  it('toggles from the chevron without selecting the row', () => {
+    render(<TreeView data={TREE_DATA} aria-label="Files" />);
+    const src = container.querySelector('[role="treeitem"]')!;
+    const chevron = src.querySelector('span')!;
+    expect(chevron.textContent).toBe('▸');
+    click(chevron);
+    expect(src.getAttribute('aria-expanded')).toBe('true');
+    expect(src.getAttribute('aria-selected')).toBe('false');
+  });
+
+  it('shows Loading on a branch whose children are loading', async () => {
+    render(<TreeView data={LAZY_TREE} loadChildren={neverLoads} aria-label="Files" />);
+    const docs = container.querySelector('[role="treeitem"]')!;
+    expect(docs.querySelector('span')!.textContent).toBe('▸');
+    await act(async () => {
+      (docs.querySelector('span') as HTMLElement).click();
+    });
+    expect(docs.textContent).toContain('Loading');
+    expect(docs.getAttribute('aria-busy')).toBe('true');
+  });
+
+  it('paints every selected row in multiple mode', () => {
+    render(
+      <TreeView
+        data={TREE_DATA}
+        defaultExpanded={TREE_EXPANDED}
+        selectionMode="multiple"
+        aria-label="Files"
+      />,
+    );
+    const rows = Array.from(container.querySelectorAll('[role="treeitem"]'));
+    const pick = (name: string) => rows.find((r) => r.textContent?.includes(name))!;
+    click(pick('index.ts').firstElementChild!);
+    click(pick('README').firstElementChild!);
+    expect(pick('index.ts').getAttribute('aria-selected')).toBe('true');
+    expect(pick('README').getAttribute('aria-selected')).toBe('true');
+    const bg = (name: string) =>
+      (pick(name).firstElementChild as HTMLElement).style.backgroundColor;
+    expect(bg('index.ts')).toBe(bg('README'));
+    expect(bg('index.ts')).not.toBe(bg('App.tsx'));
   });
 });
 
