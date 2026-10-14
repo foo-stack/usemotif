@@ -189,6 +189,8 @@ export type {
   TreeViewProps,
 } from './specialized.js';
 
+export { PinInput } from './pin-input.js';
+export type { PinInputProps, PinType } from './pin-input.js';
 export { Toggle, ToggleGroup, ToggleGroupItem } from './toggle-group.js';
 export type { ToggleGroupItemProps, ToggleGroupProps, ToggleProps } from './toggle-group.js';
 export { Breadcrumb, NavigationMenu, Pagination, Stepper, Toolbar } from './navigation.js';
