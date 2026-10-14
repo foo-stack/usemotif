@@ -3,7 +3,7 @@ title: useThemeChain
 description: Read the full chain of nested theme names from root provider to the current scope. Useful for tooling and instrumentation.
 diataxis: reference
 covers: ['useThemeChain']
-last_verified: 2026-05-15
+last_verified: 2026-10-14
 ---
 
 import { ApiSignature, ArticleMeta, CodeBlock, Eyebrow } from '../../components/index.js';
@@ -26,6 +26,9 @@ scope. `undefined` when no provider is in scope.
 `<ThemeProvider active="dark"><Theme name="red">` yields `['dark', 'red']` - regardless of
 whether the combination theme `'dark_red'` is actually registered. This is the unresolved
 view; [`useThemeName`](/reference/use-theme-name) returns the resolved view.
+
+Works on web and React Native. On native, `useThemeName` returns the innermost `<Theme>` name
+rather than a registered combination, so the chain is the only view of the nesting there.
 
 ## When to reach for it
 
