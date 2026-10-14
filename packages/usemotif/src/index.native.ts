@@ -215,6 +215,7 @@ export type {
 export { createStyledContext, styled } from '@usemotif/react-native';
 export type {
   CompoundVariant,
+  StyledComponent,
   StyledConfig,
   StyledContext,
   VariantContext,
