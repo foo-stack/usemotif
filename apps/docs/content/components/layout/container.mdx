@@ -2,8 +2,8 @@
 title: Container
 description: Establishes a CSS containment context so descendants can address it with container-query responsive keys.
 diataxis: reference
-covers: ['Container', 'ContainerProps']
-last_verified: 2026-05-15
+covers: ['Container', 'ContainerProps', 'useContainerInfo', 'ContainerContextValue']
+last_verified: 2026-10-14
 ---
 
 import {
@@ -98,13 +98,37 @@ Sidebar list of cards, each card its own container:
   ))}
 </Grid>`} />
 
+## Reading the width
+
+`useContainerInfo()` returns the measured widths of the enclosing containers, for decisions a
+style prop cannot make, such as rendering a different component:
+
+<CodeBlock lang="tsx" code={`import { useContainerInfo } from 'usemotif';
+
+function CardBody() {
+  const { named } = useContainerInfo();
+  return (named.get('card') ?? 0) >= 480 ? <WideLayout /> : <StackedLayout />;
+}`} />
+
+<CodeBlock lang="ts" code={`interface ContainerContextValue {
+  readonly nearestWidth: number | null;           // innermost measured Container
+  readonly named: ReadonlyMap<string, number>;    // each measured named ancestor
+}`} />
+
+A width is absent until the container is first measured, and always during server rendering, so
+render something sensible for `null`. An inner container with the same name as an outer one
+shadows it.
+
+On web a container only measures while something below it calls the hook, through one
+`ResizeObserver` that stops when the last reader unmounts. The width is the content box, the same
+box the browser's container queries measure, so the hook and `@md` styling agree.
+
 ## Cross-platform notes
 
-On web Container emits the `container-type` / `container-name` CSS properties; container queries
-resolve in any modern browser. On native CSS container queries are not part of the platform - the
-component renders as a Box, and `@<bp>` descendant keys are dropped silently. The literal and
-media-query (`{ base, sm, md }`) prop forms work everywhere; reach for container queries only when
-you are sure the consuming surface is web.
+On web Container emits the `container-type` / `container-name` CSS properties, and container
+queries resolve in the browser. React Native has no container queries, so Container measures
+itself with `onLayout` and descendants resolve `@<bp>` and `@<name>.<bp>` keys against that width
+in JavaScript. `useContainerInfo()` returns the same shape on both platforms.
 
 <Callout variant="info" title="Related">
   [Responsive](/concepts/responsive) covers the full responsive-key syntax - including the
