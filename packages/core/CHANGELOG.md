@@ -1,5 +1,11 @@
 # @usemotif/core
 
+## 1.6.0
+
+### Minor Changes
+
+- 3fe366c: Define the spring and drag option types once, in `@usemotif/core`. `SpringConfig`, `DragAxis`, `DragConstraints`, `DragInfo`, `DragSpringConfig` and `UseDragOptions` are now exported from `@usemotif/core`, and `@usemotif/react` and `@usemotif/react-native` re-export the same types under the same names, so existing imports keep working.
+
 ## 1.5.0
 
 ### Minor Changes

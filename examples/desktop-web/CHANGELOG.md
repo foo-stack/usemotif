@@ -1,5 +1,13 @@
 # @usemotif/example-desktop-web
 
+## 0.0.7
+
+### Patch Changes
+
+- Updated dependencies [fbf4759]
+  - usemotif@1.6.0
+  - @usemotif/example-desktop-shared@0.0.7
+
 ## 0.0.6
 
 ### Patch Changes

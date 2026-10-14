@@ -1,5 +1,14 @@
 # @usemotif/compiler-metro
 
+## 1.6.0
+
+### Patch Changes
+
+- 55e262b: Add an `onBail` option that reports each motif element the compiler left to the runtime: its file, line, column, element name, the reason (`dynamic-props`, `has-spread`, or why the wrapper had to stay), and the dynamic props. The bundler plugin and the Metro transformer pass it through. Setting it never changes the output.
+- 8e76882: Correct two dependency declarations. `@usemotif/compiler-core` no longer installs `@babel/generator`, which it never imported. `@usemotif/compiler-metro` now declares `@babel/core` as a peer dependency (`^7.20.0`, the same range `@usemotif/compiler-babel` requires) instead of installing its own copy; React Native projects already have it.
+- Updated dependencies [55e262b]
+  - @usemotif/compiler-babel@1.6.0
+
 ## 1.5.0
 
 ### Patch Changes

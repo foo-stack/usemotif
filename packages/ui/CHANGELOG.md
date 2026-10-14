@@ -1,5 +1,14 @@
 # @usemotif/ui
 
+## 1.6.0
+
+### Patch Changes
+
+- 0f15ad0: `@usemotif/headless` exports `useControllableState`, the controlled-or-uncontrolled state hook its own components and the kit's `Select` now share. Pass `value`, `defaultValue` and `onChange`; pass `controlled` to keep `value={undefined}` controlled.
+- ddaef6e: Add `alertRecipe`, `bannerRecipe`, `chipRecipe`, `statRecipe`, and `statDeltaRecipe` to `@usemotif/recipes`. The kit's Alert, Banner, Chip, and Stat now take their styling from these recipes, the way Card and Badge already do. Their rendered output is unchanged.
+- Updated dependencies [ddaef6e]
+  - @usemotif/recipes@1.6.0
+
 ## 1.5.0
 
 ### Minor Changes

@@ -1,6 +1,6 @@
 {
   "name": "@usemotif/tokens",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "description": "Default opinionated token presets for motif-js (colors, spacing, typography, radii, shadows).",
   "homepage": "https://github.com/foo-stack/usemotif/tree/main/packages/tokens#readme",
   "bugs": "https://github.com/foo-stack/usemotif/issues",

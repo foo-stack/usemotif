@@ -1,5 +1,17 @@
 # @usemotif/tokens
 
+## 1.6.0
+
+### Minor Changes
+
+- f07a5c7: Add `highContrastLightTheme` and `highContrastDarkTheme`. They keep the default presets' semantic layout and are built from the same palette, but every text colour reaches 7:1 on every surface, solid-control labels reach 7:1 on their fills, and borders reach 3:1. A test holds every pair to those ratios.
+
+### Patch Changes
+
+- d9d0ff6: Stop shipping the Material 3, Primer and Atlassian validation themes in the published tarball. They are test fixtures, never exported, and now live under `src/__fixtures__/`, which the package already excludes from `files`.
+- Updated dependencies [3fe366c]
+  - @usemotif/core@1.6.0
+
 ## 1.5.0
 
 ### Patch Changes

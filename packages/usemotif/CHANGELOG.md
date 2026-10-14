@@ -1,5 +1,21 @@
 # usemotif
 
+## 1.6.0
+
+### Minor Changes
+
+- fbf4759: Add `useScrollTarget()` on web. It returns `{ ref, onLayout }` like the native hook, and web `useScroll({ target })` now accepts that handle as well as a plain ref, so scroll-linked code written for native runs unchanged on web. Web `Box` accepts `onLayout={undefined}` and never forwards it to the DOM.
+
+### Patch Changes
+
+- Updated dependencies [ddc08ae]
+- Updated dependencies [3fe366c]
+- Updated dependencies [a3f3d7c]
+- Updated dependencies [fbf4759]
+  - @usemotif/react@1.6.0
+  - @usemotif/core@1.6.0
+  - @usemotif/react-native@1.6.0
+
 ## 1.5.0
 
 ### Minor Changes

@@ -1,6 +1,6 @@
 {
   "name": "@usemotif/example-desktop-tauri",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "private": true,
   "description": "Tauri shell loading the desktop-web build - the second proof the shared <DemoScreen/> renders in a real desktop window (WKWebView/WebView2).",
   "type": "module",

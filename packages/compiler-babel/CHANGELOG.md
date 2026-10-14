@@ -1,5 +1,18 @@
 # @usemotif/compiler-babel
 
+## 1.6.0
+
+### Minor Changes
+
+- 55e262b: Add an `onBail` option that reports each motif element the compiler left to the runtime: its file, line, column, element name, the reason (`dynamic-props`, `has-spread`, or why the wrapper had to stay), and the dynamic props. The bundler plugin and the Metro transformer pass it through. Setting it never changes the output.
+
+### Patch Changes
+
+- Updated dependencies [8e76882]
+- Updated dependencies [3fe366c]
+  - @usemotif/compiler-core@1.6.0
+  - @usemotif/core@1.6.0
+
 ## 1.5.0
 
 ### Patch Changes

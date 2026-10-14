@@ -1,5 +1,19 @@
 # @usemotif/react
 
+## 1.6.0
+
+### Minor Changes
+
+- ddc08ae: `useExitPresence` now returns `settle`, which ends the current exit immediately as if every registered exit had completed. `@usemotif/headless` builds its overlay exits on it instead of keeping its own copy of the presence state machine.
+- fbf4759: Add `useScrollTarget()` on web. It returns `{ ref, onLayout }` like the native hook, and web `useScroll({ target })` now accepts that handle as well as a plain ref, so scroll-linked code written for native runs unchanged on web. Web `Box` accepts `onLayout={undefined}` and never forwards it to the DOM.
+
+### Patch Changes
+
+- 3fe366c: Define the spring and drag option types once, in `@usemotif/core`. `SpringConfig`, `DragAxis`, `DragConstraints`, `DragInfo`, `DragSpringConfig` and `UseDragOptions` are now exported from `@usemotif/core`, and `@usemotif/react` and `@usemotif/react-native` re-export the same types under the same names, so existing imports keep working.
+- a3f3d7c: Apply `useSpring`'s configured `velocity` on the first `.set()` only, as documented. On web the seed was re-applied every time a settled spring started moving again, so a later `.set()` could kick the value away from its new target before it turned around. The React Native hook already behaved this way.
+- Updated dependencies [3fe366c]
+  - @usemotif/core@1.6.0
+
 ## 1.5.0
 
 ### Minor Changes

@@ -1,5 +1,15 @@
 # @usemotif/example-desktop-shared
 
+## 0.0.7
+
+### Patch Changes
+
+- Updated dependencies [f07a5c7]
+- Updated dependencies [d9d0ff6]
+- Updated dependencies [fbf4759]
+  - @usemotif/tokens@1.6.0
+  - usemotif@1.6.0
+
 ## 0.0.6
 
 ### Patch Changes

@@ -1,6 +1,6 @@
 {
   "name": "@usemotif-bench/native-container",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "private": true,
   "description": "Native container-query polyfill perf benchmark for motif-js.",
   "type": "module",

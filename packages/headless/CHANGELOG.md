@@ -1,5 +1,15 @@
 # @usemotif/headless
 
+## 1.6.0
+
+### Minor Changes
+
+- 0f15ad0: `@usemotif/headless` exports `useControllableState`, the controlled-or-uncontrolled state hook its own components and the kit's `Select` now share. Pass `value`, `defaultValue` and `onChange`; pass `controlled` to keep `value={undefined}` controlled.
+
+### Patch Changes
+
+- ddc08ae: `useExitPresence` now returns `settle`, which ends the current exit immediately as if every registered exit had completed. `@usemotif/headless` builds its overlay exits on it instead of keeping its own copy of the presence state machine.
+
 ## 1.5.0
 
 ### Minor Changes
