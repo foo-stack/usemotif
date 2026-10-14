@@ -13,6 +13,11 @@ export interface ThemeContextValue {
   readonly themes: readonly Theme[];
   /** Active theme's `name`. */
   readonly active: string;
+  /** Theme names from the root provider down to this scope:
+   * `<ThemeProvider active="dark">` starts it at `['dark']` and each nested
+   * `<Theme name="X">` appends `X`. Optional so a hand-built value can omit
+   * it; the provider and `<Theme>` always populate it. */
+  readonly chain?: readonly string[];
   /** Resolved breakpoint pixel widths for this render tree. The single
    * per-tree source every native breakpoint-match path reads (responsive
    * props like `p={{ md }}`, `Show`/`Hide`, `useViewportMatch`), so the
@@ -41,6 +46,15 @@ export function useTheme(): Theme | undefined {
  */
 export function useThemeName(): string | undefined {
   return useContext(ThemeContext)?.active;
+}
+
+/**
+ * Returns the theme names from the root provider down to the current scope.
+ * `<ThemeProvider active="dark"><Theme name="red">` yields `['dark', 'red']`,
+ * whichever theme `useThemeName()` resolves to. `undefined` outside a provider.
+ */
+export function useThemeChain(): readonly string[] | undefined {
+  return useContext(ThemeContext)?.chain;
 }
 
 /**

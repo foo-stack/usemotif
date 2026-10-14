@@ -10,7 +10,7 @@
 import { describe, expect, it } from 'vitest';
 import { act } from 'react';
 import { createRoot } from 'react-dom/client';
-import { createStyledContext, styled, useScroll, useScrollTarget } from './index.js';
+import { createStyledContext, styled, useScroll, useScrollTarget, useThemeChain } from './index.js';
 
 describe('usemotif - styled surface', () => {
   it('re-exports the styled factory and its context helper', () => {
@@ -53,5 +53,11 @@ describe('usemotif - scroll surface', () => {
   it('re-exports useScrollTarget beside useScroll, matching the native entry', () => {
     expect(typeof useScroll).toBe('function');
     expect(typeof useScrollTarget).toBe('function');
+  });
+});
+
+describe('usemotif - theme surface', () => {
+  it('re-exports useThemeChain, matching the native entry', () => {
+    expect(typeof useThemeChain).toBe('function');
   });
 });

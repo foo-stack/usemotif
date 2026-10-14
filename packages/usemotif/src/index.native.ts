@@ -74,6 +74,7 @@ export {
   useMotionValue,
   useSpring,
   useTheme,
+  useThemeChain,
   useThemeName,
   useTransform,
 } from '@usemotif/react-native';
