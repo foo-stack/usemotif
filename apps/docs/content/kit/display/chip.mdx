@@ -31,8 +31,9 @@ import {
 A `Box` styled by the `chipRecipe` from `@usemotif/recipes`. The recipe adjusts the padding when
 an `icon` is present and when the chip is removable, so the content stays balanced either way.
 
-Setting `onRemove` renders a `×` button labelled "Remove" that calls it. Chip does not remove
-itself; your state owns the list of chips.
+Setting `onRemove` renders a `×` button labelled "Remove" that calls it; `removeLabel` renames it,
+which matters when several chips sit together ("Remove react"). Chip does not remove itself; your
+state owns the list of chips.
 
 ## Install
 
@@ -94,6 +95,12 @@ A primary chip with an icon:
       name: 'onRemove',
       type: '() => void',
       description: 'When set, renders a `×` button labelled "Remove" that calls it.',
+    },
+    {
+      name: 'removeLabel',
+      type: 'string',
+      default: "'Remove'",
+      description: 'Accessible name of the remove button. Name the chip in it when several sit together.',
     },
   ]}
 />

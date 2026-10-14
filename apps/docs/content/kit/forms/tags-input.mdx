@@ -1,0 +1,82 @@
+---
+title: TagsInput
+description: A themed tags field over the headless TagsInput - each entry becomes a removable Chip, with optional suggestions.
+diataxis: reference
+covers: ['TagsInput', 'TagsInputProps']
+last_verified: 2026-10-14
+---
+
+import { ApiSignature, ArticleMeta, CodeBlock, Eyebrow, Lede } from '../../../components/index.js';
+
+<Eyebrow>UI kit / Forms</Eyebrow>
+
+# TagsInput
+
+<Lede>
+  TagsInput is a field of removable chips. Type and press Enter or a comma to add one, paste a list
+  to add several, and press Backspace to remove the last.
+</Lede>
+
+<ArticleMeta />
+
+## What it is
+
+The headless [TagsInput](/headless/selection/tags-input) in a bordered `surface.raised` field.
+Each tag is a [Chip](/kit/display/chip) whose remove button is named after it ("Remove react"),
+and suggestions open in the same themed list as [Combobox](/kit/forms/combobox).
+
+## Install
+
+<CodeBlock lang="bash" code={`yarn add @usemotif/ui`} />
+
+## Usage
+
+<CodeBlock lang="tsx" code={`import { TagsInput } from '@usemotif/ui';
+
+<TagsInput
+  aria-label="Topics"
+  defaultValue={['react']}
+  suggestions={['react', 'react-native', 'typescript']}
+/>`} />
+
+## API
+
+<ApiSignature
+  name="TagsInput"
+  status="stable"
+  signature={`function TagsInput(props: TagsInputProps): JSX.Element`}
+  params={[
+    {
+      name: 'value / defaultValue / onValueChange',
+      type: 'readonly string[] / readonly string[] / (value: readonly string[]) => void',
+      description: 'The tags, controlled or uncontrolled.',
+    },
+    {
+      name: 'suggestions',
+      type: 'readonly string[]',
+      description: 'Offered as the user types: the ones not yet added, filtered by the text. Arrow keys highlight one and Enter adds it.',
+    },
+    {
+      name: 'delimiters',
+      type: 'readonly string[]',
+      default: "[',']",
+      description: 'Keys, besides Enter, that add the typed entry. Pasted text splits on them and on newlines.',
+    },
+    {
+      name: 'max / allowDuplicates / validate',
+      type: 'number / boolean / (tag: string) => boolean',
+      description: 'Caps the count, keeps repeated entries (off by default), and rejects entries `validate` returns `false` for. Entries are always trimmed, and empty ones are dropped.',
+    },
+    {
+      name: 'placeholder / disabled / aria-label',
+      type: 'string / boolean / string',
+      description: 'For the input. Name it with `aria-label`.',
+    },
+    {
+      name: 'width',
+      type: 'number | string',
+      default: '320',
+      description: 'Width of the field. A number is pixels.',
+    },
+  ]}
+/>
