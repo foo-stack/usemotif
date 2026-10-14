@@ -163,6 +163,10 @@ describe('the barrel and the client chunk agree', () => {
     expect(barrel.ContextMenu.Sub).toBe(barrel.Menu.Sub);
     expect(barrel.ContextMenu.SubTrigger).toBe(barrel.Menu.SubTrigger);
     expect(barrel.ContextMenu.SubContent).toBe(barrel.Menu.SubContent);
+    expect(barrel.ContextMenu.CheckboxItem).toBe(barrel.Menu.CheckboxItem);
+    expect(barrel.ContextMenu.RadioGroup).toBe(barrel.Menu.RadioGroup);
+    expect(barrel.ContextMenu.RadioItem).toBe(barrel.Menu.RadioItem);
+    expect(barrel.ContextMenu.Label).toBe(barrel.Menu.Label);
     expect(barrel.Select.List).toBe(barrel.Combobox.List);
     expect(barrel.Search.Input).toBe(barrel.Combobox.Input);
   });

@@ -60,6 +60,13 @@ export type {
 export { MenuContent, MenuItem, MenuRoot, MenuSeparator, MenuTrigger } from './Menu.js';
 export type { MenuContentProps, MenuItemProps, MenuRootProps, MenuTriggerProps } from './Menu.js';
 export { MenuSub, MenuSubContent, MenuSubTrigger } from './MenuSub.js';
+export { MenuCheckboxItem, MenuLabel, MenuRadioGroup, MenuRadioItem } from './MenuItems.js';
+export type {
+  MenuCheckboxItemProps,
+  MenuLabelProps,
+  MenuRadioGroupProps,
+  MenuRadioItemProps,
+} from './MenuItems.js';
 export type { MenuSubContentProps, MenuSubProps, MenuSubTriggerProps } from './MenuSub.js';
 
 export {

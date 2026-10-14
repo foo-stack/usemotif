@@ -53,6 +53,10 @@ import {
   MenuContent,
   MenuItem,
   MenuRoot,
+  MenuCheckboxItem,
+  MenuLabel,
+  MenuRadioGroup,
+  MenuRadioItem,
   MenuSeparator,
   MenuSub,
   MenuSubContent,
@@ -89,7 +93,7 @@ import {
  *
  * This is also where the reuse between namespaces is resolved. `AlertDialog`,
  * `Drawer` and `Sheet` share four of Dialog's parts, `Accordion` shares two of
- * Collapsible's, `ContextMenu` shares Menu's item, separator and submenu parts, `Search` shares
+ * Collapsible's, `ContextMenu` shares Menu's item, separator, submenu, checkbox, radio and label parts, `Search` shares
  * Combobox's input and list, and `Select` shares its list alone. Sharing a part
  * means sharing the identical client reference, not a copy.
  */
@@ -157,6 +161,10 @@ export const Menu = {
   Sub: MenuSub,
   SubTrigger: MenuSubTrigger,
   SubContent: MenuSubContent,
+  CheckboxItem: MenuCheckboxItem,
+  RadioGroup: MenuRadioGroup,
+  RadioItem: MenuRadioItem,
+  Label: MenuLabel,
 };
 
 export const ContextMenu = {
@@ -168,6 +176,10 @@ export const ContextMenu = {
   Sub: MenuSub,
   SubTrigger: MenuSubTrigger,
   SubContent: MenuSubContent,
+  CheckboxItem: MenuCheckboxItem,
+  RadioGroup: MenuRadioGroup,
+  RadioItem: MenuRadioItem,
+  Label: MenuLabel,
 };
 
 export const Collapsible = {
@@ -289,7 +301,11 @@ export type {
   HoverCardRootProps,
   HoverCardTriggerProps,
   MenuContentProps,
+  MenuCheckboxItemProps,
   MenuItemProps,
+  MenuLabelProps,
+  MenuRadioGroupProps,
+  MenuRadioItemProps,
   MenuSubContentProps,
   MenuSubProps,
   MenuSubTriggerProps,
