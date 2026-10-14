@@ -1,4 +1,4 @@
-import type { Theme, TokenMap } from '@usemotif/core';
+import type { Theme, TokenMap, TokenScale } from '@usemotif/core';
 import {
   animations,
   borderWidths,
@@ -23,7 +23,7 @@ import {
  * `$colors.blue.500`-style paths. Primitives never change with the theme;
  * only the semantic layer rebinds.
  */
-const primitiveTokens: TokenMap = {
+const primitiveTokens = {
   colors,
   space,
   sizes,
@@ -43,13 +43,15 @@ const primitiveTokens: TokenMap = {
   durations,
   easings,
   animations,
-};
+} satisfies TokenMap;
 
 /**
  * Build a theme by merging the shared primitives with a semantic-layer
- * override (which uses `$`-refs into the primitive tree).
+ * override (which uses `$`-refs into the primitive tree). The return type
+ * keeps the literal token shape, so `extendTheme` over a preset, and a
+ * `MotifCustomTheme` augmented with one, see real `$`-paths.
  */
-function buildTheme(name: string, semantic: TokenMap): Theme {
+function buildTheme<C extends TokenScale<string>>(name: string, semantic: { readonly colors: C }) {
   return {
     name,
     tokens: {
@@ -61,10 +63,10 @@ function buildTheme(name: string, semantic: TokenMap): Theme {
         ...semantic.colors,
       },
     },
-  };
+  } satisfies Theme;
 }
 
-export const lightTheme: Theme = buildTheme('light', {
+export const lightTheme = buildTheme('light', {
   colors: {
     // `interactive` is the hover / highlight fill for rows and triggers that
     // sit on a panel - menu items, listbox options, calendar days. It is a
@@ -113,7 +115,7 @@ export const lightTheme: Theme = buildTheme('light', {
   },
 });
 
-export const darkTheme: Theme = buildTheme('dark', {
+export const darkTheme = buildTheme('dark', {
   colors: {
     // `interactive` - see the light theme. Here it must step *up* off the
     // `raised` panel rather than down, so it is a lighter grey than either
@@ -164,7 +166,7 @@ export const darkTheme: Theme = buildTheme('dark', {
  * from the shared palette, so it composes with the default presets and their
  * sub-themes.
  */
-export const highContrastLightTheme: Theme = buildTheme('high-contrast-light', {
+export const highContrastLightTheme = buildTheme('high-contrast-light', {
   colors: {
     surface: {
       base: '$colors.white',
@@ -206,7 +208,7 @@ export const highContrastLightTheme: Theme = buildTheme('high-contrast-light', {
  * controls carrying dark labels, held to the same 7:1 and 3:1 thresholds as
  * the light variant.
  */
-export const highContrastDarkTheme: Theme = buildTheme('high-contrast-dark', {
+export const highContrastDarkTheme = buildTheme('high-contrast-dark', {
   colors: {
     surface: {
       base: '$colors.black',

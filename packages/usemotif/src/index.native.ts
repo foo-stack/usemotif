@@ -17,6 +17,7 @@ export const PACKAGE_NAME = 'usemotif';
 export {
   configureBreakpoints,
   createTheme,
+  extendTheme,
   getBreakpoints,
   makeKeyframe as keyframes,
 } from '@usemotif/core';

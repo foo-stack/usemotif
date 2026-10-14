@@ -16,7 +16,7 @@
 
 export const PACKAGE_NAME = '@usemotif/react';
 
-export { configureBreakpoints, createTheme, getBreakpoints } from '@usemotif/core';
+export { configureBreakpoints, createTheme, extendTheme, getBreakpoints } from '@usemotif/core';
 export type {
   AnimationObject,
   AnimationValue,
