@@ -79,13 +79,14 @@ See [`Direction`](/reference/direction) for setting the writing direction of a s
 
 ## Pseudo-state props
 
-Style bags applied when a pseudo-class or ARIA state is true. Eleven states are exposed.
+Style bags applied when a pseudo-class or ARIA state is true. Fourteen states are exposed.
 
 <CodeBlock lang="ts" code={`import { PSEUDO_STATE_PROP_NAMES } from '@usemotif/core';
 
 PSEUDO_STATE_PROP_NAMES;
 // ['_hover', '_focus', '_active', '_disabled', '_checked', '_selected', '_expanded',
-//  '_invalid', '_pressed', '_focusWithin', '_readOnly'] as const`} />
+//  '_invalid', '_pressed', '_focusWithin', '_readOnly',
+//  '_groupHover', '_groupFocus', '_groupActive'] as const`} />
 
 | Prop | Pseudo |
 | --- | --- |
@@ -100,6 +101,9 @@ PSEUDO_STATE_PROP_NAMES;
 | `_pressed` | `[aria-pressed="true"]` (a toggle button that is on) |
 | `_focusWithin` | `:focus-within` (focus is on the element or inside it) |
 | `_readOnly` | `[readonly]`, `[aria-readonly="true"]` |
+| `_groupHover` | an ancestor Box with `group` is hovered |
+| `_groupFocus` | an ancestor Box with `group` has `:focus-visible` |
+| `_groupActive` | an ancestor Box with `group` is `:active` |
 
 On web, the runtime emits one CSS rule per unique pseudo-state bag, hashed into a class. On
 native, the bags drive `Pressable`'s state callbacks. `_checked` / `_selected` / `_expanded` cover
@@ -111,6 +115,24 @@ Two of the newer states read attributes on purpose. `_invalid` is `[aria-invalid
 the `readonly` attribute rather than `:read-only`, which matches every element that is not
 editable. `_pressed` is a toggle's on state; a pointer held down is `_active`. On native, Box
 ignores these four, as it does `_checked`, `_selected` and `_expanded`.
+
+### Group states
+
+Set `group` on a Box and its descendants can react to its state. The group renders a
+`data-motif-group` attribute, and `_groupHover` and its peers key on it:
+
+<CodeBlock lang="tsx" code={`<Box group p="$4" borderRadius="$lg" bg="$colors.surface.raised">
+  <Text>Release notes</Text>
+  <Text color="$colors.text.muted" _groupHover={{ color: '$colors.action.primary.bg' }}>
+    Read more
+  </Text>
+</Box>
+// [data-motif-group]:hover .m-x { color: var(--colors-action-primary-bg); }`} />
+
+Any marked ancestor counts, so in nested groups the state of an outer group reaches an inner
+child too. The group states are web-only for now: React Native ignores `group` and the three
+props. The compiler extracts a child's group states, and leaves a `group` Box in place so its
+marker attribute is rendered.
 
 ### Responsive values inside a state
 
