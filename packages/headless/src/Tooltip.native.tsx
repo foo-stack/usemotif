@@ -116,4 +116,20 @@ function Content({ children, style }: TooltipContentProps): ReactElement | null 
  * server graph, where each one is already a client reference. Internal: the
  * barrel re-exports by name and does not list these.
  */
-export { Root as TooltipRoot, Trigger as TooltipTrigger, Content as TooltipContent };
+export interface TooltipProviderProps {
+  /** Web only: how long after one tooltip closes the next opens at once.
+   * Native tooltips open on press, so the group has no delay to skip. */
+  skipDelayDuration?: number;
+  children?: ReactNode;
+}
+/** Accepted for shared code; native tooltips open on press with no delay. */
+function Provider({ children }: TooltipProviderProps): ReactElement {
+  return <>{children}</>;
+}
+
+export {
+  Provider as TooltipProvider,
+  Root as TooltipRoot,
+  Trigger as TooltipTrigger,
+  Content as TooltipContent,
+};

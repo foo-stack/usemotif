@@ -232,3 +232,72 @@ describe('Tooltip - exit transition (exitDurationMs > 0)', () => {
     expect(document.querySelector('[role="tooltip"]')).toBeNull();
   });
 });
+
+describe('Tooltip.Provider - delay group', () => {
+  function renderGroup(withProvider: boolean): HTMLElement[] {
+    const tips = (
+      <>
+        {['a', 'b'].map((id) => (
+          <Tooltip.Root key={id} openDelay={500} closeDelay={200}>
+            <Tooltip.Trigger>
+              <button type="button" data-id={id}>
+                {id}
+              </button>
+            </Tooltip.Trigger>
+            <Tooltip.Content>{`tip ${id}`}</Tooltip.Content>
+          </Tooltip.Root>
+        ))}
+      </>
+    );
+    render(
+      withProvider ? <Tooltip.Provider skipDelayDuration={300}>{tips}</Tooltip.Provider> : tips,
+    );
+    return Array.from(container.querySelectorAll<HTMLElement>('button'));
+  }
+  function shown(): string[] {
+    return Array.from(document.body.querySelectorAll('[role="tooltip"]')).map(
+      (t) => t.textContent ?? '',
+    );
+  }
+  function tick(ms: number): void {
+    act(() => {
+      vi.advanceTimersByTime(ms);
+    });
+  }
+
+  it('opens a neighbour at once and hides the first, while the group is warm', () => {
+    const [a, b] = renderGroup(true);
+    fire(a!, 'mouseenter');
+    tick(500);
+    expect(shown()).toEqual(['tip a']);
+    fire(a!, 'mouseleave');
+    fire(b!, 'mouseenter');
+    expect(shown()).toEqual(['tip b']);
+  });
+
+  it('waits the full delay again once the group has cooled', () => {
+    const [a, b] = renderGroup(true);
+    fire(a!, 'mouseenter');
+    tick(500);
+    fire(a!, 'mouseleave');
+    tick(200); // closes; the group starts cooling once the close has rendered
+    tick(300);
+    expect(shown()).toEqual([]);
+    fire(b!, 'mouseenter');
+    tick(499);
+    expect(shown()).toEqual([]);
+    tick(1);
+    expect(shown()).toEqual(['tip b']);
+  });
+
+  it('keeps every tooltip on its own delay without a Provider', () => {
+    const [a, b] = renderGroup(false);
+    fire(a!, 'mouseenter');
+    tick(500);
+    fire(a!, 'mouseleave');
+    fire(b!, 'mouseenter');
+    expect(shown()).toEqual(['tip a']);
+    tick(500);
+    expect(shown()).toEqual(['tip b']);
+  });
+});
