@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { resolveAnimationToken, resolveValue } from '@usemotif/core';
-import { darkTheme, lightTheme } from './themes.js';
+import { resolveAnimationToken, resolveValue, type Theme } from '@usemotif/core';
+import { darkTheme, highContrastDarkTheme, highContrastLightTheme, lightTheme } from './themes.js';
 
 /**
  * The default themes must carry every scale the core style props
@@ -85,5 +85,60 @@ describe('default themes - action.neutral', () => {
     expect(resolveValue('$colors.action.neutral.fg', lightTheme)).toBe('#18181b');
     expect(resolveValue('$colors.action.neutral.bg', darkTheme)).toBe('#27272a');
     expect(resolveValue('$colors.action.neutral.fg', darkTheme)).toBe('#fafafa');
+  });
+});
+
+/** WCAG 2 relative luminance of a `#rrggbb` colour. */
+function luminance(hex: string): number {
+  const channel = (i: number): number => {
+    const c = Number.parseInt(hex.slice(i, i + 2), 16) / 255;
+    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  };
+  return 0.2126 * channel(1) + 0.7152 * channel(3) + 0.0722 * channel(5);
+}
+
+function contrast(theme: Theme, a: string, b: string): number {
+  const la = luminance(String(resolveValue(`$colors.${a}`, theme)));
+  const lb = luminance(String(resolveValue(`$colors.${b}`, theme)));
+  return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
+}
+
+/** Every pair a high-contrast theme promises, with the ratio it must reach. */
+function contrastPairs(): [string, string, number][] {
+  const pairs: [string, string, number][] = [];
+  const surfaces = ['base', 'muted', 'raised', 'sunken', 'interactive'];
+  for (const text of ['default', 'muted', 'subtle']) {
+    for (const surface of surfaces) pairs.push([`text.${text}`, `surface.${surface}`, 7]);
+  }
+  pairs.push(['text.inverse', 'surface.inverse', 7]);
+  for (const action of ['primary', 'danger', 'success', 'neutral']) {
+    pairs.push([`action.${action}.fg`, `action.${action}.bg`, 7]);
+    pairs.push([`action.${action}.fg`, `action.${action}.hover`, 7]);
+  }
+  for (const status of ['neutral', 'info', 'success', 'warning', 'danger']) {
+    pairs.push([`status.${status}.fg`, `status.${status}.tint`, 7]);
+    pairs.push([`status.${status}.border`, `status.${status}.tint`, 3]);
+  }
+  for (const border of ['default', 'muted', 'strong']) {
+    for (const surface of surfaces.slice(0, 4))
+      pairs.push([`border.${border}`, `surface.${surface}`, 3]);
+  }
+  return pairs;
+}
+
+describe('high-contrast themes', () => {
+  for (const theme of [highContrastLightTheme, highContrastDarkTheme]) {
+    describe(theme.name, () => {
+      for (const [fg, bg, min] of contrastPairs()) {
+        it(`${fg} on ${bg} reaches ${min}:1`, () => {
+          expect(contrast(theme, fg, bg)).toBeGreaterThanOrEqual(min);
+        });
+      }
+    });
+  }
+
+  it('the check fails a low-contrast pair', () => {
+    // The default light theme's subtle text is gray.500 on white: about 4.8:1.
+    expect(contrast(lightTheme, 'text.subtle', 'surface.base')).toBeLessThan(7);
   });
 });

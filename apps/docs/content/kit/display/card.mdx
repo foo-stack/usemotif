@@ -1,0 +1,102 @@
+---
+title: Card
+description: A themed surface container with elevation and padding variants, and every Box style prop available at the call site.
+diataxis: reference
+covers: ['Card']
+last_verified: 2026-10-14
+---
+
+import {
+  ApiSignature,
+  ArticleMeta,
+  Callout,
+  CodeBlock,
+  Eyebrow,
+  Lede,
+} from '../../../components/index.js';
+
+<Eyebrow>UI kit / Display</Eyebrow>
+
+# Card
+
+<Lede>
+  Card is a raised-surface container: a rounded, bordered column on the theme's `surface.raised`
+  colour. Pick an `elevation` and a `padding` and put your content inside.
+</Lede>
+
+<ArticleMeta />
+
+## What it is
+
+`Card` is `styled(Box, cardRecipe)`: the `cardRecipe` from `@usemotif/recipes` applied to a
+`Box`. It is a flex column, so its children stack vertically.
+
+`flat` draws a stronger border with no shadow; `raised` adds a soft box-shadow.
+
+Because it is a styled `Box`, it accepts every `Box` style prop alongside its variants, so you can
+set `gap`, a width, or a different background at the call site.
+
+## Install
+
+<CodeBlock lang="bash" code={`yarn add @usemotif/ui`} />
+
+<CodeBlock lang="tsx" code={`import { Card } from '@usemotif/ui';`} />
+
+## Usage
+
+<CodeBlock lang="tsx" code={`import { Card } from '@usemotif/ui';
+import { Paragraph, Text } from 'usemotif';
+
+<Card elevation="raised" padding="lg" gap="$space.2">
+  <Text fontWeight="$fontWeights.semibold">Team plan</Text>
+  <Paragraph>Unlimited projects and shared billing.</Paragraph>
+</Card>`} />
+
+Edge-to-edge content, such as an image, with padding on an inner box:
+
+<CodeBlock lang="tsx" code={`import { Card } from '@usemotif/ui';
+import { Box, Image, Text } from 'usemotif';
+
+<Card padding="none" overflow="hidden">
+  <Image src="/cover.jpg" alt="" width="100%" height={160} />
+  <Box p="$space.4">
+    <Text>Release notes</Text>
+  </Box>
+</Card>`} />
+
+## API
+
+<ApiSignature
+  name="Card"
+  status="stable"
+  signature={`const Card = styled(Box, cardRecipe)`}
+  params={[
+    {
+      name: 'elevation',
+      type: "'flat' | 'raised'",
+      default: "'flat'",
+      description: '`flat` draws a stronger border; `raised` adds a soft box-shadow.',
+    },
+    {
+      name: 'padding',
+      type: "'none' | 'sm' | 'md' | 'lg'",
+      default: "'md'",
+      description: 'Inner padding from the space scale: `none` is 0, then `3`, `4`, and `6`.',
+    },
+    {
+      name: 'children',
+      type: 'ReactNode',
+      description: 'The card content, stacked as a flex column.',
+    },
+    {
+      name: '...BoxProps',
+      type: 'BoxProps',
+      description: 'Every `Box` prop, including the style props.',
+    },
+  ]}
+/>
+
+<Callout variant="info" title="Related">
+  [Component recipes](/recipes/component-recipes) - `cardRecipe`, for building your own card over a
+  different base.
+</Callout>

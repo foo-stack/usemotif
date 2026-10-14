@@ -18,3 +18,7 @@ export { buttonRecipe } from './button.js';
 export { cardRecipe } from './card.js';
 export { badgeRecipe } from './badge.js';
 export { inputRecipe } from './input.js';
+export { alertRecipe } from './alert.js';
+export { bannerRecipe } from './banner.js';
+export { chipRecipe } from './chip.js';
+export { statRecipe, statDeltaRecipe } from './stat.js';

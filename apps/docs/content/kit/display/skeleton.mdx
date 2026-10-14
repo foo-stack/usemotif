@@ -1,0 +1,101 @@
+---
+title: Skeleton
+description: A themed loading placeholder - a muted block that pulses, rectangular or circular. Hidden from assistive tech.
+diataxis: reference
+covers: ['Skeleton', 'SkeletonProps']
+last_verified: 2026-10-14
+---
+
+import {
+  ApiSignature,
+  ArticleMeta,
+  Callout,
+  CodeBlock,
+  Eyebrow,
+  Lede,
+} from '../../../components/index.js';
+
+<Eyebrow>UI kit / Display</Eyebrow>
+
+# Skeleton
+
+<Lede>
+  Skeleton holds the place of content that is still loading. Size it like the content it stands in
+  for, and the layout stays still when the real content arrives.
+</Lede>
+
+<ArticleMeta />
+
+## What it is
+
+A `Box` filled with the theme's `surface.muted` colour, with rounded corners and a gentle pulse.
+Set `circle` for a fully rounded placeholder whose height tracks its width, such as an avatar.
+
+Skeleton is decorative and renders with `aria-hidden`. Announce the loading state some other way,
+for example with `aria-busy` on the region that is loading. The pulse runs through motif's
+reduced-motion guard, so it stops under `prefers-reduced-motion`.
+
+## Install
+
+<CodeBlock lang="bash" code={`yarn add @usemotif/ui`} />
+
+<CodeBlock lang="tsx" code={`import { Skeleton } from '@usemotif/ui';`} />
+
+## Usage
+
+<CodeBlock lang="tsx" code={`import { Skeleton } from '@usemotif/ui';
+
+<Skeleton width={240} height={20} />
+<Skeleton circle width={40} />`} />
+
+A loading row in the shape of a profile:
+
+<CodeBlock lang="tsx" code={`import { Skeleton } from '@usemotif/ui';
+import { HStack, VStack } from 'usemotif';
+
+<HStack gap="$space.3" alignItems="center" aria-busy>
+  <Skeleton circle width={40} />
+  <VStack gap="$space.2" flex={1}>
+    <Skeleton width="40%" height={14} />
+    <Skeleton width="70%" height={12} />
+  </VStack>
+</HStack>`} />
+
+## API
+
+<ApiSignature
+  name="Skeleton"
+  status="stable"
+  signature={`function Skeleton(props: SkeletonProps): JSX.Element`}
+  params={[
+    {
+      name: 'width',
+      type: 'number | string',
+      default: "'100%'",
+      description: 'Width. A number is pixels.',
+    },
+    {
+      name: 'height',
+      type: 'number | string',
+      default: '16',
+      description: 'Height. A number is pixels. Ignored when `circle` is set.',
+    },
+    {
+      name: 'circle',
+      type: 'boolean',
+      default: 'false',
+      description:
+        'Render a circle: the height follows the width and the corners are fully rounded.',
+    },
+    {
+      name: '...BoxProps',
+      type: "Omit<BoxProps, 'children' | 'width' | 'height'>",
+      description: 'Any other `Box` prop, spread last, so it can override the defaults.',
+    },
+  ]}
+/>
+
+<Callout variant="info" title="Related">
+  [Spinner](/kit/display/spinner) when there is no layout to hold, and
+  [Progress](/kit/display/progress) when you know how far along the work is.
+</Callout>

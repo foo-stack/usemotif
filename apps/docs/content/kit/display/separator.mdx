@@ -1,0 +1,83 @@
+---
+title: Separator
+description: A themed hairline with role="separator", horizontal or vertical, drawn from the border.default token.
+diataxis: reference
+covers: ['Separator', 'SeparatorProps']
+last_verified: 2026-10-14
+---
+
+import {
+  ApiSignature,
+  ArticleMeta,
+  Callout,
+  CodeBlock,
+  Eyebrow,
+  Lede,
+} from '../../../components/index.js';
+
+<Eyebrow>UI kit / Display</Eyebrow>
+
+# Separator
+
+<Lede>
+  Separator draws a one-pixel line between groups of content, in the theme's `border.default`
+  colour, and tells assistive tech that it is a divider.
+</Lede>
+
+<ArticleMeta />
+
+## What it is
+
+A `Box` with `role="separator"` and a matching `aria-orientation`. Horizontal, it spans the full
+width at a height of one pixel. Vertical, it is one pixel wide and stretches to the height of its
+parent, so place it inside a flex row.
+
+## Install
+
+<CodeBlock lang="bash" code={`yarn add @usemotif/ui`} />
+
+<CodeBlock lang="tsx" code={`import { Separator } from '@usemotif/ui';`} />
+
+## Usage
+
+<CodeBlock lang="tsx" code={`import { Separator } from '@usemotif/ui';
+import { Text, VStack } from 'usemotif';
+
+<VStack gap="$space.3">
+  <Text>Account</Text>
+  <Separator />
+  <Text>Billing</Text>
+</VStack>`} />
+
+Vertical, between items in a row:
+
+<CodeBlock lang="tsx" code={`import { Separator } from '@usemotif/ui';
+import { HStack, Text } from 'usemotif';
+
+<HStack gap="$space.3">
+  <Text>Docs</Text>
+  <Separator orientation="vertical" />
+  <Text>Blog</Text>
+</HStack>`} />
+
+## API
+
+<ApiSignature
+  name="Separator"
+  status="stable"
+  signature={`function Separator(props: SeparatorProps): JSX.Element`}
+  params={[
+    {
+      name: 'orientation',
+      type: "'horizontal' | 'vertical'",
+      default: "'horizontal'",
+      description:
+        '`horizontal` is a full-width hairline; `vertical` stretches to the parent height inside a flex row.',
+    },
+  ]}
+/>
+
+<Callout variant="info" title="Related">
+  [Toolbar](/headless/navigation/toolbar) for grouping controls in a row, where a vertical Separator
+  often splits the groups.
+</Callout>

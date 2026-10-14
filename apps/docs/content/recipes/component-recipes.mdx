@@ -1,9 +1,9 @@
 ---
 title: Component recipes
-description: Ready-made styled() configs - themed, variant-driven Button, Card, Badge, and Input recipes you drop onto any primitive. Plain data, zero runtime, fully overridable.
+description: Ready-made styled() configs - themed, variant-driven Button, Card, Badge, Input, Alert, Banner, Chip, and Stat recipes you drop onto any primitive. Plain data, zero runtime, fully overridable.
 diataxis: how-to
-covers: ['buttonRecipe', 'cardRecipe', 'badgeRecipe', 'inputRecipe']
-last_verified: 2026-06-22
+covers: ['buttonRecipe', 'cardRecipe', 'badgeRecipe', 'inputRecipe', 'alertRecipe', 'bannerRecipe', 'chipRecipe', 'statRecipe', 'statDeltaRecipe']
+last_verified: 2026-10-14
 ---
 
 import { ArticleMeta, Callout, CodeBlock, Eyebrow, Lede } from '../../components/index.js';
@@ -14,8 +14,9 @@ import { ArticleMeta, Callout, CodeBlock, Eyebrow, Lede } from '../../components
 
 <Lede>
   `@usemotif/recipes` ships the variant configs for the components you build on every project -
-  Button, Card, Badge, Input - as plain `styled()` data. Pass one to `styled()` over any primitive
-  and you have a themed, variant-driven component. No new runtime, no opinion you can't override.
+  Button, Card, Badge, Input - and for the kit's display components - Alert, Banner, Chip, Stat - as
+  plain `styled()` data. Pass one to `styled()` over any primitive and you have a themed,
+  variant-driven component. No new runtime, no opinion you can't override.
 </Lede>
 
 <ArticleMeta />
@@ -30,10 +31,10 @@ any style prop you pass at the call site still wins over the recipe.
 
 <Callout variant="info" title="Interaction can live in the recipe - or at the call site">
   A `styled()` layer carries pseudo-states (`_hover`, `_focus`, ...) and motion (`transition`,
-  `enterStyle`) alongside static styles, so a recipe can bake in its own hover, focus ring, or
-  press feedback - the Button recipe below does. Call-site props still win, and pseudo bags
-  deep-merge, so a one-off `_hover` _extends_ the recipe's rather than replacing it. The
-  `@usemotif/ui` kit goes further, wrapping these recipes into install-and-go components.
+  `enterStyle`) alongside static styles, so a recipe can bake in its own hover, focus ring, or press
+  feedback - the Button recipe below does. Call-site props still win, and pseudo bags deep-merge, so
+  a one-off `_hover` _extends_ the recipe's rather than replacing it. The `@usemotif/ui` kit goes
+  further, wrapping these recipes into install-and-go components.
 </Callout>
 
 ## Button
@@ -46,10 +47,14 @@ import { buttonRecipe } from '@usemotif/recipes';
 const Button = styled(Pressable, buttonRecipe);
 
 // themed + sized + hover/press feedback out of the box
-<Button intent="primary" size="lg">Save</Button>
+
+<Button intent="primary" size="lg">
+  Save
+</Button>
 <Button intent="ghost">Cancel</Button>
 
-// the recipe's hover is built in; a call-site _hover extends it (deep-merge)
+// the recipe's hover is built in; a call-site \_hover extends it (deep-merge)
+
 <Button intent="primary" _hover={{ outline: '2px solid' }}>
   Save
 </Button>`} />
@@ -93,8 +98,68 @@ const TextField = styled(Input, inputRecipe);
 <TextField invalid={hasError} aria-invalid={hasError} />
 
 // focus ring at the call site
+
 <TextField _focus={{ borderColor: '$colors.action.primary.bg' }}
            transition="border-color 150ms ease" />`} />
+
+## Alert
+
+A message box tinted by `intent` (`neutral` · `info` · `success` · `warning` · `danger`), with the
+surface, border, and text colours all drawn from the semantic `status` tokens.
+
+<CodeBlock lang="tsx" code={`import { styled, Box } from 'usemotif';
+import { alertRecipe } from '@usemotif/recipes';
+
+const Alert = styled(Box, alertRecipe);
+
+<Alert intent="danger" role="alert">
+  Payment failed. Update your card and try again.
+</Alert>`} />
+
+## Banner
+
+A full-width notice strip with the same `intent` scale as Alert and a bottom rule in the intent's
+border colour.
+
+<CodeBlock lang="tsx" code={`import { styled, Box } from 'usemotif';
+import { bannerRecipe } from '@usemotif/recipes';
+
+const Banner = styled(Box, bannerRecipe);
+
+<Banner intent="info" role="status">Maintenance on Sunday from 02:00 UTC.</Banner>`} />
+
+## Chip
+
+A compact pill - `intent` (`neutral` · `primary`), plus two boolean variants that tighten the
+padding: `withIcon` on the leading edge for an icon, `removable` on the trailing edge for a remove
+button.
+
+<CodeBlock lang="tsx" code={`import { styled, Box } from 'usemotif';
+import { chipRecipe } from '@usemotif/recipes';
+
+const Chip = styled(Box, chipRecipe);
+
+<Chip intent="primary">design</Chip>
+<Chip withIcon removable>
+  <TagIcon /> filter <RemoveButton />
+</Chip>`} />
+
+## Stat
+
+Two recipes: `statRecipe` stacks a figure's label, value, and help text in a column, and
+`statDeltaRecipe` colours the change figure by `trend` (`up` · `down` · `neutral`).
+
+<CodeBlock lang="tsx" code={`import { styled, Box, Text } from 'usemotif';
+import { statDeltaRecipe, statRecipe } from '@usemotif/recipes';
+
+const Stat = styled(Box, statRecipe);
+const Delta = styled(Text, statDeltaRecipe);
+
+<Stat>
+  <Text>Revenue</Text>
+  <Text fontSize="$fontSizes.xl">$48,200</Text>
+  <Delta trend="up">↑ 12%</Delta>
+</Stat>`} />
 
 ## Extending a recipe
 
@@ -104,11 +169,11 @@ forking:
 <CodeBlock lang="tsx" code={`import { buttonRecipe } from '@usemotif/recipes';
 
 const Button = styled(Pressable, {
-  ...buttonRecipe,
-  base: { ...buttonRecipe.base, borderRadius: '$radii.full' }, // pill buttons
+...buttonRecipe,
+base: { ...buttonRecipe.base, borderRadius: '$radii.full' }, // pill buttons
 });`} />
 
 <Callout variant="info" title="Where to next">
-  [styled()](/reference/styled) is the full variant API these configs use.
-  [Build a design system](/recipes/design-system-from-scratch) goes from tokens to a component set.
+  [styled()](/reference/styled) is the full variant API these configs use. [Build a design
+  system](/recipes/design-system-from-scratch) goes from tokens to a component set.
 </Callout>

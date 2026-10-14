@@ -1,0 +1,204 @@
+---
+title: Menu
+description: A themed dropdown menu over the headless Menu - role="menu" with arrow-key navigation that skips disabled items, and Escape or click-outside dismissal.
+diataxis: reference
+covers: ['Menu', 'MenuItemPropsThemed']
+last_verified: 2026-10-14
+---
+
+import {
+  ApiSignature,
+  ArticleMeta,
+  Callout,
+  CodeBlock,
+  Eyebrow,
+  Lede,
+} from '../../../components/index.js';
+
+<Eyebrow>UI kit / Overlay</Eyebrow>
+
+# Menu
+
+<Lede>
+  Menu opens a list of actions under a button: rename, duplicate, archive. Choosing an item runs its
+  `onSelect`, closes the menu, and returns focus to the trigger.
+</Lede>
+
+<ArticleMeta />
+
+## What it is
+
+The headless [Menu](/headless/menu/menu) with a themed panel and rows. The trigger gets
+`aria-haspopup="menu"` and `aria-expanded`, and opens on click or on ArrowDown, Enter, or Space.
+When it opens, focus moves to the first enabled item. ArrowDown and ArrowUp move between enabled
+items and wrap, Home and End jump to the ends, Enter or Space activates, and Escape or a click
+outside closes the menu.
+
+The kit panel is a `surface.raised` card at least 180px wide with a `border.default` border. Each
+item is the focusable element itself, so it takes `surface.interactive` on both hover and keyboard
+focus. A disabled item renders in `text.muted`.
+
+## Install
+
+<CodeBlock lang="bash" code={`yarn add @usemotif/ui`} />
+
+<CodeBlock lang="tsx" code={`import { Menu } from '@usemotif/ui';`} />
+
+## Anatomy
+
+<CodeBlock lang="tsx" code={`<Menu.Root>
+  <Menu.Trigger>
+    <Button>Actions</Button>
+  </Menu.Trigger>
+  <Menu.Content>
+    <Menu.Item>Item</Menu.Item>
+    <Menu.Separator />
+    <Menu.Item>Item</Menu.Item>
+  </Menu.Content>
+</Menu.Root>`} />
+
+## Usage
+
+<CodeBlock lang="tsx" code={`import { Menu } from '@usemotif/ui';
+import { Button } from 'usemotif';
+
+<Menu.Root>
+  <Menu.Trigger>
+    <Button variant="outline">Actions</Button>
+  </Menu.Trigger>
+  <Menu.Content>
+    <Menu.Item onSelect={rename}>Rename</Menu.Item>
+    <Menu.Item onSelect={duplicate}>Duplicate</Menu.Item>
+    <Menu.Separator />
+    <Menu.Item disabled>Archive</Menu.Item>
+  </Menu.Content>
+</Menu.Root>`} />
+
+## API
+
+### Menu.Root
+
+The headless `Menu.Root`.
+
+<ApiSignature
+  name="Menu.Root"
+  status="stable"
+  signature={`function Menu.Root(props: MenuRootProps): JSX.Element`}
+  params={[
+    {
+      name: 'open',
+      type: 'boolean',
+      description: 'Controlled open state. Pass alongside `onOpenChange`.',
+    },
+    {
+      name: 'defaultOpen',
+      type: 'boolean',
+      default: 'false',
+      description: 'Initial open state when uncontrolled.',
+    },
+    {
+      name: 'onOpenChange',
+      type: '(open: boolean) => void',
+      description: 'Called when the open state changes.',
+    },
+    {
+      name: 'children',
+      type: 'ReactNode',
+      description: 'The Trigger and Content parts.',
+    },
+  ]}
+/>
+
+### Menu.Trigger
+
+The headless `Menu.Trigger`.
+
+<ApiSignature
+  name="Menu.Trigger"
+  status="stable"
+  signature={`function Menu.Trigger(props: MenuTriggerProps): JSX.Element`}
+  params={[
+    {
+      name: 'children',
+      type: 'ReactElement',
+      required: true,
+      description: 'A single element. It is cloned to add the click and key handlers and the ARIA state.',
+    },
+  ]}
+/>
+
+### Menu.Content
+
+<ApiSignature
+  name="Menu.Content"
+  status="stable"
+  signature={`function Menu.Content(props: MenuContentProps): JSX.Element | null`}
+  params={[
+    {
+      name: 'placement',
+      type: "'top' | 'bottom' | 'left' | 'right'",
+      default: "'bottom'",
+      description: 'Which side of the trigger the panel opens on.',
+    },
+    {
+      name: 'offset',
+      type: 'number',
+      default: '8',
+      description: 'Gap between the trigger and the panel, in pixels.',
+    },
+    {
+      name: 'style',
+      type: 'CSSProperties',
+      description: 'Inline style for the `role="menu"` wrapper around the themed panel.',
+    },
+    {
+      name: 'children',
+      type: 'ReactNode',
+      description: 'Items and separators.',
+    },
+  ]}
+/>
+
+### Menu.Item
+
+<ApiSignature
+  name="Menu.Item"
+  status="stable"
+  signature={`function Menu.Item(props: MenuItemPropsThemed): JSX.Element`}
+  params={[
+    {
+      name: 'onSelect',
+      type: '() => void',
+      description: 'Called when the item is clicked or activated with Enter or Space.',
+    },
+    {
+      name: 'disabled',
+      type: 'boolean',
+      default: 'false',
+      description: 'Skip the item in keyboard navigation and ignore activation. Sets `aria-disabled`.',
+    },
+    {
+      name: 'children',
+      type: 'ReactNode',
+      description: 'The item label.',
+    },
+  ]}
+/>
+
+`MenuItemPropsThemed` is the headless `MenuItemProps` without `style` and `asChild`: the kit
+projects the item semantics onto its own themed row.
+
+### Menu.Separator
+
+<ApiSignature
+  name="Menu.Separator"
+  status="stable"
+  signature={`function Menu.Separator(): JSX.Element`}
+/>
+
+A `role="separator"` hairline in `border.default`. It takes no props.
+
+<Callout variant="info" title="Related">
+  [Menu (headless)](/headless/menu/menu) - the unstyled behaviour.
+  [ContextMenu](/kit/overlay/context-menu) for the same list opened by a right-click.
+</Callout>

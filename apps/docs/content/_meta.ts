@@ -5,6 +5,7 @@ const meta: MetaFile = {
   concepts: 'Concepts',
   components: 'Components',
   headless: 'Headless',
+  kit: 'UI kit',
   guides: 'Guides',
   reference: 'API reference',
   recipes: 'Recipes',

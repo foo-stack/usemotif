@@ -1,0 +1,61 @@
+---
+title: Navigation
+description: The kit's navigation components - tabs, disclosures, trails, page and step indicators, a nav bar, a toolbar, and a tree. Themed, with the keyboard and ARIA wiring from the headless layer.
+diataxis: explanation
+covers:
+  [
+    'Tabs',
+    'Accordion',
+    'Collapsible',
+    'Breadcrumb',
+    'Pagination',
+    'Stepper',
+    'NavigationMenu',
+    'Toolbar',
+    'TreeView',
+  ]
+last_verified: 2026-10-14
+---
+
+import { ArticleMeta, Callout, Eyebrow, Lede } from '../../../components/index.js';
+
+<Eyebrow>UI kit / Navigation</Eyebrow>
+
+# Navigation
+
+<Lede>
+  The components that move people around: between panels, through a hierarchy, across pages, and
+  along a sequence of steps. Each wraps a headless behaviour, so landmarks, `aria-current`, and
+  keyboard navigation come with the theme.
+</Lede>
+
+<ArticleMeta />
+
+## The pieces
+
+| Component                                         | Use it for                                                      |
+| ------------------------------------------------- | --------------------------------------------------------------- |
+| [Tabs](/kit/navigation/tabs)                      | Switching between panels of related content in one place.       |
+| [Accordion](/kit/navigation/accordion)            | A stack of collapsible sections, one or several open at a time. |
+| [Collapsible](/kit/navigation/collapsible)        | A single section that shows and hides behind a header.          |
+| [Breadcrumb](/kit/navigation/breadcrumb)          | The trail from the root to the current page.                    |
+| [Pagination](/kit/navigation/pagination)          | Moving between numbered pages of results.                       |
+| [Stepper](/kit/navigation/stepper)                | Showing progress through a fixed sequence of steps.             |
+| [NavigationMenu](/kit/navigation/navigation-menu) | A top-level bar of site links with the current one marked.      |
+| [Toolbar](/kit/navigation/toolbar)                | A row of controls that arrow keys move focus across.            |
+| [TreeView](/kit/navigation/tree-view)             | A nested, expandable hierarchy such as a file tree.             |
+
+## Namespaces and single components
+
+Tabs, Accordion, and Collapsible are namespaces of parts (`Tabs.Root`, `Tabs.List`, and so on).
+Breadcrumb and NavigationMenu are components with an `Item` part attached, so you render
+`<Breadcrumb>` and nest `<Breadcrumb.Item>` inside. Pagination, Stepper, Toolbar, and TreeView are
+single components that take their content as props or children.
+
+The kit parts accept only the props they document. Where a headless part takes `style` or
+`asChild`, the kit part usually does not, because it projects the headless semantics onto its own
+themed element.
+
+<Callout variant="info" title="Related">
+  [Headless](/headless) - the unstyled behaviours, for navigation you theme yourself.
+</Callout>

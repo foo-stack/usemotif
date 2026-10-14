@@ -12,6 +12,7 @@ import {
   findThemeChainCombos,
   getPrimitiveInfo,
   resolveStyledMergedProps,
+  type BailReason,
   type CallSiteAnalysis,
   type PrimitiveBinding,
   type PrimitiveInfo,
@@ -68,6 +69,31 @@ export interface AggressiveReport {
   readonly mediaErased: number;
 }
 
+/**
+ * One motif element the compiler left to the runtime, and why - emitted via
+ * {@link MotifBabelOptions.onBail} so a build can see what extraction missed.
+ */
+export interface BailEvent {
+  readonly filename?: string | undefined;
+  /** 1-based line of the element's opening tag, when the source has locations. */
+  readonly line?: number | undefined;
+  /** 0-based column of the element's opening tag. */
+  readonly column?: number | undefined;
+  /** The JSX name as written, e.g. `Box` or `Stack`. */
+  readonly element: string;
+  /**
+   * - `dynamic-props`: no style prop is static, so the element's styling is
+   *   left entirely to the runtime resolver (see `props`).
+   * - `has-spread`: a `{...spread}` hides the element's props from the
+   *   compiler, so the element is left to the runtime.
+   * - any {@link BailReason}: the static styles were extracted, but the wrapper
+   *   component stays, because rendering the plain tag would change behaviour.
+   */
+  readonly reason: 'dynamic-props' | BailReason;
+  /** The style props whose values are dynamic, as written at the call site, when any are. */
+  readonly props?: readonly string[] | undefined;
+}
+
 export interface MotifBabelOptions {
   /** `'web'` (default) extracts CSS. `'native'` hoists StyleSheet entries. */
   readonly target?: 'web' | 'native';
@@ -91,6 +117,12 @@ export interface MotifBabelOptions {
    * Skipped in safe mode and when nothing aggressive happened.
    */
   readonly onAggressiveReport?: (report: AggressiveReport) => void;
+  /**
+   * Called for each motif element the compiler leaves to the runtime, in every
+   * optimization level, with where it is and why. Setting it never changes the
+   * output.
+   */
+  readonly onBail?: (event: BailEvent) => void;
   /**
    * Override the breakpoint pixel widths used to build `@media` / `@container`
    * rules and to compute responsive matches. Merges over the defaults (the five
@@ -336,7 +368,16 @@ export default function motifBabelPlugin(_api: ConfigAPI): PluginObj<State> {
         const ternaryEligible =
           aggressive && target === 'web' && hasStaticTernaryCandidate(analysis, path.scope);
 
-        if (analysis.classification === 'dynamic' && !ternaryEligible) return;
+        if (analysis.classification === 'dynamic' && !ternaryEligible) {
+          const dynamicNames = analysis.dynamicProps.map((p) => p.name);
+          reportBail(
+            path,
+            state,
+            dynamicNames.length === 0 && analysis.hasSpread ? 'has-spread' : 'dynamic-props',
+            dynamicNames,
+          );
+          return;
+        }
         if (
           analysis.staticProps.length === 0 &&
           analysis.pseudoStateProps.length === 0 &&
@@ -728,8 +769,41 @@ function rewriteJsxForWeb(
     const safety = analyzeStripSafety(path.node, parentEl, primitive, analysis);
     if (safety.safe) {
       renameJsxElement(path, primitive.defaultTag);
+    } else if (safety.bailReason !== undefined) {
+      const dynamicNames = analysis.dynamicProps.map((p) => p.name);
+      reportBail(
+        path,
+        state,
+        safety.bailReason,
+        dynamicNames.length > 0 ? dynamicNames : undefined,
+      );
     }
   }
+}
+
+function reportBail(
+  path: NodePath<t.JSXOpeningElement>,
+  state: State,
+  reason: BailEvent['reason'],
+  props?: readonly string[],
+): void {
+  const onBail = (state.opts as MotifBabelOptions).onBail;
+  if (typeof onBail !== 'function') return;
+  const start = path.node.loc?.start;
+  onBail({
+    filename: state.filename,
+    line: start?.line,
+    column: start?.column,
+    element: jsxNameText(path.node.name),
+    reason,
+    props,
+  });
+}
+
+function jsxNameText(name: t.JSXOpeningElement['name']): string {
+  if (t.isJSXIdentifier(name)) return name.name;
+  if (t.isJSXNamespacedName(name)) return `${name.namespace.name}:${name.name.name}`;
+  return `${jsxNameText(name.object as t.JSXOpeningElement['name'])}.${name.property.name}`;
 }
 
 /**
@@ -1202,3 +1276,4 @@ function objectKey(k: string): t.Identifier | t.StringLiteral {
 }
 
 export { PACKAGE_NAME };
+export type { BailReason } from '@usemotif/compiler-core';

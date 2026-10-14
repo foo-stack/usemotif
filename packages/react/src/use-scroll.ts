@@ -7,7 +7,40 @@ import {
   type MotionValue,
   type ScrollOffsetPair,
 } from '@usemotif/core';
-import { useEffect, useMemo, useState, type RefObject } from 'react';
+import { useEffect, useMemo, useRef, useState, type RefObject } from 'react';
+
+/**
+ * Handle returned by {@link useScrollTarget}. Same call shape as the
+ * native handle, so `{ ref, onLayout }` can be spread onto the tracked
+ * `<Box>` on either platform. On web the element is measured with
+ * `getBoundingClientRect`, so `onLayout` is explicitly `undefined`.
+ */
+export interface ScrollTargetHandle {
+  /** Spread onto the tracked element. */
+  readonly ref: RefObject<HTMLElement | null>;
+  /** Native-only; `undefined` on web. */
+  readonly onLayout?: undefined;
+}
+
+/**
+ * Create a target handle for {@link useScroll}. Exists so scroll-linked
+ * code written against native compiles and runs unchanged on web; a
+ * plain `useRef` passed as `target` works too.
+ *
+ * @example
+ * ```tsx
+ * const target = useScrollTarget();
+ * const { scrollYProgress } = useScroll({ target });
+ *
+ * <Box ref={target.ref} onLayout={target.onLayout}>tracked</Box>
+ * ```
+ */
+export function useScrollTarget(): ScrollTargetHandle {
+  const ref = useRef<HTMLElement | null>(null);
+  const handleRef = useRef<ScrollTargetHandle | null>(null);
+  if (handleRef.current === null) handleRef.current = { ref };
+  return handleRef.current;
+}
 
 /**
  * Options for {@link useScroll}.
@@ -40,9 +73,10 @@ export interface UseScrollOptions {
    * Ref to the target element whose scroll-relative progress is tracked.
    * When set, `scrollXProgress` / `scrollYProgress` advance `0 → 1`
    * between the two anchors in {@link offset}; `scrollX` / `scrollY`
-   * continue to report raw scroll position.
+   * continue to report raw scroll position. Accepts a plain ref or the
+   * handle from {@link useScrollTarget}.
    */
-  target?: RefObject<HTMLElement | null>;
+  target?: RefObject<HTMLElement | null> | ScrollTargetHandle;
   /**
    * Pair of `<element-edge> <viewport-edge>` anchors. Used only when
    * {@link target} is set. Each anchor maps to a scroll position; the
@@ -116,7 +150,8 @@ const DEFAULT_OFFSET: ScrollOffsetPair = ['start end', 'end start'];
  */
 export function useScroll(options?: UseScrollOptions): UseScrollResult {
   const containerRef = options?.container;
-  const targetRef = options?.target;
+  const target = options?.target;
+  const targetRef = target !== undefined && 'ref' in target ? target.ref : target;
   const rawOffset = options?.offset ?? DEFAULT_OFFSET;
   // Stabilise the offset by value. Callers commonly pass an inline array
   // literal (`offset={['start end', 'end start']}`), a new identity every

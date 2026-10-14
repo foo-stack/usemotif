@@ -23,4 +23,4 @@ export {
   zIndices,
 } from './primitives.js';
 
-export { darkTheme, lightTheme } from './themes.js';
+export { darkTheme, highContrastDarkTheme, highContrastLightTheme, lightTheme } from './themes.js';

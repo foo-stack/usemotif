@@ -1,0 +1,124 @@
+---
+title: Radio
+description: Themed radio buttons - real native inputs, grouped by RadioGroup under one shared name for single selection and arrow-key navigation.
+diataxis: reference
+covers: ['Radio', 'RadioGroup', 'RadioProps', 'RadioGroupProps']
+last_verified: 2026-10-14
+---
+
+import {
+  ApiSignature,
+  ArticleMeta,
+  Callout,
+  CodeBlock,
+  Eyebrow,
+  Lede,
+} from '../../../components/index.js';
+
+<Eyebrow>UI kit / Forms</Eyebrow>
+
+# Radio
+
+<Lede>
+  Radio is a native `<input type="radio">` with a themed ring. Put a set of them inside a
+  `RadioGroup` and they share one `name`, so the browser handles single selection and arrow keys.
+</Lede>
+
+<ArticleMeta />
+
+## What it is
+
+`Radio` is a `Box` rendered as an `<input type="radio">`, an 18px circle with a thin
+`border.strong` border. The native chrome is reset with `appearance: none`. When checked, the
+`_checked` pseudo-state fills the ring with `action.primary` and paints a white centre dot.
+
+`RadioGroup` is a `role="radiogroup"` column with a small gap. Through context it gives each
+`Radio` inside it:
+
+- the group's `name`, or an id generated with `useId` when you leave `name` out
+- `defaultChecked`, on the option whose `value` equals the group's `defaultValue`
+
+Both are defaults only: a `name`, `checked`, or `defaultChecked` you pass on a `Radio` wins.
+Selection stays native, so for controlled selection put `checked` and `onChange` on each `Radio`.
+
+## Install
+
+<CodeBlock lang="bash" code={`yarn add @usemotif/ui`} />
+
+<CodeBlock lang="tsx" code={`import { Radio, RadioGroup } from '@usemotif/ui';`} />
+
+## Usage
+
+<CodeBlock lang="tsx" code={`import { Radio, RadioGroup } from '@usemotif/ui';
+
+<RadioGroup name="plan" defaultValue="pro">
+  <label>
+    <Radio value="free" /> Free
+  </label>
+  <label>
+    <Radio value="pro" /> Pro
+  </label>
+</RadioGroup>`} />
+
+Controlled, one `checked` per option:
+
+<CodeBlock lang="tsx" code={`import { Radio, RadioGroup } from '@usemotif/ui';
+
+<RadioGroup name="size">
+  {['s', 'm', 'l'].map((s) => (
+    <label key={s}>
+      <Radio value={s} checked={size === s} onChange={() => setSize(s)} /> {s.toUpperCase()}
+    </label>
+  ))}
+</RadioGroup>`} />
+
+## API
+
+<ApiSignature
+  name="Radio"
+  status="stable"
+  signature={`function Radio(props: RadioProps): JSX.Element`}
+  params={[
+    {
+      name: 'invalid',
+      type: 'boolean',
+      description: 'Marks the control invalid by setting `aria-invalid`.',
+    },
+    {
+      name: 'style',
+      type: 'CSSProperties',
+      description: "Inline styles, merged over the control's own reset styles.",
+    },
+  ]}
+/>
+
+`RadioProps` also accepts every `InputHTMLAttributes<HTMLInputElement>` attribute except `size`.
+`type` is set to `radio`.
+
+<ApiSignature
+  name="RadioGroup"
+  status="stable"
+  signature={`function RadioGroup(props: RadioGroupProps): JSX.Element`}
+  params={[
+    {
+      name: 'name',
+      type: 'string',
+      description: 'Shared `name` for the radios inside. Generated with `useId` when omitted.',
+    },
+    {
+      name: 'defaultValue',
+      type: 'string',
+      description: 'Value of the option checked on first render.',
+    },
+    {
+      name: 'children',
+      type: 'ReactNode',
+      description: 'The `Radio` options, with any labels around them.',
+    },
+  ]}
+/>
+
+<Callout variant="info" title="Related">
+  [RadioGroup (headless)](/headless/selection/radio-group) - the unstyled group, synchronised
+  through context. [SegmentedControl](/kit/forms/segmented-control) for a compact row of choices.
+</Callout>

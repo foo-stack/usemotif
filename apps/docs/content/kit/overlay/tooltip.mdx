@@ -1,0 +1,158 @@
+---
+title: Tooltip
+description: A themed hint bubble over the headless Tooltip - opens on hover or focus after a delay, describes its trigger through aria-describedby, and re-themes in light and dark.
+diataxis: reference
+covers: ['Tooltip']
+last_verified: 2026-10-14
+---
+
+import {
+  ApiSignature,
+  ArticleMeta,
+  Callout,
+  CodeBlock,
+  Eyebrow,
+  Lede,
+} from '../../../components/index.js';
+
+<Eyebrow>UI kit / Overlay</Eyebrow>
+
+# Tooltip
+
+<Lede>
+  Tooltip shows a short label next to an element on hover or keyboard focus. It describes the
+  element rather than adding to it, so keep the text brief and never put anything interactive
+  inside.
+</Lede>
+
+<ArticleMeta />
+
+## What it is
+
+The headless [Tooltip](/headless/overlay/tooltip) with a themed bubble. The headless layer opens
+the tip after `openDelay`, closes it after `closeDelay`, renders it in a portal with
+`role="tooltip"`, and points the trigger's `aria-describedby` at it.
+
+The kit bubble uses the inverse surface: `surface.inverse` behind `text.inverse`, in the `sm` size,
+up to 240px wide, with `md` radius.
+
+## Install
+
+<CodeBlock lang="bash" code={`yarn add @usemotif/ui`} />
+
+<CodeBlock lang="tsx" code={`import { Tooltip } from '@usemotif/ui';`} />
+
+## Anatomy
+
+<CodeBlock lang="tsx" code={`<Tooltip.Root>
+  <Tooltip.Trigger>
+    <Button>Hover me</Button>
+  </Tooltip.Trigger>
+  <Tooltip.Content>Hint text</Tooltip.Content>
+</Tooltip.Root>`} />
+
+## Usage
+
+<CodeBlock lang="tsx" code={`import { Tooltip } from '@usemotif/ui';
+import { IconButton } from 'usemotif';
+
+<Tooltip.Root placement="top" openDelay={300}>
+  <Tooltip.Trigger>
+    <IconButton aria-label="Copy link">
+      <CopyIcon />
+    </IconButton>
+  </Tooltip.Trigger>
+  <Tooltip.Content>Copy link</Tooltip.Content>
+</Tooltip.Root>`} />
+
+## API
+
+### Tooltip.Root
+
+The headless `Tooltip.Root`. Open state is internal; there is no controlled mode.
+
+<ApiSignature
+  name="Tooltip.Root"
+  status="stable"
+  signature={`function Tooltip.Root(props: TooltipRootProps): JSX.Element`}
+  params={[
+    {
+      name: 'openDelay',
+      type: 'number',
+      default: '500',
+      description: 'Milliseconds of hover or focus before the tip opens.',
+    },
+    {
+      name: 'closeDelay',
+      type: 'number',
+      default: '200',
+      description: 'Milliseconds after the pointer or focus leaves before the tip closes.',
+    },
+    {
+      name: 'placement',
+      type: "'top' | 'bottom' | 'left' | 'right'",
+      default: "'bottom'",
+      description: 'Which side of the trigger the tip opens on.',
+    },
+    {
+      name: 'children',
+      type: 'ReactNode',
+      description: 'The Trigger and Content parts.',
+    },
+  ]}
+/>
+
+### Tooltip.Trigger
+
+The headless `Tooltip.Trigger`.
+
+<ApiSignature
+  name="Tooltip.Trigger"
+  status="stable"
+  signature={`function Tooltip.Trigger(props: TooltipTriggerProps): JSX.Element`}
+  params={[
+    {
+      name: 'children',
+      type: 'ReactElement',
+      required: true,
+      description: 'A single focusable element. It is cloned to add the hover and focus handlers and `aria-describedby`.',
+    },
+  ]}
+/>
+
+### Tooltip.Content
+
+<ApiSignature
+  name="Tooltip.Content"
+  status="stable"
+  signature={`function Tooltip.Content(props: TooltipContentProps): JSX.Element | null`}
+  params={[
+    {
+      name: 'offset',
+      type: 'number',
+      default: '8',
+      description: 'Gap between the trigger and the bubble, in pixels.',
+    },
+    {
+      name: 'exitDurationMs',
+      type: 'number',
+      default: '0',
+      description: 'Keep the tip mounted this long after close, for an exit transition.',
+    },
+    {
+      name: 'style',
+      type: 'CSSProperties',
+      description: 'Inline style merged over the positioning of the wrapper around the themed bubble.',
+    },
+    {
+      name: 'children',
+      type: 'ReactNode',
+      description: 'The hint text.',
+    },
+  ]}
+/>
+
+<Callout variant="info" title="Related">
+  [Tooltip (headless)](/headless/overlay/tooltip) - the unstyled behaviour.
+  [HoverCard](/kit/overlay/hover-card) when the content needs to be interactive.
+</Callout>

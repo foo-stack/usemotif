@@ -38,8 +38,30 @@ function loadStoryIds(): string[] {
 
 const storyIds = loadStoryIds();
 
+const FIXED_NOW = new Date('2026-01-15T12:00:00Z');
+
+// The Image and Avatar stories load placeholder images from placehold.co. Serve
+// saved copies of those responses so a slow or failed fetch cannot change a
+// snapshot, and fail the deliberately broken URL at once instead of waiting
+// on DNS.
+const FIXTURES = resolve(here, 'fixtures');
+const PLACEHOLDERS: Record<string, string> = {
+  '/160x100/3b82f6/white': 'placehold-160x100-img.svg',
+  '/160x160/3b82f6/white': 'placehold-160x160-JD.svg',
+};
+
 for (const id of storyIds) {
   test(id, async ({ page }) => {
+    // Calendar and DatePicker stories (and Calendar's "today" marker) read the
+    // current date, so freeze it: otherwise their snapshots change every day.
+    await page.clock.setFixedTime(FIXED_NOW);
+    await page.route('https://placehold.co/**', (route) => {
+      const file = PLACEHOLDERS[new URL(route.request().url()).pathname];
+      return file === undefined
+        ? route.abort()
+        : route.fulfill({ path: resolve(FIXTURES, file), contentType: 'image/svg+xml' });
+    });
+    await page.route('https://example.invalid/**', (route) => route.abort());
     await page.goto(`/iframe.html?id=${id}&viewMode=story`);
     await page.waitForSelector('#storybook-root', { state: 'attached' });
     // CDN Inter loads async - wait for it so snapshots don't flip between the

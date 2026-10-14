@@ -1,6 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
+import { bannerRecipe } from '@usemotif/recipes';
 import { Box, Text, type BoxProps } from 'usemotif';
 
 export type BannerIntent = 'neutral' | 'info' | 'success' | 'warning' | 'danger';
@@ -44,23 +45,12 @@ export function Banner({
   action,
   onDismiss,
 }: BannerProps) {
-  const tint = `$colors.status.${intent}.tint`;
   const fg = `$colors.status.${intent}.fg`;
-  const border = `$colors.status.${intent}.border`;
   return (
     <Box
       role={intent === 'danger' || intent === 'warning' ? 'alert' : 'status'}
-      display="flex"
-      flexDirection="row"
-      alignItems="center"
-      gap="$space.3"
-      width="100%"
-      px="$space.4"
-      py="$space.3"
-      bg={tint}
-      color={fg}
-      borderBottomWidth="$borderWidths.thin"
-      borderBottomColor={border}
+      {...bannerRecipe.base}
+      {...bannerRecipe.variants.intent[intent]}
     >
       {icon !== undefined ? (
         <Box flexShrink={0} display="inline-flex" alignItems="center">

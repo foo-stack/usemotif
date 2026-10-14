@@ -10,7 +10,7 @@
 import { describe, expect, it } from 'vitest';
 import { act } from 'react';
 import { createRoot } from 'react-dom/client';
-import { createStyledContext, styled } from './index.js';
+import { createStyledContext, styled, useScroll, useScrollTarget } from './index.js';
 
 describe('usemotif - styled surface', () => {
   it('re-exports the styled factory and its context helper', () => {
@@ -46,5 +46,12 @@ describe('usemotif - styled surface', () => {
     const ButtonContext = createStyledContext({ size: 'md' });
     expect(ButtonContext.defaults).toStrictEqual({ size: 'md' });
     expect(ButtonContext.Provider).toBeDefined();
+  });
+});
+
+describe('usemotif - scroll surface', () => {
+  it('re-exports useScrollTarget beside useScroll, matching the native entry', () => {
+    expect(typeof useScroll).toBe('function');
+    expect(typeof useScrollTarget).toBe('function');
   });
 });

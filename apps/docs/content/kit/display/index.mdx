@@ -1,0 +1,68 @@
+---
+title: Display
+description: The kit's presentational components - messages, pills, surfaces, metrics, placeholders, and progress. Themed and ready to render.
+diataxis: explanation
+covers:
+  [
+    'Alert',
+    'Banner',
+    'Badge',
+    'Card',
+    'Chip',
+    'EmptyState',
+    'Stat',
+    'Timeline',
+    'Skeleton',
+    'Spinner',
+    'AvatarGroup',
+    'FormField',
+    'Separator',
+    'Progress',
+  ]
+last_verified: 2026-10-14
+---
+
+import { ArticleMeta, Callout, Eyebrow, Lede } from '../../../components/index.js';
+
+<Eyebrow>UI kit / Display</Eyebrow>
+
+# Display
+
+<Lede>
+  The presentational half of the kit. These components show information - a message, a status, a
+  metric, a loading state - rather than collect it, so most are plain `Box` and `Text` compositions
+  with no headless behaviour underneath.
+</Lede>
+
+<ArticleMeta />
+
+## The pieces
+
+| Component                                | Use it for                                                                     |
+| ---------------------------------------- | ------------------------------------------------------------------------------ |
+| [Alert](/kit/display/alert)              | An intent-tinted message box with a title, body, and optional icon.            |
+| [Banner](/kit/display/banner)            | A full-width announcement bar with an action slot and optional dismiss button. |
+| [Badge](/kit/display/badge)              | A small status pill in four intents and two sizes.                             |
+| [Card](/kit/display/card)                | A surface container with `elevation` and `padding` variants.                   |
+| [Chip](/kit/display/chip)                | A compact tag with an optional icon and remove button.                         |
+| [EmptyState](/kit/display/empty-state)   | A centered zero-data placeholder with an icon, copy, and action.               |
+| [Stat](/kit/display/stat)                | A metric block - label, headline value, and trend-coloured delta.              |
+| [Timeline](/kit/display/timeline)        | A vertical list of events joined by marker dots and a connector line.          |
+| [Skeleton](/kit/display/skeleton)        | A pulsing loading placeholder, rectangular or circular.                        |
+| [Spinner](/kit/display/spinner)          | An indeterminate rotating loading indicator.                                   |
+| [AvatarGroup](/kit/display/avatar-group) | Overlapping avatars with a `+N` overflow circle.                               |
+| [FormField](/kit/display/form-field)     | A label, control, and help or error line with the ARIA wiring done.            |
+| [Separator](/kit/display/separator)      | A horizontal or vertical hairline with `role="separator"`.                     |
+| [Progress](/kit/display/progress)        | A determinate or indeterminate progress bar.                                   |
+
+## Recipe-backed or composed
+
+Card and Badge are `styled(Box, recipe)`: they take the recipe's variant props plus every `Box`
+style prop, so you can adjust spacing or layout at the call site. Alert, Banner, Chip, and Stat
+spread a recipe inside a fixed structure and take only their own props. The rest are composed
+directly from primitives, and Progress wraps the headless `Progress` behaviour.
+
+<Callout variant="info" title="Related">
+  [Component recipes](/recipes/component-recipes) - the styling data behind Card, Badge, Alert,
+  Banner, Chip, and Stat, for when you want to build your own variant of one.
+</Callout>

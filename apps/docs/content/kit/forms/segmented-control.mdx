@@ -1,0 +1,141 @@
+---
+title: SegmentedControl
+description: A themed single-select row of segments - the radiogroup pattern with a roving tab stop and arrow-key navigation, controlled or uncontrolled.
+diataxis: reference
+covers: ['SegmentedControl', 'SegmentedControlProps', 'SegmentedControlOption']
+last_verified: 2026-10-14
+---
+
+import {
+  ApiSignature,
+  ArticleMeta,
+  Callout,
+  CodeBlock,
+  Eyebrow,
+  Lede,
+} from '../../../components/index.js';
+
+<Eyebrow>UI kit / Forms</Eyebrow>
+
+# SegmentedControl
+
+<Lede>
+  SegmentedControl picks one option from a short row of segments, such as a list or grid view. The
+  selected segment lifts out of the track.
+</Lede>
+
+<ArticleMeta />
+
+## What it is
+
+A `role="radiogroup"` container in `surface.muted` holding one `role="radio"` button per option.
+The selected segment takes `surface.raised`, a semibold weight, and a small shadow, and carries
+`aria-checked`.
+
+Only the selected segment is in the tab order. Left and Right arrows move the selection to the
+previous or next enabled option, wrapping at the ends, and move focus with it. Disabled options
+are skipped and render muted.
+
+SegmentedControl has no headless component behind it: the selection and keyboard handling are
+built in. With no `value` or `defaultValue`, the first option starts selected.
+
+## Install
+
+<CodeBlock lang="bash" code={`yarn add @usemotif/ui`} />
+
+<CodeBlock lang="tsx" code={`import { SegmentedControl } from '@usemotif/ui';`} />
+
+## Usage
+
+<CodeBlock lang="tsx" code={`import { SegmentedControl } from '@usemotif/ui';
+
+<SegmentedControl
+  aria-label="View"
+  defaultValue="list"
+  options={[
+    { value: 'list', label: 'List' },
+    { value: 'grid', label: 'Grid' },
+  ]}
+  onValueChange={setView}
+/>`} />
+
+Controlled, with a disabled option:
+
+<CodeBlock lang="tsx" code={`import { SegmentedControl } from '@usemotif/ui';
+
+<SegmentedControl
+  aria-label="Range"
+  value={range}
+  onValueChange={setRange}
+  options={[
+    { value: 'day', label: 'Day' },
+    { value: 'week', label: 'Week' },
+    { value: 'year', label: 'Year', disabled: true },
+  ]}
+/>`} />
+
+## API
+
+<ApiSignature
+  name="SegmentedControl"
+  status="stable"
+  signature={`function SegmentedControl(props: SegmentedControlProps): JSX.Element`}
+  params={[
+    {
+      name: 'options',
+      type: 'ReadonlyArray<SegmentedControlOption>',
+      required: true,
+      description: 'The segments, in order.',
+    },
+    {
+      name: 'value',
+      type: 'string',
+      description: 'Controlled selection. Pass with `onValueChange`.',
+    },
+    {
+      name: 'defaultValue',
+      type: 'string',
+      description: 'Initial selection when uncontrolled. Falls back to the first option.',
+    },
+    {
+      name: 'onValueChange',
+      type: '(value: string) => void',
+      description: 'Called with the value of the segment picked by click or arrow key.',
+    },
+    {
+      name: 'aria-label',
+      type: 'string',
+      description: 'Accessible name for the group.',
+    },
+  ]}
+/>
+
+<ApiSignature
+  name="SegmentedControlOption"
+  status="stable"
+  signature={`interface SegmentedControlOption`}
+  params={[
+    {
+      name: 'value',
+      type: 'string',
+      required: true,
+      description: 'Value reported to `onValueChange`.',
+    },
+    {
+      name: 'label',
+      type: 'ReactNode',
+      required: true,
+      description: 'Segment content.',
+    },
+    {
+      name: 'disabled',
+      type: 'boolean',
+      description: 'Makes the segment unselectable and skips it during arrow-key navigation.',
+    },
+  ]}
+/>
+
+<Callout variant="info" title="Related">
+  [Radio](/kit/forms/radio) for a vertical list of choices. [Select](/kit/forms/select) when there
+  are too many options for one row.
+</Callout>

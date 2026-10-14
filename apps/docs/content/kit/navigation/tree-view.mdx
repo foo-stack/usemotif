@@ -1,0 +1,143 @@
+---
+title: TreeView
+description: A themed tree over the headless TreeView - the ARIA tree pattern with roving focus, arrow-key expand, collapse, and navigation, and single selection, controlled or uncontrolled.
+diataxis: reference
+covers: ['TreeView', 'TreeViewProps', 'TreeNode']
+last_verified: 2026-10-14
+---
+
+import {
+  ApiSignature,
+  ArticleMeta,
+  Callout,
+  CodeBlock,
+  Eyebrow,
+  Lede,
+} from '../../../components/index.js';
+
+<Eyebrow>UI kit / Navigation</Eyebrow>
+
+# TreeView
+
+<Lede>
+  TreeView shows a nested hierarchy, such as files and folders, where each branch expands and
+  collapses and one node at a time is selected.
+</Lede>
+
+<ArticleMeta />
+
+## What it is
+
+The headless [TreeView](/headless/specialized/tree-view) with a themed surface and rows. It
+renders `role="tree"` with a `role="treeitem"` per visible node, carrying `aria-level`,
+`aria-expanded` on branches, `aria-selected`, and `aria-disabled`. The tree is one tab stop.
+ArrowDown and ArrowUp move between visible nodes; ArrowRight expands a collapsed branch; ArrowLeft
+collapses an open branch or moves to the parent; Enter or Space selects. A disabled node cannot be
+selected.
+
+The kit surface is a bordered, `lg`-radius box on `surface.raised`. Each row is indented 16px per
+level and shows a disclosure chevron when the node has children. Clicking a row selects it,
+and clicking its chevron also toggles the branch. The selected row fills with `action.primary` in
+`text.inverse`, and a disabled row renders in `text.muted`.
+
+## Install
+
+<CodeBlock lang="bash" code={`yarn add @usemotif/ui`} />
+
+<CodeBlock lang="tsx" code={`import { TreeView } from '@usemotif/ui';`} />
+
+## Usage
+
+<CodeBlock lang="tsx" code={`import { TreeView, type TreeNode } from '@usemotif/ui';
+
+const files: TreeNode[] = [
+  {
+    id: 'src',
+    label: 'src',
+    children: [
+      { id: 'src/index.ts', label: 'index.ts' },
+      { id: 'src/app.tsx', label: 'app.tsx' },
+    ],
+  },
+  { id: 'package.json', label: 'package.json' },
+];
+
+<TreeView data={files} defaultExpanded={['src']} onValueChange={openFile} aria-label="Files" />`} />
+
+Controlled selection:
+
+<CodeBlock lang="tsx" code={`const [selected, setSelected] = useState<string>();
+
+<TreeView data={files} value={selected} onValueChange={setSelected} aria-label="Files" />`} />
+
+## API
+
+<ApiSignature
+  name="TreeView"
+  status="stable"
+  signature={`function TreeView<T>(props: TreeViewProps<T>): JSX.Element`}
+  params={[
+    {
+      name: 'data',
+      type: 'ReadonlyArray<TreeNode<T>>',
+      required: true,
+      description: 'The root nodes.',
+    },
+    {
+      name: 'value',
+      type: 'string',
+      description: 'Controlled selected node id. Pass alongside `onValueChange`.',
+    },
+    {
+      name: 'defaultValue',
+      type: 'string',
+      description: 'Initially selected node id when uncontrolled.',
+    },
+    {
+      name: 'onValueChange',
+      type: '(next: string) => void',
+      description: 'Called with the id of the newly selected node.',
+    },
+    {
+      name: 'defaultExpanded',
+      type: 'ReadonlyArray<string>',
+      default: '[]',
+      description: 'Ids of the branches that start expanded.',
+    },
+    {
+      name: 'renderNode',
+      type: '(info: { node: TreeNode<T>; depth: number; isExpanded: boolean; isSelected: boolean; isFocused: boolean; toggle: () => void; select: () => void }) => ReactElement',
+      description: 'Replace the themed row. The headless `treeitem` wrapper, focus, and keyboard handling stay in place.',
+    },
+    {
+      name: 'style',
+      type: 'CSSProperties',
+      description: 'Inline style merged over the themed tree surface.',
+    },
+    {
+      name: 'aria-label',
+      type: 'string',
+      description: 'Accessible name for the tree.',
+    },
+  ]}
+/>
+
+### TreeNode
+
+<ApiSignature
+  name="TreeNode"
+  status="stable"
+  signature={`interface TreeNode<T = unknown>`}
+  params={[
+    { name: 'id', type: 'string', required: true, description: 'Unique id, used for selection and expansion.' },
+    { name: 'label', type: 'ReactNode', required: true, description: 'The row content.' },
+    { name: 'children', type: 'ReadonlyArray<TreeNode<T>>', description: 'Child nodes. A node with children is a branch.' },
+    { name: 'disabled', type: 'boolean', description: 'Shown but cannot be selected.' },
+    { name: 'data', type: 'T', description: 'Any payload of your own, available in `renderNode`.' },
+  ]}
+/>
+
+<Callout variant="info" title="Related">
+  [TreeView (headless)](/headless/specialized/tree-view) - the unstyled behaviour.
+  [Accordion](/kit/navigation/accordion) for a flat set of collapsible sections.
+</Callout>

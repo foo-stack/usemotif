@@ -1,0 +1,158 @@
+---
+title: HoverCard
+description: A themed preview card over the headless HoverCard - opens on hover or focus after a delay, stays open while the pointer moves onto it, and can hold interactive content.
+diataxis: reference
+covers: ['HoverCard']
+last_verified: 2026-10-14
+---
+
+import {
+  ApiSignature,
+  ArticleMeta,
+  Callout,
+  CodeBlock,
+  Eyebrow,
+  Lede,
+} from '../../../components/index.js';
+
+<Eyebrow>UI kit / Overlay</Eyebrow>
+
+# HoverCard
+
+<Lede>
+  HoverCard shows a preview when the pointer rests on a link or the link takes focus - a profile, a
+  page summary, a quick action. Unlike a tooltip, the card can hold links and buttons, and it stays
+  open while the pointer or focus moves into it.
+</Lede>
+
+<ArticleMeta />
+
+## What it is
+
+The headless [HoverCard](/headless/overlay/hover-card) with a themed card. The headless layer
+opens the card after `openDelay`, closes it `closeDelay` after the pointer or focus leaves both the
+trigger and the card, and closes it on Escape. The card is a non-modal `role="dialog"`, so give it
+an `aria-label`.
+
+The kit card is a `surface.raised` box, 240px to 360px wide, with a `border.default` border and
+`lg` radius.
+
+## Install
+
+<CodeBlock lang="bash" code={`yarn add @usemotif/ui`} />
+
+<CodeBlock lang="tsx" code={`import { HoverCard } from '@usemotif/ui';`} />
+
+## Anatomy
+
+<CodeBlock lang="tsx" code={`<HoverCard.Root>
+  <HoverCard.Trigger>
+    <a href="/u/jane">@jane</a>
+  </HoverCard.Trigger>
+  <HoverCard.Content aria-label="Preview">Card content</HoverCard.Content>
+</HoverCard.Root>`} />
+
+## Usage
+
+<CodeBlock lang="tsx" code={`import { HoverCard } from '@usemotif/ui';
+
+<HoverCard.Root openDelay={400} placement="top">
+  <HoverCard.Trigger>
+    <a href="/u/jane">@jane</a>
+  </HoverCard.Trigger>
+  <HoverCard.Content aria-label="Jane's profile">
+    <ProfileSummary id="jane" />
+  </HoverCard.Content>
+</HoverCard.Root>`} />
+
+## API
+
+### HoverCard.Root
+
+The headless `HoverCard.Root`. Open state is internal; there is no controlled mode.
+
+<ApiSignature
+  name="HoverCard.Root"
+  status="stable"
+  signature={`function HoverCard.Root(props: HoverCardRootProps): JSX.Element`}
+  params={[
+    {
+      name: 'openDelay',
+      type: 'number',
+      default: '700',
+      description: 'Milliseconds of hover or focus before the card opens.',
+    },
+    {
+      name: 'closeDelay',
+      type: 'number',
+      default: '300',
+      description: 'Milliseconds after the pointer or focus leaves before the card closes.',
+    },
+    {
+      name: 'placement',
+      type: "'top' | 'bottom' | 'left' | 'right'",
+      default: "'bottom'",
+      description: 'Which side of the trigger the card opens on.',
+    },
+    {
+      name: 'children',
+      type: 'ReactNode',
+      description: 'The Trigger and Content parts.',
+    },
+  ]}
+/>
+
+### HoverCard.Trigger
+
+The headless `HoverCard.Trigger`.
+
+<ApiSignature
+  name="HoverCard.Trigger"
+  status="stable"
+  signature={`function HoverCard.Trigger(props: HoverCardTriggerProps): JSX.Element`}
+  params={[
+    {
+      name: 'children',
+      type: 'ReactElement',
+      required: true,
+      description: 'A single focusable element. It is cloned to add the hover and focus handlers and the ARIA state.',
+    },
+  ]}
+/>
+
+### HoverCard.Content
+
+<ApiSignature
+  name="HoverCard.Content"
+  status="stable"
+  signature={`function HoverCard.Content(props: HoverCardContentProps): JSX.Element | null`}
+  params={[
+    {
+      name: 'aria-label',
+      type: 'string',
+      description: 'Accessible name for the card, announced by screen readers.',
+    },
+    {
+      name: 'offset',
+      type: 'number',
+      default: '8',
+      description: 'Gap between the trigger and the card, in pixels.',
+    },
+    {
+      name: 'style',
+      type: 'CSSProperties',
+      description: 'Inline style merged over the positioning of the wrapper around the themed card.',
+    },
+    {
+      name: 'children',
+      type: 'ReactNode',
+      description: 'The card content. It may be interactive.',
+    },
+  ]}
+/>
+
+<Callout variant="info" title="Related">
+  [HoverCard (headless)](/headless/overlay/hover-card) - the unstyled behaviour.
+  [Tooltip](/kit/overlay/tooltip) for a short, non-interactive hint.
+  [Popover](/kit/overlay/popover) for a panel opened by click.
+</Callout>

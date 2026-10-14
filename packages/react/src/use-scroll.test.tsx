@@ -2,7 +2,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, useRef, type ReactNode } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { useScroll } from './use-scroll.js';
+import { useScroll, useScrollTarget } from './use-scroll.js';
+import { Box } from './Box.js';
 import type { MotionValue } from '@usemotif/core';
 
 let container: HTMLElement;
@@ -406,5 +407,76 @@ describe('useScroll - target + offset (window scroll)', () => {
     } finally {
       spy.mockRestore();
     }
+  });
+});
+
+describe('useScrollTarget', () => {
+  function rectAt(top: number): () => DOMRect {
+    return () =>
+      ({
+        x: 0,
+        y: top,
+        width: 1000,
+        height: 400,
+        top,
+        left: 0,
+        bottom: top + 400,
+        right: 1000,
+        toJSON: () => ({}),
+      }) as DOMRect;
+  }
+
+  it('reports the same progress through the handle as through a plain ref', () => {
+    defineWindowGeometry({
+      innerWidth: 1000,
+      innerHeight: 800,
+      scrollWidth: 1000,
+      scrollHeight: 3000,
+    });
+    Object.defineProperty(window, 'scrollX', { value: 0, configurable: true });
+    Object.defineProperty(window, 'scrollY', { value: 600, configurable: true });
+
+    const viaHandle = vi.fn();
+    const viaRef = vi.fn();
+    function Harness(): ReactNode {
+      const target = useScrollTarget();
+      const plain = useRef<HTMLDivElement | null>(null);
+      viaHandle(useScroll({ target }));
+      viaRef(useScroll({ target: plain }));
+      return (
+        <>
+          <Box ref={target.ref} onLayout={target.onLayout} data-testid="handle" />
+          <div ref={plain} data-testid="plain" />
+        </>
+      );
+    }
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      HTMLElement.prototype.getBoundingClientRect = rectAt(200);
+      render(<Harness />);
+      act(() => {
+        window.dispatchEvent(new Event('resize'));
+      });
+      const handleValues = viaHandle.mock.lastCall![0] as Captured;
+      const refValues = viaRef.mock.lastCall![0] as Captured;
+      expect(handleValues.scrollYProgress.get()).toBeGreaterThan(0);
+      expect(handleValues.scrollYProgress.get()).toBe(refValues.scrollYProgress.get());
+      const unknownProp = spy.mock.calls.some((c) => String(c[0]).includes('Unknown'));
+      expect(unknownProp).toBe(false);
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
+  it('returns the same handle on every render', () => {
+    const seen: unknown[] = [];
+    function Harness({ n }: { n: number }): ReactNode {
+      seen.push(useScrollTarget());
+      return <span>{n}</span>;
+    }
+    render(<Harness n={1} />);
+    render(<Harness n={2} />);
+    expect(seen.length).toBe(2);
+    expect(seen[0]).toBe(seen[1]);
   });
 });
