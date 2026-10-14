@@ -57,6 +57,15 @@ describe('forms (web)', () => {
     expect(html).toMatch(/<textarea[^>]*rows="5"/);
   });
 
+  it('TextArea autoResize sizes by content between rows and maxRows', () => {
+    const html = renderToStaticMarkup(<TextArea autoResize rows={2} maxRows={8} />);
+    expect(html).toContain('field-sizing:content');
+    expect(html).toContain('resize:none');
+    expect(html).toContain('min-height:calc(2lh + 18px)');
+    expect(html).toContain('max-height:calc(8lh + 18px)');
+    expect(renderToStaticMarkup(<TextArea />)).toContain('resize:vertical');
+  });
+
   it('NumberInput sets type=number and inputMode=numeric', () => {
     const html = renderToStaticMarkup(<NumberInput />);
     expect(html).toMatch(/type="number"/);

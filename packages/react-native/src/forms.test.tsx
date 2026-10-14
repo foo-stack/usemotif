@@ -3,7 +3,7 @@ import { act, type ReactNode } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { Theme } from '@usemotif/core';
-import { Input } from './forms.js';
+import { Input, TextArea } from './forms.js';
 import { ThemeProvider } from './Theme.js';
 
 const theme: Theme = {
@@ -78,5 +78,43 @@ describe('native Input adornments', () => {
     const texts = Array.from(row.children).map((c) => c.getAttribute('data-motif-host'));
     expect(texts).toEqual(['Text', 'TextInput', 'Text']);
     expect(row.textContent).toBe('$USD');
+  });
+});
+
+describe('native TextArea autoResize', () => {
+  function props(): Record<string, unknown> {
+    const el = container.querySelector('[data-motif-host="TextInput"]')!;
+    const key = Object.keys(el).find((k) => k.startsWith('__reactProps'))!;
+    return (el as unknown as Record<string, Record<string, unknown>>)[key]!;
+  }
+
+  function grow(height: number): void {
+    const handler = props().onContentSizeChange as (e: unknown) => void;
+    act(() =>
+      handler({
+        nativeEvent: { contentSize: { width: 200, height } },
+      }),
+    );
+  }
+
+  it('follows the content height between rows and maxRows, scrolling only when capped', () => {
+    render(<TextArea autoResize rows={2} maxRows={4} />);
+    const el = (): Element => container.querySelector('[data-motif-host="TextInput"]')!;
+    grow(30);
+    expect(styleOf(el()).height).toBe(48);
+    grow(70);
+    expect(styleOf(el()).height).toBe(70);
+    expect(props().scrollEnabled).toBe(false);
+    grow(200);
+    expect(styleOf(el()).height).toBe(96);
+    expect(props().scrollEnabled).toBe(true);
+  });
+
+  it('keeps a fixed height without autoResize', () => {
+    render(<TextArea rows={2} />);
+    grow(200);
+    const el = container.querySelector('[data-motif-host="TextInput"]')!;
+    expect(styleOf(el).height).toBeUndefined();
+    expect(styleOf(el).minHeight).toBe(48);
   });
 });

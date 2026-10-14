@@ -222,20 +222,49 @@ export const Input = /* @__PURE__ */ forwardRef(function Input(
 });
 
 export interface TextAreaProps extends Omit<InputProps, 'multiline' | 'numberOfLines'> {
+  /** Visible lines; with `autoResize`, the height it starts at. Defaults to 3. */
   rows?: number;
+  /** Grow and shrink with the content, from `rows` lines up to `maxRows`. */
+  autoResize?: boolean;
+  /** With `autoResize`, the most lines shown before the text scrolls. */
+  maxRows?: number;
 }
+
+/** The line height the TextArea's row counts are measured in, in px. */
+const LINE = 24;
+
 export const TextArea = /* @__PURE__ */ forwardRef(function TextArea(
-  { rows = 3, style, ...rest }: TextAreaProps,
+  { rows = 3, autoResize = false, maxRows, style, onContentSizeChange, ...rest }: TextAreaProps,
   ref: Ref<RNTextInput>,
 ): ReactElement {
-  const taStyle: TextStyle = { minHeight: rows * 24, textAlignVertical: 'top' };
+  const [content, setContent] = useState(0);
+  const max = maxRows === undefined ? Infinity : maxRows * LINE;
+  const height = autoResize ? Math.min(Math.max(content, rows * LINE), max) : undefined;
+  const taStyle: TextStyle = {
+    minHeight: rows * LINE,
+    textAlignVertical: 'top',
+    ...(height !== undefined ? { height } : {}),
+  };
   const merged: TextStyle | readonly TextStyle[] =
     style === undefined
       ? taStyle
       : Array.isArray(style)
         ? [taStyle, ...(style as TextStyle[])]
         : [taStyle, style as TextStyle];
-  return <Input ref={ref} multiline numberOfLines={rows} style={merged as TextStyle} {...rest} />;
+  return (
+    <Input
+      ref={ref}
+      multiline
+      numberOfLines={rows}
+      style={merged as TextStyle}
+      {...(autoResize ? { scrollEnabled: content > max } : {})}
+      onContentSizeChange={(e) => {
+        if (autoResize) setContent(e.nativeEvent.contentSize.height);
+        onContentSizeChange?.(e);
+      }}
+      {...rest}
+    />
+  );
 });
 
 export interface NumberInputProps extends Omit<InputProps, 'keyboardType'> {
