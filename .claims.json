@@ -310,13 +310,13 @@
         "kind": "artifact",
         "path": "packages/core/package.json",
         "field": "version",
-        "value": "1.5.0",
+        "value": "1.6.0",
         "note": "Every published package versions in lockstep as one fixed group, so any one manifest is authoritative for the number the README quotes."
       },
       "disposition": {
         "action": "rewritten",
         "was": "at `1.0.0`",
-        "now": "which began at `1.0.0` ... and is now at `1.5.0`",
+        "now": "which began at `1.0.0` ... and is now at `1.6.0`",
         "note": "The number is corrected on each release. It went stale between 1.4.0 and 1.5.0 with the gate green, because an answered claim stops being verified. The evidence below is artifact-backed precisely so a check can compare it against the manifests; making the check reach it is tracked separately."
       }
     },
