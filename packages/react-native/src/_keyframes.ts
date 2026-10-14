@@ -1,11 +1,5 @@
-import {
-  classifyOutputRange,
-  interpolateOutputs,
-  isTokenRef,
-  resolveToken,
-  type Keyframe,
-  type Theme,
-} from '@usemotif/core';
+import { isTokenRef, resolveToken, type Keyframe, type Theme } from '@usemotif/core';
+import { processColor } from 'react-native';
 import { sanitizeNativeStyle } from './_native-style.js';
 
 /** One keyframe stop, converted to native style. `offset` runs 0..1. */
@@ -72,13 +66,36 @@ export function compileKeyframes(
     .map(([offset, style]) => ({ offset, style }));
 }
 
+const UNIT_RE = /^(-?(?:\d+(?:\.\d+)?|\.\d+))([a-z%]+)$/;
+
+// RN's own parser, so every colour format the platform draws is one it can
+// blend. Platform colours come back as objects and stay discrete.
+function colorOf(value: string): number | null {
+  const parsed: unknown = processColor(value);
+  return typeof parsed === 'number' ? parsed >>> 0 : null;
+}
+
+function mixColor(a: number, b: number, t: number): string {
+  const channel = (shift: number): number => {
+    const from = (a >>> shift) & 255;
+    return from + (((b >>> shift) & 255) - from) * t;
+  };
+  const alpha = Math.round((channel(24) / 255) * 1000) / 1000;
+  return `rgba(${Math.round(channel(16))}, ${Math.round(channel(8))}, ${Math.round(channel(0))}, ${alpha})`;
+}
+
 function mixScalar(a: unknown, b: unknown, t: number): unknown {
-  if (
-    (typeof a === 'string' || typeof a === 'number') &&
-    (typeof b === 'string' || typeof b === 'number')
-  ) {
-    const kind = classifyOutputRange([a, b]);
-    if (kind !== 'step') return interpolateOutputs(kind, a, b, t);
+  if (typeof a === 'number' && typeof b === 'number') return a + (b - a) * t;
+  if (typeof a === 'string' && typeof b === 'string') {
+    const ua = UNIT_RE.exec(a);
+    const ub = UNIT_RE.exec(b);
+    if (ua !== null && ub !== null && ua[2] === ub[2]) {
+      const from = Number(ua[1]);
+      return `${from + (Number(ub[1]) - from) * t}${ua[2]}`;
+    }
+    const ca = colorOf(a);
+    const cb = colorOf(b);
+    if (ca !== null && cb !== null) return mixColor(ca, cb, t);
   }
   // Discrete values flip halfway through the segment, as CSS does.
   return t < 0.5 ? a : b;

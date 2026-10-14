@@ -72,9 +72,8 @@ describe('sampleKeyframes', () => {
   it('interpolates colours and transform axes across the full range', () => {
     const mid = sampleKeyframes(stops, 0.5, linear);
     expect(mid.transform).toEqual([{ rotate: '180deg' }]);
-    expect(mid.backgroundColor).not.toBe('#000000');
-    expect(mid.backgroundColor).not.toBe('#ffffff');
-    expect(sampleKeyframes(stops, 0, linear).backgroundColor).not.toBe(mid.backgroundColor);
+    expect(mid.backgroundColor).toBe('rgba(128, 128, 128, 1)');
+    expect(sampleKeyframes(stops, 0, linear).backgroundColor).toBe('rgba(0, 0, 0, 1)');
   });
 
   it('applies easing per segment, not across the whole iteration', () => {
@@ -92,6 +91,20 @@ describe('sampleKeyframes', () => {
     expect(sampleKeyframes(s, 0.5, linear).width).toBe('20%');
     expect(sampleKeyframes(s, 0.4, linear).display).toBe('flex');
     expect(sampleKeyframes(s, 0.6, linear).display).toBe('none');
+  });
+
+  it('blends alpha and rgb() colours, and leaves unknown colour words discrete', () => {
+    const s = compileKeyframes(
+      {
+        from: { backgroundColor: 'transparent', color: 'rgb(0, 0, 255)', borderColor: 'nope' },
+        to: { backgroundColor: 'red', color: 'rgba(0, 0, 0, 0.5)', borderColor: 'white' },
+      },
+      undefined,
+    );
+    const mid = sampleKeyframes(s, 0.5, linear);
+    expect(mid.backgroundColor).toBe('rgba(128, 0, 0, 0.5)');
+    expect(mid.color).toBe('rgba(0, 0, 128, 0.751)');
+    expect(sampleKeyframes(s, 0.4, linear).borderColor).toBe('nope');
   });
 
   it('treats mismatched transform lists as discrete', () => {
