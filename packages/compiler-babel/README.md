@@ -10,6 +10,13 @@ Used by `@usemotif/compiler-metro` inside the React Native build pipeline, and c
 yarn add -D @usemotif/compiler-babel
 ```
 
+## Options worth knowing
+
+- `onBail(event)` - called for each motif element left to the runtime, with `filename`,
+  `line`, `column`, `element`, `reason` (`dynamic-props`, `has-spread`, or the reason the
+  wrapper had to stay, such as `ref-attribute`), and the dynamic `props`. Setting it never
+  changes the output. The bundler plugin and the Metro transformer accept it too.
+
 ## Docs
 
 <https://usemotif.dev>
