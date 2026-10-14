@@ -3,7 +3,7 @@ title: Search
 description: A Combobox framed as site search - wrapped in a search landmark, tuned for free-text queries.
 diataxis: reference
 covers: ['Search']
-last_verified: 2026-05-15
+last_verified: 2026-10-14
 ---
 
 import {
@@ -57,7 +57,9 @@ or records, where the result is "go here" rather than "fill this field".
 
 Search exposes three parts. `Search.Root` takes the same props as
 [Combobox.Root](/headless/selection/combobox#comboboxroot) - `options`, the value props, the
-filter, the open props - and wraps the result in a `search` landmark. `Search.Input` and
+filter, `loading`, the open props - and wraps the result in a `search` landmark. For results
+fetched as the user types, see
+[Options fetched as you type](/headless/selection/combobox#options-fetched-as-you-type). `Search.Input` and
 `Search.List` are Combobox's parts; see the
 [Combobox API](/headless/selection/combobox#api) for their reference.
 
