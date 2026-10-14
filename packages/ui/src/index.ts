@@ -57,8 +57,8 @@ export {
   type CollapsibleTriggerProps,
   type CollapsibleContentProps,
 } from './Collapsible.js';
-export { Calendar, type CalendarProps } from './Calendar.js';
-export { DatePicker, type DatePickerProps } from './DatePicker.js';
+export { Calendar, type CalendarProps, type RangeCalendarProps } from './Calendar.js';
+export { DatePicker, type DatePickerProps, type RangeDatePickerProps } from './DatePicker.js';
 export {
   CommandPalette,
   useCommandPaletteShortcut,

@@ -2,8 +2,8 @@
 title: Calendar
 description: A focusable month grid with full keyboard navigation - arrow keys by day, PageUp/Down by month, locale-aware labels.
 diataxis: reference
-covers: ['Calendar', 'CalendarProps']
-last_verified: 2026-05-15
+covers: ['Calendar', 'CalendarProps', 'RangeCalendarProps', 'CalendarBaseProps', 'CalendarDayInfo', 'DateRange']
+last_verified: 2026-10-14
 ---
 
 import {
@@ -51,12 +51,18 @@ intact.
 <ApiSignature
   name="Calendar"
   status="stable"
-  signature={`function Calendar(props: CalendarProps): JSX.Element`}
+  signature={`function Calendar(props: CalendarProps | RangeCalendarProps): JSX.Element`}
   params={[
+    {
+      name: 'mode',
+      type: "'single' | 'range'",
+      default: "'single'",
+      description: 'Pick one date, or a start and an end date. See Range selection below.',
+    },
     {
       name: 'value / defaultValue / onValueChange',
       type: 'Date / Date / (next: Date) => void',
-      description: 'The selected date, controlled or uncontrolled.',
+      description: 'The selected date, controlled or uncontrolled. In range mode these take and report a `DateRange` instead.',
     },
     {
       name: 'isDisabled',
@@ -77,7 +83,7 @@ intact.
     {
       name: 'renderDay',
       type: '(info) => ReactNode',
-      description: 'Custom day-cell renderer. `info` carries `date`, `isSelected`, `isToday`, `isOutsideMonth`, `isDisabled`.',
+      description: 'Custom day-cell renderer. `info` carries `date`, `isSelected`, `isToday`, `isOutsideMonth`, `isDisabled`, and in range mode `isRangeStart`, `isRangeEnd`, `isInRange`.',
     },
     {
       name: 'style',
@@ -87,6 +93,26 @@ intact.
   ]}
 />
 
+## Range selection
+
+`mode="range"` picks a start and an end date. The first pick starts the range, the second
+finishes it, and a second pick earlier than the first swaps the two. Picking again after that
+starts a new range.
+
+<CodeBlock lang="ts" code={`interface DateRange {
+  readonly start: Date;
+  readonly end: Date | null; // null until the second pick
+}`} />
+
+<CodeBlock lang="tsx" code={`const [range, setRange] = useState<DateRange>();
+
+<Calendar mode="range" value={range} onValueChange={setRange} />`} />
+
+`onValueChange` fires on both picks, so `end` is `null` after the first. Every day in the range
+is `aria-selected`, and `renderDay` receives `isRangeStart`, `isRangeEnd` and `isInRange` to
+paint the ends and the days between. The native Calendar takes the same `mode`, with the same
+rule and flags.
+
 ## Keyboard
 
 | Key | Action |
@@ -95,7 +121,7 @@ intact.
 | Arrow Up / Down | Previous / next week |
 | PageUp / PageDown | Previous / next month |
 | Home / End | Start / end of the current week |
-| Enter / Space | Select the focused day |
+| Enter / Space | Select the focused day (in range mode, the start or the end) |
 
 ## Accessibility
 

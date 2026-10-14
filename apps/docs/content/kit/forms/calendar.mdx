@@ -2,7 +2,7 @@
 title: Calendar
 description: A themed month calendar over the headless Calendar - a focusable grid with full keyboard navigation, locale-aware labels, and themed day cells.
 diataxis: reference
-covers: ['Calendar', 'CalendarProps']
+covers: ['Calendar', 'CalendarProps', 'RangeCalendarProps']
 last_verified: 2026-10-14
 ---
 
@@ -74,8 +74,14 @@ Weeks starting on Monday, with weekends disabled:
 <ApiSignature
   name="Calendar"
   status="stable"
-  signature={`function Calendar(props: CalendarProps): JSX.Element`}
+  signature={`function Calendar(props: CalendarProps | RangeCalendarProps): JSX.Element`}
   params={[
+    {
+      name: 'mode',
+      type: "'single' | 'range'",
+      default: "'single'",
+      description: 'Pick one date, or a start and an end date (`value`, `defaultValue` and `onValueChange` then use `{ start: Date; end: Date | null }`). Range ends paint as the selected day; the days between take the `status.info` tint.',
+    },
     {
       name: 'value',
       type: 'Date | undefined',
@@ -114,8 +120,8 @@ Weeks starting on Monday, with weekends disabled:
     },
     {
       name: 'renderDay',
-      type: '(info: { date, isSelected, isToday, isOutsideMonth, isDisabled }) => ReactNode',
-      description: 'Replaces the themed day cell. `date` is a `Date`; the rest are booleans.',
+      type: '(info: { date, isSelected, isToday, isOutsideMonth, isDisabled, isRangeStart, isRangeEnd, isInRange }) => ReactNode',
+      description: 'Replaces the themed day cell. `date` is a `Date`; the rest are booleans, the range flags `false` outside range mode.',
     },
   ]}
 />

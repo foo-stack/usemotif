@@ -125,6 +125,7 @@ function onMultiChange(next: ReadonlyArray<string>): void {
 // Hoisted: an inline `defaultValue={new Date(...)}` object prop would trip the
 // lint. A fixed date keeps the selected-cell assertion deterministic.
 const CAL_DEFAULT = new Date(2024, 0, 15);
+const CAL_RANGE = { start: new Date(2024, 0, 10), end: new Date(2024, 0, 12) };
 
 // Hoisted command list + tree data (inline array/object props would trip lint).
 function cmdNoop(): void {}
@@ -1093,6 +1094,24 @@ describe('Calendar - themed month grid over the headless behaviour', () => {
   });
 });
 
+describe('Calendar - range mode', () => {
+  it('paints the range ends solid and tints the days between', () => {
+    render(<Calendar mode="range" defaultValue={CAL_RANGE} />);
+    const paintOf = (day: string): string => {
+      const cell = Array.from(container.querySelectorAll('[role="gridcell"]')).find(
+        (c) => c.textContent === day,
+      )!;
+      return look(cell.firstElementChild!);
+    };
+    expect(paintOf('10')).toBe(paintOf('12'));
+    expect(paintOf('11')).not.toBe(paintOf('10'));
+    expect(paintOf('11')).not.toBe(paintOf('13'));
+    expect(paintOf('13')).not.toBe(paintOf('10'));
+    const selected = container.querySelectorAll('[role="gridcell"][aria-selected="true"]');
+    expect(Array.from(selected).map((c) => c.textContent)).toEqual(['10', '11', '12']);
+  });
+});
+
 describe('DatePicker - themed trigger + calendar popover', () => {
   it('renders a themed trigger and opens the themed calendar on click', () => {
     render(<DatePicker placeholder="Pick a date" />);
@@ -1105,6 +1124,11 @@ describe('DatePicker - themed trigger + calendar popover', () => {
     // Opening reveals the calendar (portaled to the document).
     click(trigger);
     expect(document.querySelector('[role="grid"]')).not.toBeNull();
+  });
+
+  it('labels a range with both dates', () => {
+    render(<DatePicker mode="range" locale="en-US" defaultValue={CAL_RANGE} />);
+    expect(container.querySelector('button')!.textContent).toMatch(/Jan 10\D+12, 2024/);
   });
 });
 

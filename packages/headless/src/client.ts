@@ -145,7 +145,17 @@ export type { AdaptProps } from './Adapt.js';
 export { configureViewportBreakpoints } from './_breakpoint-config.js';
 
 export { Calendar, DatePicker, TimeInput } from './datetime.js';
-export type { CalendarProps, DatePickerProps, TimeInputProps } from './datetime.js';
+export type {
+  CalendarBaseProps,
+  CalendarDayInfo,
+  CalendarProps,
+  DatePickerOptions,
+  DatePickerProps,
+  DateRange,
+  RangeCalendarProps,
+  RangeDatePickerProps,
+  TimeInputProps,
+} from './datetime.js';
 
 export { ColorPicker, FileUpload, TreeView } from './specialized.js';
 export type { ColorPickerProps, FileUploadProps, TreeNode, TreeViewProps } from './specialized.js';

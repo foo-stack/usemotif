@@ -2,12 +2,15 @@
 
 import {
   DatePicker as HeadlessDatePicker,
+  type CalendarDayInfo,
   type DatePickerProps as HeadlessDatePickerProps,
+  type RangeDatePickerProps as HeadlessRangeDatePickerProps,
 } from '@usemotif/headless';
 import { type CSSProperties, type ReactNode } from 'react';
 import { Box } from 'usemotif';
 
 export type DatePickerProps = HeadlessDatePickerProps;
+export type RangeDatePickerProps = HeadlessRangeDatePickerProps;
 
 const DAY_HOVER = { bg: '$colors.surface.interactive' } as const;
 
@@ -16,14 +19,11 @@ const DAY_HOVER = { bg: '$colors.surface.interactive' } as const;
  * `Calendar` rather than imported so each kit entry stays an independent
  * code-split chunk. The headless DatePicker forwards it into its inner Calendar.
  */
-function renderThemedDay(info: {
-  date: Date;
-  isSelected: boolean;
-  isToday: boolean;
-  isOutsideMonth: boolean;
-  isDisabled: boolean;
-}): ReactNode {
-  const { date, isSelected, isToday, isOutsideMonth, isDisabled } = info;
+function renderThemedDay(info: CalendarDayInfo): ReactNode {
+  const { date, isToday, isOutsideMonth, isDisabled } = info;
+  // Days between a range's ends take a soft tint; the ends paint as selected.
+  const isBetween = info.isInRange && !info.isRangeStart && !info.isRangeEnd;
+  const isSelected = info.isSelected && !isBetween;
   return (
     <Box
       display="flex"
@@ -35,17 +35,25 @@ function renderThemedDay(info: {
       fontSize="$fontSizes.sm"
       borderWidth="$borderWidths.thin"
       borderColor={isToday && !isSelected ? '$colors.action.primary.bg' : 'transparent'}
-      bg={isSelected ? '$colors.action.primary.bg' : 'transparent'}
+      bg={
+        isSelected
+          ? '$colors.action.primary.bg'
+          : isBetween
+            ? '$colors.status.info.tint'
+            : 'transparent'
+      }
       color={
         isSelected
           ? '$colors.text.inverse'
-          : isDisabled || isOutsideMonth
-            ? '$colors.text.muted'
-            : '$colors.text.default'
+          : isBetween
+            ? '$colors.status.info.fg'
+            : isDisabled || isOutsideMonth
+              ? '$colors.text.muted'
+              : '$colors.text.default'
       }
       opacity={isDisabled ? 0.5 : 1}
       cursor={isDisabled ? 'not-allowed' : 'pointer'}
-      {...(isSelected || isDisabled ? {} : { _hover: DAY_HOVER })}
+      {...(isSelected || isBetween || isDisabled ? {} : { _hover: DAY_HOVER })}
     >
       {date.getDate()}
     </Box>
@@ -84,9 +92,11 @@ const POPOVER_STYLE: CSSProperties = {
  * theme the trigger, the popover surface, and each day; override any of
  * `triggerStyle` / `popoverStyle` / `style` (the grid) / `renderTrigger` /
  * `renderDay`. Controlled (`value` + `onValueChange`) or uncontrolled.
+ * `mode="range"` picks a start and an end date, closing after the second.
  *
  * ```tsx
  * <DatePicker placeholder="Pick a date" onValueChange={setDate} />
+ * <DatePicker mode="range" onValueChange={setRange} />
  * ```
  */
 export function DatePicker({
@@ -95,7 +105,7 @@ export function DatePicker({
   triggerStyle,
   popoverStyle,
   ...rest
-}: DatePickerProps) {
+}: DatePickerProps | RangeDatePickerProps) {
   return (
     <HeadlessDatePicker
       {...rest}

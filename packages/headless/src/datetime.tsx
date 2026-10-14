@@ -15,7 +15,9 @@ import {
   type Ref,
 } from 'react';
 import { PopoverContent, PopoverRoot, PopoverTrigger } from './Popover.js';
-import { addMonths, isSameDay } from './_date-math.js';
+import { addMonths, isSameDay, nextRange, rangeFlags, type DateRange } from './_date-math.js';
+
+export type { DateRange } from './_date-math.js';
 import { useControllableState } from './use-controllable-state.js';
 
 /**
@@ -59,10 +61,23 @@ function addDays(date: Date, n: number): Date {
 const CAL_ROW_STYLE: CSSProperties = { display: 'flex' };
 const CAL_CELL_STYLE: CSSProperties = { flex: '1 1 0', minWidth: 0 };
 
-export interface CalendarProps {
-  value?: Date | undefined;
-  defaultValue?: Date;
-  onValueChange?: (next: Date) => void;
+/** What a `renderDay` callback is told about one day cell. */
+export interface CalendarDayInfo {
+  date: Date;
+  isSelected: boolean;
+  isToday: boolean;
+  isOutsideMonth: boolean;
+  isDisabled: boolean;
+  /** Range mode: the range's first day. Always `false` in single mode. */
+  isRangeStart: boolean;
+  /** Range mode: the range's last day, once picked. Always `false` in single mode. */
+  isRangeEnd: boolean;
+  /** Range mode: inside the range, ends included. Always `false` in single mode. */
+  isInRange: boolean;
+}
+
+/** Props both selection modes share. */
+export interface CalendarBaseProps {
   /** Locale used for weekday + month labels. Defaults to navigator
    * locale. */
   locale?: string;
@@ -73,35 +88,103 @@ export interface CalendarProps {
   /** Inline style for the grid. */
   style?: CSSProperties;
   /** Override how each day cell renders. */
-  renderDay?: (info: {
-    date: Date;
-    isSelected: boolean;
-    isToday: boolean;
-    isOutsideMonth: boolean;
-    isDisabled: boolean;
-  }) => ReactNode;
+  renderDay?: (info: CalendarDayInfo) => ReactNode;
 }
 
-export function Calendar(props: CalendarProps): ReactElement {
-  const {
-    value: controlled,
+export interface CalendarProps extends CalendarBaseProps {
+  /** Picks one date. The default. */
+  mode?: 'single';
+  value?: Date | undefined;
+  defaultValue?: Date;
+  onValueChange?: (next: Date) => void;
+}
+
+/**
+ * Picks a start and an end date. The first pick starts the range (`end` is
+ * `null`), the second finishes it, swapping the two if it is earlier.
+ */
+export interface RangeCalendarProps extends CalendarBaseProps {
+  mode: 'range';
+  value?: DateRange | undefined;
+  defaultValue?: DateRange;
+  /** Called on both picks; `end` is `null` after the first. */
+  onValueChange?: (next: DateRange) => void;
+}
+
+const NO_RANGE = { isRangeStart: false, isRangeEnd: false, isInRange: false } as const;
+
+/**
+ * A month grid with keyboard navigation. Pass `mode="range"` to pick a start
+ * and an end date.
+ */
+export function Calendar(props: CalendarProps | RangeCalendarProps): ReactElement {
+  return props.mode === 'range' ? <RangeCalendar {...props} /> : <SingleCalendar {...props} />;
+}
+
+function SingleCalendar(props: CalendarProps): ReactElement {
+  const { value, defaultValue, onValueChange, mode: _mode, ...base } = props;
+  // Prop-presence detection so a controlled Calendar cleared to
+  // `value={undefined}` stays controlled (no selection), not stale.
+  const [selected, setSelected] = useControllableState({
+    value,
     defaultValue,
-    onValueChange,
+    onChange: onValueChange,
+    controlled: 'value' in props,
+  });
+  return (
+    <CalendarGrid
+      {...base}
+      initialFocus={selected}
+      select={setSelected}
+      dayState={(d) => ({
+        isSelected: selected !== undefined && isSameDay(d, selected),
+        ...NO_RANGE,
+      })}
+    />
+  );
+}
+
+function RangeCalendar(props: RangeCalendarProps): ReactElement {
+  const { value, defaultValue, onValueChange, mode: _mode, ...base } = props;
+  const [range, setRange] = useControllableState({
+    value,
+    defaultValue,
+    onChange: onValueChange,
+    controlled: 'value' in props,
+  });
+  return (
+    <CalendarGrid
+      {...base}
+      initialFocus={range?.start}
+      select={(d) => setRange(nextRange(range, d))}
+      dayState={(d) => {
+        const flags = rangeFlags(range, d);
+        return { isSelected: flags.isInRange, ...flags };
+      }}
+    />
+  );
+}
+
+interface CalendarGridProps extends CalendarBaseProps {
+  initialFocus: Date | undefined;
+  select: (day: Date) => void;
+  dayState: (
+    day: Date,
+  ) => Pick<CalendarDayInfo, 'isSelected' | 'isRangeStart' | 'isRangeEnd' | 'isInRange'>;
+}
+
+function CalendarGrid(props: CalendarGridProps): ReactElement {
+  const {
     locale,
     isDisabled,
     weekStartsOn = 0,
     style,
     renderDay,
+    initialFocus,
+    select,
+    dayState,
   } = props;
-  // Prop-presence detection so a controlled Calendar cleared to
-  // `value={undefined}` stays controlled (no selection), not stale.
-  const [selected, setSelected] = useControllableState({
-    value: controlled,
-    defaultValue,
-    onChange: onValueChange,
-    controlled: 'value' in props,
-  });
-  const [focusedDay, setFocusedDay] = useState<Date>(selected ?? new Date());
+  const [focusedDay, setFocusedDay] = useState<Date>(initialFocus ?? new Date());
   const monthStart = startOfMonth(focusedDay);
 
   // Roving focus: move real DOM focus to the focused cell when it changes,
@@ -170,7 +253,7 @@ export function Calendar(props: CalendarProps): ReactElement {
       case 'Enter':
       case ' ':
         e.preventDefault();
-        if (isDisabled?.(focusedDay) !== true) setSelected(focusedDay);
+        if (isDisabled?.(focusedDay) !== true) select(focusedDay);
         return;
       default:
         return;
@@ -199,14 +282,14 @@ export function Calendar(props: CalendarProps): ReactElement {
       {Array.from({ length: 6 }, (_, weekIdx) => (
         <div role="row" key={weekIdx} style={CAL_ROW_STYLE}>
           {cells.slice(weekIdx * 7, weekIdx * 7 + 7).map((d, i) => {
-            const isSelected = selected !== undefined && isSameDay(d, selected);
+            const state = dayState(d);
             const isOutsideMonth = d.getMonth() !== monthStart.getMonth();
             const isToday = isSameDay(d, today);
             const disabled = isDisabled?.(d) === true;
             const isFocused = isSameDay(d, focusedDay);
             return (
               // Keyboard activation lives on the parent grid (Enter / Space
-              // on the focused cell triggers the same setSelected). The
+              // on the focused cell triggers the same select). The
               // jsx-a11y rule can't see the parent listener, so disable it
               // here; the cell is fully keyboard-accessible via the grid.
               // eslint-disable-next-line jsx-a11y/click-events-have-key-events
@@ -214,7 +297,7 @@ export function Calendar(props: CalendarProps): ReactElement {
                 key={i}
                 ref={isFocused ? focusedCellRef : undefined}
                 role="gridcell"
-                aria-selected={isSelected}
+                aria-selected={state.isSelected}
                 aria-disabled={disabled || undefined}
                 tabIndex={isFocused ? 0 : -1}
                 aria-label={dayLabel(d)}
@@ -222,13 +305,13 @@ export function Calendar(props: CalendarProps): ReactElement {
                 onClick={() => {
                   if (disabled) return;
                   setFocusedDay(d);
-                  setSelected(d);
+                  select(d);
                 }}
               >
                 {renderDay !== undefined
                   ? renderDay({
                       date: d,
-                      isSelected,
+                      ...state,
                       isToday,
                       isOutsideMonth,
                       isDisabled: disabled,
@@ -245,7 +328,8 @@ export function Calendar(props: CalendarProps): ReactElement {
 
 // ─────────── DatePicker ───────────────────────────────────────────
 
-export interface DatePickerProps extends CalendarProps {
+/** Props the single and range date pickers share. */
+export interface DatePickerOptions {
   /** What renders as the trigger. Receives the formatted current
    * value + an `onClick` to open the calendar. */
   renderTrigger?: (info: { label: string; onClick: () => void }) => ReactNode;
@@ -254,17 +338,21 @@ export interface DatePickerProps extends CalendarProps {
   triggerStyle?: CSSProperties;
 }
 
-export function DatePicker({
-  value,
-  defaultValue,
-  onValueChange,
-  renderTrigger,
-  locale,
-  popoverStyle,
-  triggerStyle,
-  placeholder = 'Pick a date',
-  ...calendarRest
-}: DatePickerProps): ReactElement {
+export interface DatePickerProps extends CalendarProps, DatePickerOptions {}
+
+/** A range date picker: stays open after the first pick, closes after the second. */
+export interface RangeDatePickerProps extends RangeCalendarProps, DatePickerOptions {}
+
+/**
+ * A trigger that opens a `Calendar` in a popover. Pass `mode="range"` to pick a
+ * start and an end date.
+ */
+export function DatePicker(props: DatePickerProps | RangeDatePickerProps): ReactElement {
+  return props.mode === 'range' ? <RangeDatePicker {...props} /> : <SingleDatePicker {...props} />;
+}
+
+function SingleDatePicker(props: DatePickerProps): ReactElement {
+  const { value, defaultValue, onValueChange, placeholder = 'Pick a date', ...rest } = props;
   const [open, setOpen] = useState(false);
   // Track the committed selection locally so the trigger label reflects what
   // the (uncontrolled) Calendar holds internally - the Calendar owns its own
@@ -279,8 +367,80 @@ export function DatePicker({
   const label =
     current === undefined
       ? placeholder
-      : new Intl.DateTimeFormat(locale, { dateStyle: 'medium' }).format(current);
+      : new Intl.DateTimeFormat(rest.locale, { dateStyle: 'medium' }).format(current);
+  return (
+    <DatePickerShell {...rest} label={label} open={open} setOpen={setOpen}>
+      {(calendarProps) => (
+        <Calendar
+          {...calendarProps}
+          // Feed the committed selection back in: Popover.Content unmounts on
+          // close, so the Calendar remounts on reopen - passing the original
+          // defaultValue would resurrect the stale default and lose the pick.
+          // `current` (controlled value or mirrored committed pick) keeps the
+          // reopened grid in sync with the trigger label.
+          value={current}
+          onValueChange={(d) => {
+            commit(d);
+            setOpen(false);
+          }}
+        />
+      )}
+    </DatePickerShell>
+  );
+}
 
+function RangeDatePicker(props: RangeDatePickerProps): ReactElement {
+  const { value, defaultValue, onValueChange, placeholder = 'Pick dates', ...rest } = props;
+  const [open, setOpen] = useState(false);
+  const [current, commit] = useControllableState({
+    value,
+    defaultValue,
+    onChange: onValueChange,
+  });
+  const fmt = new Intl.DateTimeFormat(rest.locale, { dateStyle: 'medium' });
+  const label =
+    current === undefined
+      ? placeholder
+      : current.end === null
+        ? fmt.format(current.start)
+        : fmt.formatRange(current.start, current.end);
+  return (
+    <DatePickerShell {...rest} label={label} open={open} setOpen={setOpen}>
+      {(calendarProps) => (
+        <Calendar
+          {...calendarProps}
+          mode="range"
+          value={current}
+          onValueChange={(range) => {
+            commit(range);
+            if (range.end !== null) setOpen(false);
+          }}
+        />
+      )}
+    </DatePickerShell>
+  );
+}
+
+interface DatePickerShellProps extends CalendarBaseProps, DatePickerOptions {
+  mode?: 'single' | 'range';
+  label: string;
+  open: boolean;
+  setOpen: (next: boolean | ((prev: boolean) => boolean)) => void;
+  children: (calendarProps: CalendarBaseProps) => ReactNode;
+}
+
+function DatePickerShell({
+  label,
+  open,
+  setOpen,
+  renderTrigger,
+  popoverStyle,
+  triggerStyle,
+  placeholder: _placeholder,
+  mode: _mode,
+  children,
+  ...calendarProps
+}: DatePickerShellProps): ReactElement {
   return (
     <PopoverRoot open={open} onOpenChange={setOpen}>
       <PopoverTrigger>
@@ -293,20 +453,7 @@ export function DatePicker({
         )}
       </PopoverTrigger>
       <PopoverContent {...(popoverStyle !== undefined ? { style: popoverStyle } : {})}>
-        <Calendar
-          {...calendarRest}
-          // Feed the committed selection back in: Popover.Content unmounts on
-          // close, so the Calendar remounts on reopen - passing the original
-          // defaultValue would resurrect the stale default and lose the pick.
-          // `current` (controlled value or mirrored committed pick) keeps the
-          // reopened grid in sync with the trigger label.
-          value={current}
-          onValueChange={(d) => {
-            commit(d);
-            setOpen(false);
-          }}
-          {...(locale !== undefined ? { locale } : {})}
-        />
+        {children(calendarProps)}
       </PopoverContent>
     </PopoverRoot>
   );
