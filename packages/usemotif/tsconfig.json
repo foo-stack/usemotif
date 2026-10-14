@@ -2,7 +2,9 @@
   "extends": "@usemotif/tsconfig/react-library.json",
   "compilerOptions": {
     "outDir": "dist",
-    "rootDir": "src"
+    "rootDir": "src",
+    // shared-exports.test.ts reads the platform entry files with node:fs.
+    "types": ["react", "node"]
   },
   "include": ["src/**/*"]
 }
