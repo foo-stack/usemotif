@@ -943,3 +943,30 @@ describe('resolveResponsiveStylesToVars - baseAsClass', () => {
     expect(rest).toEqual({ id: 'x' });
   });
 });
+
+describe('gradients scale', () => {
+  const gradientTheme: Theme = {
+    name: 'g',
+    tokens: {
+      gradients: { hero: 'linear-gradient(90deg, #2563eb, #7c3aed)' },
+    },
+  };
+
+  it('resolves backgroundImage through the gradients scale, full or bare', () => {
+    expect(resolveStyles({ backgroundImage: '$gradients.hero' }, gradientTheme).style).toEqual({
+      backgroundImage: 'linear-gradient(90deg, #2563eb, #7c3aed)',
+    });
+    expect(resolveStyles({ backgroundImage: '$hero' }, gradientTheme).style).toEqual({
+      backgroundImage: 'linear-gradient(90deg, #2563eb, #7c3aed)',
+    });
+  });
+
+  it('emits a CSS variable on web, and passes raw values through', () => {
+    expect(resolveStylesToVars({ backgroundImage: '$gradients.hero' }).style).toEqual({
+      backgroundImage: 'var(--gradients-hero)',
+    });
+    expect(resolveStylesToVars({ backgroundImage: 'url(a.png)' }).style).toEqual({
+      backgroundImage: 'url(a.png)',
+    });
+  });
+});

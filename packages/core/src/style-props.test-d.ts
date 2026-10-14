@@ -160,3 +160,14 @@ expectTypeOf<StrictTokens>().toEqualTypeOf<false>();
 expectTypeOf<MotifComponent<{ p?: string }, null>>().toEqualTypeOf<
   (props: { p?: string }) => null
 >();
+
+// ─────────── gradients ───────────────────────────────────────────
+
+// `backgroundImage` is bound to the `gradients` scale, so a theme's gradient
+// paths autocomplete there and nowhere else; raw CSS still compiles.
+type GradientTokens = { gradients: { hero: 'linear-gradient(red, blue)' } };
+expectTypeOf<'$gradients.hero'>().toExtend<StylePropValueFrom<GradientTokens, 'backgroundImage'>>();
+expectTypeOf<'url(a.png)'>().toExtend<StylePropValueFrom<GradientTokens, 'backgroundImage'>>();
+expectTypeOf<ScaleValueFrom<GradientTokens, 'gradients'>>().toEqualTypeOf<
+  '$gradients.hero' | (string & {}) | number
+>();

@@ -174,15 +174,13 @@ const stylePropsLiteral = {
   borderColor: { cssProperty: 'borderColor', scale: 'colors' },
 
   // Background - image / positioning / sizing / blending family.
-  // Pure pass-through (enum-string or CSS-function-string values);
-  // gradient fills and brand-mark tiles land here. `background` is the
-  // shorthand. No `scale` - gradient tokens through a `gradients`
-  // scale would be a follow-up; until then theme-defined gradients
-  // reach Box via a token ref on `backgroundImage`. Native renderers
-  // accept the type for cross-platform parity but image / positioning
+  // Pass-through CSS values; `background` is the shorthand. A theme's
+  // `gradients` scale feeds `backgroundImage`, so `$gradients.hero` (or
+  // the bare `$hero`) resolves and autocompletes. Web-only by design:
+  // native renderers accept the type for parity, but image and gradient
   // values no-op on RN (handled by `<Image>`, not `View` styles).
   background: { cssProperty: 'background' },
-  backgroundImage: { cssProperty: 'backgroundImage' },
+  backgroundImage: { cssProperty: 'backgroundImage', scale: 'gradients' },
   backgroundPosition: { cssProperty: 'backgroundPosition' },
   backgroundRepeat: { cssProperty: 'backgroundRepeat' },
   backgroundSize: { cssProperty: 'backgroundSize' },
