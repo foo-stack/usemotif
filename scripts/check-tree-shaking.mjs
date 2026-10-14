@@ -152,7 +152,8 @@ const targets = [
     // declaration to a const so its type can switch on strict token
     // paths. `var X = function (p) {}` is a few bytes wider than
     // `function X(p) {}`; nothing new is pulled in.
-    budget: 12250,
+    // Bumped when Box's `layout` animation took `layoutTransition` timing.
+    budget: 12350,
   },
   {
     name: '@usemotif/ui - Modal only',
@@ -555,7 +556,8 @@ const targets = [
     // declaration to a const so its type can switch on strict token
     // paths. `var X = function (p) {}` is a few bytes wider than
     // `function X(p) {}`; nothing new is pulled in.
-    budget: 11850,
+    // Bumped when Box's `layout` animation took `layoutTransition` timing.
+    budget: 11950,
   },
   {
     name: '@usemotif/ui - AvatarGroup only',
@@ -575,7 +577,8 @@ const targets = [
     // Pure presentational (Box + Text, no headless) - display floor.
     // Bumped by cascade-layer support: `Box` now reads the active layer and
     // can emit base props as a class instead of inline styles.
-    budget: 12000,
+    // Bumped when Box's `layout` animation took `layoutTransition` timing.
+    budget: 12100,
   },
   {
     name: '@usemotif/ui - FormField only',

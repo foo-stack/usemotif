@@ -2,6 +2,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, type ReactNode } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
+import { Box } from './Box.js';
 import { useLayoutAnimation } from './use-layout-animation.js';
 
 let container: HTMLElement;
@@ -293,5 +294,42 @@ describe('useLayoutAnimation', () => {
       Element.prototype.addEventListener = origAdd;
       Element.prototype.removeEventListener = origRemove;
     }
+  });
+});
+
+describe('Box layoutTransition', () => {
+  function moveBox(node: (trigger: number) => ReactNode): HTMLElement {
+    setRect({ x: 0, y: 0, width: 100, height: 100 });
+    render(node(0));
+    const el = container.firstElementChild as HTMLElement;
+    const queued = queueRaf();
+    setRect({ x: 40, y: 0, width: 100, height: 100 });
+    render(node(1));
+    queued[0]?.();
+    return el;
+  }
+
+  it('times the layout animation with token CSS variables', () => {
+    const el = moveBox((t) => (
+      <Box
+        layout
+        layoutTransition={{ duration: '$durations.5', easing: '$easings.decelerate' }}
+        data-trigger={t}
+      />
+    ));
+    expect(el.style.transition).toBe('transform var(--durations-5) var(--easings-decelerate)');
+    expect(el.hasAttribute('layoutTransition')).toBe(false);
+  });
+
+  it('takes literal values, and keeps the default for a part left out', () => {
+    const el = moveBox((t) => (
+      <Box layout layoutTransition={{ duration: '120ms' }} data-trigger={t} />
+    ));
+    expect(el.style.transition).toBe('transform 120ms ease-in-out');
+  });
+
+  it('defaults to 300ms ease-in-out', () => {
+    const el = moveBox((t) => <Box layout data-trigger={t} />);
+    expect(el.style.transition).toBe('transform 300ms ease-in-out');
   });
 });

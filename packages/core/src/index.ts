@@ -94,6 +94,7 @@ export type {
   StyleProps,
   TransformAxis,
   TransitionObject,
+  LayoutTransition,
   TransitionValue,
   ValidateStyleProps,
   ValidateStylePropsFrom,

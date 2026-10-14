@@ -1,12 +1,15 @@
 import { useCallback, useEffect, useRef, type RefObject } from 'react';
-import { Animated, Easing, type LayoutChangeEvent, type ViewStyle } from 'react-native';
+import { Animated, type LayoutChangeEvent, type ViewStyle } from 'react-native';
+import { mapEasing } from './_animation/animated.js';
 
 /** Which axes to animate. Mirrors the web hook's option shape. */
 export type LayoutAnimationKind = 'all' | 'position' | 'size';
 
 export interface UseLayoutAnimationOptions {
   kind?: LayoutAnimationKind;
+  /** Duration in seconds. Default `0.3`. */
   duration?: number;
+  /** CSS easing keyword or `cubic-bezier(...)`. Default `'ease-in-out'`. */
   easing?: string;
 }
 
@@ -183,22 +186,4 @@ export function useLayoutAnimation<T = unknown>(
   };
 
   return { ref, onLayout, style };
-}
-
-/** Map a CSS-style easing keyword to an RN Easing function. Falls
- * back to a permissive `inOut(ease)` curve for unknown keywords. */
-function mapEasing(easing: string): (t: number) => number {
-  switch (easing) {
-    case 'linear':
-      return Easing.linear;
-    case 'ease-in':
-      return Easing.in(Easing.ease);
-    case 'ease-out':
-      return Easing.out(Easing.ease);
-    case 'ease':
-      return Easing.ease;
-    case 'ease-in-out':
-    default:
-      return Easing.inOut(Easing.ease);
-  }
 }
