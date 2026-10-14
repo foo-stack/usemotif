@@ -1212,6 +1212,31 @@ describe('motif babel plugin - wrapper stripping', () => {
     expect(code).not.toMatch(/<Box\b/);
   });
 
+  it('strips a <Box> with literal _before / _after, emitting ::before and ::after', () => {
+    const { code, css } = transform(`
+      import { Box } from '@usemotif/react';
+      const X = () => (
+        <Box p={4} _before={{ content: '"*"', color: '$colors.text.muted' }} _after={{ bg: 'red' }} />
+      );
+    `);
+    expect(code).toMatch(/<div\b/);
+    expect(code).not.toMatch(/<Box\b/);
+    expect(code).not.toContain('_before');
+    expect(code).not.toContain('_after');
+    expect(code).toMatch(/className="m-[a-z0-9]+"/);
+    expect(css).toMatch(/\.m-[a-z0-9]+::before \{[^}]*content: "\*"/);
+    expect(css).toMatch(/::after \{[^}]*content: "";[^}]*background-color: red/);
+  });
+
+  it('keeps <Box> when a _before bag is dynamic', () => {
+    const { code } = transform(`
+      import { Box } from '@usemotif/react';
+      const X = ({ bag }) => <Box p={4} _before={bag} />;
+    `);
+    expect(code).toMatch(/<Box\b/);
+    expect(code).toContain('_before={bag}');
+  });
+
   it('replaces fully-static <Text> with <span>', () => {
     const { code } = transform(`
       import { Text } from '@usemotif/react';

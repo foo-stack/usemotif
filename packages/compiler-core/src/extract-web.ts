@@ -7,6 +7,7 @@ import {
   isMotionProp,
   liftPseudoOverriddenBaseProps,
   resolveResponsiveStylesToVars,
+  resolvePseudoElementBag,
   resolveStylesToVars,
   resolveTransitionToVars,
   styleProps,
@@ -200,7 +201,11 @@ export function extractWeb(
     // `:hover` rule. The runtime performs the lift itself when the bag is
     // present on the element.
     if (bagConflictsWithDynamic(ps.style, dynamicFamilies)) continue;
-    const { style } = resolveStylesToVars(ps.style);
+    // Pseudo-element bags carry `content` (defaulted when absent) the way the
+    // runtime resolves them, so the rule hashes identically.
+    const style = ps.pseudo.startsWith('::')
+      ? resolvePseudoElementBag(ps.style)
+      : resolveStylesToVars(ps.style).style;
     rankedPseudo.push({ rank: PSEUDO_ORDER[ps.name] ?? 50, rule: { pseudo: ps.pseudo, style } });
     consumed.push(ps.name);
   }

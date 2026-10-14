@@ -56,21 +56,12 @@ export interface PrimitiveInfo {
 const MOTION_NON_STRIPPABLE: readonly string[] = ['enterStyle'];
 
 /**
- * Pseudo-element bags every strippable primitive supports at runtime
- * (`Box` emits `::before`/`::after` rules with a default `content`). The
- * compiler doesn't yet synthesize those rules during extraction, so a
- * literal `_before`/`_after` must keep the wrapper in place - otherwise
- * the pseudo-element CSS is never emitted and the prop leaks onto the DOM
- * as an invalid attribute. Folding these into the extractor's pseudo path
- * (so the wrapper can still be stripped) is a follow-up.
+ * Block-strip set shared by every strippable primitive. `_before` and
+ * `_after` are not in it: a literal bag is extracted to a `::before` /
+ * `::after` rule, and a dynamic one makes the element non-static, which
+ * keeps the wrapper by itself.
  */
-const PSEUDO_ELEMENT_PROPS: readonly string[] = ['_before', '_after'];
-
-/** Block-strip set shared by every strippable primitive. */
-const BASE_NON_STRIPPABLE: ReadonlySet<string> = new Set([
-  ...MOTION_NON_STRIPPABLE,
-  ...PSEUDO_ELEMENT_PROPS,
-]);
+const BASE_NON_STRIPPABLE: ReadonlySet<string> = new Set(MOTION_NON_STRIPPABLE);
 /** Text adds `lines`; the Stack family adds `stagger`. Each is a single
  * shared instance (read-only - only `.has()` is called) so the three Stack
  * variants don't allocate three identical sets. */
