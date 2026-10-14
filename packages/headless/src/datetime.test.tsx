@@ -417,3 +417,77 @@ describe('TimeInput', () => {
     expect(input.step).toBe('60');
   });
 });
+
+describe('Calendar - minDate and maxDate', () => {
+  const MIN = new Date(2024, 5, 10);
+  const MAX = new Date(2024, 5, 20);
+
+  function cell(day: number): HTMLElement {
+    return container.querySelector<HTMLElement>(`[aria-label*="June ${day}, 2024"]`)!;
+  }
+
+  it('disables days outside the bounds and ignores clicks on them', () => {
+    const onValueChange = vi.fn();
+    render(
+      <Calendar
+        defaultValue={JUNE_15_2024}
+        minDate={MIN}
+        maxDate={MAX}
+        locale="en-US"
+        onValueChange={onValueChange}
+      />,
+    );
+    expect(cell(9).getAttribute('aria-disabled')).toBe('true');
+    expect(cell(10).hasAttribute('aria-disabled')).toBe(false);
+    expect(cell(20).hasAttribute('aria-disabled')).toBe(false);
+    expect(cell(21).getAttribute('aria-disabled')).toBe('true');
+    act(() => cell(9).click());
+    expect(onValueChange).not.toHaveBeenCalled();
+  });
+
+  it('stops keyboard focus at the bounds', () => {
+    render(<Calendar defaultValue={JUNE_15_2024} minDate={MIN} maxDate={MAX} locale="en-US" />);
+    const grid = container.querySelector<HTMLElement>('[role="grid"]')!;
+    press(grid, 'PageUp');
+    expect(container.querySelector('[tabindex="0"]')!.getAttribute('aria-label')).toContain(
+      'June 10',
+    );
+    press(grid, 'PageDown');
+    expect(container.querySelector('[tabindex="0"]')!.getAttribute('aria-label')).toContain(
+      'June 20',
+    );
+  });
+
+  it('starts focus inside the bounds when nothing is selected', () => {
+    render(<Calendar minDate={new Date(2099, 0, 5)} locale="en-US" />);
+    expect(container.querySelector('[tabindex="0"]')!.getAttribute('aria-label')).toContain(
+      'January 5, 2099',
+    );
+  });
+});
+
+describe('Calendar - numberOfMonths', () => {
+  it('renders consecutive months with outside days left empty', () => {
+    render(<Calendar defaultValue={JUNE_15_2024} numberOfMonths={2} locale="en-US" />);
+    const grids = Array.from(container.querySelectorAll('[role="grid"]'));
+    expect(grids.map((g) => g.getAttribute('aria-label'))).toEqual(['June 2024', 'July 2024']);
+    // July 1st appears once: June's grid leaves its trailing days empty.
+    expect(container.querySelectorAll('[aria-label*="July 1, 2024"]')).toHaveLength(1);
+    expect(container.querySelectorAll('[tabindex="0"]')).toHaveLength(1);
+  });
+
+  it('moves focus across the months, and slides the window past the last one', () => {
+    render(<Calendar defaultValue={JUNE_15_2024} numberOfMonths={2} locale="en-US" />);
+    const grid = (): HTMLElement => container.querySelector<HTMLElement>('[role="grid"]')!;
+    press(grid(), 'PageDown');
+    expect(container.querySelector('[tabindex="0"]')!.getAttribute('aria-label')).toContain(
+      'July 15',
+    );
+    expect(grid().getAttribute('aria-label')).toBe('June 2024');
+    press(grid(), 'PageDown');
+    const labels = Array.from(container.querySelectorAll('[role="grid"]')).map((g) =>
+      g.getAttribute('aria-label'),
+    );
+    expect(labels).toEqual(['July 2024', 'August 2024']);
+  });
+});

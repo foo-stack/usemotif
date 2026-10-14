@@ -3,7 +3,7 @@ title: Calendar
 description: A themed month calendar over the headless Calendar - a focusable grid with full keyboard navigation, locale-aware labels, and themed day cells.
 diataxis: reference
 covers: ['Calendar', 'CalendarProps', 'RangeCalendarProps']
-last_verified: 2026-10-14
+last_verified: 2026-10-15
 ---
 
 import {
@@ -106,6 +106,17 @@ Weeks starting on Monday, with weekends disabled:
       name: 'isDisabled',
       type: '(date: Date) => boolean',
       description: 'Return `true` to mark a day disabled.',
+    },
+    {
+      name: 'minDate / maxDate',
+      type: 'Date',
+      description: 'The first and last selectable days. Days outside are disabled, and keyboard focus stops at the bounds.',
+    },
+    {
+      name: 'numberOfMonths',
+      type: 'number',
+      default: '1',
+      description: 'Consecutive months shown side by side. Focus moves across them, and the view slides when it leaves the last one. Outside-month days are left blank so no date shows twice.',
     },
     {
       name: 'weekStartsOn',
