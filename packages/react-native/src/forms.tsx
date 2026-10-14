@@ -165,7 +165,7 @@ function adornment(node: ReactNode): ReactNode {
   return typeof node === 'string' || typeof node === 'number' ? <Text>{node}</Text> : node;
 }
 
-export const Input = forwardRef(function Input(
+export const Input = /* @__PURE__ */ forwardRef(function Input(
   { invalid, disabled, style: userStyle, startElement, endElement, ...rest }: InputProps,
   ref: Ref<RNTextInput>,
 ): ReactElement {
@@ -224,7 +224,7 @@ export const Input = forwardRef(function Input(
 export interface TextAreaProps extends Omit<InputProps, 'multiline' | 'numberOfLines'> {
   rows?: number;
 }
-export const TextArea = forwardRef(function TextArea(
+export const TextArea = /* @__PURE__ */ forwardRef(function TextArea(
   { rows = 3, style, ...rest }: TextAreaProps,
   ref: Ref<RNTextInput>,
 ): ReactElement {
@@ -241,7 +241,7 @@ export const TextArea = forwardRef(function TextArea(
 export interface NumberInputProps extends Omit<InputProps, 'keyboardType'> {
   keyboardType?: KeyboardTypeOptions;
 }
-export const NumberInput = forwardRef(function NumberInput(
+export const NumberInput = /* @__PURE__ */ forwardRef(function NumberInput(
   { keyboardType = 'numeric', ...rest }: NumberInputProps,
   ref: Ref<RNTextInput>,
 ): ReactElement {
@@ -251,7 +251,7 @@ export const NumberInput = forwardRef(function NumberInput(
 export interface PasswordInputProps extends Omit<InputProps, 'secureTextEntry'> {
   togglable?: boolean;
 }
-export const PasswordInput = forwardRef(function PasswordInput(
+export const PasswordInput = /* @__PURE__ */ forwardRef(function PasswordInput(
   { togglable = true, ...rest }: PasswordInputProps,
   ref: Ref<RNTextInput>,
 ): ReactElement {

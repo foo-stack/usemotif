@@ -259,7 +259,7 @@ const FOCUS_RING = { outlineStyle: 'auto' } as const;
  * <Input placeholder="Search" startElement={<Icon icon={Search} />} />
  * ```
  */
-export const Input = forwardRef(function Input(
+export const Input = /* @__PURE__ */ forwardRef(function Input(
   { invalid, disabled, type = 'text', style, startElement, endElement, ...rest }: InputProps,
   ref: Ref<HTMLInputElement>,
 ): ReactElement {
@@ -302,7 +302,7 @@ export interface TextAreaProps extends Omit<TextareaHTMLAttributes<HTMLTextAreaE
   invalid?: boolean;
   rows?: number;
 }
-export const TextArea = forwardRef(function TextArea(
+export const TextArea = /* @__PURE__ */ forwardRef(function TextArea(
   { invalid, disabled, rows = 3, style, ...rest }: TextAreaProps,
   ref: Ref<HTMLTextAreaElement>,
 ): ReactElement {
@@ -322,7 +322,7 @@ export const TextArea = forwardRef(function TextArea(
 });
 
 export interface NumberInputProps extends Omit<InputProps, 'type'> {}
-export const NumberInput = forwardRef(function NumberInput(
+export const NumberInput = /* @__PURE__ */ forwardRef(function NumberInput(
   props: NumberInputProps,
   ref: Ref<HTMLInputElement>,
 ): ReactElement {
@@ -334,7 +334,7 @@ export interface PasswordInputProps extends Omit<InputProps, 'type'> {
    * Defaults to true. */
   togglable?: boolean;
 }
-export const PasswordInput = forwardRef(function PasswordInput(
+export const PasswordInput = /* @__PURE__ */ forwardRef(function PasswordInput(
   { togglable = true, ...rest }: PasswordInputProps,
   ref: Ref<HTMLInputElement>,
 ): ReactElement {
