@@ -414,3 +414,69 @@ describe('MultiSelect - controlled value clearing (#190)', () => {
     expect(checkbox().getAttribute('aria-checked')).toBe('false');
   });
 });
+
+describe('Combobox - async options', () => {
+  const remote = [
+    { value: 'a', label: 'Alpha (server match)' },
+    { value: 'b', label: 'Beta (server match)' },
+  ];
+
+  function Async({
+    options,
+    loading,
+    onInput,
+  }: {
+    options: typeof remote;
+    loading: boolean;
+    onInput?: (v: string) => void;
+  }): React.ReactElement {
+    return (
+      <Search.Root
+        options={options}
+        loading={loading}
+        filter={false}
+        defaultOpen
+        {...(onInput !== undefined ? { onInputValueChange: onInput } : {})}
+      >
+        <Search.Input />
+        <Search.List loadingMessage="Fetching" emptyMessage="Nothing found" />
+      </Search.Root>
+    );
+  }
+
+  it('shows the loading message and aria-busy while loading with no options', () => {
+    render(<Async options={[]} loading />);
+    expect(findOptions().map((o) => o.textContent)).toEqual(['Fetching']);
+    expect(document.body.querySelector('[role="listbox"]')!.getAttribute('aria-busy')).toBe('true');
+  });
+
+  it('keeps showing options while loading, and the empty message once loading ends', () => {
+    render(<Async options={remote} loading />);
+    expect(findOptions().length).toBe(2);
+    expect(document.body.querySelector('[role="listbox"]')!.getAttribute('aria-busy')).toBe('true');
+    render(<Async options={[]} loading={false} />);
+    expect(findOptions().map((o) => o.textContent)).toEqual(['Nothing found']);
+    expect(document.body.querySelector('[role="listbox"]')!.hasAttribute('aria-busy')).toBe(false);
+  });
+
+  it('shows options the input does not match when filter is false, and reports each keystroke', () => {
+    const onInput = vi.fn();
+    render(<Async options={remote} loading={false} onInput={onInput} />);
+    const input = container.querySelector('input')!;
+    type(input, 'z');
+    type(input, 'zq');
+    expect(onInput.mock.calls.map((c) => c[0])).toEqual(['z', 'zq']);
+    expect(findOptions().length).toBe(2);
+  });
+
+  it('still filters by default', () => {
+    render(
+      <Combobox.Root options={langs} defaultOpen>
+        <Combobox.Input />
+        <Combobox.List />
+      </Combobox.Root>,
+    );
+    type(container.querySelector('input')!, 'ru');
+    expect(findOptions().map((o) => o.textContent)).toEqual(['Rust']);
+  });
+});

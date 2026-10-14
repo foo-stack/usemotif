@@ -2,7 +2,7 @@
 title: Menu
 description: An accessible dropdown menu with arrow-key navigation. Trigger, panel, items, separators - the full keyboard contract.
 diataxis: reference
-covers: ['Menu', 'MenuRootProps', 'MenuTriggerProps', 'MenuContentProps', 'MenuItemProps', 'MenuSubProps', 'MenuSubTriggerProps', 'MenuSubContentProps']
+covers: ['Menu', 'MenuRootProps', 'MenuTriggerProps', 'MenuContentProps', 'MenuItemProps', 'MenuSubProps', 'MenuSubTriggerProps', 'MenuSubContentProps', 'MenuCheckboxItemProps', 'MenuRadioGroupProps', 'MenuRadioItemProps', 'MenuLabelProps']
 last_verified: 2026-10-14
 ---
 
@@ -195,6 +195,30 @@ at a time.
 `ContextMenu.Sub`, `ContextMenu.SubTrigger` and `ContextMenu.SubContent` are the same parts. On
 React Native a submenu expands inline within the menu sheet.
 
+### Menu.CheckboxItem, Menu.RadioGroup, Menu.RadioItem, Menu.Label
+
+Items that hold state. A checkbox item toggles on its own; radio items pick one value within
+their group. Both close the menu when chosen, as `Menu.Item` does, unless `closeOnSelect` is
+`false`. `Menu.Label` is a heading the arrow keys pass over.
+
+<CodeBlock lang="tsx" code={`<Menu.CheckboxItem checked={wrap} onCheckedChange={setWrap}>Word wrap</Menu.CheckboxItem>
+<Menu.Label>Sort by</Menu.Label>
+<Menu.RadioGroup value={sort} onValueChange={setSort} label="Sort by">
+  <Menu.RadioItem value="name">Name</Menu.RadioItem>
+  <Menu.RadioItem value="date">Date modified</Menu.RadioItem>
+</Menu.RadioGroup>`} />
+
+- **`Menu.CheckboxItem`** takes `checked` / `defaultChecked` / `onCheckedChange`, plus
+  `disabled`, `closeOnSelect`, `style`, `asChild`. It is `role="menuitemcheckbox"` with
+  `aria-checked`.
+- **`Menu.RadioGroup`** takes `value` / `defaultValue` / `onValueChange` and an optional
+  `label` that names the group. **`Menu.RadioItem`** takes its `value` and the same item props,
+  and is `role="menuitemradio"` with `aria-checked`.
+- Both items carry `data-state="checked"` or `"unchecked"` for styling.
+
+ContextMenu exposes the same four parts. On React Native they report
+`accessibilityState.checked`.
+
 ## Keyboard
 
 | Key | Action |
@@ -202,7 +226,7 @@ React Native a submenu expands inline within the menu sheet.
 | Arrow Down / Up on the trigger | Open the menu |
 | Arrow Down / Up in the panel | Move focus between items, wrapping |
 | Home / End | Focus the first / last enabled item |
-| Enter / Space | Activate the focused item, or open the focused submenu |
+| Enter / Space | Activate the focused item, toggle a checkbox or pick a radio item, or open the focused submenu |
 | Arrow Right on a submenu trigger | Open the submenu and focus its first item |
 | Arrow Left in a submenu | Close the submenu, returning focus to its trigger |
 | Escape | Close the innermost open menu, returning focus to its trigger |

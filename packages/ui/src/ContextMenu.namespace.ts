@@ -1,5 +1,6 @@
 import { ContextMenu as Headless } from '@usemotif/headless';
 import { ContextMenuContent, ContextMenuItem, ContextMenuSeparator } from './ContextMenu.js';
+import { MenuCheckboxItem, MenuLabel, MenuRadioGroup, MenuRadioItem } from './MenuItems.js';
 import { MenuSubContent, MenuSubTrigger } from './MenuSub.js';
 
 /**
@@ -20,4 +21,8 @@ export const ContextMenu = {
   Sub: Headless.Sub,
   SubTrigger: MenuSubTrigger,
   SubContent: MenuSubContent,
+  CheckboxItem: MenuCheckboxItem,
+  RadioGroup: MenuRadioGroup,
+  RadioItem: MenuRadioItem,
+  Label: MenuLabel,
 };

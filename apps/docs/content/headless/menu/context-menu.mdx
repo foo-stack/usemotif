@@ -86,10 +86,23 @@ position comes from the click coordinates, not from a `placement` prop.
       name: 'children',
       type: 'ReactElement',
       required: true,
-      description: 'A single element - the region that listens for the right-click. ContextMenu clones it to attach the `onContextMenu` handler.',
+      description: 'A single element - the region that listens for the right-click or long-press. ContextMenu clones it to attach its handlers; the element\'s own handlers still run.',
+    },
+    {
+      name: 'longPressDelay',
+      type: 'number',
+      default: '500',
+      description: 'How long a touch must be held to open the menu, in milliseconds.',
     },
   ]}
 />
+
+On a touch screen the trigger also opens on a long-press: a touch held for `longPressDelay`
+(500 ms by default, React Native's long-press delay) opens the menu at the finger. Moving more
+than 10 px, lifting, or the browser cancelling the touch stops it, and the click a browser may
+send on release is swallowed. iOS Safari shows its own callout and starts a text selection on
+a long-press; turn those off on the trigger element with
+`style={{ WebkitTouchCallout: 'none', userSelect: 'none' }}`.
 
 ### ContextMenu.Content
 
@@ -121,6 +134,11 @@ The same component as [Menu.Item](/headless/menu/menu#menuitem) - `onSelect`, `d
 The same submenu parts as [Menu.Sub](/headless/menu/menu#menusub-menusubtrigger-menusubcontent),
 with the same keyboard and pointer behaviour.
 
+### ContextMenu.CheckboxItem, ContextMenu.RadioGroup, ContextMenu.RadioItem, ContextMenu.Label
+
+The same stateful items and label as
+[Menu.CheckboxItem](/headless/menu/menu#menucheckboxitem-menuradiogroup-menuradioitem-menulabel).
+
 <CodeBlock lang="tsx" code={`<ContextMenu.Sub>
   <ContextMenu.SubTrigger>Move to</ContextMenu.SubTrigger>
   <ContextMenu.SubContent>
@@ -134,8 +152,8 @@ ContextMenu carries the same ARIA as Menu - `role="menu"`, `role="menuitem"`, `a
 disabled rows. Opening the menu focuses the first enabled item; the arrow keys, Home, End, and
 Escape all behave as they do in Menu.
 
-A right-click is a pointer-only gesture. Whatever a ContextMenu offers must also be reachable
-another way - a visible [Menu](/headless/menu/menu) button, a toolbar, a keyboard shortcut - so
+A right-click or long-press is a pointer-only gesture. Whatever a ContextMenu offers must also be
+reachable another way - a visible [Menu](/headless/menu/menu) button, a toolbar, a keyboard shortcut - so
 keyboard and touch users are not locked out of the actions.
 
 ## Examples

@@ -2,8 +2,8 @@
 title: RangeSlider
 description: A low-high pair on one scale - two slider thumbs that cannot cross. Price ranges, date windows.
 diataxis: reference
-covers: ['RangeSlider', 'RangeSliderProps']
-last_verified: 2026-05-15
+covers: ['RangeSlider', 'RangeSliderProps', 'SliderMark']
+last_verified: 2026-10-14
 ---
 
 import {
@@ -75,6 +75,22 @@ drag or a keypress can narrow the range but never invert it.
       name: 'style',
       type: 'CSSProperties',
       description: 'Inline style for the track wrapper.',
+    },
+    {
+      name: 'orientation',
+      type: "'horizontal' | 'vertical'",
+      default: "'horizontal'",
+      description: 'Lay the track out vertically: the fill and thumbs are placed from the bottom, and each thumb reports `aria-orientation`. Arrow Up raises a thumb.',
+    },
+    {
+      name: 'marks',
+      type: 'ReadonlyArray<{ value: number; label?: ReactNode }>',
+      description: 'Points along the track, each with an optional label, rendered as `aria-hidden` elements flagged `data-active` inside the filled range. When the value sits on a mark with a string label, that label becomes the `aria-valuetext`.',
+    },
+    {
+      name: 'markStyle / markLabelStyle',
+      type: 'CSSProperties',
+      description: 'Inline styles for each mark and its label.',
     },
   ]}
 />

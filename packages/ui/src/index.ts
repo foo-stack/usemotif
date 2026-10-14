@@ -28,6 +28,7 @@ export { Select, type SelectProps, type SelectOption } from './Select.js';
 export { Menu } from './Menu.namespace.js';
 export { type MenuItemPropsThemed } from './Menu.js';
 export { type MenuSubTriggerPropsThemed } from './MenuSub.js';
+export { type MenuCheckboxItemPropsThemed, type MenuRadioItemPropsThemed } from './MenuItems.js';
 export { Slider, type SliderProps } from './Slider.js';
 export { Progress, type ProgressProps } from './Progress.js';
 export { Drawer, Sheet } from './Drawer.namespace.js';
@@ -66,7 +67,12 @@ export {
   type CommandPaletteProps,
   type Command,
 } from './CommandPalette.js';
-export { TreeView, type TreeViewProps, type TreeNode } from './TreeView.js';
+export {
+  TreeView,
+  type MultiTreeViewProps,
+  type TreeViewProps,
+  type TreeNode,
+} from './TreeView.js';
 export { Stat, type StatProps, type StatTrend } from './Stat.js';
 export { EmptyState, type EmptyStateProps } from './EmptyState.js';
 export {

@@ -1,0 +1,67 @@
+---
+title: Toggle
+description: A button that stays pressed - aria-pressed and a data-state attribute, controlled or uncontrolled.
+diataxis: reference
+covers: ['Toggle', 'ToggleProps']
+last_verified: 2026-10-14
+---
+
+import { ApiSignature, ArticleMeta, CodeBlock, Eyebrow, Lede } from '../../../components/index.js';
+
+<Eyebrow>Headless / Selection</Eyebrow>
+
+# Toggle
+
+<Lede>
+  Toggle is a button that stays pressed until it is pressed again: bold in a text editor, mute on
+  a call. It is a real `<button>` with `aria-pressed`.
+</Lede>
+
+<ArticleMeta />
+
+## What it is
+
+A `<button type="button">` that flips its pressed state on click, Enter, or Space. It carries
+`aria-pressed` for assistive technology and `data-state="on"` or `"off"` for styling. Any other
+button prop passes through. For a row of toggles that share one value or several, use
+[ToggleGroup](/headless/selection/toggle-group).
+
+## Install
+
+<CodeBlock lang="bash" code={`yarn add @usemotif/headless`} />
+
+<CodeBlock lang="tsx" code={`import { Toggle } from '@usemotif/headless';`} />
+
+## API
+
+<ApiSignature
+  name="Toggle"
+  status="stable"
+  signature={`function Toggle(props: ToggleProps): JSX.Element`}
+  params={[
+    {
+      name: 'pressed / defaultPressed / onPressedChange',
+      type: 'boolean / boolean / (pressed: boolean) => void',
+      description: 'The pressed state, controlled or uncontrolled.',
+    },
+    {
+      name: '...ButtonHTMLAttributes',
+      type: 'Omit<ButtonHTMLAttributes, "type" | "value">',
+      description: 'Every other button attribute - `disabled`, `aria-label`, `onClick`, `style`. An `onClick` that calls `preventDefault()` stops the toggle.',
+    },
+  ]}
+/>
+
+## Accessibility
+
+A toggle needs a name that does not change with its state - "Bold", not "Make bold" - because
+`aria-pressed` already announces whether it is on. Give an icon-only toggle an `aria-label`. On
+React Native it is a Pressable announced as a toggle button, with `accessibilityState.checked`.
+
+## Example
+
+<CodeBlock lang="tsx" code={`const [bold, setBold] = useState(false);
+
+<Toggle pressed={bold} onPressedChange={setBold} aria-label="Bold">
+  <BoldIcon />
+</Toggle>`} />

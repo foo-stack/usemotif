@@ -15,6 +15,7 @@ import {
   type CSSProperties,
   type KeyboardEvent,
   type MouseEvent,
+  type PointerEvent,
   type ReactElement,
   type ReactNode,
 } from 'react';
@@ -76,23 +77,92 @@ function Root({ children }: ContextMenuRootProps): ReactElement {
 export interface ContextMenuTriggerProps {
   children: ReactElement<{
     onContextMenu?: (e: MouseEvent<HTMLElement>) => void;
+    onPointerDown?: (e: PointerEvent<HTMLElement>) => void;
+    onPointerMove?: (e: PointerEvent<HTMLElement>) => void;
+    onPointerUp?: (e: PointerEvent<HTMLElement>) => void;
+    onPointerCancel?: (e: PointerEvent<HTMLElement>) => void;
+    onClick?: (e: MouseEvent<HTMLElement>) => void;
   }>;
+  /** How long a touch must be held to open the menu, in ms. Defaults to 500,
+   * React Native's long-press delay. */
+  longPressDelay?: number;
 }
-function Trigger({ children }: ContextMenuTriggerProps): ReactElement {
+
+/** How far a held touch may drift, in px, before it counts as a scroll. */
+const LONG_PRESS_TOLERANCE = 10;
+
+function Trigger({ children, longPressDelay = 500 }: ContextMenuTriggerProps): ReactElement {
   const ctx = useContextMenuContext('ContextMenu.Trigger');
+  const pressRef = useRef<{ x: number; y: number; timer: ReturnType<typeof setTimeout> } | null>(
+    null,
+  );
+  // A long-press can be followed by a click on release; swallow that one so
+  // opening the menu does not also activate what the trigger wraps.
+  const swallowClickRef = useRef(false);
+  const cancelPress = useCallback(() => {
+    if (pressRef.current !== null) clearTimeout(pressRef.current.timer);
+    pressRef.current = null;
+  }, []);
+  useEffect(() => cancelPress, [cancelPress]);
+
   if (!isValidElement(children)) throw new Error('ContextMenu.Trigger expects a single element.');
-  const childOnContextMenu = children.props.onContextMenu;
+  const props = children.props;
+  // Content is portaled to <body> as position:absolute, so store document
+  // coordinates: clientX/Y are viewport-relative, and without the scroll
+  // offset the menu lands `scrollY` px above the pointer on a scrolled page.
+  const openAt = (clientX: number, clientY: number): void => {
+    ctx.setPosition({ x: clientX + window.scrollX, y: clientY + window.scrollY });
+    ctx.setOpen(true);
+  };
+  const endPress = (
+    e: PointerEvent<HTMLElement>,
+    own: ((e: PointerEvent<HTMLElement>) => void) | undefined,
+  ): void => {
+    own?.(e);
+    cancelPress();
+  };
+
   return cloneElement(children, {
     onContextMenu: (e: MouseEvent<HTMLElement>) => {
-      childOnContextMenu?.(e);
+      props.onContextMenu?.(e);
       if (e.defaultPrevented) return;
       e.preventDefault();
-      // Store document-relative coordinates: the Content is portaled to
-      // <body> as position:absolute (document-flow), but clientX/Y are
-      // viewport-relative. Without the scroll offset the menu lands
-      // `scrollY` px above the pointer on a scrolled page.
-      ctx.setPosition({ x: e.clientX + window.scrollX, y: e.clientY + window.scrollY });
-      ctx.setOpen(true);
+      openAt(e.clientX, e.clientY);
+    },
+    // Touch screens have no right-click; a held touch opens the menu instead.
+    onPointerDown: (e: PointerEvent<HTMLElement>) => {
+      props.onPointerDown?.(e);
+      swallowClickRef.current = false;
+      if (e.pointerType !== 'touch' || e.defaultPrevented) return;
+      cancelPress();
+      const { clientX, clientY } = e;
+      pressRef.current = {
+        x: clientX,
+        y: clientY,
+        timer: setTimeout(() => {
+          pressRef.current = null;
+          swallowClickRef.current = true;
+          openAt(clientX, clientY);
+        }, longPressDelay),
+      };
+    },
+    onPointerMove: (e: PointerEvent<HTMLElement>) => {
+      props.onPointerMove?.(e);
+      const press = pressRef.current;
+      if (press === null) return;
+      if (Math.hypot(e.clientX - press.x, e.clientY - press.y) > LONG_PRESS_TOLERANCE) {
+        cancelPress();
+      }
+    },
+    onPointerUp: (e: PointerEvent<HTMLElement>) => endPress(e, props.onPointerUp),
+    onPointerCancel: (e: PointerEvent<HTMLElement>) => endPress(e, props.onPointerCancel),
+    onClick: (e: MouseEvent<HTMLElement>) => {
+      if (swallowClickRef.current) {
+        swallowClickRef.current = false;
+        e.preventDefault();
+        return;
+      }
+      props.onClick?.(e);
     },
   });
 }

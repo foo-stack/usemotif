@@ -58,6 +58,7 @@ interface ComboboxContextValue<T = string> {
   readonly inputValue: string;
   readonly setInputValue: (next: string) => void;
   readonly options: ReadonlyArray<ComboboxOption<T>>;
+  readonly loading: boolean;
   readonly listboxId: string;
 }
 const ComboboxContext = createContext<ComboboxContextValue<unknown> | null>(null);
@@ -74,7 +75,14 @@ export interface ComboboxRootProps<T = string> {
   onValueChange?: (next: T | undefined) => void;
   inputValue?: string;
   onInputValueChange?: (next: string) => void;
-  filter?: (option: ComboboxOption<T>, input: string) => boolean;
+  /** Custom filter. Defaults to case-insensitive substring match
+   * against `option.label`. `false` shows `options` exactly as given, for
+   * results a server has already matched. */
+  filter?: ((option: ComboboxOption<T>, input: string) => boolean) | false;
+  /** Results are being fetched: the list shows `loadingMessage` while it has
+   * no options. Pair with `onInputValueChange`, which fires on every
+   * keystroke, to fetch as the user types. */
+  loading?: boolean;
   open?: boolean;
   defaultOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
@@ -89,6 +97,7 @@ function ComboboxRoot<T>(props: ComboboxRootProps<T>): ReactElement {
     inputValue: controlledInput,
     onInputValueChange,
     filter,
+    loading = false,
     open: controlledOpen,
     defaultOpen = false,
     onOpenChange,
@@ -117,6 +126,7 @@ function ComboboxRoot<T>(props: ComboboxRootProps<T>): ReactElement {
   });
 
   const filtered = useMemo(() => {
+    if (filter === false) return options;
     const fn = filter ?? defaultFilter;
     return options.filter((o) => fn(o, inputValue));
   }, [options, inputValue, filter]);
@@ -134,6 +144,7 @@ function ComboboxRoot<T>(props: ComboboxRootProps<T>): ReactElement {
           inputValue,
           setInputValue,
           options: filtered as ReadonlyArray<ComboboxOption<unknown>>,
+          loading,
           listboxId: `${reactId}-listbox`,
         } satisfies ComboboxContextValue<unknown>
       }
@@ -174,6 +185,7 @@ function ComboboxList<T>({
   style,
   renderOption,
   emptyMessage = 'No options',
+  loadingMessage = 'Loading...',
 }: {
   style?: ViewStyle;
   renderOption?: (
@@ -181,6 +193,8 @@ function ComboboxList<T>({
     info: { selected: boolean; index: number },
   ) => ReactNode;
   emptyMessage?: ReactNode;
+  /** Shown in place of `emptyMessage` while the root is `loading`. */
+  loadingMessage?: ReactNode;
 }): ReactElement | null {
   const ctx = useComboboxContext<T>('Combobox.List');
   if (!ctx.open) return null;
@@ -191,10 +205,17 @@ function ComboboxList<T>({
         style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.4)' }}
       >
         <Pressable onPress={(e) => e.stopPropagation?.()} style={style}>
-          <View nativeID={ctx.listboxId} accessibilityRole="list" style={{ maxHeight: '60%' }}>
+          <View
+            nativeID={ctx.listboxId}
+            accessibilityRole="list"
+            accessibilityState={{ busy: ctx.loading }}
+            style={{ maxHeight: '60%' }}
+          >
             <ScrollView>
               {ctx.options.length === 0 ? (
-                <View accessibilityRole="text">{nativeText(emptyMessage)}</View>
+                <View accessibilityRole="text">
+                  {nativeText(ctx.loading ? loadingMessage : emptyMessage)}
+                </View>
               ) : (
                 ctx.options.map((opt, i) => {
                   const optionId = `${ctx.listboxId}-option-${i}`;

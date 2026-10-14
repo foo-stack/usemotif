@@ -3,7 +3,7 @@ title: Combobox
 description: A filterable single-select - a typeable input over a listbox of options. Type to narrow, arrow keys to choose.
 diataxis: reference
 covers: ['Combobox', 'ComboboxRootProps', 'ComboboxOption']
-last_verified: 2026-05-15
+last_verified: 2026-10-14
 ---
 
 import {
@@ -81,8 +81,14 @@ case-insensitive substring match on each option's label; pass `filter` to overri
     },
     {
       name: 'filter',
-      type: '(option, input) => boolean',
-      description: 'Custom filter predicate. Defaults to a case-insensitive substring match on `label`.',
+      type: '((option, input) => boolean) | false',
+      description: 'Custom filter predicate. Defaults to a case-insensitive substring match on `label`. `false` shows `options` exactly as given, for results a server already matched.',
+    },
+    {
+      name: 'loading',
+      type: 'boolean',
+      default: 'false',
+      description: 'Results are being fetched. The list shows `loadingMessage` while it has no options, and the listbox carries `aria-busy`.',
     },
     {
       name: 'open / defaultOpen / onOpenChange',
@@ -120,8 +126,37 @@ Combobox clones it with the combobox ARIA wiring and the keyboard handlers.
       default: '"No options"',
       description: 'Rendered when the filter matches nothing.',
     },
+    {
+      name: 'loadingMessage',
+      type: 'ReactNode',
+      default: '"Loading..."',
+      description: 'Rendered in place of `emptyMessage` while the root is `loading`.',
+    },
   ]}
 />
+
+## Options fetched as you type
+
+`onInputValueChange` fires on every keystroke, so it is where a fetch starts. Pass the results as
+`options` with `filter={false}`, so the built-in substring filter does not hide matches the
+server ranked or matched loosely, and set `loading` while a request is in flight.
+
+<CodeBlock lang="tsx" code={`const [query, setQuery] = useState('');
+const { data = [], isFetching } = useSearch(query); // your fetch, debounced as you like
+
+<Search.Root
+  options={data}
+  filter={false}
+  loading={isFetching}
+  onInputValueChange={setQuery}
+>
+  <Search.Input placeholder="Search docs" />
+  <Search.List loadingMessage="Searching..." emptyMessage="No results" />
+</Search.Root>`} />
+
+While `loading` is set and there are no options, the list shows `loadingMessage` where the empty
+message would go; options already on screen stay. On the web the listbox carries `aria-busy`
+while loading. The same props work on React Native.
 
 ## Keyboard
 

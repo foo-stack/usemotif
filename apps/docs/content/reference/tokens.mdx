@@ -6,7 +6,13 @@ covers: ['lightTheme', 'darkTheme', 'highContrastLightTheme', 'highContrastDarkT
 last_verified: 2026-10-14
 ---
 
-import { ApiSignature, ArticleMeta, CodeBlock, Eyebrow } from '../../components/index.js';
+import {
+  ApiSignature,
+  ArticleMeta,
+  CodeBlock,
+  Eyebrow,
+  TokenSwatches,
+} from '../../components/index.js';
 
 <Eyebrow>API reference</Eyebrow>
 
@@ -94,6 +100,15 @@ with the default presets: register them alongside and switch with `active`.
 >
   {children}
 </ThemeProvider>`} />
+
+## Semantic colours
+
+Every semantic colour in `lightTheme` and `darkTheme`, read from `@usemotif/tokens` when this page
+is built, so it always matches what ships. Each swatch shows the literal colour the token resolves
+to, so both themes appear whichever theme you are reading in. Author against the token path on
+the left, never the value.
+
+<TokenSwatches />
 
 ## Primitive scales
 

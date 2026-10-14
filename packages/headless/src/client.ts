@@ -60,6 +60,13 @@ export type {
 export { MenuContent, MenuItem, MenuRoot, MenuSeparator, MenuTrigger } from './Menu.js';
 export type { MenuContentProps, MenuItemProps, MenuRootProps, MenuTriggerProps } from './Menu.js';
 export { MenuSub, MenuSubContent, MenuSubTrigger } from './MenuSub.js';
+export { MenuCheckboxItem, MenuLabel, MenuRadioGroup, MenuRadioItem } from './MenuItems.js';
+export type {
+  MenuCheckboxItemProps,
+  MenuLabelProps,
+  MenuRadioGroupProps,
+  MenuRadioItemProps,
+} from './MenuItems.js';
 export type { MenuSubContentProps, MenuSubProps, MenuSubTriggerProps } from './MenuSub.js';
 
 export {
@@ -101,7 +108,13 @@ export type {
 } from './disclosure.js';
 
 export { Toast, Toaster, useToast } from './Toast.js';
-export type { ToastItem, ToasterProps } from './Toast.js';
+export type {
+  ToastContent,
+  ToastFn,
+  ToastItem,
+  ToastPromiseMessages,
+  ToasterProps,
+} from './Toast.js';
 
 export {
   ComboboxInput,
@@ -137,7 +150,13 @@ export type {
 } from './CommandPalette.js';
 
 export { Progress, RangeSlider, RatingInput, Slider } from './range.js';
-export type { ProgressProps, RangeSliderProps, RatingInputProps, SliderProps } from './range.js';
+export type {
+  ProgressProps,
+  RangeSliderProps,
+  RatingInputProps,
+  SliderMark,
+  SliderProps,
+} from './range.js';
 
 export { DrawerContent, DrawerRoot, SheetContent } from './Drawer.js';
 export type { DrawerContentProps } from './Drawer.js';
@@ -160,8 +179,20 @@ export type {
 } from './datetime.js';
 
 export { ColorPicker, FileUpload, TreeView } from './specialized.js';
-export type { ColorPickerProps, FileUploadProps, TreeNode, TreeViewProps } from './specialized.js';
+export type {
+  ColorPickerProps,
+  FileUploadProps,
+  MultiTreeViewProps,
+  TreeNode,
+  TreeNodeInfo,
+  TreeViewBaseProps,
+  TreeViewProps,
+} from './specialized.js';
 
+export { PinInput } from './pin-input.js';
+export type { PinInputProps, PinType } from './pin-input.js';
+export { Toggle, ToggleGroup, ToggleGroupItem } from './toggle-group.js';
+export type { ToggleGroupItemProps, ToggleGroupProps, ToggleProps } from './toggle-group.js';
 export { Breadcrumb, NavigationMenu, Pagination, Stepper, Toolbar } from './navigation.js';
 export type {
   BreadcrumbProps,

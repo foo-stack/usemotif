@@ -261,3 +261,160 @@ describe('TreeView - keyboard navigation', () => {
     expect(document.activeElement).toBe(nextItem);
   });
 });
+
+describe('TreeView lazy children', () => {
+  function item(name: string): HTMLElement {
+    const el = Array.from(container.querySelectorAll<HTMLElement>('[role="treeitem"]')).find((e) =>
+      e.textContent?.startsWith(name),
+    );
+    if (el === undefined) throw new Error(`no item ${name}`);
+    return el;
+  }
+
+  function LazyTree({
+    load,
+    loaded,
+  }: {
+    load: (node: TreeNode) => Promise<void>;
+    loaded: boolean;
+  }): React.ReactElement {
+    const data: TreeNode[] = [
+      {
+        id: 'docs',
+        label: 'docs',
+        hasChildren: true,
+        ...(loaded ? { children: [{ id: 'guide', label: 'guide.md' }] } : {}),
+      },
+    ];
+    return (
+      <TreeView
+        aria-label="Files"
+        data={data}
+        loadChildren={load}
+        renderNode={({ node, toggle, isLoading }) => (
+          <button type="button" onClick={toggle}>
+            {String(node.label)}
+            {isLoading ? ' (loading)' : ''}
+          </button>
+        )}
+      />
+    );
+  }
+
+  it('marks a hasChildren node as a branch, loads once while busy, then shows the children', async () => {
+    let resolve!: () => void;
+    const load = vi.fn(
+      () =>
+        new Promise<void>((r) => {
+          resolve = r;
+        }),
+    );
+    render(<LazyTree load={load} loaded={false} />);
+    expect(item('docs').getAttribute('aria-expanded')).toBe('false');
+    await act(async () => {
+      item('docs').querySelector('button')!.click();
+    });
+    expect(load).toHaveBeenCalledTimes(1);
+    expect(item('docs').getAttribute('aria-busy')).toBe('true');
+    expect(item('docs').textContent).toContain('(loading)');
+    render(<LazyTree load={load} loaded />);
+    await act(async () => {
+      resolve();
+    });
+    expect(item('docs').hasAttribute('aria-busy')).toBe(false);
+    expect(item('guide.md').getAttribute('aria-level')).toBe('2');
+    expect(load).toHaveBeenCalledTimes(1);
+  });
+
+  it('collapses again when the load fails, so expanding retries', async () => {
+    const load = vi.fn(() => Promise.reject(new Error('offline')));
+    render(<LazyTree load={load} loaded={false} />);
+    await act(async () => {
+      item('docs').querySelector('button')!.click();
+    });
+    expect(item('docs').getAttribute('aria-expanded')).toBe('false');
+    expect(item('docs').hasAttribute('aria-busy')).toBe(false);
+    await act(async () => {
+      item('docs').querySelector('button')!.click();
+    });
+    expect(load).toHaveBeenCalledTimes(2);
+  });
+
+  it('expands a lazy branch with ArrowRight', async () => {
+    const load = vi.fn(() => Promise.resolve());
+    render(<LazyTree load={load} loaded={false} />);
+    act(() => item('docs').focus());
+    await act(async () => {
+      item('docs').dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }),
+      );
+    });
+    expect(load).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('TreeView multiple selection', () => {
+  const nodes: TreeNode[] = [
+    { id: 'a', label: 'a' },
+    { id: 'b', label: 'b' },
+    { id: 'c', label: 'c', disabled: true },
+  ];
+  const renderNode = ({ node, select }: { node: TreeNode; select: () => void }) => (
+    <button type="button" onClick={select}>
+      {String(node.label)}
+    </button>
+  );
+
+  function selectedIds(): string[] {
+    return Array.from(container.querySelectorAll('[role="treeitem"][aria-selected="true"]')).map(
+      (e) => e.textContent ?? '',
+    );
+  }
+
+  it('toggles membership by click and Space, and skips disabled nodes', () => {
+    const onValueChange = vi.fn();
+    render(
+      <TreeView
+        aria-label="Pick"
+        selectionMode="multiple"
+        defaultValue={['a']}
+        onValueChange={onValueChange}
+        data={nodes}
+        renderNode={renderNode}
+      />,
+    );
+    expect(container.querySelector('[role="tree"]')!.getAttribute('aria-multiselectable')).toBe(
+      'true',
+    );
+    expect(selectedIds()).toEqual(['a']);
+    act(() => (container.querySelectorAll('button')[1] as HTMLElement).click());
+    expect(selectedIds()).toEqual(['a', 'b']);
+    expect(onValueChange).toHaveBeenLastCalledWith(['a', 'b']);
+    const items = container.querySelectorAll<HTMLElement>('[role="treeitem"]');
+    act(() => items[0]!.focus());
+    act(() => {
+      items[0]!.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true }));
+    });
+    expect(selectedIds()).toEqual(['b']);
+    act(() => (container.querySelectorAll('button')[2] as HTMLElement).click());
+    expect(selectedIds()).toEqual(['b']);
+  });
+
+  it('keeps a controlled value authoritative, and single mode has no aria-multiselectable', () => {
+    render(
+      <TreeView
+        aria-label="Pick"
+        selectionMode="multiple"
+        value={['b']}
+        data={nodes}
+        renderNode={renderNode}
+      />,
+    );
+    act(() => (container.querySelectorAll('button')[0] as HTMLElement).click());
+    expect(selectedIds()).toEqual(['b']);
+    render(<TreeView aria-label="One" data={nodes} renderNode={renderNode} />);
+    expect(container.querySelector('[role="tree"]')!.hasAttribute('aria-multiselectable')).toBe(
+      false,
+    );
+  });
+});

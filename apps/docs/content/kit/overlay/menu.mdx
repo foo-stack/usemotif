@@ -2,7 +2,7 @@
 title: Menu
 description: A themed dropdown menu over the headless Menu - role="menu" with arrow-key navigation that skips disabled items, and Escape or click-outside dismissal.
 diataxis: reference
-covers: ['Menu', 'MenuItemPropsThemed', 'MenuSubTriggerPropsThemed']
+covers: ['Menu', 'MenuItemPropsThemed', 'MenuSubTriggerPropsThemed', 'MenuCheckboxItemPropsThemed', 'MenuRadioItemPropsThemed']
 last_verified: 2026-10-14
 ---
 
@@ -204,6 +204,20 @@ A submenu. `Menu.SubTrigger` is themed like an item with a trailing chevron and 
 click, Arrow Right, Enter or Space; `Menu.SubContent` is the same raised card as the menu.
 Arrow Left or Escape closes it, and choosing an item inside closes the whole menu. The kit's
 Menu and ContextMenu share these parts.
+
+### Menu.CheckboxItem, Menu.RadioGroup, Menu.RadioItem, Menu.Label
+
+Stateful rows with a fixed indicator column: a check on a checked checkbox item, a dot on the
+selected radio item, so labels line up either way. `Menu.Label` is a small muted heading the
+arrow keys skip. The props are the headless ones without `style` and `asChild`; see
+[Menu (headless)](/headless/menu/menu#menucheckboxitem-menuradiogroup-menuradioitem-menulabel).
+
+<CodeBlock lang="tsx" code={`<Menu.CheckboxItem defaultChecked>Word wrap</Menu.CheckboxItem>
+<Menu.Label>Sort by</Menu.Label>
+<Menu.RadioGroup defaultValue="name">
+  <Menu.RadioItem value="name">Name</Menu.RadioItem>
+  <Menu.RadioItem value="date">Date modified</Menu.RadioItem>
+</Menu.RadioGroup>`} />
 
 <CodeBlock lang="tsx" code={`<Menu.Sub>
   <Menu.SubTrigger>Share</Menu.SubTrigger>

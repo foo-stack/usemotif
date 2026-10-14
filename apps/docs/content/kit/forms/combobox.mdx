@@ -103,6 +103,28 @@ As site search:
       default: '240',
       description: 'Width of the input. A number is pixels.',
     },
+    {
+      name: 'inputValue / onInputValueChange',
+      type: 'string / (input: string) => void',
+      description: 'The text in the input, controlled or reported. `onInputValueChange` fires on every keystroke: the place to fetch options as the user types.',
+    },
+    {
+      name: 'filter',
+      type: '((option, input) => boolean) | false',
+      description: 'Custom filter. `false` shows `options` exactly as given, for results a server already matched.',
+    },
+    {
+      name: 'loading',
+      type: 'boolean',
+      default: 'false',
+      description: 'Results are being fetched: the list shows `loadingMessage` while it has no options.',
+    },
+    {
+      name: 'loadingMessage / emptyMessage',
+      type: 'ReactNode',
+      default: "'Loading...' / 'No options'",
+      description: 'What the list shows while loading with no options, and when there are none.',
+    },
   ]}
 />
 
@@ -143,6 +165,28 @@ As site search:
       type: 'number | string',
       default: '280',
       description: 'Width of the input. A number is pixels.',
+    },
+    {
+      name: 'inputValue / onInputValueChange',
+      type: 'string / (input: string) => void',
+      description: 'The text in the input, controlled or reported. `onInputValueChange` fires on every keystroke: the place to fetch options as the user types.',
+    },
+    {
+      name: 'filter',
+      type: '((option, input) => boolean) | false',
+      description: 'Custom filter. `false` shows `options` exactly as given, for results a server already matched.',
+    },
+    {
+      name: 'loading',
+      type: 'boolean',
+      default: 'false',
+      description: 'Results are being fetched: the list shows `loadingMessage` while it has no options.',
+    },
+    {
+      name: 'loadingMessage / emptyMessage',
+      type: 'ReactNode',
+      default: "'Loading...' / 'No options'",
+      description: 'What the list shows while loading with no options, and when there are none.',
     },
   ]}
 />

@@ -104,7 +104,13 @@ The headless `ContextMenu.Trigger`.
       name: 'children',
       type: 'ReactElement',
       required: true,
-      description: 'A single element. It is cloned to open the menu on `contextmenu`. If the child calls `preventDefault()` in its own handler, the menu does not open.',
+      description: 'A single element. It is cloned to open the menu on `contextmenu`, or on a touch long-press. If the child calls `preventDefault()` in its own handler, the menu does not open.',
+    },
+    {
+      name: 'longPressDelay',
+      type: 'number',
+      default: '500',
+      description: 'How long a touch must be held to open the menu, in milliseconds. See the [headless page](/headless/menu/context-menu#contextmenutrigger) for the iOS callout.',
     },
   ]}
 />
@@ -171,6 +177,20 @@ A submenu. `ContextMenu.SubTrigger` is themed like an item with a trailing chevr
 click, Arrow Right, Enter or Space; `ContextMenu.SubContent` is the same raised card as the menu.
 Arrow Left or Escape closes it, and choosing an item inside closes the whole menu. The kit's
 Menu and ContextMenu share these parts.
+
+### ContextMenu.CheckboxItem, ContextMenu.RadioGroup, ContextMenu.RadioItem, ContextMenu.Label
+
+Stateful rows with a fixed indicator column: a check on a checked checkbox item, a dot on the
+selected radio item, so labels line up either way. `ContextMenu.Label` is a small muted heading the
+arrow keys skip. The props are the headless ones without `style` and `asChild`; see
+[Menu (headless)](/headless/menu/menu#menucheckboxitem-menuradiogroup-menuradioitem-menulabel).
+
+<CodeBlock lang="tsx" code={`<ContextMenu.CheckboxItem defaultChecked>Word wrap</ContextMenu.CheckboxItem>
+<ContextMenu.Label>Sort by</ContextMenu.Label>
+<ContextMenu.RadioGroup defaultValue="name">
+  <ContextMenu.RadioItem value="name">Name</ContextMenu.RadioItem>
+  <ContextMenu.RadioItem value="date">Date modified</ContextMenu.RadioItem>
+</ContextMenu.RadioGroup>`} />
 
 <CodeBlock lang="tsx" code={`<ContextMenu.Sub>
   <ContextMenu.SubTrigger>Share</ContextMenu.SubTrigger>

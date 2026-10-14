@@ -125,6 +125,17 @@ Controlled, on a custom scale:
       type: 'string',
       description: 'Id of an element that names the slider.',
     },
+    {
+      name: 'orientation',
+      type: "'horizontal' | 'vertical'",
+      default: "'horizontal'",
+      description: 'Stand the track upright; `width` is then its height.',
+    },
+    {
+      name: 'marks',
+      type: 'ReadonlyArray<{ value: number; label?: ReactNode }>',
+      description: 'Ticks along the track with optional labels below it (beside it when vertical). The track leaves room for the labels. A string label also names the value for assistive technology when the thumb sits on it.',
+    },
   ]}
 />
 
