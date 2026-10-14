@@ -405,3 +405,106 @@ describe('Toaster - animated dismiss (exitDurationMs > 0)', () => {
     expect(document.querySelector('[data-testid="surface"]')).toBeNull();
   });
 });
+
+describe('Toaster maxVisible and toast.promise', () => {
+  let api: ReturnType<typeof useToast> | null = null;
+  function Api(): null {
+    api = useToast();
+    return null;
+  }
+
+  it('drops the oldest toasts past maxVisible, and their timers never bring them back', () => {
+    render(
+      <Toaster maxVisible={2} defaultDuration={1000}>
+        <Api />
+      </Toaster>,
+    );
+    act(() => {
+      api!.toast({ title: 'one' });
+      api!.toast({ title: 'two' });
+      api!.toast({ title: 'three' });
+    });
+    expect(listToasts().map((t) => t.textContent)).toEqual([
+      expect.stringContaining('two'),
+      expect.stringContaining('three'),
+    ]);
+    act(() => {
+      vi.advanceTimersByTime(1500);
+    });
+    expect(listToasts()).toEqual([]);
+  });
+
+  it('keeps every toast by default', () => {
+    render(
+      <Toaster>
+        <Api />
+      </Toaster>,
+    );
+    act(() => {
+      for (let i = 0; i < 6; i++) api!.toast({ title: `t${i}` });
+    });
+    expect(listToasts().length).toBe(6);
+  });
+
+  it('turns one loading toast into the success toast', async () => {
+    render(
+      <Toaster defaultDuration={1000}>
+        <Api />
+      </Toaster>,
+    );
+    let resolve!: (v: number) => void;
+    const work = new Promise<number>((r) => {
+      resolve = r;
+    });
+    let returned: Promise<number> | null = null;
+    act(() => {
+      returned = api!.toast.promise(work, {
+        loading: { title: 'Saving' },
+        success: (n) => ({ title: `Saved ${n} rows` }),
+        error: { title: 'Failed' },
+      });
+    });
+    expect(returned).toBe(work);
+    expect(listToasts().map((t) => t.textContent)).toEqual([expect.stringContaining('Saving')]);
+    act(() => {
+      vi.advanceTimersByTime(5000);
+    });
+    expect(listToasts().length).toBe(1);
+    await act(async () => {
+      resolve(3);
+      await work;
+    });
+    const toasts = listToasts();
+    expect(toasts.length).toBe(1);
+    expect(toasts[0]!.textContent).toContain('Saved 3 rows');
+    expect(toasts[0]!.getAttribute('role')).toBe('status');
+    act(() => {
+      vi.advanceTimersByTime(1500);
+    });
+    expect(listToasts()).toEqual([]);
+  });
+
+  it('turns it into an assertive error toast when the promise rejects', async () => {
+    render(
+      <Toaster>
+        <Api />
+      </Toaster>,
+    );
+    const work = Promise.reject(new Error('disk full'));
+    work.catch(() => {});
+    act(() => {
+      api!.toast.promise(work, {
+        loading: { title: 'Saving' },
+        success: { title: 'Saved' },
+        error: (e) => ({ title: `Failed: ${(e as Error).message}` }),
+      });
+    });
+    await act(async () => {
+      await work.catch(() => {});
+    });
+    const toasts = listToasts();
+    expect(toasts.length).toBe(1);
+    expect(toasts[0]!.textContent).toContain('Failed: disk full');
+    expect(toasts[0]!.getAttribute('role')).toBe('alert');
+  });
+});

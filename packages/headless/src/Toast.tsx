@@ -13,7 +13,10 @@ import {
   type ReactElement,
   type ReactNode,
 } from 'react';
+import { withPromise, type ToastFn } from './_toast-promise.js';
 import { useExitTransition } from './_use-exit-transition.js';
+
+export type { ToastContent, ToastFn, ToastPromiseMessages } from './_toast-promise.js';
 
 /**
  * Toast / Toaster - transient notifications announced via an
@@ -67,7 +70,7 @@ export interface ToastItem {
 type ToastInput = Omit<ToastItem, 'id'> & { id?: string };
 
 interface ToasterContextValue {
-  readonly toast: (input: ToastInput) => string;
+  readonly toast: ToastFn;
   readonly dismiss: (id: string) => void;
   readonly toasts: ToastItem[];
 }
@@ -92,6 +95,9 @@ export interface ToasterProps {
   renderToasts?: (toasts: ToastItem[], dismiss: (id: string) => void) => ReactNode;
   /** Default duration in ms for new toasts. Defaults to 5000. */
   defaultDuration?: number;
+  /** Most toasts shown at once; past it the oldest are dropped, as on native.
+   * Defaults to no limit. */
+  maxVisible?: number;
   /**
    * Fallback exit duration (ms) for dismissals. **Defaults to `0`** -
    * dismissed toasts unmount instantly. With a positive value the default
@@ -113,6 +119,7 @@ export function Toaster({
   children,
   renderToasts,
   defaultDuration = 5000,
+  maxVisible = Infinity,
   exitDurationMs = 0,
   style,
 }: ToasterProps): ReactElement {
@@ -192,7 +199,7 @@ export function Toaster({
       });
       setToasts((current) => {
         const idx = current.findIndex((t) => t.id === id);
-        if (idx === -1) return [...current, item];
+        if (idx === -1) return [...current, item].slice(-maxVisible);
         const next = current.slice();
         next[idx] = item;
         return next;
@@ -203,8 +210,18 @@ export function Toaster({
       }
       return id;
     },
-    [defaultDuration, dismiss, clearTimer],
+    [defaultDuration, dismiss, clearTimer, maxVisible],
   );
+
+  // A toast dropped past `maxVisible` must not keep a timer that could later
+  // dismiss (or, mid-exit, re-flag) an id that is no longer queued.
+  useEffect(() => {
+    for (const id of timersRef.current.keys()) {
+      if (!toasts.some((t) => t.id === id)) clearTimer(id);
+    }
+  }, [toasts, clearTimer]);
+
+  const toastFn = useMemo(() => withPromise(toast), [toast]);
 
   // Clear pending timers on unmount.
   useEffect(() => {
@@ -217,7 +234,7 @@ export function Toaster({
 
   // Memoized so consumers don't re-render on every provider render (parity
   // with Menu/Dialog/Popover). toast/dismiss are useCallback-stable.
-  const value = useMemo(() => ({ toast, dismiss, toasts }), [toast, dismiss, toasts]);
+  const value = useMemo(() => ({ toast: toastFn, dismiss, toasts }), [toastFn, dismiss, toasts]);
   return (
     <ToasterContext.Provider value={value}>
       {children}

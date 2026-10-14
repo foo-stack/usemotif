@@ -101,7 +101,13 @@ export type {
 } from './disclosure.js';
 
 export { Toast, Toaster, useToast } from './Toast.js';
-export type { ToastItem, ToasterProps } from './Toast.js';
+export type {
+  ToastContent,
+  ToastFn,
+  ToastItem,
+  ToastPromiseMessages,
+  ToasterProps,
+} from './Toast.js';
 
 export {
   ComboboxInput,
