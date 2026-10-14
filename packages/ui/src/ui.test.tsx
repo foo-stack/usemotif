@@ -52,6 +52,7 @@ import {
   Stepper,
   type StepperStep,
   Switch,
+  TagsInput,
   Tabs,
   TimeInput,
   Timeline,
@@ -130,6 +131,7 @@ const LAZY_TREE: ReadonlyArray<TreeNode> = [{ id: 'docs', label: 'docs', hasChil
 function neverLoads(): Promise<void> {
   return new Promise(() => {});
 }
+const TAGS: ReadonlyArray<string> = ['react', 'vue'];
 const CAL_DEFAULT = new Date(2024, 0, 15);
 const CAL_RANGE = { start: new Date(2024, 0, 10), end: new Date(2024, 0, 12) };
 
@@ -1327,6 +1329,18 @@ describe('TreeView chevron, loading and multiple selection', () => {
       (pick(name).firstElementChild as HTMLElement).style.backgroundColor;
     expect(bg('index.ts')).toBe(bg('README'));
     expect(bg('index.ts')).not.toBe(bg('App.tsx'));
+  });
+});
+
+describe('TagsInput - chips over the headless tags input', () => {
+  it('draws each tag as a themed Chip whose remove button names it', () => {
+    render(<TagsInput aria-label="Topics" defaultValue={TAGS} />);
+    const remove = container.querySelector<HTMLElement>('[aria-label="Remove vue"]')!;
+    expect(remove).not.toBeNull();
+    expect(look(remove.parentElement!)).not.toBe('|');
+    click(remove);
+    expect(container.querySelector('[aria-label="Remove vue"]')).toBeNull();
+    expect(container.querySelector('[aria-label="Remove react"]')).not.toBeNull();
   });
 });
 
