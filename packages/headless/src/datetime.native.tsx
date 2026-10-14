@@ -7,7 +7,9 @@ import {
   type ReactNode,
 } from 'react';
 import { Modal, Pressable, TextInput, View, type ViewStyle } from 'react-native';
-import { addMonths, isSameDay } from './_date-math.js';
+import { addMonths, isSameDay, nextRange, rangeFlags, type DateRange } from './_date-math.js';
+
+export type { DateRange } from './_date-math.js';
 import { useControllableState } from './use-controllable-state.js';
 
 /**
@@ -41,10 +43,23 @@ function buildMonthGrid(viewMonth: Date, weekStartsOn: number): Date[] {
   return days;
 }
 
-export interface CalendarProps {
-  value?: Date | undefined;
-  defaultValue?: Date;
-  onValueChange?: (next: Date) => void;
+/** What a `renderDay` callback is told about one day cell. */
+export interface CalendarDayInfo {
+  date: Date;
+  isSelected: boolean;
+  isOutside: boolean;
+  isDisabled: boolean;
+  isToday: boolean;
+  /** Range mode: the range's first day. Always `false` in single mode. */
+  isRangeStart: boolean;
+  /** Range mode: the range's last day, once picked. Always `false` in single mode. */
+  isRangeEnd: boolean;
+  /** Range mode: inside the range, ends included. Always `false` in single mode. */
+  isInRange: boolean;
+}
+
+/** Props both selection modes share. */
+export interface CalendarBaseProps {
   minDate?: Date;
   maxDate?: Date;
   weekStartsOn?: 0 | 1 | 2 | 3 | 4 | 5 | 6;
@@ -54,21 +69,94 @@ export interface CalendarProps {
   viewMonth?: Date;
   defaultViewMonth?: Date;
   onViewMonthChange?: (next: Date) => void;
-  renderDay?: (info: {
-    date: Date;
-    isSelected: boolean;
-    isOutside: boolean;
-    isDisabled: boolean;
-    isToday: boolean;
-  }) => ReactNode;
+  renderDay?: (info: CalendarDayInfo) => ReactNode;
   accessibilityLabel?: string;
   style?: ViewStyle;
 }
 
-export function Calendar({
+export interface CalendarProps extends CalendarBaseProps {
+  /** Picks one date. The default. */
+  mode?: 'single';
+  value?: Date | undefined;
+  defaultValue?: Date;
+  onValueChange?: (next: Date) => void;
+}
+
+/**
+ * Picks a start and an end date. The first press starts the range (`end` is
+ * `null`), the second finishes it, swapping the two if it is earlier.
+ */
+export interface RangeCalendarProps extends CalendarBaseProps {
+  mode: 'range';
+  value?: DateRange | undefined;
+  defaultValue?: DateRange;
+  /** Called on both presses; `end` is `null` after the first. */
+  onValueChange?: (next: DateRange) => void;
+}
+
+const NO_RANGE = { isRangeStart: false, isRangeEnd: false, isInRange: false } as const;
+
+/** A month grid. Pass `mode="range"` to pick a start and an end date. */
+export function Calendar(props: CalendarProps | RangeCalendarProps): ReactElement {
+  return props.mode === 'range' ? <RangeCalendar {...props} /> : <SingleCalendar {...props} />;
+}
+
+function SingleCalendar({
   value: controlledValue,
   defaultValue,
   onValueChange,
+  mode: _mode,
+  ...base
+}: CalendarProps): ReactElement {
+  const [value, commitValue] = useControllableState({
+    value: controlledValue,
+    defaultValue,
+    onChange: onValueChange,
+  });
+  return (
+    <CalendarGrid
+      {...base}
+      initialMonth={value}
+      select={commitValue}
+      dayState={(d) => ({ isSelected: value !== undefined && isSameDay(d, value), ...NO_RANGE })}
+    />
+  );
+}
+
+function RangeCalendar({
+  value: controlledValue,
+  defaultValue,
+  onValueChange,
+  mode: _mode,
+  ...base
+}: RangeCalendarProps): ReactElement {
+  const [range, commitRange] = useControllableState({
+    value: controlledValue,
+    defaultValue,
+    onChange: onValueChange,
+  });
+  return (
+    <CalendarGrid
+      {...base}
+      initialMonth={range?.start}
+      select={(d) => commitRange(nextRange(range, d))}
+      dayState={(d) => {
+        const flags = rangeFlags(range, d);
+        return { isSelected: flags.isInRange, ...flags };
+      }}
+    />
+  );
+}
+
+interface CalendarGridProps extends CalendarBaseProps {
+  initialMonth: Date | undefined;
+  select: (day: Date) => void;
+  dayState: (
+    day: Date,
+  ) => Pick<CalendarDayInfo, 'isSelected' | 'isRangeStart' | 'isRangeEnd' | 'isInRange'>;
+}
+
+function CalendarGrid({
   minDate,
   maxDate,
   weekStartsOn = 0,
@@ -79,26 +167,15 @@ export function Calendar({
   renderDay,
   accessibilityLabel,
   style,
-}: CalendarProps): ReactElement {
-  const [value, commitValue] = useControllableState({
-    value: controlledValue,
-    defaultValue,
-    onChange: onValueChange,
-  });
-
+  initialMonth,
+  select,
+  dayState,
+}: CalendarGridProps): ReactElement {
   const [viewMonth, setViewMonth] = useControllableState({
     value: controlledViewMonth,
-    defaultValue: defaultViewMonth ?? value ?? new Date(),
+    defaultValue: defaultViewMonth ?? initialMonth ?? new Date(),
     onChange: onViewMonthChange,
   });
-
-  const select = useCallback(
-    (d: Date) => {
-      const day = startOfDay(d);
-      commitValue(day);
-    },
-    [commitValue],
-  );
 
   const days = useMemo(() => buildMonthGrid(viewMonth, weekStartsOn), [viewMonth, weekStartsOn]);
   const today = useMemo(() => startOfDay(new Date()), []);
@@ -132,22 +209,22 @@ export function Calendar({
       </View>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
         {days.map((d, i) => {
+          const state = dayState(d);
           const isOutside = d.getMonth() !== viewMonth.getMonth();
-          const isSelected = value !== undefined && isSameDay(d, value);
           const isToday = isSameDay(d, today);
           const isDisabled = dayDisabled(d);
           const child =
             renderDay !== undefined
-              ? renderDay({ date: d, isSelected, isOutside, isDisabled, isToday })
+              ? renderDay({ date: d, ...state, isOutside, isDisabled, isToday })
               : null;
           return (
             <Pressable
               key={i}
               accessibilityRole="button"
-              accessibilityState={{ selected: isSelected, disabled: isDisabled }}
+              accessibilityState={{ selected: state.isSelected, disabled: isDisabled }}
               accessibilityLabel={d.toDateString()}
               disabled={isDisabled}
-              onPress={() => select(d)}
+              onPress={() => select(startOfDay(d))}
               style={{ width: `${100 / 7}%` }}
             >
               {child}
@@ -161,59 +238,161 @@ export function Calendar({
 
 // ─────────── DatePicker ───────────────────────────────────────────
 
-export interface DatePickerProps extends Omit<CalendarProps, 'style' | 'renderDay'> {
+/** Props the single and range date pickers share. */
+export interface DatePickerOptions {
   format?: (d: Date) => string;
   placeholder?: string;
   open?: boolean;
   defaultOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
-  /** Render fn for the trigger button. Defaults to a Pressable
-   * showing the formatted value or placeholder. */
-  renderTrigger?: (info: { value: Date | undefined; open: () => void }) => ReactElement;
-  renderDay?: CalendarProps['renderDay'];
+  renderDay?: (info: CalendarDayInfo) => ReactNode;
   triggerStyle?: ViewStyle;
   modalStyle?: ViewStyle;
 }
 
-export function DatePicker({
-  format,
-  placeholder = 'Pick a date',
-  open: controlledOpen,
-  defaultOpen = false,
-  onOpenChange,
+export interface DatePickerProps
+  extends Omit<CalendarProps, 'style' | 'renderDay'>, DatePickerOptions {
+  /** Render fn for the trigger button. Defaults to a Pressable
+   * showing the formatted value or placeholder. */
+  renderTrigger?: (info: { value: Date | undefined; open: () => void }) => ReactElement;
+}
+
+/** A range date picker: stays open after the first press, closes after the second. */
+export interface RangeDatePickerProps
+  extends Omit<RangeCalendarProps, 'style' | 'renderDay'>, DatePickerOptions {
+  renderTrigger?: (info: { value: DateRange | undefined; open: () => void }) => ReactElement;
+}
+
+/**
+ * A trigger that opens a `Calendar` in a modal. Pass `mode="range"` to pick a
+ * start and an end date.
+ */
+export function DatePicker(props: DatePickerProps | RangeDatePickerProps): ReactElement {
+  return props.mode === 'range' ? <RangeDatePicker {...props} /> : <SingleDatePicker {...props} />;
+}
+
+function SingleDatePicker({
   renderTrigger,
-  renderDay,
-  triggerStyle,
-  modalStyle,
-  ...calendarProps
+  placeholder = 'Pick a date',
+  ...props
 }: DatePickerProps): ReactElement {
-  const [open, setOpen] = useControllableState({
-    value: controlledOpen,
-    defaultValue: defaultOpen,
-    onChange: onOpenChange,
-  });
   // Track the committed selection locally so the trigger label reflects an
   // *uncontrolled* Calendar's internal pick (the Calendar owns that state and
   // DatePicker can't otherwise read it). Controlled mode keeps `value`
   // authoritative; uncontrolled mode mirrors onValueChange into `committed`.
   const [current, commit] = useControllableState({
-    value: calendarProps.value,
-    defaultValue: calendarProps.defaultValue,
-    onChange: calendarProps.onValueChange,
-    controlled: 'value' in calendarProps,
+    value: props.value,
+    defaultValue: props.defaultValue,
+    onChange: props.onValueChange,
+    controlled: 'value' in props,
   });
-  const formatted =
-    current !== undefined ? (format?.(current) ?? current.toDateString()) : placeholder;
+  const format = props.format ?? ((d: Date) => d.toDateString());
+  return (
+    <DatePickerShell
+      {...props}
+      label={current !== undefined ? format(current) : placeholder}
+      renderTrigger={
+        renderTrigger === undefined ? undefined : (open) => renderTrigger({ value: current, open })
+      }
+    >
+      {(calendarProps, close) => (
+        <Calendar
+          {...calendarProps}
+          // Feed the committed selection back so the grid stays in sync
+          // with the label across reopens (the modal may remount it).
+          value={current}
+          onValueChange={(d) => {
+            commit(d);
+            close();
+          }}
+        />
+      )}
+    </DatePickerShell>
+  );
+}
 
+function RangeDatePicker({
+  renderTrigger,
+  placeholder = 'Pick dates',
+  ...props
+}: RangeDatePickerProps): ReactElement {
+  const [current, commit] = useControllableState({
+    value: props.value,
+    defaultValue: props.defaultValue,
+    onChange: props.onValueChange,
+    controlled: 'value' in props,
+  });
+  const format = props.format ?? ((d: Date) => d.toDateString());
+  const label =
+    current === undefined
+      ? placeholder
+      : current.end === null
+        ? format(current.start)
+        : `${format(current.start)} - ${format(current.end)}`;
+  return (
+    <DatePickerShell
+      {...props}
+      label={label}
+      renderTrigger={
+        renderTrigger === undefined ? undefined : (open) => renderTrigger({ value: current, open })
+      }
+    >
+      {(calendarProps, close) => (
+        <Calendar
+          {...calendarProps}
+          mode="range"
+          value={current}
+          onValueChange={(range) => {
+            commit(range);
+            if (range.end !== null) close();
+          }}
+        />
+      )}
+    </DatePickerShell>
+  );
+}
+
+interface DatePickerShellProps extends Omit<CalendarBaseProps, 'style'>, DatePickerOptions {
+  mode?: 'single' | 'range';
+  value?: unknown;
+  defaultValue?: unknown;
+  onValueChange?: unknown;
+  label: string;
+  renderTrigger: ((open: () => void) => ReactElement) | undefined;
+  children: (calendarProps: CalendarBaseProps, close: () => void) => ReactNode;
+}
+
+function DatePickerShell({
+  label,
+  renderTrigger,
+  open: controlledOpen,
+  defaultOpen = false,
+  onOpenChange,
+  triggerStyle,
+  modalStyle,
+  format: _format,
+  placeholder: _placeholder,
+  mode: _mode,
+  value: _value,
+  defaultValue: _defaultValue,
+  onValueChange: _onValueChange,
+  children,
+  ...calendarProps
+}: DatePickerShellProps): ReactElement {
+  const [open, setOpen] = useControllableState({
+    value: controlledOpen,
+    defaultValue: defaultOpen,
+    onChange: onOpenChange,
+  });
   return (
     <View>
       {renderTrigger !== undefined ? (
-        renderTrigger({ value: current, open: () => setOpen(true) })
+        renderTrigger(() => setOpen(true))
       ) : (
         <Pressable
           accessibilityRole="button"
           accessibilityState={{ expanded: open }}
-          accessibilityLabel={formatted}
+          accessibilityLabel={label}
           onPress={() => setOpen(true)}
           style={triggerStyle}
         />
@@ -229,17 +408,7 @@ export function DatePicker({
           }}
         >
           <Pressable onPress={(e) => e.stopPropagation?.()} style={modalStyle}>
-            <Calendar
-              {...calendarProps}
-              // Feed the committed selection back so the grid stays in sync
-              // with the label across reopens (the modal may remount it).
-              value={current}
-              {...(renderDay !== undefined ? { renderDay } : {})}
-              onValueChange={(d) => {
-                commit(d);
-                setOpen(false);
-              }}
-            />
+            {children(calendarProps, () => setOpen(false))}
           </Pressable>
         </Pressable>
       </Modal>
