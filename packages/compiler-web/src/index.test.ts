@@ -33,6 +33,23 @@ describe('@usemotif/compiler-web', () => {
     expect(code).not.toMatch(/\bp=\{4\}/);
   });
 
+  it('passes onBail through to the babel transform', async () => {
+    const reasons: string[] = [];
+    const plugin = motifExtract.vite({ onBail: (e) => reasons.push(`${e.element}:${e.reason}`) });
+    const inst = Array.isArray(plugin) ? plugin[0]! : plugin;
+    const transform =
+      typeof inst.transform === 'function'
+        ? inst.transform
+        : (inst.transform as { handler: (code: string, id: string) => unknown }).handler;
+
+    await transform.call(
+      { warn() {}, error() {} } as unknown as ThisParameterType<typeof transform>,
+      `import { Box } from '@usemotif/react';\nconst X = ({ pad }) => <Box p={pad} />;\n`,
+      '/abs/path/bail.tsx',
+    );
+    expect(reasons).toEqual(['Box:dynamic-props']);
+  });
+
   it('skips files outside include / inside exclude', async () => {
     const plugin = motifExtract.vite();
     const inst = Array.isArray(plugin) ? plugin[0]! : plugin;
