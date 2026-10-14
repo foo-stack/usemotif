@@ -19,6 +19,8 @@ import { ApiSignature, ArticleMeta, CodeBlock, Eyebrow } from '../../components/
   readonly fonts?: readonly FontFace[];
   readonly root?: ThemeRootStyles;
   readonly reducedMotion?: ReducedMotionMode;
+  readonly colorScheme?: 'light' | 'dark';
+  readonly themeColor?: string;
 }): Theme & { readonly tokens: T }`}
   params={[
     {
@@ -46,6 +48,18 @@ import { ApiSignature, ArticleMeta, CodeBlock, Eyebrow } from '../../components/
       type: 'ThemeRootStyles',
       description:
         'Web-only. Base styles applied to the document root - body resets and the like - emitted by ThemeProvider.',
+    },
+    {
+      name: 'def.colorScheme',
+      type: "'light' | 'dark'",
+      description:
+        'Web-only. Sets color-scheme for the theme, and on <html> while it is active, so scrollbars and form controls match.',
+    },
+    {
+      name: 'def.themeColor',
+      type: 'string',
+      description:
+        'Web-only. A colour or $-token written to <meta name="theme-color"> while the theme is active.',
     },
     {
       name: 'def.reducedMotion',
