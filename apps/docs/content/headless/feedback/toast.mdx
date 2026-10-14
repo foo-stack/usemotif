@@ -76,7 +76,18 @@ function SaveButton() {
     {
       name: 'renderToasts',
       type: '(toasts: ToastItem[], dismiss: (id: string) => void) => ReactNode',
-      description: 'Override how the list renders. The default is a bottom-right stacked column.',
+      description: 'Override how the whole list renders. A custom list owns its own placement, pausing, and exits.',
+    },
+    {
+      name: 'renderToast',
+      type: '(item: ToastItem, info: { dismiss }) => ReactElement',
+      description: 'Render one toast\'s content inside the default list, which keeps its placement, pausing, swiping, and exits. The same signature as on React Native.',
+    },
+    {
+      name: 'placement',
+      type: "'top' | 'bottom' | 'top-start' | 'top-end' | 'bottom-start' | 'bottom-end'",
+      default: "'bottom-end' (web), 'bottom' (React Native)",
+      description: 'Where the default list sits. `top` and `bottom` centre it, the values React Native takes; the corner placements are web-only.',
     },
     {
       name: 'defaultDuration',
@@ -158,8 +169,11 @@ assertively, interrupting. Reserve `foreground` for messages that genuinely cann
 interface where every toast interrupts is one a screen-reader user cannot work through.
 
 Auto-dismiss is a problem for some users - a toast that vanishes in five seconds is gone before a
-screen-reader or low-vision user has read it. For any toast carrying an `action`, or anything the
-user must act on, set `duration: Infinity` and rely on the Close control.
+screen-reader or low-vision user has read it. On the web the default list pauses every toast's
+timer while the pointer is over it or focus is inside it, and resumes each with the time it had
+left, so a toast does not disappear while someone is reading it or reaching for its button. A
+custom `renderToasts` list does not pause. For any toast carrying an `action`, or anything the
+user must act on, still set `duration: Infinity` and rely on the Close control.
 
 ## Examples
 
