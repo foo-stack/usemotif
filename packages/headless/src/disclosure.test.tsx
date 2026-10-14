@@ -163,7 +163,11 @@ describe('Accordion - multiple mode', () => {
 
 describe('Tabs', () => {
   function renderTabs(
-    opts: { defaultValue?: string; orientation?: 'horizontal' | 'vertical' } = {},
+    opts: {
+      defaultValue?: string;
+      orientation?: 'horizontal' | 'vertical';
+      activationMode?: 'automatic' | 'manual';
+    } = {},
   ) {
     render(
       <Tabs.Root {...opts}>
@@ -239,6 +243,42 @@ describe('Tabs', () => {
         new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true, cancelable: true }),
       );
     });
+    expect(tabs[2]!.getAttribute('aria-selected')).toBe('true');
+  });
+
+  it('manual activation moves focus without selecting, and a press selects', () => {
+    renderTabs({ defaultValue: 'a', activationMode: 'manual' });
+    const tabs = container.querySelectorAll<HTMLElement>('[role="tab"]');
+    tabs[0]!.focus();
+    const key = (k: string): void =>
+      act(() => {
+        document.activeElement!.dispatchEvent(
+          new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true }),
+        );
+      });
+    key('ArrowRight');
+    expect(document.activeElement).toBe(tabs[1]);
+    expect(tabs[0]!.getAttribute('aria-selected')).toBe('true');
+    key('End');
+    expect(document.activeElement).toBe(tabs[2]);
+    key('Home');
+    expect(document.activeElement).toBe(tabs[0]);
+    key('ArrowLeft');
+    expect(document.activeElement).toBe(tabs[2]);
+    expect(tabs[2]!.getAttribute('aria-selected')).toBe('false');
+    // Enter and Space on a focused <button> fire its click, which selects.
+    click(tabs[2]!);
+    expect(tabs[2]!.getAttribute('aria-selected')).toBe('true');
+  });
+
+  it('automatic activation stays the default, selecting as focus moves', () => {
+    renderTabs({ defaultValue: 'a' });
+    const tabs = container.querySelectorAll<HTMLElement>('[role="tab"]');
+    tabs[0]!.focus();
+    act(() => {
+      tabs[0]!.dispatchEvent(new KeyboardEvent('keydown', { key: 'End', bubbles: true }));
+    });
+    expect(document.activeElement).toBe(tabs[2]);
     expect(tabs[2]!.getAttribute('aria-selected')).toBe('true');
   });
 
