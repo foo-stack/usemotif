@@ -88,6 +88,7 @@ export type {
   PseudoElementStyleProps,
   PseudoStatePropName,
   StateStyleBag,
+  StateStyleValue,
   StateStyleProps,
   StyleBag,
   StylePropDefinition,
@@ -140,6 +141,7 @@ export type {
 
 export {
   resolvePseudoElementBag,
+  resolveStateRules,
   resolveResponsiveStylesToVars,
   resolveStyles,
   resolveStylesToVars,

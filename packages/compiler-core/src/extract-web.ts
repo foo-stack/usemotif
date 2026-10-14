@@ -8,6 +8,7 @@ import {
   liftPseudoOverriddenBaseProps,
   resolveResponsiveStylesToVars,
   resolvePseudoElementBag,
+  resolveStateRules,
   resolveStylesToVars,
   resolveTransitionToVars,
   styleProps,
@@ -207,10 +208,11 @@ export function extractWeb(
     if (bagConflictsWithDynamic(ps.style, dynamicFamilies)) continue;
     // Pseudo-element bags carry `content` (defaulted when absent) the way the
     // runtime resolves them, so the rule hashes identically.
-    const style = ps.pseudo.startsWith('::')
-      ? resolvePseudoElementBag(ps.style)
-      : resolveStylesToVars(ps.style).style;
-    rankedPseudo.push({ rank: PSEUDO_ORDER[ps.name] ?? 50, rule: { pseudo: ps.pseudo, style } });
+    const rank = PSEUDO_ORDER[ps.name] ?? 50;
+    const rules = ps.pseudo.startsWith('::')
+      ? [{ pseudo: ps.pseudo, style: resolvePseudoElementBag(ps.style) }]
+      : resolveStateRules(ps.pseudo, ps.style);
+    for (const rule of rules) rankedPseudo.push({ rank, rule });
     consumed.push(ps.name);
   }
 

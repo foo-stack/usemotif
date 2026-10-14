@@ -161,3 +161,16 @@ describe('Box - pseudo-state override cascade (#39)', () => {
     expect(baseBlock, css).toMatch(/padding:\s*8px/);
   });
 });
+
+describe('Box - responsive values inside state bags', () => {
+  it('nests the breakpoint under the state selector', () => {
+    render(<Box _hover={{ bg: { base: 'red', md: 'blue' }, opacity: [1, undefined, 0.5] }} />);
+    const el = container.firstElementChild as HTMLElement;
+    const cls = Array.from(el.classList).find((c) => c.startsWith('m-'))!;
+    const css = getEmittedCss();
+    expect(css).toContain(`.${cls}:hover { background-color: red; opacity: 1; }`);
+    expect(css).toContain(
+      `@media (min-width: 768px) { .${cls}:hover { background-color: blue; opacity: 0.5; } }`,
+    );
+  });
+});

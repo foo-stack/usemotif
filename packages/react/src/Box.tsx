@@ -10,6 +10,7 @@ import {
   liftPseudoOverriddenBaseProps,
   resolveResponsiveStylesToVars,
   resolvePseudoElementBag,
+  resolveStateRules,
   resolveStylesToVars,
   resolveTransitionToVars,
   type AnimationValue,
@@ -566,10 +567,7 @@ function buildSelectorRules(
   for (const name of PSEUDO_STATE_PROP_NAMES) {
     const bag = states[name];
     if (bag !== undefined) {
-      rules.push({
-        pseudo: PSEUDO_SELECTOR[name],
-        style: resolveStylesToVars(bag as Record<string, unknown>).style,
-      });
+      rules.push(...resolveStateRules(PSEUDO_SELECTOR[name], bag as Record<string, unknown>));
     }
   }
   if (before !== undefined) {

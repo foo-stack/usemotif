@@ -188,6 +188,8 @@ export function stringifyDeclarations(style: ResolvedStyle): string {
 export interface PseudoRule {
   readonly pseudo: string;
   readonly style: ResolvedStyle;
+  /** An at-rule the rule nests in, for a state bag with responsive values. */
+  readonly at?: string;
 }
 
 /**
@@ -266,9 +268,10 @@ export function buildPseudoCss(
 ): string {
   return wrapInLayer(
     rules
-      .map(
-        (r) => `${scopePseudoSelector(r.pseudo, className)} { ${stringifyDeclarations(r.style)} }`,
-      )
+      .map((r) => {
+        const rule = `${scopePseudoSelector(r.pseudo, className)} { ${stringifyDeclarations(r.style)} }`;
+        return r.at === undefined ? rule : `${r.at} { ${rule} }`;
+      })
       .join('\n'),
     layer,
   );
@@ -328,7 +331,14 @@ export function hashAtRules(rules: readonly AtRule[], layer?: string): string {
 
 /** Hash a list of pseudo rules into a deterministic class name. */
 export function hashPseudoRules(rules: readonly PseudoRule[], layer?: string): string {
-  const serialised = JSON.stringify(rules.map((r) => [r.pseudo, stringifyDeclarations(r.style)]));
+  // The at-rule joins the entry only when present, so flat rules hash as before.
+  const serialised = JSON.stringify(
+    rules.map((r) =>
+      r.at === undefined
+        ? [r.pseudo, stringifyDeclarations(r.style)]
+        : [r.pseudo, stringifyDeclarations(r.style), r.at],
+    ),
+  );
   return `m-${hashString(withLayer(serialised, layer))}`;
 }
 

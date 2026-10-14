@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createRoot, type Root } from 'react-dom/client';
 import { act } from 'react';
 import type { Theme } from '@usemotif/core';
+import { __setDimensions } from './__test-setup__/react-native-mock.js';
 import { Pressable } from './Pressable.js';
 import { Direction } from './Direction.js';
 import { ThemeProvider } from './Theme.js';
@@ -131,6 +132,38 @@ describe('Native Pressable - pseudo-state styles', () => {
       </ThemeProvider>,
     );
     expect(styleOn(pressable()).opacity).toBe(0.5);
+  });
+
+  it('resolves a responsive state bag at the current viewport width', () => {
+    __setDimensions(800);
+    render(
+      <ThemeProvider themes={[theme]} active="test">
+        <Pressable
+          opacity={1}
+          _active={{ opacity: { base: 0.9, md: 0.5 } }}
+          {...({ 'data-motif-pressable-state': JSON.stringify({ pressed: true }) } as Record<
+            string,
+            string
+          >)}
+        />
+      </ThemeProvider>,
+    );
+    expect(styleOn(pressable()).opacity).toBe(0.5);
+    __setDimensions(400);
+    render(
+      <ThemeProvider themes={[theme]} active="test">
+        <Pressable
+          key="narrow"
+          opacity={1}
+          _active={{ opacity: { base: 0.9, md: 0.5 } }}
+          {...({ 'data-motif-pressable-state': JSON.stringify({ pressed: true }) } as Record<
+            string,
+            string
+          >)}
+        />
+      </ThemeProvider>,
+    );
+    expect(styleOn(pressable()).opacity).toBe(0.9);
   });
 
   it('applies _disabled style when disabled=true', () => {
