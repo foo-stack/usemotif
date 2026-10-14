@@ -1,5 +1,23 @@
 # usemotif
 
+## 1.7.0
+
+### Minor Changes
+
+- 0e9d616: `useThemeChain()` works on React Native, returning the theme names from the root `ThemeProvider` down to the current scope as it does on web: `<ThemeProvider active="dark"><Theme name="red">` yields `['dark', 'red']`. `usemotif` now exports `useThemeChain` from both its web and native entries.
+- fc9500a: `usemotif` now re-exports every name `@usemotif/react` and `@usemotif/react-native` both export, from both of its entries. Newly available: `useThemeSetting` and its types (`ThemeMode`, `ResolvedTheme`, `SyncStorage`, `UseThemeSettingOptions`, `UseThemeSettingResult`), `Direction`, `DirectionContext`, `useDirection`, `PresenceContext`, `usePresence`, `getMotionDriver`, `registerMotionDriver`, `useBreakpointWidths`, `registerVirtualListImpl`, `SVG_PRIMITIVES`, and the types `DirectionProps`, `MotionPhase`, `PresenceContextValue`, `ThemeContextValue`, `SvgPrimitives`, `VirtualListImpl`, `MotionValueWideningOf` and `MotionValueWidenedProp`. A test now fails if a shared name is missing from either entry.
+- d93f805: `useContainerInfo()` on web returns the measured widths of the enclosing `Container`s, `{ nearestWidth, named }`, in the same shape as React Native. A `Container` measures only while something below it calls the hook, through a `ResizeObserver` that stops when the last reader unmounts. `usemotif` exports `useContainerInfo` and `ContainerContextValue` from both its web and native entries.
+
+### Patch Changes
+
+- Updated dependencies [35cd26c]
+- Updated dependencies [0e9d616]
+- Updated dependencies [d93f805]
+- Updated dependencies [ab3361a]
+  - @usemotif/core@1.7.0
+  - @usemotif/react-native@1.7.0
+  - @usemotif/react@1.7.0
+
 ## 1.6.0
 
 ### Minor Changes

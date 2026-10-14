@@ -1,5 +1,15 @@
 # @usemotif-bench/data-table
 
+## 0.0.9
+
+### Patch Changes
+
+- Updated dependencies [35cd26c]
+- Updated dependencies [d93f805]
+- Updated dependencies [ab3361a]
+  - @usemotif/core@1.7.0
+  - @usemotif/react@1.7.0
+
 ## 0.0.8
 
 ### Patch Changes

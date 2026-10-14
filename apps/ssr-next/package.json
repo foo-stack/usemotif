@@ -1,6 +1,6 @@
 {
   "name": "@usemotif/ssr-next",
-  "version": "0.0.17",
+  "version": "0.0.18",
   "private": true,
   "description": "End-to-end SSR demo: Next.js App Router + motif-js (collector + RSC + hydration).",
   "type": "module",

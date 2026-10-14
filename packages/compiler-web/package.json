@@ -1,6 +1,6 @@
 {
   "name": "@usemotif/compiler-web",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "description": "Universal bundler plugin (unplugin) for motif-js static style extraction - Babel-based; works with Vite, Rollup, webpack, Rspack, esbuild, and Farm.",
   "homepage": "https://github.com/foo-stack/usemotif/tree/main/packages/compiler-web#readme",
   "bugs": "https://github.com/foo-stack/usemotif/issues",

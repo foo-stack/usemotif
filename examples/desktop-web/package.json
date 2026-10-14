@@ -1,6 +1,6 @@
 {
   "name": "@usemotif/example-desktop-web",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "private": true,
   "description": "Vite app rendering the shared <DemoScreen/> via motif's web bundle. Electron and Tauri both load this build.",
   "type": "module",

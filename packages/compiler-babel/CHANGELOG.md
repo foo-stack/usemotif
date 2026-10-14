@@ -1,5 +1,13 @@
 # @usemotif/compiler-babel
 
+## 1.7.0
+
+### Patch Changes
+
+- Updated dependencies [35cd26c]
+  - @usemotif/core@1.7.0
+  - @usemotif/compiler-core@1.7.0
+
 ## 1.6.0
 
 ### Minor Changes
