@@ -1,0 +1,100 @@
+---
+title: FileUpload
+description: A themed drag-and-drop file zone over the headless FileUpload - highlights while dragging, opens the file picker on click, and filters by accept and multiple.
+diataxis: reference
+covers: ['FileUpload', 'FileUploadProps']
+last_verified: 2026-10-14
+---
+
+import {
+  ApiSignature,
+  ArticleMeta,
+  Callout,
+  CodeBlock,
+  Eyebrow,
+  Lede,
+} from '../../../components/index.js';
+
+<Eyebrow>UI kit / Forms</Eyebrow>
+
+# FileUpload
+
+<Lede>
+  FileUpload is a drop zone for files. Drag files onto it, or click it to open the file picker,
+  and `onFiles` receives what was chosen.
+</Lede>
+
+<ArticleMeta />
+
+## What it is
+
+The headless [FileUpload](/headless/specialized/file-upload) behaviour with a themed zone. The
+headless layer renders a hidden `<input type="file">` and tracks drag enter and leave, so the
+dragging state holds while the pointer crosses child elements. Dropped files go through the same
+`accept` and `multiple` filter as picked ones: files that do not match `accept` are dropped, and
+without `multiple` only the first file is kept.
+
+The kit zone is a centred box with a 2px dashed `border.strong` border on `surface.base`, showing
+`label` in muted text. While files are dragged over it, the border turns `action.primary` and the
+background `surface.muted`. Clicking it opens the picker.
+
+## Install
+
+<CodeBlock lang="bash" code={`yarn add @usemotif/ui`} />
+
+<CodeBlock lang="tsx" code={`import { FileUpload } from '@usemotif/ui';`} />
+
+## Usage
+
+<CodeBlock lang="tsx" code={`import { FileUpload } from '@usemotif/ui';
+
+<FileUpload accept="image/*" multiple onFiles={(files) => upload(files)} />`} />
+
+With a custom prompt:
+
+<CodeBlock lang="tsx" code={`import { FileUpload } from '@usemotif/ui';
+
+<FileUpload accept=".pdf" label="Drop your CV here (PDF)" onFiles={([file]) => setCv(file)} />`} />
+
+## API
+
+<ApiSignature
+  name="FileUpload"
+  status="stable"
+  signature={`function FileUpload(props: FileUploadProps): JSX.Element`}
+  params={[
+    {
+      name: 'accept',
+      type: 'string',
+      description: 'Accepted types, as for the native `accept` attribute: MIME types, `image/*` wildcards, or extensions.',
+    },
+    {
+      name: 'multiple',
+      type: 'boolean',
+      default: 'false',
+      description: 'Accepts more than one file per pick or drop.',
+    },
+    {
+      name: 'disabled',
+      type: 'boolean',
+      default: 'false',
+      description: 'Ignores drops and clicks.',
+    },
+    {
+      name: 'onFiles',
+      type: '(files: File[]) => void',
+      description: 'Called with the accepted files. Not called when none match.',
+    },
+    {
+      name: 'label',
+      type: 'ReactNode',
+      default: "'Drag files here, or click to browse'",
+      description: 'Prompt shown inside the drop zone.',
+    },
+  ]}
+/>
+
+<Callout variant="info" title="Related">
+  [FileUpload (headless)](/headless/specialized/file-upload) - the unstyled behaviour, with your
+  own render function for the zone.
+</Callout>

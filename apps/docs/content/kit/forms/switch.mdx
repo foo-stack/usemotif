@@ -1,0 +1,90 @@
+---
+title: Switch
+description: A themed on/off toggle - a native checkbox input with role="switch", a token-coloured track, and a thumb that slides in CSS.
+diataxis: reference
+covers: ['Switch', 'SwitchProps']
+last_verified: 2026-10-14
+---
+
+import {
+  ApiSignature,
+  ArticleMeta,
+  Callout,
+  CodeBlock,
+  Eyebrow,
+  Lede,
+} from '../../../components/index.js';
+
+<Eyebrow>UI kit / Forms</Eyebrow>
+
+# Switch
+
+<Lede>
+  Switch is an on/off toggle for settings that apply straight away. It is a native checkbox input
+  announced as a switch, so it works with keyboards, forms, and screen readers as is.
+</Lede>
+
+<ArticleMeta />
+
+## What it is
+
+A `Box` rendered as an `<input type="checkbox" role="switch">`, 44 by 24px with a fully rounded
+track in `border.strong`. The thumb is a white circle painted as a background image. When checked,
+the `_checked` pseudo-state turns the track `action.primary` and moves the thumb to the right edge,
+with a 150ms transition.
+
+Every standard input attribute (`checked`, `defaultChecked`, `onChange`, `name`, `disabled`, and
+the rest) passes through to the element. Switch omits `size`, and replaces `style` with a version
+that merges over its own reset styles.
+
+## Install
+
+<CodeBlock lang="bash" code={`yarn add @usemotif/ui`} />
+
+<CodeBlock lang="tsx" code={`import { Switch } from '@usemotif/ui';`} />
+
+## Usage
+
+<CodeBlock lang="tsx" code={`import { Switch } from '@usemotif/ui';
+
+<label>
+  <Switch defaultChecked onChange={(e) => save(e.currentTarget.checked)} /> Email notifications
+</label>`} />
+
+Controlled:
+
+<CodeBlock lang="tsx" code={`import { Switch } from '@usemotif/ui';
+
+<Switch
+  checked={darkMode}
+  onChange={(e) => setDarkMode(e.currentTarget.checked)}
+  aria-label="Dark mode"
+/>`} />
+
+## API
+
+<ApiSignature
+  name="Switch"
+  status="stable"
+  signature={`function Switch(props: SwitchProps): JSX.Element`}
+  params={[
+    {
+      name: 'invalid',
+      type: 'boolean',
+      description: 'Marks the control invalid by setting `aria-invalid`.',
+    },
+    {
+      name: 'style',
+      type: 'CSSProperties',
+      description: "Inline styles, merged over the control's own reset styles.",
+    },
+  ]}
+/>
+
+`SwitchProps` also accepts every `InputHTMLAttributes<HTMLInputElement>` attribute except `size`.
+`type` is set to `checkbox` and `role` to `switch`.
+
+<Callout variant="info" title="Related">
+  [Switch (headless)](/headless/selection/switch) - the unstyled switch.
+  [Checkbox](/kit/forms/checkbox) for a choice that is submitted with a form.
+</Callout>

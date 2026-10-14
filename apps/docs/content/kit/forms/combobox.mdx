@@ -1,0 +1,157 @@
+---
+title: Combobox
+description: A themed autocomplete over the headless Combobox - a text input that filters a listbox as you type - and Search, the same control inside a search landmark.
+diataxis: reference
+covers: ['Combobox', 'Search', 'ComboboxProps', 'ComboboxItem']
+last_verified: 2026-10-14
+---
+
+import {
+  ApiSignature,
+  ArticleMeta,
+  Callout,
+  CodeBlock,
+  Eyebrow,
+  Lede,
+} from '../../../components/index.js';
+
+<Eyebrow>UI kit / Forms</Eyebrow>
+
+# Combobox
+
+<Lede>
+  Combobox is a text input with a suggestion list. Typing narrows the list, and picking an option
+  fills the input. `Search` is the same control framed as site search.
+</Lede>
+
+<ArticleMeta />
+
+## What it is
+
+`Combobox` is the headless [Combobox](/headless/selection/combobox) behaviour with a themed input
+and list. The headless layer gives the input `role="combobox"`, filters the options with a
+case-insensitive match on their labels, and handles keyboard navigation in the listbox.
+
+`Search` wraps the headless [Search](/headless/selection/search) instead, which renders the same
+combobox inside a `role="search"` landmark. The two take the same props.
+
+The kit input is a rounded field in `surface.raised` with a `border.default` border. The listbox
+is a raised panel up to 260px tall that scrolls; the highlighted row takes `surface.interactive`
+and the selected row is bold.
+
+## Install
+
+<CodeBlock lang="bash" code={`yarn add @usemotif/ui`} />
+
+<CodeBlock lang="tsx" code={`import { Combobox, Search } from '@usemotif/ui';`} />
+
+## Usage
+
+<CodeBlock lang="tsx" code={`import { Combobox } from '@usemotif/ui';
+
+const frameworks = [
+  { value: 'react', label: 'React' },
+  { value: 'vue', label: 'Vue' },
+  { value: 'svelte', label: 'Svelte' },
+];
+
+<Combobox options={frameworks} defaultValue="react" onValueChange={setFramework} />`} />
+
+As site search:
+
+<CodeBlock lang="tsx" code={`import { Search } from '@usemotif/ui';
+
+<Search options={pages} onValueChange={openPage} placeholder="Search docs" />`} />
+
+## API
+
+<ApiSignature
+  name="Combobox"
+  status="stable"
+  signature={`function Combobox(props: ComboboxProps): JSX.Element`}
+  params={[
+    {
+      name: 'options',
+      type: 'ReadonlyArray<ComboboxOption>',
+      required: true,
+      description: 'The choices. Each is `{ value, label, disabled? }`.',
+    },
+    {
+      name: 'value',
+      type: 'string',
+      description: 'Controlled selected value. Pass with `onValueChange`.',
+    },
+    {
+      name: 'defaultValue',
+      type: 'string',
+      description: 'Initially selected value when uncontrolled.',
+    },
+    {
+      name: 'onValueChange',
+      type: '(value: string | undefined) => void',
+      description: 'Called with the new value when an option is picked.',
+    },
+    {
+      name: 'placeholder',
+      type: 'string',
+      default: "'Search...'",
+      description: 'Placeholder for the input.',
+    },
+    {
+      name: 'width',
+      type: 'number | string',
+      default: '240',
+      description: 'Width of the input. A number is pixels.',
+    },
+  ]}
+/>
+
+<ApiSignature
+  name="Search"
+  status="stable"
+  signature={`function Search(props: ComboboxProps): JSX.Element`}
+  params={[
+    {
+      name: 'options',
+      type: 'ReadonlyArray<ComboboxOption>',
+      required: true,
+      description: 'The suggestions. Each is `{ value, label, disabled? }`.',
+    },
+    {
+      name: 'value',
+      type: 'string',
+      description: 'Controlled selected value. Pass with `onValueChange`.',
+    },
+    {
+      name: 'defaultValue',
+      type: 'string',
+      description: 'Initially selected value when uncontrolled.',
+    },
+    {
+      name: 'onValueChange',
+      type: '(value: string | undefined) => void',
+      description: 'Called with the new value when a suggestion is picked.',
+    },
+    {
+      name: 'placeholder',
+      type: 'string',
+      default: "'Search...'",
+      description: 'Placeholder for the input.',
+    },
+    {
+      name: 'width',
+      type: 'number | string',
+      default: '280',
+      description: 'Width of the input. A number is pixels.',
+    },
+  ]}
+/>
+
+`ComboboxItem` is exported as the option type, the headless `ComboboxOption`: `value: string`,
+`label: string`, and an optional `disabled: boolean`.
+
+<Callout variant="info" title="Related">
+  [Combobox (headless)](/headless/selection/combobox) and
+  [Search (headless)](/headless/selection/search) - the unstyled behaviours, with a custom filter.
+  [Select](/kit/forms/select) when typing is not needed.
+</Callout>

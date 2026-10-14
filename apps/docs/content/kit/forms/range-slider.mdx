@@ -1,0 +1,134 @@
+---
+title: RangeSlider
+description: A themed two-thumb slider over the headless RangeSlider - a low and high value on one track, each thumb clamped against the other.
+diataxis: reference
+covers: ['RangeSlider', 'RangeSliderProps']
+last_verified: 2026-10-14
+---
+
+import {
+  ApiSignature,
+  ArticleMeta,
+  Callout,
+  CodeBlock,
+  Eyebrow,
+  Lede,
+} from '../../../components/index.js';
+
+<Eyebrow>UI kit / Forms</Eyebrow>
+
+# RangeSlider
+
+<Lede>
+  RangeSlider picks a span, such as a price range, with two thumbs on one track. The value is a
+  `[low, high]` pair, and neither thumb can pass the other.
+</Lede>
+
+<ArticleMeta />
+
+## What it is
+
+The headless [RangeSlider](/headless/numeric/range-slider) behaviour with a themed track, fill,
+and thumbs. Each thumb is its own `role="slider"`, and its `aria-valuemin` and `aria-valuemax`
+follow the other thumb, so assistive tech reports the range each thumb can move in. Arrow keys
+step a thumb; Home and End send it to its limit.
+
+The kit paints a 6px rounded track in `surface.muted`, the segment between the thumbs in
+`action.primary`, and two 16px round thumbs with an `action.primary` border, through the token CSS
+variables. A disabled slider drops to half opacity.
+
+## Install
+
+<CodeBlock lang="bash" code={`yarn add @usemotif/ui`} />
+
+<CodeBlock lang="tsx" code={`import { RangeSlider } from '@usemotif/ui';`} />
+
+## Usage
+
+<CodeBlock lang="tsx" code={`import { RangeSlider } from '@usemotif/ui';
+
+<RangeSlider defaultValue={[20, 80]} aria-label="Price range" onValueChange={setPrice} />`} />
+
+Controlled, on a custom scale:
+
+<CodeBlock lang="tsx" code={`import { RangeSlider } from '@usemotif/ui';
+
+<RangeSlider
+  value={hours}
+  onValueChange={setHours}
+  min={0}
+  max={24}
+  width={320}
+  aria-label="Opening hours"
+/>`} />
+
+## API
+
+<ApiSignature
+  name="RangeSlider"
+  status="stable"
+  signature={`function RangeSlider(props: RangeSliderProps): JSX.Element`}
+  params={[
+    {
+      name: 'value',
+      type: '[number, number]',
+      description: 'Controlled `[low, high]` pair. Pass with `onValueChange`.',
+    },
+    {
+      name: 'defaultValue',
+      type: '[number, number]',
+      default: '[0, 100]',
+      description: 'Initial pair when uncontrolled.',
+    },
+    {
+      name: 'onValueChange',
+      type: '(next: [number, number]) => void',
+      description: 'Called with the new pair when either thumb moves.',
+    },
+    {
+      name: 'min',
+      type: 'number',
+      default: '0',
+      description: 'Lowest value the low thumb can reach.',
+    },
+    {
+      name: 'max',
+      type: 'number',
+      default: '100',
+      description: 'Highest value the high thumb can reach.',
+    },
+    {
+      name: 'step',
+      type: 'number',
+      default: '1',
+      description: 'Increment each thumb snaps to.',
+    },
+    {
+      name: 'disabled',
+      type: 'boolean',
+      default: 'false',
+      description: 'Ignores input and dims the track.',
+    },
+    {
+      name: 'width',
+      type: 'number | string',
+      default: '200',
+      description: 'Track length. A number is pixels.',
+    },
+    {
+      name: 'aria-label',
+      type: 'string',
+      description: 'Accessible name for the slider.',
+    },
+    {
+      name: 'aria-labelledby',
+      type: 'string',
+      description: 'Id of an element that names the slider.',
+    },
+  ]}
+/>
+
+<Callout variant="info" title="Related">
+  [RangeSlider (headless)](/headless/numeric/range-slider) - the unstyled behaviour.
+  [Slider](/kit/forms/slider) for a single value.
+</Callout>

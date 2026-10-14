@@ -1,0 +1,135 @@
+---
+title: Slider
+description: A themed single-value slider over the headless Slider - drag, arrow keys, Home and End, PageUp and PageDown, controlled or uncontrolled.
+diataxis: reference
+covers: ['Slider', 'SliderProps']
+last_verified: 2026-10-14
+---
+
+import {
+  ApiSignature,
+  ArticleMeta,
+  Callout,
+  CodeBlock,
+  Eyebrow,
+  Lede,
+} from '../../../components/index.js';
+
+<Eyebrow>UI kit / Forms</Eyebrow>
+
+# Slider
+
+<Lede>
+  Slider picks one number from a range by dragging a thumb along a track or pressing the arrow
+  keys. Set `min`, `max`, and `step`, and the value snaps to the step.
+</Lede>
+
+<ArticleMeta />
+
+## What it is
+
+The headless [Slider](/headless/numeric/slider) behaviour with a themed track, fill, and thumb.
+The headless layer renders `role="slider"` with `aria-valuenow`, handles pointer dragging, and
+maps the arrow keys, Home, End, PageUp, and PageDown to value changes.
+
+The kit paints a 6px rounded track in `surface.muted`, a fill in `action.primary`, and a 16px
+round thumb with an `action.primary` border, all through the token CSS variables. A disabled
+slider drops to half opacity. The kit slider is always horizontal: it sets its own track, fill,
+and thumb styles and takes a `width` instead.
+
+## Install
+
+<CodeBlock lang="bash" code={`yarn add @usemotif/ui`} />
+
+<CodeBlock lang="tsx" code={`import { Slider } from '@usemotif/ui';`} />
+
+## Usage
+
+<CodeBlock lang="tsx" code={`import { Slider } from '@usemotif/ui';
+
+<Slider defaultValue={40} aria-label="Volume" onValueChange={setVolume} />`} />
+
+Controlled, with a custom range and step:
+
+<CodeBlock lang="tsx" code={`import { Slider } from '@usemotif/ui';
+
+<Slider
+  value={opacity}
+  onValueChange={setOpacity}
+  min={0}
+  max={1}
+  step={0.05}
+  width={320}
+  aria-label="Opacity"
+/>`} />
+
+## API
+
+<ApiSignature
+  name="Slider"
+  status="stable"
+  signature={`function Slider(props: SliderProps): JSX.Element`}
+  params={[
+    {
+      name: 'value',
+      type: 'number',
+      description: 'Controlled value. Pass with `onValueChange`.',
+    },
+    {
+      name: 'defaultValue',
+      type: 'number',
+      default: '0',
+      description: 'Initial value when uncontrolled.',
+    },
+    {
+      name: 'onValueChange',
+      type: '(next: number) => void',
+      description: 'Called with the new value on drag or key press.',
+    },
+    {
+      name: 'min',
+      type: 'number',
+      default: '0',
+      description: 'Lowest value.',
+    },
+    {
+      name: 'max',
+      type: 'number',
+      default: '100',
+      description: 'Highest value.',
+    },
+    {
+      name: 'step',
+      type: 'number',
+      default: '1',
+      description: 'Increment the value snaps to.',
+    },
+    {
+      name: 'disabled',
+      type: 'boolean',
+      default: 'false',
+      description: 'Ignores input and dims the track.',
+    },
+    {
+      name: 'width',
+      type: 'number | string',
+      default: '200',
+      description: 'Track length. A number is pixels.',
+    },
+    {
+      name: 'aria-label',
+      type: 'string',
+      description: 'Accessible name for the slider.',
+    },
+    {
+      name: 'aria-labelledby',
+      type: 'string',
+      description: 'Id of an element that names the slider.',
+    },
+  ]}
+/>
+
+<Callout variant="info" title="Related">
+  [Slider (headless)](/headless/numeric/slider) - the unstyled behaviour, with vertical
+  orientation. [RangeSlider](/kit/forms/range-slider) for picking a low and high value.
+</Callout>

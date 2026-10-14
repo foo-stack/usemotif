@@ -1,0 +1,120 @@
+---
+title: ColorPicker
+description: A themed HSV colour picker over the headless ColorPicker - a saturation and value plane, a hue slider, an optional alpha slider, and a hex, rgb, or hsl format toggle.
+diataxis: reference
+covers: ['ColorPicker', 'ColorPickerProps']
+last_verified: 2026-10-14
+---
+
+import {
+  ApiSignature,
+  ArticleMeta,
+  Callout,
+  CodeBlock,
+  Eyebrow,
+  Lede,
+} from '../../../components/index.js';
+
+<Eyebrow>UI kit / Forms</Eyebrow>
+
+# ColorPicker
+
+<Lede>
+  ColorPicker picks a colour by hue, saturation, and brightness, and reports it as a CSS string in
+  hex, rgb, or hsl.
+</Lede>
+
+<ArticleMeta />
+
+## What it is
+
+The headless [ColorPicker](/headless/specialized/color-picker) behaviour inside a themed card. The
+headless layer renders a saturation and value plane, a hue slider, an alpha slider when
+`allowAlpha` is on and the format is not hex, and a toggle between the `formats`. Arrow keys move
+the plane's thumb, Shift with an arrow takes larger steps, and the sliders use the standard slider
+keys.
+
+The kit lays the parts out in a column inside a rounded card in `surface.default` with a
+`border.default` border. The plane is 220 by 150px, the sliders 220px wide and 12px tall, and the
+plane's thumb a 14px white ring.
+
+The kit sets the per-part styles itself, so `ColorPickerProps` omits the headless `style`,
+`saturationValueStyle`, `saturationValueThumbStyle`, `hueSliderStyle`, and `alphaSliderStyle`.
+
+## Install
+
+<CodeBlock lang="bash" code={`yarn add @usemotif/ui`} />
+
+<CodeBlock lang="tsx" code={`import { ColorPicker } from '@usemotif/ui';`} />
+
+## Usage
+
+<CodeBlock lang="tsx" code={`import { ColorPicker } from '@usemotif/ui';
+
+<ColorPicker defaultValue="#3b82f6" onValueChange={setBrand} />`} />
+
+Controlled, in rgb with an alpha slider:
+
+<CodeBlock lang="tsx" code={`import { ColorPicker } from '@usemotif/ui';
+
+<ColorPicker value={color} onValueChange={setColor} format="rgb" allowAlpha />`} />
+
+## API
+
+<ApiSignature
+  name="ColorPicker"
+  status="stable"
+  signature={`function ColorPicker(props: ColorPickerProps): JSX.Element`}
+  params={[
+    {
+      name: 'value',
+      type: 'string',
+      description: 'Controlled colour as a CSS string. Pass with `onValueChange`.',
+    },
+    {
+      name: 'defaultValue',
+      type: 'string',
+      default: "'#000000'",
+      description: 'Initial colour when uncontrolled.',
+    },
+    {
+      name: 'onValueChange',
+      type: '(next: string) => void',
+      description: 'Called with the new colour, written in the current `format`.',
+    },
+    {
+      name: 'format',
+      type: "'hex' | 'rgb' | 'hsl'",
+      default: "'hex'",
+      description: 'Output format. Pass with `onFormatChange` to control the toggle.',
+    },
+    {
+      name: 'onFormatChange',
+      type: "(next: 'hex' | 'rgb' | 'hsl') => void",
+      description: 'Called when the format toggle changes.',
+    },
+    {
+      name: 'allowAlpha',
+      type: 'boolean',
+      default: 'false',
+      description: 'Shows an alpha slider when the format is not hex.',
+    },
+    {
+      name: 'formats',
+      type: "ReadonlyArray<'hex' | 'rgb' | 'hsl'>",
+      default: "['hex', 'rgb', 'hsl']",
+      description: 'Formats offered in the toggle. Pass `[]` to hide it.',
+    },
+    {
+      name: 'disabled',
+      type: 'boolean',
+      default: 'false',
+      description: 'Ignores input.',
+    },
+  ]}
+/>
+
+<Callout variant="info" title="Related">
+  [ColorPicker (headless)](/headless/specialized/color-picker) - the unstyled behaviour, with a
+  style hook for each part.
+</Callout>
