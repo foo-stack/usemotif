@@ -5,6 +5,8 @@ const meta: MetaFile = {
   checkbox: 'Checkbox',
   'radio-group': 'RadioGroup',
   switch: 'Switch',
+  toggle: 'Toggle',
+  'toggle-group': 'ToggleGroup',
   select: 'Select',
   combobox: 'Combobox',
   'multi-select': 'MultiSelect',
