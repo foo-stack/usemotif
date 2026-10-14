@@ -3,7 +3,7 @@ title: DatePicker
 description: A themed date picker over the headless DatePicker - a trigger button that opens a popover holding the themed calendar, controlled or uncontrolled.
 diataxis: reference
 covers: ['DatePicker', 'DatePickerProps', 'RangeDatePickerProps']
-last_verified: 2026-10-14
+last_verified: 2026-10-15
 ---
 
 import {
@@ -110,6 +110,17 @@ Controlled, with past days disabled:
       name: 'isDisabled',
       type: '(date: Date) => boolean',
       description: 'Return `true` to mark a day disabled.',
+    },
+    {
+      name: 'minDate / maxDate',
+      type: 'Date',
+      description: 'The first and last selectable days. Days outside are disabled, and keyboard focus stops at the bounds.',
+    },
+    {
+      name: 'numberOfMonths',
+      type: 'number',
+      default: '1',
+      description: 'Consecutive months shown side by side. Focus moves across them, and the view slides when it leaves the last one. Outside-month days are left blank so no date shows twice.',
     },
     {
       name: 'weekStartsOn',

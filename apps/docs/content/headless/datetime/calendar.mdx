@@ -3,7 +3,7 @@ title: Calendar
 description: A focusable month grid with full keyboard navigation - arrow keys by day, PageUp/Down by month, locale-aware labels.
 diataxis: reference
 covers: ['Calendar', 'CalendarProps', 'RangeCalendarProps', 'CalendarBaseProps', 'CalendarDayInfo', 'DateRange']
-last_verified: 2026-10-14
+last_verified: 2026-10-15
 ---
 
 import {
@@ -67,7 +67,18 @@ intact.
     {
       name: 'isDisabled',
       type: '(date: Date) => boolean',
-      description: 'Predicate marking individual days disabled - for min/max ranges or blocked dates.',
+      description: 'Predicate marking individual days disabled, such as blocked dates. For a range, use `minDate` and `maxDate`.',
+    },
+    {
+      name: 'minDate / maxDate',
+      type: 'Date',
+      description: 'The first and last selectable days. Days outside are disabled, and keyboard focus stops at the bounds.',
+    },
+    {
+      name: 'numberOfMonths',
+      type: 'number',
+      default: '1',
+      description: 'Consecutive months shown side by side. Focus moves across them, and the view slides when it leaves the last one. Outside-month days are left blank so no date shows twice.',
     },
     {
       name: 'weekStartsOn',
