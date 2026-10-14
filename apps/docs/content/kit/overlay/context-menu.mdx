@@ -104,7 +104,13 @@ The headless `ContextMenu.Trigger`.
       name: 'children',
       type: 'ReactElement',
       required: true,
-      description: 'A single element. It is cloned to open the menu on `contextmenu`. If the child calls `preventDefault()` in its own handler, the menu does not open.',
+      description: 'A single element. It is cloned to open the menu on `contextmenu`, or on a touch long-press. If the child calls `preventDefault()` in its own handler, the menu does not open.',
+    },
+    {
+      name: 'longPressDelay',
+      type: 'number',
+      default: '500',
+      description: 'How long a touch must be held to open the menu, in milliseconds. See the [headless page](/headless/menu/context-menu#contextmenutrigger) for the iOS callout.',
     },
   ]}
 />
