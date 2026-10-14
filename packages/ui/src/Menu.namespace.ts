@@ -1,5 +1,6 @@
 import { Menu as Headless } from '@usemotif/headless';
 import { MenuContent, MenuItem, MenuSeparator } from './Menu.js';
+import { MenuCheckboxItem, MenuLabel, MenuRadioGroup, MenuRadioItem } from './MenuItems.js';
 import { MenuSubContent, MenuSubTrigger } from './MenuSub.js';
 
 /**
@@ -20,4 +21,8 @@ export const Menu = {
   Sub: Headless.Sub,
   SubTrigger: MenuSubTrigger,
   SubContent: MenuSubContent,
+  CheckboxItem: MenuCheckboxItem,
+  RadioGroup: MenuRadioGroup,
+  RadioItem: MenuRadioItem,
+  Label: MenuLabel,
 };
