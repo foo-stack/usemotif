@@ -91,6 +91,12 @@ function SaveButton() {
       description: 'Most toasts shown at once. Past it the oldest are dropped.',
     },
     {
+      name: 'swipeToDismiss',
+      type: 'boolean',
+      default: 'true',
+      description: 'Let a sideways swipe dismiss a toast: released more than 80 px away, or flicked faster than 500 px/s. Anything less springs back. On the web, presses that start on a button or link inside the toast are left to it.',
+    },
+    {
       name: 'style',
       type: 'CSSProperties',
       description: 'Inline style for the default container - ignored when `renderToasts` is set.',

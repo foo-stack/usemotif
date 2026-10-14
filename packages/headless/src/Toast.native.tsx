@@ -9,9 +9,11 @@ import {
   type ReactElement,
   type ReactNode,
 } from 'react';
+import { useDrag } from '@usemotif/react-native';
 import { Animated, View, type ViewStyle } from 'react-native';
 import { nativeText } from './_native-text.js';
 import { withPromise, type ToastFn } from './_toast-promise.js';
+import { isSwipeDismiss } from './_toast-swipe.js';
 import { useReducedMotion } from './_use-reduced-motion.js';
 
 /**
@@ -61,6 +63,8 @@ export interface ToasterProps {
   renderToast?: (item: ToastItem, info: { dismiss: () => void }) => ReactElement;
   /** Position of the toast stack. Defaults to bottom. */
   placement?: 'top' | 'bottom';
+  /** Let a sideways swipe dismiss a toast. Defaults to `true`. */
+  swipeToDismiss?: boolean;
   style?: ViewStyle;
 }
 export function Toaster({
@@ -69,6 +73,7 @@ export function Toaster({
   maxVisible = 4,
   renderToast,
   placement = 'bottom',
+  swipeToDismiss = true,
   style,
 }: ToasterProps): ReactElement {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
@@ -148,7 +153,13 @@ export function Toaster({
         ]}
       >
         {toasts.map((t) => (
-          <ToastView key={t.id} item={t} dismiss={() => dismiss(t.id)} render={renderToast} />
+          <ToastView
+            key={t.id}
+            item={t}
+            dismiss={() => dismiss(t.id)}
+            render={renderToast}
+            swipe={swipeToDismiss}
+          />
         ))}
       </View>
     </ToasterContext.Provider>
@@ -159,10 +170,12 @@ function ToastView({
   item,
   dismiss,
   render,
+  swipe,
 }: {
   item: ToastItem;
   dismiss: () => void;
   render?: ((item: ToastItem, info: { dismiss: () => void }) => ReactElement) | undefined;
+  swipe: boolean;
 }): ReactElement {
   const reducedMotion = useReducedMotion();
   const opacity = useRef(new Animated.Value(0)).current;
@@ -173,12 +186,29 @@ function ToastView({
     }
     Animated.timing(opacity, { toValue: 1, duration: 200, useNativeDriver: true }).start();
   }, [opacity, reducedMotion]);
-  return (
+
+  // Bounded at 0 with full elasticity: the toast follows the finger and
+  // springs back when a release does not dismiss it.
+  const dismissRef = useRef(dismiss);
+  dismissRef.current = dismiss;
+  const { dragProps, Wrapper, x } = useDrag({
+    axis: 'x',
+    constraints: { left: 0, right: 0 },
+    dragElastic: 1,
+    onDragEnd: (info) => {
+      if (isSwipeDismiss(info)) dismissRef.current();
+    },
+  });
+  const translateX = useRef(new Animated.Value(0)).current;
+  useEffect(() => x.on('change', (offset) => translateX.setValue(offset)), [x, translateX]);
+
+  const view = (
     <Animated.View
+      {...(swipe ? dragProps : {})}
       // role="status" semantics - non-modal, polite for background,
       // assertive for foreground toasts.
       accessibilityLiveRegion={item.type === 'foreground' ? 'assertive' : 'polite'}
-      style={{ opacity }}
+      style={{ opacity, transform: [{ translateX }] }}
     >
       {render !== undefined ? (
         render(item, { dismiss })
@@ -191,6 +221,7 @@ function ToastView({
       )}
     </Animated.View>
   );
+  return swipe ? <Wrapper>{view}</Wrapper> : view;
 }
 
 /**

@@ -1,6 +1,6 @@
 'use client';
 
-import { Portal } from '@usemotif/react';
+import { Portal, useDrag } from '@usemotif/react';
 import {
   createContext,
   useCallback,
@@ -10,10 +10,12 @@ import {
   useRef,
   useState,
   type CSSProperties,
+  type PointerEvent,
   type ReactElement,
   type ReactNode,
 } from 'react';
 import { withPromise, type ToastFn } from './_toast-promise.js';
+import { isSwipeDismiss, swipeOpacity } from './_toast-swipe.js';
 import { useExitTransition } from './_use-exit-transition.js';
 
 export type { ToastContent, ToastFn, ToastPromiseMessages } from './_toast-promise.js';
@@ -108,6 +110,9 @@ export interface ToasterProps {
    * (a custom list owns its own removal).
    */
   exitDurationMs?: number;
+  /** Let a sideways swipe dismiss a toast in the default list. Defaults to
+   * `true`. */
+  swipeToDismiss?: boolean;
   /** Inline style for the default container - only used when
    * `renderToasts` is not provided. */
   style?: CSSProperties;
@@ -115,12 +120,15 @@ export interface ToasterProps {
 
 let nextId = 0;
 
+const INTERACTIVE = 'button, a[href], input, select, textarea, [role="button"]';
+
 export function Toaster({
   children,
   renderToasts,
   defaultDuration = 5000,
   maxVisible = Infinity,
   exitDurationMs = 0,
+  swipeToDismiss = true,
   style,
 }: ToasterProps): ReactElement {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
@@ -248,6 +256,7 @@ export function Toaster({
             dismiss={dismiss}
             remove={remove}
             exitDurationMs={exitDurationMs}
+            swipeToDismiss={swipeToDismiss}
             {...(style !== undefined ? { style } : {})}
           />
         )}
@@ -262,6 +271,7 @@ function DefaultToasterList({
   dismiss,
   remove,
   exitDurationMs,
+  swipeToDismiss,
   style,
 }: {
   toasts: ToastItem[];
@@ -269,6 +279,7 @@ function DefaultToasterList({
   dismiss: (id: string) => void;
   remove: (id: string) => void;
   exitDurationMs: number;
+  swipeToDismiss: boolean;
   style?: CSSProperties;
 }): ReactElement {
   return (
@@ -297,6 +308,7 @@ function DefaultToasterList({
           exitDurationMs={exitDurationMs}
           onExited={remove}
           onDismiss={() => dismiss(t.id)}
+          swipeToDismiss={swipeToDismiss}
         />
       ))}
     </div>
@@ -319,11 +331,17 @@ export function Toast({
   open = true,
   exitDurationMs = 0,
   onExited,
+  swipeToDismiss = true,
   style,
   children,
 }: {
   item: ToastItem;
+  /** Dismisses this toast. Also enables swiping it away, unless
+   * `swipeToDismiss` is `false`. */
   onDismiss?: () => void;
+  /** Let a sideways swipe dismiss the toast when it has an `onDismiss`.
+   * Defaults to `true`. */
+  swipeToDismiss?: boolean;
   /** When `false`, the toast plays its exit (held mounted in the exiting
    * phase) instead of rendering normally. Defaults to `true`. */
   open?: boolean;
@@ -353,6 +371,37 @@ export function Toast({
     if (!shouldRender) onExitedRef.current?.(id);
   }, [shouldRender, id]);
 
+  const swipe = swipeToDismiss && onDismiss !== undefined;
+  const onDismissRef = useRef(onDismiss);
+  onDismissRef.current = onDismiss;
+  // Bounded at 0 with full elasticity: the toast follows the finger freely and
+  // springs back to rest when a release does not dismiss it.
+  const { dragProps, x } = useDrag({
+    axis: 'x',
+    constraints: { left: 0, right: 0 },
+    dragElastic: 1,
+    onDragEnd: (info) => {
+      if (isSwipeDismiss(info)) onDismissRef.current?.();
+    },
+  });
+  useEffect(
+    () =>
+      x.on('change', (offset) => {
+        const el = elementRef.current;
+        if (el === null) return;
+        el.style.transform = offset === 0 ? '' : `translateX(${offset}px)`;
+        el.style.opacity = offset === 0 ? '' : String(swipeOpacity(offset));
+      }),
+    [x, elementRef],
+  );
+
+  // The drag captures the pointer, which would retarget a click meant for the
+  // toast's own button or link; presses that start on one are left alone.
+  const startSwipe = (e: PointerEvent<HTMLElement>): void => {
+    if (e.target !== e.currentTarget && (e.target as Element).closest(INTERACTIVE) !== null) return;
+    dragProps.onPointerDown(e);
+  };
+
   if (!shouldRender) return null;
   return (
     <div
@@ -365,7 +414,10 @@ export function Toast({
       role={item.type === 'foreground' ? 'alert' : 'status'}
       aria-atomic="true"
       data-motif-state={phase === 'exiting' ? 'exiting' : undefined}
-      style={{ pointerEvents: 'auto', ...style }}
+      {...(swipe ? { onPointerDown: startSwipe } : {})}
+      // pan-y keeps vertical page scrolling on touch while horizontal moves
+      // reach the swipe.
+      style={{ pointerEvents: 'auto', ...(swipe ? { touchAction: 'pan-y' } : {}), ...style }}
     >
       {/* Publish the presence phase so a WAAPI-driven descendant surface
           registers + plays its exit off-thread; the CSS path rides
