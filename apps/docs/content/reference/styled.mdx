@@ -3,7 +3,7 @@ title: styled
 description: Wrap a component or HTML element with base styles, named variants, and a typed prop API.
 diataxis: reference
 covers: ['styled', 'createStyledContext']
-last_verified: 2026-06-22
+last_verified: 2026-10-14
 ---
 
 import { ApiSignature, ArticleMeta, Callout, CodeBlock, Eyebrow } from '../../components/index.js';
@@ -16,7 +16,7 @@ import { ApiSignature, ArticleMeta, Callout, CodeBlock, Eyebrow } from '../../co
   signature={`function styled<V extends AnyVariants = Record<string, never>>(
   Component: ElementType,
   config: StyledConfig<V>,
-): ComponentType<VariantProps<V> & Omit<BoxProps, keyof VariantProps<V>>>`}
+): StyledComponent<V>`}
   params={[
     {
       name: 'Component',
@@ -89,14 +89,29 @@ go through the standard pipeline.
 
 ## VariantProps
 
-<CodeBlock lang="ts" code={`type VariantProps<V extends AnyVariants> = {
-  [K in AllVariantNames<V>]?: ExplicitValue<V, K> | FallbackValue<V, K>;
-};`} />
+<CodeBlock lang="ts" code={`type ButtonVariants = VariantProps<typeof Button>; // from the component
+type SizeOnly = VariantProps<typeof config.variants>; // or from the config`} />
 
-The prop type derived from a `variants` config. Each variant name becomes one optional prop typed
-as the union of its explicit keys and its fallback value type.
+The variant props of a `styled()` component, from the component itself or from its `variants`
+config. Each variant name becomes one optional prop typed as the union of its explicit keys and
+its fallback value type, in any of the responsive forms below.
 
 `<Component size="sm" />` - `size` is keyof the explicit map; type-checked.
+
+### Responsive variant values
+
+A variant prop takes one value per breakpoint, in the same three syntaxes as a style prop:
+
+<CodeBlock lang="tsx" code={`<Button size={{ base: 'sm', md: 'lg' }} />
+<Button size={['sm', null, 'lg']} />
+<Button size="base:sm md:lg" />`} />
+
+The component resolves its variants once per breakpoint the value names, so compound variants
+match per breakpoint too, and folds the results into responsive style props: `size` above becomes
+`px={{ base: 2, md: 4 }}` and the like, state bags included. Keys that are not style props, such
+as `transition`, come from the base value. A style that the smaller breakpoint's value sets and
+the larger one's does not carries up, since CSS has no per-breakpoint unset. On React Native the
+value resolves at the current viewport and container width, as style props do.
 
 ## CompoundVariant
 
