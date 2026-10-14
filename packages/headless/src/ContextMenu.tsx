@@ -17,7 +17,6 @@ import {
   type MouseEvent,
   type ReactElement,
   type ReactNode,
-  type Ref,
 } from 'react';
 import { inDomOrder } from './_dom-order.js';
 import { MenuItem, MenuLevelContext, navigateMenu, type MenuLevel } from './_menu-level.js';
