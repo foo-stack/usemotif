@@ -23,6 +23,9 @@ export interface ListboxBaseProps<T = string> {
     info: { highlighted: boolean; selected: boolean; index: number },
   ) => ReactNode;
   disabled?: boolean;
+  /** Row height in px for long lists, which render only the rows in view.
+   * Omitted, it is measured from the first row; rows must share one height. */
+  itemHeight?: number;
   'aria-label'?: string;
   'aria-labelledby'?: string;
   style?: CSSProperties;
@@ -123,6 +126,7 @@ function ListboxBody<T>({
   isSelected,
   select,
   initial,
+  itemHeight,
   ...aria
 }: ListboxBodyProps<T>): ReactElement {
   const id = useId();
@@ -221,6 +225,8 @@ function ListboxBody<T>({
           select(option.value);
         }}
         renderOption={renderOption}
+        scrollRef={listRef}
+        itemHeight={itemHeight}
       />
     </div>
   );
