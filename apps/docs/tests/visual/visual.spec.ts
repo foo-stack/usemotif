@@ -41,6 +41,7 @@ const ROUTES = [
   '/guides/desktop',
   '/bundlers/webpack-swc',
   '/reference/create-theme',
+  '/reference/tokens',
   '/reference/styled',
   '/reference/breakpoints',
   '/reference/test-utils',
