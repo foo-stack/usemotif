@@ -5,6 +5,7 @@ import type { Theme } from '@usemotif/core';
 import { Box } from './Box.js';
 import { ThemeProvider } from './Theme.js';
 import { styled } from './styled.js';
+import { __setDimensions } from './__test-setup__/react-native-mock.js';
 import { _resetDevWarningsForTesting } from './_dev-warnings.js';
 import { createStyledContext, type VariantContext } from './styled-context.js';
 
@@ -270,5 +271,28 @@ describe('native createStyledContext()', () => {
     );
     // The component's own defaultVariants outrank the context defaults.
     expect(viewStyle(container).padding).toBe(8);
+  });
+});
+
+describe('native styled - responsive variant values', () => {
+  const Card = styled(Box, {
+    variants: { size: { sm: { padding: 4 }, lg: { padding: 16 } } },
+  });
+
+  it('resolves the variant at the current viewport width', () => {
+    __setDimensions(800);
+    render(
+      <ThemeProvider themes={THEMES} active="test">
+        <Card size={{ base: 'sm', md: 'lg' }} />
+      </ThemeProvider>,
+    );
+    expect(viewStyle(container).padding).toBe(16);
+    __setDimensions(400);
+    render(
+      <ThemeProvider themes={THEMES} active="test">
+        <Card key="narrow" size="base:sm md:lg" />
+      </ThemeProvider>,
+    );
+    expect(viewStyle(container).padding).toBe(4);
   });
 });

@@ -38,6 +38,7 @@ export { isTokenRef, resolveOutputRangeTokens, resolveToken, resolveValue } from
 export type { ResolveTokenOptions } from './token.js';
 
 export { createTheme, extendTheme } from './createTheme.js';
+export { resolveResponsiveVariants } from './responsive-variants.js';
 export type { MergeTokens } from './createTheme.js';
 
 export type {

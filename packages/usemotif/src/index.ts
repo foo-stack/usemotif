@@ -203,6 +203,7 @@ export type {
 export { createStyledContext, styled } from '@usemotif/react';
 export type {
   CompoundVariant,
+  StyledComponent,
   StyledConfig,
   StyledContext,
   VariantContext,

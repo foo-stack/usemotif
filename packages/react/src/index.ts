@@ -238,6 +238,6 @@ export type { AtRule, PseudoRule } from './style-cache.js';
 export { CollectorContext, useActiveCollector } from './collector-context.js';
 
 export { styled } from './styled.js';
-export type { CompoundVariant, StyledConfig, VariantProps } from './styled.js';
+export type { CompoundVariant, StyledComponent, StyledConfig, VariantProps } from './styled.js';
 export { createStyledContext } from './styled-context.js';
 export type { StyledContext, VariantContext } from './styled-context.js';

@@ -151,7 +151,8 @@ const targets = [
     // can emit base props as a class instead of inline styles.
     // Bumped by the `gradients` scale joining core's known scale names.
     // Bumped when state bags took responsive values (nested at-rules).
-    budget: 6600,
+    // Bumped when styled() variants took responsive values.
+    budget: 6700,
   },
   {
     name: '@usemotif/ui - Card only',

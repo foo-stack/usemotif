@@ -56,6 +56,9 @@ afterEach(() => {
   document.body.removeChild(container);
 });
 
+/** A variant prop's plain values: the responsive object, array, and DSL forms removed. */
+type Plain<T> = Exclude<T, object | `${string}:${string}` | undefined>;
+
 describe('styled() - base styles', () => {
   it('applies base style props on every render', () => {
     const SBox = styled('div', { base: { padding: 8, color: 'red' } });
@@ -312,7 +315,7 @@ describe('styled() - type inference', () => {
       },
     });
     type Props = React.ComponentProps<typeof SBox>;
-    expectTypeOf<Props['size']>().toEqualTypeOf<'sm' | 'md' | 'lg' | undefined>();
+    expectTypeOf<Plain<Props['size']>>().toEqualTypeOf<'sm' | 'md' | 'lg'>();
   });
 
   it('derives a boolean variant as native boolean', () => {
@@ -320,7 +323,7 @@ describe('styled() - type inference', () => {
       variants: { active: { true: { color: 'red' }, false: { color: 'gray' } } },
     });
     type Props = React.ComponentProps<typeof SBox>;
-    expectTypeOf<Props['active']>().toEqualTypeOf<boolean | undefined>();
+    expectTypeOf<Plain<Props['active']>>().toEqualTypeOf<boolean>();
   });
 
   it('derives a fallback-fn variant as the function arg type', () => {
@@ -328,7 +331,7 @@ describe('styled() - type inference', () => {
       variants: { '...size': (val: number) => ({ padding: val }) },
     });
     type Props = React.ComponentProps<typeof SBox>;
-    expectTypeOf<Props['size']>().toEqualTypeOf<number | undefined>();
+    expectTypeOf<Plain<Props['size']>>().toEqualTypeOf<number>();
   });
 
   it('mixes explicit + fallback into a single union prop', () => {
@@ -339,7 +342,18 @@ describe('styled() - type inference', () => {
       },
     });
     type Props = React.ComponentProps<typeof SBox>;
-    expectTypeOf<Props['size']>().toEqualTypeOf<'sm' | number | undefined>();
+    expectTypeOf<Plain<Props['size']>>().toEqualTypeOf<'sm' | number>();
+  });
+
+  it('VariantProps takes the component itself, with the responsive forms', () => {
+    const Btn = styled('button', {
+      variants: { size: { sm: { padding: 4 }, md: { padding: 8 } }, active: { true: {} } },
+    });
+    expectTypeOf<Plain<VariantProps<typeof Btn>['size']>>().toEqualTypeOf<'sm' | 'md'>();
+    expectTypeOf<{ base: 'sm'; md: 'md' }>().toExtend<VariantProps<typeof Btn>['size']>();
+    expectTypeOf<['sm', null, 'md']>().toExtend<VariantProps<typeof Btn>['size']>();
+    expectTypeOf<'base:sm md:md'>().toExtend<VariantProps<typeof Btn>['size']>();
+    expectTypeOf<{ base: 'xl' }>().not.toExtend<VariantProps<typeof Btn>['size']>();
   });
 
   it('VariantProps<V> exposes the same prop union for downstream re-use', () => {
@@ -347,7 +361,7 @@ describe('styled() - type inference', () => {
       variants: { size: { sm: { padding: 4 }, md: { padding: 8 } } },
     } as const;
     type V = typeof config.variants;
-    expectTypeOf<VariantProps<V>['size']>().toEqualTypeOf<'sm' | 'md' | undefined>();
+    expectTypeOf<Plain<VariantProps<V>['size']>>().toEqualTypeOf<'sm' | 'md'>();
   });
 });
 
@@ -415,8 +429,38 @@ describe('styled() - interaction + motion in layers', () => {
       base: { _hover: { bg: 'navy' }, transition: 'all 150ms ease' },
       variants: { intent: { primary: { _focus: { bg: 'blue' }, enterStyle: { opacity: 0 } } } },
     });
-    expectTypeOf<React.ComponentProps<typeof Btn>['intent']>().toEqualTypeOf<
-      'primary' | undefined
-    >();
+    expectTypeOf<Plain<React.ComponentProps<typeof Btn>['intent']>>().toEqualTypeOf<'primary'>();
+  });
+});
+
+describe('styled - responsive variant values', () => {
+  const Btn = styled('button', {
+    base: { display: 'inline-flex' },
+    variants: {
+      size: { sm: { padding: 4 }, lg: { padding: 16, _hover: { color: 'navy' } } },
+      tone: { loud: {} },
+    },
+    compoundVariants: [{ size: 'lg', tone: 'loud', css: { fontWeight: 700 } }],
+  });
+
+  it('emits each breakpoint value under its media query', () => {
+    render(<Btn size={{ base: 'sm', md: 'lg' }} />);
+    const el = container.firstElementChild as HTMLElement;
+    const cls = Array.from(el.classList).find((c) => c.startsWith('m-'))!;
+    const css = injectedCss();
+    expect(css).toContain(`.${cls} { padding: 4px; }`);
+    expect(css).toContain(`@media (min-width: 768px) { .${cls} { padding: 16px; } }`);
+    expect(css).toMatch(/@media \(min-width: 768px\) \{ \.m-\w+:hover \{ color: navy; \} \}/);
+  });
+
+  it('takes the array and DSL forms, and matches compound variants per breakpoint', () => {
+    render(<Btn size={['sm', undefined, undefined, 'lg']} tone="loud" />);
+    expect(injectedCss()).toMatch(
+      /@media \(min-width: 1024px\) \{ \.m-\w+ \{[^}]*font-weight: 700/,
+    );
+    render(<Btn key="dsl" size="base:sm lg:lg" />);
+    expect(injectedCss()).toMatch(
+      /@media \(min-width: 1024px\) \{ \.m-\w+ \{ padding: 16px; \} \}/,
+    );
   });
 });
