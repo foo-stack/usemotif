@@ -37,7 +37,8 @@ export type {
 export { isTokenRef, resolveOutputRangeTokens, resolveToken, resolveValue } from './token.js';
 export type { ResolveTokenOptions } from './token.js';
 
-export { createTheme } from './createTheme.js';
+export { createTheme, extendTheme } from './createTheme.js';
+export type { MergeTokens } from './createTheme.js';
 
 export type {
   KnownScaleName,
