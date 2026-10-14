@@ -79,6 +79,7 @@ export function tokenRefToCssVar(ref: TokenRef, defaultScale?: string): string |
     'lineHeights',
     'letterSpacings',
     'shadows',
+    'gradients',
     'zIndices',
     'borderWidths',
     'opacities',
@@ -295,6 +296,9 @@ export function themeToCssBlock(theme: Theme, layer?: string): string {
     // JSON, so escape them the same way the theme *name* is escaped above - a
     // raw `}` or `;` would otherwise close the rule block and inject CSS.
     lines.push(`  ${name}: ${escapeCssValue(value)};`);
+  }
+  if (theme.colorScheme !== undefined) {
+    lines.push(`  color-scheme: ${escapeCssValue(theme.colorScheme)};`);
   }
   lines.push('}');
   return wrapInLayer(lines.join('\n'), layer);

@@ -14,6 +14,9 @@ export interface ChipProps {
   readonly intent?: ChipIntent;
   /** When provided, renders a `×` button that calls this. */
   readonly onRemove?: () => void;
+  /** Accessible name of the remove button. Defaults to `'Remove'`; name the
+   * chip in it when several sit together, as in `Remove react`. */
+  readonly removeLabel?: string;
 }
 
 const REMOVE_HOVER = { opacity: 0.65 } as const;
@@ -28,7 +31,13 @@ const REMOVE_HOVER = { opacity: 0.65 } as const;
  * <Chip intent="primary" icon={<TagIcon />}>Featured</Chip>
  * ```
  */
-export function Chip({ children, icon, intent = 'neutral', onRemove }: ChipProps) {
+export function Chip({
+  children,
+  icon,
+  intent = 'neutral',
+  onRemove,
+  removeLabel = 'Remove',
+}: ChipProps) {
   return (
     <Box
       {...chipRecipe.base}
@@ -57,7 +66,7 @@ export function Chip({ children, icon, intent = 'neutral', onRemove }: ChipProps
           cursor="pointer"
           _hover={REMOVE_HOVER}
           onClick={onRemove}
-          aria-label="Remove"
+          aria-label={removeLabel}
           {...({ type: 'button' } as unknown as BoxProps)}
         >
           ×

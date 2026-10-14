@@ -1,0 +1,107 @@
+---
+title: TagsInput
+description: An input that turns entries into tags - Enter, a delimiter, or a paste adds them, Backspace removes the last - with optional suggestions.
+diataxis: reference
+covers: ['TagsInput', 'TagsInputProps', 'TagInfo']
+last_verified: 2026-10-14
+---
+
+import { ApiSignature, ArticleMeta, CodeBlock, Eyebrow, Lede } from '../../../components/index.js';
+
+<Eyebrow>Headless / Selection</Eyebrow>
+
+# TagsInput
+
+<Lede>
+  TagsInput collects free-text entries as tags: topics, recipients, labels. It is a text input that
+  turns what you type into a list, with optional suggestions.
+</Lede>
+
+<ArticleMeta />
+
+## What it is
+
+Enter or a delimiter (a comma by default) adds the typed entry; a paste adds every entry in it;
+Backspace in an empty input removes the last tag. Each tag is drawn by `renderTag`, which gets a
+`remove` callback. With `suggestions`, the input becomes the headless
+[Combobox](/headless/selection/combobox) input, so the suggestion list has the combobox's keyboard
+and ARIA, and picking a suggestion adds it instead of filling the input. For a fixed set of
+options with no free text, use [MultiSelect](/headless/selection/multi-select).
+
+## Install
+
+<CodeBlock lang="bash" code={`yarn add @usemotif/headless`} />
+
+<CodeBlock lang="tsx" code={`import { TagsInput } from '@usemotif/headless';`} />
+
+## API
+
+<ApiSignature
+  name="TagsInput"
+  status="stable"
+  signature={`function TagsInput(props: TagsInputProps): JSX.Element`}
+  params={[
+    {
+      name: 'value / defaultValue / onValueChange',
+      type: 'readonly string[] / readonly string[] / (value: readonly string[]) => void',
+      description: 'The tags, controlled or uncontrolled.',
+    },
+    {
+      name: 'suggestions',
+      type: 'readonly string[]',
+      description: 'Offered as the user types: the ones not yet added, filtered by the text. Arrow keys highlight one and Enter adds it.',
+    },
+    {
+      name: 'delimiters',
+      type: 'readonly string[]',
+      default: "[',']",
+      description: 'Keys, besides Enter, that add the typed entry. Pasted text splits on them and on newlines.',
+    },
+    {
+      name: 'max / allowDuplicates / validate',
+      type: 'number / boolean / (tag: string) => boolean',
+      description: 'Caps the count, keeps repeated entries (off by default), and rejects entries `validate` returns `false` for. Entries are always trimmed, and empty ones are dropped.',
+    },
+    {
+      name: 'placeholder / disabled / aria-label',
+      type: 'string / boolean / string',
+      description: 'For the input. Name it with `aria-label`.',
+    },
+    {
+      name: 'renderTag',
+      type: '(info: { value: string; index: number; remove: () => void }) => ReactNode',
+      description: 'Draws one tag. The default is the text and a button named "Remove {tag}".',
+    },
+    {
+      name: 'style / inputStyle / listStyle / renderSuggestion',
+      type: 'CSSProperties / CSSProperties / CSSProperties / (suggestion, info) => ReactNode',
+      description: 'Styles for the wrapper, the input and the suggestion list, and a renderer for each suggestion.',
+    },
+  ]}
+/>
+
+## Keyboard
+
+| Key | Action |
+| --- | --- |
+| Enter | Add the typed entry, or the highlighted suggestion |
+| A delimiter | Add the typed entry |
+| Backspace in an empty input | Remove the last tag |
+| Arrow Down / Up | Move through the suggestions |
+| Escape | Close the suggestions |
+
+## Accessibility
+
+Give each tag's remove control a name that says which tag it removes, as the default does. On
+React Native the field is a `TextInput`: submitting or a typed delimiter adds the entry, and
+suggestions show as a pressable list while typing.
+
+## Example
+
+<CodeBlock lang="tsx" code={`<TagsInput
+  aria-label="Recipients"
+  delimiters={[',', ' ']}
+  validate={(email) => email.includes('@')}
+  value={recipients}
+  onValueChange={setRecipients}
+/>`} />

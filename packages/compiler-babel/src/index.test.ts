@@ -1,5 +1,10 @@
 import { transformSync } from '@babel/core';
-import { configureBreakpoints, resolveResponsiveStylesToVars } from '@usemotif/core';
+import {
+  configureBreakpoints,
+  hashPseudoRules,
+  resolveResponsiveStylesToVars,
+  resolveStateRules,
+} from '@usemotif/core';
 import { afterEach, describe, expect, it } from 'vitest';
 import motifBabelPlugin, {
   type AggressiveReport,
@@ -350,6 +355,47 @@ describe('motif babel plugin - binding resolution', () => {
       );
     `);
     expect(css).toMatch(/\[aria-expanded="true"\]\s*\{[^}]*background-color:\s*olive/);
+  });
+
+  it('extracts _groupHover to a rule keyed on the group ancestor', () => {
+    const { code, css } = transform(`
+      import { Box } from '@usemotif/react';
+      const X = () => <Box _groupHover={{ color: 'red' }} />;
+    `);
+    const cls = hashPseudoRules(resolveStateRules('[data-motif-group]:hover &', { color: 'red' }));
+    expect(code).toContain(`<div className="${cls}"`);
+    expect(css).toContain(`[data-motif-group]:hover .${cls} { color: red; }`);
+  });
+
+  it('extracts a responsive state bag with the class and CSS the runtime builds', () => {
+    const { code, css } = transform(`
+      import { Box } from '@usemotif/react';
+      const X = () => <Box _hover={{ bg: { base: 'red', md: 'blue' } }} />;
+    `);
+    const cls = hashPseudoRules(resolveStateRules(':hover', { bg: { base: 'red', md: 'blue' } }));
+    expect(code).toContain(`<div className="${cls}"`);
+    expect(css).toContain(
+      `@media (min-width: 768px) { .${cls}:hover { background-color: blue; } }`,
+    );
+  });
+
+  it('extracts _invalid, _pressed, _focusWithin and _readOnly, and strips the Box', () => {
+    const { code, css } = transform(`
+      import { Box } from '@usemotif/react';
+      const X = () => (
+        <Box
+          _invalid={{ borderColor: 'red' }}
+          _pressed={{ backgroundColor: 'navy' }}
+          _focusWithin={{ outlineColor: 'blue' }}
+          _readOnly={{ opacity: 0.6 }}
+        />
+      );
+    `);
+    expect(code).toMatch(/<div className=/);
+    expect(css).toMatch(/\[aria-invalid="true"\]\s*\{[^}]*border-color:\s*red/);
+    expect(css).toMatch(/\[aria-pressed="true"\]\s*\{[^}]*background-color:\s*navy/);
+    expect(css).toMatch(/:focus-within\s*\{[^}]*outline-color:\s*blue/);
+    expect(css).toMatch(/\[readonly\][^{]*\{[^}]*opacity:\s*0\.6/);
   });
 
   it('keeps a static prop conflicting with a dynamic prop on the JSX (no precedence inversion)', () => {
@@ -1210,6 +1256,31 @@ describe('motif babel plugin - wrapper stripping', () => {
     `);
     expect(code).toContain('<div');
     expect(code).not.toMatch(/<Box\b/);
+  });
+
+  it('strips a <Box> with literal _before / _after, emitting ::before and ::after', () => {
+    const { code, css } = transform(`
+      import { Box } from '@usemotif/react';
+      const X = () => (
+        <Box p={4} _before={{ content: '"*"', color: '$colors.text.muted' }} _after={{ bg: 'red' }} />
+      );
+    `);
+    expect(code).toMatch(/<div\b/);
+    expect(code).not.toMatch(/<Box\b/);
+    expect(code).not.toContain('_before');
+    expect(code).not.toContain('_after');
+    expect(code).toMatch(/className="m-[a-z0-9]+"/);
+    expect(css).toMatch(/\.m-[a-z0-9]+::before \{[^}]*content: "\*"/);
+    expect(css).toMatch(/::after \{[^}]*content: "";[^}]*background-color: red/);
+  });
+
+  it('keeps <Box> when a _before bag is dynamic', () => {
+    const { code } = transform(`
+      import { Box } from '@usemotif/react';
+      const X = ({ bag }) => <Box p={4} _before={bag} />;
+    `);
+    expect(code).toMatch(/<Box\b/);
+    expect(code).toContain('_before={bag}');
   });
 
   it('replaces fully-static <Text> with <span>', () => {

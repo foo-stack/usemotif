@@ -123,6 +123,7 @@ export type ScaleName =
   | 'lineHeights'
   | 'letterSpacings'
   | 'shadows'
+  | 'gradients'
   | 'zIndices'
   | 'borderWidths'
   | 'opacities'
@@ -163,6 +164,20 @@ export interface Theme {
    * Most apps already follow this convention.
    */
   readonly root?: ThemeRootStyles;
+  /**
+   * Whether this theme is light or dark. On web it is emitted as
+   * `color-scheme` in the theme's block, and the root `<ThemeProvider>` sets
+   * it on `<html>` for the active theme, so scrollbars and native form
+   * controls match.
+   */
+  readonly colorScheme?: 'light' | 'dark';
+  /**
+   * The colour for the browser's own chrome, such as the mobile address bar:
+   * a colour or a `$`-token reference. The root `<ThemeProvider>` writes the
+   * active theme's value, resolved to a literal, to
+   * `<meta name="theme-color">` on web.
+   */
+  readonly themeColor?: string;
   /**
    * `prefers-reduced-motion` policy.
    *

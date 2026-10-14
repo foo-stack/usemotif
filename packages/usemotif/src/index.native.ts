@@ -17,6 +17,7 @@ export const PACKAGE_NAME = 'usemotif';
 export {
   configureBreakpoints,
   createTheme,
+  extendTheme,
   getBreakpoints,
   makeKeyframe as keyframes,
 } from '@usemotif/core';
@@ -214,6 +215,7 @@ export type {
 export { createStyledContext, styled } from '@usemotif/react-native';
 export type {
   CompoundVariant,
+  StyledComponent,
   StyledConfig,
   StyledContext,
   VariantContext,

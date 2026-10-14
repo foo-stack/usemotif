@@ -3,7 +3,7 @@ title: Input
 description: A single-line text input. Picks up id, aria-describedby, and invalid state from Field context.
 diataxis: reference
 covers: ['Input', 'InputProps']
-last_verified: 2026-05-15
+last_verified: 2026-10-14
 ---
 
 import {
@@ -64,6 +64,11 @@ system). Pass `type`, `placeholder`, `value`, `onChange`, and the rest as usual.
       description: 'The HTML input type. `text`, `email`, `search`, `url`, and the rest.',
     },
     {
+      name: 'startElement / endElement',
+      type: 'ReactNode',
+      description: 'Shown inside the field before or after the text: an icon, a prefix or suffix, a button. With either set, the field becomes a row that carries the border, so the adornments take the width they need.',
+    },
+    {
       name: 'style',
       type: 'CSSProperties',
       description: 'Inline style merged on top of the bordered-surface defaults.',
@@ -103,6 +108,18 @@ Controlled standalone input:
   onChange={(e) => setQuery(e.target.value)}
   placeholder="Search"
 />`} />
+
+With adornments, an icon before and a button after:
+
+<CodeBlock lang="tsx" code={`<Input
+  placeholder="Search"
+  startElement={<Icon icon={Search} size={16} />}
+  endElement={<IconButton aria-label="Clear" onPress={clear} icon={X} />}
+/>`} />
+
+The wrapping row takes the border, background, and focus ring, and the input inside is
+borderless, so an adorned Input lines up with a plain one. `style` still lands on the `<input>`.
+On React Native the row is a `View`, and a string adornment is wrapped in `<Text>`.
 
 With a forwarded ref:
 

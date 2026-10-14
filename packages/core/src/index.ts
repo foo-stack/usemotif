@@ -37,7 +37,9 @@ export type {
 export { isTokenRef, resolveOutputRangeTokens, resolveToken, resolveValue } from './token.js';
 export type { ResolveTokenOptions } from './token.js';
 
-export { createTheme } from './createTheme.js';
+export { createTheme, extendTheme } from './createTheme.js';
+export { resolveResponsiveVariants } from './responsive-variants.js';
+export type { MergeTokens } from './createTheme.js';
 
 export type {
   KnownScaleName,
@@ -58,6 +60,7 @@ export {
   PSEUDO_ELEMENT_SELECTOR,
   PSEUDO_SELECTOR,
   PSEUDO_STATE_PROP_NAMES,
+  GROUP_ATTRIBUTE,
   PSEUDO_STATE_PROPS,
   STYLE_PROP_NAMES,
   TRANSFORM_AXIS_NAMES,
@@ -87,6 +90,7 @@ export type {
   PseudoElementStyleProps,
   PseudoStatePropName,
   StateStyleBag,
+  StateStyleValue,
   StateStyleProps,
   StyleBag,
   StylePropDefinition,
@@ -94,6 +98,7 @@ export type {
   StyleProps,
   TransformAxis,
   TransitionObject,
+  LayoutTransition,
   TransitionValue,
   ValidateStyleProps,
   ValidateStylePropsFrom,
@@ -136,7 +141,13 @@ export type {
   ScrollOffsetPair,
 } from './scroll-offset.js';
 
-export { resolveResponsiveStylesToVars, resolveStyles, resolveStylesToVars } from './style.js';
+export {
+  resolvePseudoElementBag,
+  resolveStateRules,
+  resolveResponsiveStylesToVars,
+  resolveStyles,
+  resolveStylesToVars,
+} from './style.js';
 export type {
   AtRule,
   ResolveResponsiveOptions,

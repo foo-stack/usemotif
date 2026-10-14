@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  GROUP_ATTRIBUTE,
   PSEUDO_SELECTOR,
   PSEUDO_STATE_PROP_NAMES,
   PSEUDO_STATE_PROPS,
@@ -59,6 +60,13 @@ describe('pseudo-state schema', () => {
       '_checked',
       '_selected',
       '_expanded',
+      '_invalid',
+      '_pressed',
+      '_focusWithin',
+      '_readOnly',
+      '_groupHover',
+      '_groupFocus',
+      '_groupActive',
     ]);
   });
 
@@ -75,7 +83,7 @@ describe('pseudo-state schema', () => {
   });
 
   it('PSEUDO_STATE_PROPS membership matches the name list', () => {
-    expect(PSEUDO_STATE_PROPS.size).toBe(7);
+    expect(PSEUDO_STATE_PROPS.size).toBe(14);
     for (const name of PSEUDO_STATE_PROP_NAMES) {
       expect(PSEUDO_STATE_PROPS.has(name)).toBe(true);
     }
@@ -92,6 +100,21 @@ describe('pseudo-state schema', () => {
 
   it('maps _expanded to the [aria-expanded] selector', () => {
     expect(PSEUDO_SELECTOR._expanded).toBe('&[aria-expanded="true"]');
+  });
+
+  it('maps the ARIA-driven states to attributes, not the over-eager pseudo-classes', () => {
+    // `:invalid` matches an untouched required field; `:read-only` matches a plain div.
+    expect(PSEUDO_SELECTOR._invalid).toBe('&[aria-invalid="true"]');
+    expect(PSEUDO_SELECTOR._readOnly).toBe('&[readonly], &[aria-readonly="true"]');
+    expect(PSEUDO_SELECTOR._pressed).toBe('&[aria-pressed="true"]');
+    expect(PSEUDO_SELECTOR._focusWithin).toBe(':focus-within');
+  });
+
+  it('keys the group states on an ancestor carrying the group attribute', () => {
+    expect(GROUP_ATTRIBUTE).toBe('data-motif-group');
+    expect(PSEUDO_SELECTOR._groupHover).toBe('[data-motif-group]:hover &');
+    expect(PSEUDO_SELECTOR._groupFocus).toBe('[data-motif-group]:focus-visible &');
+    expect(PSEUDO_SELECTOR._groupActive).toBe('[data-motif-group]:active &');
   });
 
   it('maps _disabled to a selector that covers both :disabled and aria-disabled', () => {

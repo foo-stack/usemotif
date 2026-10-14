@@ -12,6 +12,7 @@ const meta: MetaFile = {
   select: 'Select',
   'multi-select': 'MultiSelect',
   combobox: 'Combobox',
+  'tags-input': 'TagsInput',
   'date-picker': 'DatePicker',
   calendar: 'Calendar',
   'time-input': 'TimeInput',

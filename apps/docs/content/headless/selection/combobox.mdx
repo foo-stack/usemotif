@@ -132,6 +132,11 @@ Combobox clones it with the combobox ARIA wiring and the keyboard handlers.
       default: '"Loading..."',
       description: 'Rendered in place of `emptyMessage` while the root is `loading`.',
     },
+    {
+      name: 'itemHeight',
+      type: 'number',
+      description: 'Row height in px for long lists. Omitted, it is measured from the first row.',
+    },
   ]}
 />
 
@@ -157,6 +162,18 @@ const { data = [], isFetching } = useSearch(query); // your fetch, debounced as 
 While `loading` is set and there are no options, the list shows `loadingMessage` where the empty
 message would go; options already on screen stay. On the web the listbox carries `aria-busy`
 while loading. The same props work on React Native.
+
+## Long lists
+
+From 50 options the list renders only the rows in view, plus a few either side, with spacers
+keeping the scrollbar true to the full list. The highlighted row always stays rendered: arrow
+keys, Home and End scroll it into view, so `aria-activedescendant` never names a missing row. Each
+row carries `aria-setsize` and `aria-posinset`, so assistive tech still announces "12 of 4000".
+
+The rows must share one height. It is measured from the first row, or pass `itemHeight` to skip
+the measurement. The listbox needs a bounded height to scroll in, such as a `maxHeight` in its
+`style`. This applies to `Select.List`, `Search.List`, `MultiSelect.List`, and `Listbox` too. On
+React Native the options sheet renders through `FlatList`, which virtualizes on its own.
 
 ## Keyboard
 

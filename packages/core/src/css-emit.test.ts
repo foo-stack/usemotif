@@ -9,6 +9,7 @@ import {
   maybePx,
   wrapInLayer,
 } from './css-emit.js';
+import { resolveStateRules, resolveStylesToVars } from './style.js';
 
 describe('maybePx unitless props', () => {
   it('appends px to length-like numeric props', () => {
@@ -246,5 +247,49 @@ describe('layered rule building', () => {
     expect(hashAtRules(atRules, undefined)).toBe(hashAtRules(atRules));
     expect(hashAtRules(atRules, '')).toBe(hashAtRules(atRules));
     expect(hashPseudoRules(pseudoRules, '')).toBe(hashPseudoRules(pseudoRules));
+  });
+});
+
+describe('resolveStateRules', () => {
+  it('keeps a flat bag as one rule, hashed exactly as before', () => {
+    const rules = resolveStateRules(':hover', { opacity: 0.5, bg: 'red' });
+    expect(rules).toEqual([
+      { pseudo: ':hover', style: resolveStylesToVars({ opacity: 0.5, bg: 'red' }).style },
+    ]);
+    expect(hashPseudoRules(rules)).toBe(
+      hashPseudoRules([
+        { pseudo: ':hover', style: resolveStylesToVars({ opacity: 0.5, bg: 'red' }).style },
+      ]),
+    );
+  });
+
+  it('nests responsive slots in at-rules under the state selector', () => {
+    const rules = resolveStateRules(':hover', { bg: { base: 'red', md: 'blue' }, opacity: 0.5 });
+    expect(rules).toEqual([
+      { pseudo: ':hover', style: { backgroundColor: 'red', opacity: 0.5 } },
+      { pseudo: ':hover', style: { backgroundColor: 'blue' }, at: '@media (min-width: 768px)' },
+    ]);
+    expect(buildPseudoCss('m-x', rules)).toBe(
+      '.m-x:hover { background-color: red; opacity: 0.5; }\n' +
+        '@media (min-width: 768px) { .m-x:hover { background-color: blue; } }',
+    );
+  });
+
+  it('takes the array and DSL forms, and container keys', () => {
+    expect(resolveStateRules(':hover', { opacity: [1, undefined, 0.5] })[1]?.at).toBe(
+      '@media (min-width: 768px)',
+    );
+    expect(resolveStateRules(':hover', { opacity: 'base:1 md:0.5' })[1]?.at).toBe(
+      '@media (min-width: 768px)',
+    );
+    expect(resolveStateRules(':hover', { opacity: { base: 1, '@md': 0.5 } })[1]?.at).toMatch(
+      /^@container/,
+    );
+  });
+
+  it('keeps the at-rule in the hash, so the same declarations at two widths do not collide', () => {
+    const flat = [{ pseudo: ':hover', style: { opacity: 0.5 } }];
+    const nested = [{ pseudo: ':hover', style: { opacity: 0.5 }, at: '@media (min-width: 768px)' }];
+    expect(hashPseudoRules(nested)).not.toBe(hashPseudoRules(flat));
   });
 });

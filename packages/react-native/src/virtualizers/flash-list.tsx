@@ -32,7 +32,16 @@ import type { VirtualListImpl, VirtualListProps } from '../scroll.js';
  * style the parent screen instead.
  */
 function FlashListVirtualList<T>(props: VirtualListProps<T>): ReactElement {
-  const { data, renderItem, keyOf, itemHeight } = props;
+  const {
+    data,
+    renderItem,
+    keyOf,
+    itemHeight,
+    onEndReached,
+    onEndReachedThreshold,
+    onRefresh,
+    refreshing,
+  } = props;
   void itemHeight; // Reserved for parity; FlashList v2 auto-measures.
   // FlashList is generic on `<T>`; using JSX (rather than
   // createElement) lets TS infer the type parameter from `data`.
@@ -47,6 +56,9 @@ function FlashListVirtualList<T>(props: VirtualListProps<T>): ReactElement {
         ) => ReactElement | null
       }
       keyExtractor={(item: T, index: number) => String(keyOf?.(item, index) ?? index)}
+      {...(onEndReached !== undefined ? { onEndReached } : {})}
+      {...(onEndReachedThreshold !== undefined ? { onEndReachedThreshold } : {})}
+      {...(onRefresh !== undefined ? { onRefresh, refreshing: refreshing ?? false } : {})}
     />
   );
 }

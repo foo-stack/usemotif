@@ -19,7 +19,7 @@
 
 export const PACKAGE_NAME = 'usemotif';
 
-export { configureBreakpoints, createTheme, getBreakpoints } from '@usemotif/core';
+export { configureBreakpoints, createTheme, extendTheme, getBreakpoints } from '@usemotif/core';
 export type {
   AnimationObject,
   AnimationValue,
@@ -203,6 +203,7 @@ export type {
 export { createStyledContext, styled } from '@usemotif/react';
 export type {
   CompoundVariant,
+  StyledComponent,
   StyledConfig,
   StyledContext,
   VariantContext,

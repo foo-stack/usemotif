@@ -110,18 +110,39 @@ describe('analyzeStripSafety - runtime-owned props keep the wrapper', () => {
     expectBail(`<Box p={4} enterStyle={{ opacity: 0 }} />`, 'Box', 'blocked-prop:enterStyle');
   });
 
-  // #172 - _before/_after emit ::before/::after rules the compiler doesn't
-  // synthesize yet; stripping would drop the CSS and leak the prop to DOM.
-  it('bails on _before on every strippable primitive', () => {
-    expectBail(`<Box _before={{ content: '"x"' }} p={4} />`, 'Box', 'blocked-prop:_before');
-    expectBail(`<Text _before={{ content: '"x"' }} />`, 'Text', 'blocked-prop:_before');
-    expectBail(`<Stack _before={{ content: '"x"' }} />`, 'Stack', 'blocked-prop:_before');
-    expectBail(`<HStack _before={{ content: '"x"' }} />`, 'HStack', 'blocked-prop:_before');
-    expectBail(`<VStack _before={{ content: '"x"' }} />`, 'VStack', 'blocked-prop:_before');
+  // The FLIP runs in the runtime Box; a stripped `<div layout>` would not animate.
+  it('bails on group, which renders a marker attribute at runtime', () => {
+    expectBail(`<Box group p={4} />`, 'Box', 'blocked-prop:group');
   });
 
-  it('bails on _after', () => {
-    expectBail(`<Box _after={{ content: '"x"' }} p={4} />`, 'Box', 'blocked-prop:_after');
+  it('strips a child that only uses group states', () => {
+    expectSafe(`<Box _groupHover={{ color: 'red' }} />`, 'Box');
+  });
+
+  it('bails on layout and layoutTransition', () => {
+    expectBail(`<Box p={4} layout />`, 'Box', 'blocked-prop:layout');
+    expectBail(`<Stack layout="position" />`, 'Stack', 'blocked-prop:layout');
+    expectBail(
+      `<Box layoutTransition={{ duration: '120ms' }} p={4} />`,
+      'Box',
+      'blocked-prop:layoutTransition',
+    );
+  });
+
+  // _before/_after are extracted into ::before/::after rules, so a literal
+  // bag no longer keeps the wrapper; a dynamic one makes the element
+  // non-static, which does.
+  it('strips with a literal _before or _after on every strippable primitive', () => {
+    expectSafe(`<Box _before={{ content: '"x"' }} p={4} />`, 'Box');
+    expectSafe(`<Text _before={{ content: '"x"' }} />`, 'Text');
+    expectSafe(`<Stack _after={{ content: '"x"' }} />`, 'Stack');
+    expectSafe(`<HStack _before={{ color: 'red' }} />`, 'HStack');
+    expectSafe(`<VStack _after={{ content: '"x"' }} />`, 'VStack');
+  });
+
+  it('keeps the wrapper for a dynamic _before or _after', () => {
+    expectBail(`<Box _before={bag} p={4} />`, 'Box', 'non-static-classification');
+    expectBail(`<Box _after={bag} />`, 'Box', 'non-static-classification');
   });
 
   // #173 - Text `lines` drives line-clamp inline styles.

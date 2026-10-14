@@ -48,28 +48,30 @@ export interface PrimitiveInfo {
  * Motion props that block wrapper-stripping when present. `enterStyle` is
  * a first-paint overlay the runtime flips off via React state - the
  * lowercase HTML element has no equivalent lifecycle, so the wrapper has
- * to stay. `transition`, `animation`, `animateOnly`, and `exitStyle` are
+ * to stay. `layout` and `layoutTransition` drive a FLIP hook the runtime
+ * runs; stripped, they would land on the element as attributes and do
+ * nothing. `transition`, `animation`, `animateOnly`, and `exitStyle` are
  * fine after extraction (they reduce to plain inline `transition` / a
  * pseudo CSS rule keyed on `[data-motif-state="exiting"]`, both of
  * which work on any element).
  */
-const MOTION_NON_STRIPPABLE: readonly string[] = ['enterStyle'];
+const MOTION_NON_STRIPPABLE: readonly string[] = ['enterStyle', 'layout', 'layoutTransition'];
 
 /**
- * Pseudo-element bags every strippable primitive supports at runtime
- * (`Box` emits `::before`/`::after` rules with a default `content`). The
- * compiler doesn't yet synthesize those rules during extraction, so a
- * literal `_before`/`_after` must keep the wrapper in place - otherwise
- * the pseudo-element CSS is never emitted and the prop leaks onto the DOM
- * as an invalid attribute. Folding these into the extractor's pseudo path
- * (so the wrapper can still be stripped) is a follow-up.
+ * `group` renders the marker attribute the `_group*` states key on. The
+ * stripped element would carry `group` itself instead, so keep the wrapper.
  */
-const PSEUDO_ELEMENT_PROPS: readonly string[] = ['_before', '_after'];
+const GROUP_NON_STRIPPABLE: readonly string[] = ['group'];
 
-/** Block-strip set shared by every strippable primitive. */
+/**
+ * Block-strip set shared by every strippable primitive. `_before` and
+ * `_after` are not in it: a literal bag is extracted to a `::before` /
+ * `::after` rule, and a dynamic one makes the element non-static, which
+ * keeps the wrapper by itself.
+ */
 const BASE_NON_STRIPPABLE: ReadonlySet<string> = new Set([
   ...MOTION_NON_STRIPPABLE,
-  ...PSEUDO_ELEMENT_PROPS,
+  ...GROUP_NON_STRIPPABLE,
 ]);
 /** Text adds `lines`; the Stack family adds `stagger`. Each is a single
  * shared instance (read-only - only `.has()` is called) so the three Stack
@@ -133,6 +135,14 @@ export const PRIMITIVE_INFO: Readonly<Record<string, PrimitiveInfo>> = {
       '_checked',
       '_selected',
       '_expanded',
+      '_invalid',
+      '_pressed',
+      '_focusWithin',
+      '_readOnly',
+      '_groupHover',
+      '_groupFocus',
+      '_groupActive',
+      'group',
       'onPress',
       'disabled',
     ]),

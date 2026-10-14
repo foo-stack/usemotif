@@ -11,9 +11,11 @@ import {
 } from 'react';
 import {
   TextInput as RNTextInput,
+  View,
   type KeyboardTypeOptions,
   type TextInputProps as RNTextInputProps,
   type TextStyle,
+  type ViewStyle,
 } from 'react-native';
 import { Box, type BoxProps } from './Box.js';
 import { useDirection } from './direction-context.js';
@@ -140,9 +142,31 @@ export interface InputProps extends Omit<RNTextInputProps, 'editable' | 'style'>
   disabled?: boolean;
   /** Style override merged onto the resolved input surface. */
   style?: TextStyle | readonly TextStyle[];
+  /** Shown inside the field before the text: an icon, a prefix, a button. */
+  startElement?: ReactNode;
+  /** Shown inside the field after the text. */
+  endElement?: ReactNode;
 }
-export const Input = forwardRef(function Input(
-  { invalid, disabled, style: userStyle, ...rest }: InputProps,
+
+// Moved to the row wrapping an adorned input, which carries the surface.
+const SURFACE_KEYS = [
+  'paddingInline',
+  'borderWidth',
+  'borderStyle',
+  'borderColor',
+  'borderRadius',
+  'backgroundColor',
+  'opacity',
+  'direction',
+] as const;
+
+/** A bare string must sit in `<Text>` on native, or React Native throws. */
+function adornment(node: ReactNode): ReactNode {
+  return typeof node === 'string' || typeof node === 'number' ? <Text>{node}</Text> : node;
+}
+
+export const Input = /* @__PURE__ */ forwardRef(function Input(
+  { invalid, disabled, style: userStyle, startElement, endElement, ...rest }: InputProps,
   ref: Ref<RNTextInput>,
 ): ReactElement {
   const ctx = useFieldContext();
@@ -173,30 +197,80 @@ export const Input = forwardRef(function Input(
       : Array.isArray(userStyle)
         ? [resolved as TextStyle, ...(userStyle as TextStyle[])]
         : [resolved as TextStyle, userStyle as TextStyle];
-  return <RNTextInput ref={ref} editable={!isDisabled} style={finalStyle} {...rest} />;
+  if (startElement === undefined && endElement === undefined) {
+    return <RNTextInput ref={ref} editable={!isDisabled} style={finalStyle} {...rest} />;
+  }
+  // With an adornment, the field is a row: the wrapper carries the surface,
+  // and the borderless input takes the width the adornments leave.
+  const surface: Record<string, unknown> = { flexDirection: 'row', alignItems: 'center', gap: 8 };
+  const field: Record<string, unknown> = { flex: 1 };
+  for (const [key, value] of Object.entries(resolved as Record<string, unknown>)) {
+    if ((SURFACE_KEYS as readonly string[]).includes(key)) surface[key] = value;
+    else field[key] = value;
+  }
+  const inputStyle: TextStyle[] =
+    userStyle === undefined
+      ? [field as TextStyle]
+      : [field as TextStyle, ...(Array.isArray(userStyle) ? userStyle : [userStyle as TextStyle])];
+  return (
+    <View style={surface as ViewStyle}>
+      {adornment(startElement)}
+      <RNTextInput ref={ref} editable={!isDisabled} style={inputStyle} {...rest} />
+      {adornment(endElement)}
+    </View>
+  );
 });
 
 export interface TextAreaProps extends Omit<InputProps, 'multiline' | 'numberOfLines'> {
+  /** Visible lines; with `autoResize`, the height it starts at. Defaults to 3. */
   rows?: number;
+  /** Grow and shrink with the content, from `rows` lines up to `maxRows`. */
+  autoResize?: boolean;
+  /** With `autoResize`, the most lines shown before the text scrolls. */
+  maxRows?: number;
 }
-export const TextArea = forwardRef(function TextArea(
-  { rows = 3, style, ...rest }: TextAreaProps,
+
+/** The line height the TextArea's row counts are measured in, in px. */
+const LINE = 24;
+
+export const TextArea = /* @__PURE__ */ forwardRef(function TextArea(
+  { rows = 3, autoResize = false, maxRows, style, onContentSizeChange, ...rest }: TextAreaProps,
   ref: Ref<RNTextInput>,
 ): ReactElement {
-  const taStyle: TextStyle = { minHeight: rows * 24, textAlignVertical: 'top' };
+  const [content, setContent] = useState(0);
+  const max = maxRows === undefined ? Infinity : maxRows * LINE;
+  const height = autoResize ? Math.min(Math.max(content, rows * LINE), max) : undefined;
+  const taStyle: TextStyle = {
+    minHeight: rows * LINE,
+    textAlignVertical: 'top',
+    ...(height !== undefined ? { height } : {}),
+  };
   const merged: TextStyle | readonly TextStyle[] =
     style === undefined
       ? taStyle
       : Array.isArray(style)
         ? [taStyle, ...(style as TextStyle[])]
         : [taStyle, style as TextStyle];
-  return <Input ref={ref} multiline numberOfLines={rows} style={merged as TextStyle} {...rest} />;
+  return (
+    <Input
+      ref={ref}
+      multiline
+      numberOfLines={rows}
+      style={merged as TextStyle}
+      {...(autoResize ? { scrollEnabled: content > max } : {})}
+      onContentSizeChange={(e) => {
+        if (autoResize) setContent(e.nativeEvent.contentSize.height);
+        onContentSizeChange?.(e);
+      }}
+      {...rest}
+    />
+  );
 });
 
 export interface NumberInputProps extends Omit<InputProps, 'keyboardType'> {
   keyboardType?: KeyboardTypeOptions;
 }
-export const NumberInput = forwardRef(function NumberInput(
+export const NumberInput = /* @__PURE__ */ forwardRef(function NumberInput(
   { keyboardType = 'numeric', ...rest }: NumberInputProps,
   ref: Ref<RNTextInput>,
 ): ReactElement {
@@ -206,7 +280,7 @@ export const NumberInput = forwardRef(function NumberInput(
 export interface PasswordInputProps extends Omit<InputProps, 'secureTextEntry'> {
   togglable?: boolean;
 }
-export const PasswordInput = forwardRef(function PasswordInput(
+export const PasswordInput = /* @__PURE__ */ forwardRef(function PasswordInput(
   { togglable = true, ...rest }: PasswordInputProps,
   ref: Ref<RNTextInput>,
 ): ReactElement {

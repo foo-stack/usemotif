@@ -1,5 +1,6 @@
 'use client';
 
+import { resolveTransitionToVars } from '@usemotif/core';
 import { useRef, type RefObject } from 'react';
 import { useIsomorphicLayoutEffect } from './_use-isomorphic-layout-effect.js';
 
@@ -15,9 +16,10 @@ export type LayoutAnimationKind = 'all' | 'position' | 'size';
 export interface UseLayoutAnimationOptions {
   /** Which axes to animate. Default `'all'`. */
   kind?: LayoutAnimationKind;
-  /** Transition duration in seconds. Default `0.3`. */
-  duration?: number;
-  /** CSS easing function. Default `'ease-in-out'`. */
+  /** Transition duration: seconds, a CSS time such as `'500ms'`, or a
+   * `$durations` token. Default `0.3`. */
+  duration?: number | string;
+  /** CSS easing function or an `$easings` token. Default `'ease-in-out'`. */
   easing?: string;
 }
 
@@ -139,8 +141,13 @@ export function useLayoutAnimation<T extends HTMLElement = HTMLElement>(
     el.style.transformOrigin = '0 0';
     el.style.transition = 'none';
 
-    const durationMs = (opts.duration ?? 0.3) * 1000;
-    const easing = opts.easing ?? 'ease-in-out';
+    // Tokens become CSS variables, so a theme switch retimes the animation.
+    const transition = resolveTransitionToVars({
+      property: 'transform',
+      duration:
+        typeof opts.duration === 'string' ? opts.duration : `${(opts.duration ?? 0.3) * 1000}ms`,
+      easing: opts.easing ?? 'ease-in-out',
+    });
 
     const restore = (): void => {
       el.style.transition = origTransition;
@@ -156,7 +163,7 @@ export function useLayoutAnimation<T extends HTMLElement = HTMLElement>(
       // the transform back to identity.
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
       el.offsetWidth;
-      el.style.transition = `transform ${durationMs}ms ${easing}`;
+      el.style.transition = transition!;
       el.style.transform = '';
 
       onEnd = (e: TransitionEvent): void => {

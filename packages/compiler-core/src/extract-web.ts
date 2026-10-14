@@ -7,6 +7,8 @@ import {
   isMotionProp,
   liftPseudoOverriddenBaseProps,
   resolveResponsiveStylesToVars,
+  resolvePseudoElementBag,
+  resolveStateRules,
   resolveStylesToVars,
   resolveTransitionToVars,
   styleProps,
@@ -96,7 +98,7 @@ const EXIT_SELECTOR = '[data-motif-state="exiting"]';
  * produces a different class hash (and a different cascade) than the
  * runtime for the same element - breaking compiled/runtime dedupe.
  */
-// Inserting _checked / _selected after _disabled keeps every existing key's
+// Inserting new states after the last one keeps every existing key's
 // RELATIVE order, so elements that don't use the new pseudos hash byte-for-byte
 // as before (only the relative order among an element's own pseudos matters).
 const PSEUDO_ORDER: Readonly<Record<string, number>> = {
@@ -107,9 +109,16 @@ const PSEUDO_ORDER: Readonly<Record<string, number>> = {
   _checked: 4,
   _selected: 5,
   _expanded: 6,
-  _before: 7,
-  _after: 8,
-  exitStyle: 9,
+  _invalid: 7,
+  _pressed: 8,
+  _focusWithin: 9,
+  _readOnly: 10,
+  _groupHover: 11,
+  _groupFocus: 12,
+  _groupActive: 13,
+  _before: 14,
+  _after: 15,
+  exitStyle: 16,
 };
 
 /**
@@ -200,8 +209,13 @@ export function extractWeb(
     // `:hover` rule. The runtime performs the lift itself when the bag is
     // present on the element.
     if (bagConflictsWithDynamic(ps.style, dynamicFamilies)) continue;
-    const { style } = resolveStylesToVars(ps.style);
-    rankedPseudo.push({ rank: PSEUDO_ORDER[ps.name] ?? 50, rule: { pseudo: ps.pseudo, style } });
+    // Pseudo-element bags carry `content` (defaulted when absent) the way the
+    // runtime resolves them, so the rule hashes identically.
+    const rank = PSEUDO_ORDER[ps.name] ?? 50;
+    const rules = ps.pseudo.startsWith('::')
+      ? [{ pseudo: ps.pseudo, style: resolvePseudoElementBag(ps.style) }]
+      : resolveStateRules(ps.pseudo, ps.style);
+    for (const rule of rules) rankedPseudo.push({ rank, rule });
     consumed.push(ps.name);
   }
 

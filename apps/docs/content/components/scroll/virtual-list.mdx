@@ -3,7 +3,7 @@ title: VirtualList
 description: A list primitive with a virtualisation seam. Short lists render directly; long lists delegate to a registered implementation.
 diataxis: reference
 covers: ['VirtualList', 'VirtualListProps', 'VirtualListImpl', 'registerVirtualListImpl']
-last_verified: 2026-05-15
+last_verified: 2026-10-14
 ---
 
 import {
@@ -125,6 +125,10 @@ Use VirtualList anywhere - short lists render directly, long ones virtualise:
   renderItem={(c) => <ContactRow contact={c} />}
   h={480}
 />`} />
+
+`onEndReached`, `onEndReachedThreshold`, and on native `onRefresh` and `refreshing` work on a
+VirtualList too: the fallback path passes them to its ScrollView, and the bundled TanStack and
+FlashList implementations wire them up. A custom implementation receives them in its props.
 
 ## Cross-platform notes
 

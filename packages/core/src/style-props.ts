@@ -1,4 +1,5 @@
 import type { MotifTokens, ScalePath, StrictTokens } from './token-path.js';
+import type { BreakpointName } from './breakpoints.js';
 import type { ResolvedStyle, ScaleName } from './types.js';
 
 /**
@@ -174,15 +175,13 @@ const stylePropsLiteral = {
   borderColor: { cssProperty: 'borderColor', scale: 'colors' },
 
   // Background - image / positioning / sizing / blending family.
-  // Pure pass-through (enum-string or CSS-function-string values);
-  // gradient fills and brand-mark tiles land here. `background` is the
-  // shorthand. No `scale` - gradient tokens through a `gradients`
-  // scale would be a follow-up; until then theme-defined gradients
-  // reach Box via a token ref on `backgroundImage`. Native renderers
-  // accept the type for cross-platform parity but image / positioning
+  // Pass-through CSS values; `background` is the shorthand. A theme's
+  // `gradients` scale feeds `backgroundImage`, so `$gradients.hero` (or
+  // the bare `$hero`) resolves and autocompletes. Web-only by design:
+  // native renderers accept the type for parity, but image and gradient
   // values no-op on RN (handled by `<Image>`, not `View` styles).
   background: { cssProperty: 'background' },
-  backgroundImage: { cssProperty: 'backgroundImage' },
+  backgroundImage: { cssProperty: 'backgroundImage', scale: 'gradients' },
   backgroundPosition: { cssProperty: 'backgroundPosition' },
   backgroundRepeat: { cssProperty: 'backgroundRepeat' },
   backgroundSize: { cssProperty: 'backgroundSize' },
@@ -547,6 +546,13 @@ export const PSEUDO_STATE_PROP_NAMES = [
   '_checked',
   '_selected',
   '_expanded',
+  '_invalid',
+  '_pressed',
+  '_focusWithin',
+  '_readOnly',
+  '_groupHover',
+  '_groupFocus',
+  '_groupActive',
 ] as const;
 
 export type PseudoStatePropName = (typeof PSEUDO_STATE_PROP_NAMES)[number];
@@ -558,6 +564,9 @@ export const PSEUDO_STATE_PROPS: ReadonlySet<string> = new Set(PSEUDO_STATE_PROP
 export function isPseudoStateProp(key: string): key is PseudoStatePropName {
   return PSEUDO_STATE_PROPS.has(key);
 }
+
+/** The attribute a `group` Box renders, which the `_group*` states key on. */
+export const GROUP_ATTRIBUTE = 'data-motif-group';
 
 /**
  * Pseudo-state prop → CSS selector suffix. Every member is written with a
@@ -576,6 +585,17 @@ export function isPseudoStateProp(key: string): key is PseudoStatePropName {
  * `_expanded` covers the open state of a disclosure trigger - accordion /
  * collapsible / popover trigger (`[aria-expanded="true"]`), so the trigger can
  * recolour or rotate a chevron purely from its own ARIA state.
+ *
+ * `_invalid` reads `[aria-invalid="true"]` rather than `:invalid`, which
+ * matches an empty required field before the user has touched it. `_pressed`
+ * is a toggle button's `[aria-pressed="true"]`; a pointer press is `_active`.
+ * `_readOnly` reads the `readonly` attribute or `[aria-readonly="true"]`
+ * rather than `:read-only`, which matches every element that is not
+ * editable, a plain `div` included.
+ *
+ * The group states style an element by the state of an ancestor marked with
+ * `group`, which renders {@link GROUP_ATTRIBUTE}: `_groupHover` applies while
+ * any marked ancestor is hovered.
  */
 export const PSEUDO_SELECTOR: Readonly<Record<PseudoStatePropName, string>> = {
   _hover: ':hover',
@@ -585,20 +605,35 @@ export const PSEUDO_SELECTOR: Readonly<Record<PseudoStatePropName, string>> = {
   _checked: '&:checked, &[aria-checked="true"]',
   _selected: '&[aria-selected="true"]',
   _expanded: '&[aria-expanded="true"]',
+  _invalid: '&[aria-invalid="true"]',
+  _pressed: '&[aria-pressed="true"]',
+  _focusWithin: ':focus-within',
+  _readOnly: '&[readonly], &[aria-readonly="true"]',
+  _groupHover: `[${GROUP_ATTRIBUTE}]:hover &`,
+  _groupFocus: `[${GROUP_ATTRIBUTE}]:focus-visible &`,
+  _groupActive: `[${GROUP_ATTRIBUTE}]:active &`,
 };
 
 /**
- * Style bag for a pseudo-state. Same prop shape as {@link StyleProps} but
- * **flat** - no responsive object/array/DSL nesting in v1. (Responsive +
- * pseudo composition would require nesting at-rules under the pseudo
- * selector; planned for a later release.)
+ * Style bag for a pseudo-state. Same prop shape as {@link StyleProps}, and each
+ * value may be responsive: object, array, or the string DSL.
  */
 export type StateStyleBag = {
   // `Exclude`, not `NonNullable`: `NonNullable<T>` is `T & {}`, and that
   // intersection reduces a prop's `(string & {}) | '$space.4'` union back to
   // a bare `string`, dropping every token path from `_hover={{ ... }}`.
-  -readonly [K in keyof StyleProps]?: Exclude<StyleProps[K], undefined>;
+  -readonly [K in keyof StyleProps]?: StateStyleValue<Exclude<StyleProps[K], undefined>>;
 };
+
+/**
+ * A value inside a state bag: a literal, or the responsive object or array
+ * form (the string DSL is a string already). On web the responsive slots nest
+ * at-rules under the state selector.
+ */
+export type StateStyleValue<V> =
+  | V
+  | ({ base?: V } & { [K in BreakpointName]?: V } & { [K in `@${string}`]?: V })
+  | readonly (V | undefined)[];
 
 /**
  * Pseudo-state props as React props - accepted by every styled primitive.
@@ -719,6 +754,16 @@ export interface TransitionObject {
   readonly easing?: string;
   /** Delay before the transition starts. Same value forms as `duration`. */
   readonly delay?: string;
+}
+
+/**
+ * Timing for a Box's `layout` animation. Same value forms as
+ * {@link TransitionObject}: a literal CSS time and easing, or `$durations` /
+ * `$easings` token references. Each part defaults to `300ms` / `ease-in-out`.
+ */
+export interface LayoutTransition {
+  readonly duration?: string;
+  readonly easing?: string;
 }
 
 /**

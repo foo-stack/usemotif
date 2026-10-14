@@ -1,0 +1,105 @@
+---
+title: Listbox
+description: An always-visible list of options with keyboard navigation, type-ahead, and single or multiple selection.
+diataxis: reference
+covers: ['Listbox', 'ListboxProps', 'MultiListboxProps', 'ListboxBaseProps']
+last_verified: 2026-10-14
+---
+
+import { ApiSignature, ArticleMeta, CodeBlock, Eyebrow, Lede } from '../../../components/index.js';
+
+<Eyebrow>Headless / Selection</Eyebrow>
+
+# Listbox
+
+<Lede>
+  Listbox is a list of options that stays on the page, for a settings panel or a sidebar picker.
+  It moves by arrow keys and type-ahead, and selects one option or several.
+</Lede>
+
+<ArticleMeta />
+
+## What it is
+
+A focusable `role="listbox"`. Focus stays on the list while `aria-activedescendant` points at the
+highlighted option, the same model as the [Combobox](/headless/selection/combobox) popup, whose
+option rows it shares. Options are the Combobox's `{ value, label, disabled? }` objects.
+
+## Install
+
+<CodeBlock lang="bash" code={`yarn add @usemotif/headless`} />
+
+<CodeBlock lang="tsx" code={`import { Listbox } from '@usemotif/headless';`} />
+
+## API
+
+<ApiSignature
+  name="Listbox"
+  status="stable"
+  signature={`function Listbox<T>(props: ListboxProps<T> | MultiListboxProps<T>): JSX.Element`}
+  params={[
+    {
+      name: 'options',
+      type: 'readonly ComboboxOption<T>[]',
+      required: true,
+      description: 'The options, each `{ value, label, disabled? }`. Disabled ones are skipped by the keyboard and ignore clicks.',
+    },
+    {
+      name: 'selectionMode',
+      type: "'single' | 'multiple'",
+      default: "'single'",
+      description: 'One selected option, or several. In multiple mode selecting an option toggles it and the list carries `aria-multiselectable`.',
+    },
+    {
+      name: 'value / defaultValue / onValueChange',
+      type: 'T / T / (value: T) => void',
+      description: 'The selected option, controlled or uncontrolled. In multiple mode they take and report `readonly T[]`.',
+    },
+    {
+      name: 'renderOption',
+      type: '(option, info: { highlighted, selected, index }) => ReactNode',
+      description: 'Override how each option renders.',
+    },
+    {
+      name: 'itemHeight',
+      type: 'number',
+      description: 'Row height in px for long lists. Omitted, it is measured from the first row. See [Long lists](/headless/selection/combobox#long-lists).',
+    },
+    {
+      name: 'disabled / aria-label / aria-labelledby / style',
+      type: 'boolean / string / string / CSSProperties',
+      description: 'Disable the whole list, name it, and style it.',
+    },
+  ]}
+/>
+
+## Keyboard
+
+| Key | Action |
+| --- | --- |
+| Arrow Down / Up | Highlight the next / previous enabled option |
+| Home / End | Highlight the first / last enabled option |
+| A letter or word | Jump to the next option whose label starts with it; repeating one letter cycles |
+| Enter / Space | Select the highlighted option, or toggle it in multiple mode |
+
+Typed characters build one search for half a second, so typing "apr" quickly lands on "Apricot"
+rather than stopping at "Apple".
+
+## Accessibility
+
+Name the list with `aria-label` or `aria-labelledby`. Focusing it highlights the selected option,
+or the first enabled one. On React Native the options are Pressables with
+`accessibilityState.selected` in a list.
+
+## Example
+
+<CodeBlock lang="tsx" code={`<Listbox
+  aria-label="Default editor"
+  options={[
+    { value: 'vim', label: 'Vim' },
+    { value: 'code', label: 'VS Code' },
+    { value: 'zed', label: 'Zed' },
+  ]}
+  value={editor}
+  onValueChange={setEditor}
+/>`} />

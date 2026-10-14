@@ -147,6 +147,7 @@ export default defineConfig({
     'src/MultiSelect.tsx',
     'src/ColorPicker.tsx',
     'src/FileUpload.tsx',
+    'src/TagsInput.tsx',
     'src/TimeInput.tsx',
     'src/HoverCard.tsx',
     'src/Collapsible.tsx',

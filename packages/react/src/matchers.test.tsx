@@ -83,6 +83,23 @@ describe('matchers - toHaveStyle / toHaveStyleAt', () => {
     expect(out).toHaveStyleAt('[aria-expanded="true"]', { backgroundColor: 'olive' });
   });
 
+  it('emits _invalid, _pressed, _focusWithin and _readOnly as their rules', () => {
+    const out = adapter.render({
+      name: 'more-states',
+      primitive: 'Box',
+      props: {
+        _invalid: { borderColor: 'red' },
+        _pressed: { backgroundColor: 'navy' },
+        _focusWithin: { outlineColor: 'blue' },
+        _readOnly: { opacity: 0.6 },
+      },
+    });
+    expect(out).toHaveStyleAt('[aria-invalid="true"]', { borderColor: 'red' });
+    expect(out).toHaveStyleAt('[aria-pressed="true"]', { backgroundColor: 'navy' });
+    expect(out).toHaveStyleAt(':focus-within', { outlineColor: 'blue' });
+    expect(out).toHaveStyleAt('[readonly]', { opacity: 0.6 });
+  });
+
   it('toHaveStyleAt fails clearly when the scope is missing', () => {
     const out = adapter.render({ name: 'p=$4', primitive: 'Box', props: { p: '$4' } });
     expect(() => expect(out).toHaveStyleAt('@media (min-width: 768px)', { padding: 32 })).toThrow(

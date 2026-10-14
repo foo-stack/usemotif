@@ -3,7 +3,7 @@ title: Tooltip
 description: A text affordance shown on hover or keyboard focus. Bound to the trigger through aria-describedby; never holds interactive content.
 diataxis: reference
 covers: ['Tooltip', 'TooltipRootProps', 'TooltipTriggerProps', 'TooltipContentProps']
-last_verified: 2026-05-15
+last_verified: 2026-10-14
 ---
 
 import {
@@ -80,7 +80,7 @@ is wrong - a hover affordance cannot be operated by keyboard or touch users. Rea
       name: 'placement',
       type: '"top" | "bottom" | "left" | "right"',
       default: '"bottom"',
-      description: 'Where the tooltip sits relative to the trigger.',
+      description: 'The preferred side of the trigger: `top`, `bottom`, `left` or `right`. When that side lacks room the tooltip flips to the opposite one, and it shifts along the edge to stay inside the viewport.',
     },
     {
       name: 'children',

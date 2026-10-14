@@ -3,7 +3,7 @@ title: Popover
 description: A non-modal floating panel anchored to a trigger. Focus stays on the page; the panel dismisses on Escape or a click outside.
 diataxis: reference
 covers: ['Popover', 'PopoverRootProps', 'PopoverTriggerProps', 'PopoverContentProps', 'PopoverCloseProps', 'Placement']
-last_verified: 2026-05-15
+last_verified: 2026-10-14
 ---
 
 import {
@@ -119,7 +119,7 @@ demanding: a filter panel, a settings menu, a small form. Modal interruptions be
       name: 'placement',
       type: 'Placement',
       default: '"bottom"',
-      description: 'Where the panel sits relative to the trigger - `top`, `bottom`, `left`, `right`, and the corner variants.',
+      description: 'The preferred side of the trigger: `top`, `bottom`, `left` or `right`. When that side lacks room the panel flips to the opposite one, and it shifts along the edge to stay inside the viewport.',
     },
     {
       name: 'offset',

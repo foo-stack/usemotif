@@ -1,5 +1,5 @@
 /** @vitest-environment jsdom */
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, type ComponentType, type ReactElement } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { tanstackVirtualImpl } from './tanstack.js';
@@ -98,5 +98,34 @@ describe('tanstackVirtualImpl', () => {
     const outer = container.firstElementChild as HTMLElement;
     const spacer = outer.firstElementChild as HTMLElement;
     expect(spacer.style.height).toBe(`${100 * 32}px`);
+  });
+});
+
+describe('tanstackVirtualImpl - onEndReached', () => {
+  it('fires as the scroll nears the end of the list', () => {
+    const clientHeight = vi
+      .spyOn(HTMLElement.prototype, 'clientHeight', 'get')
+      .mockReturnValue(100);
+    const scrollHeight = vi
+      .spyOn(HTMLElement.prototype, 'scrollHeight', 'get')
+      .mockReturnValue(3200);
+    const onEndReached = vi.fn();
+    render(
+      <Impl
+        data={ROWS}
+        renderItem={(r) => <span>{r.label}</span>}
+        itemHeight={32}
+        onEndReached={onEndReached}
+      />,
+    );
+    const el = container.firstElementChild as HTMLElement;
+    expect(onEndReached).not.toHaveBeenCalled();
+    el.scrollTop = 3080;
+    act(() => {
+      el.dispatchEvent(new Event('scroll'));
+    });
+    expect(onEndReached).toHaveBeenCalledTimes(1);
+    clientHeight.mockRestore();
+    scrollHeight.mockRestore();
   });
 });

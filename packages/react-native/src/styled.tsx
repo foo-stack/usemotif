@@ -1,6 +1,8 @@
 import {
   PSEUDO_ELEMENT_PROP_NAMES,
   PSEUDO_STATE_PROP_NAMES,
+  resolveResponsiveVariants,
+  type BreakpointName,
   type MotifComponent,
   type StyleBag,
 } from '@usemotif/core';
@@ -49,9 +51,28 @@ type FallbackValue<V, K extends string> = `...${K}` extends keyof V
     : never
   : never;
 
-export type VariantProps<V extends AnyVariants> = {
-  [K in AllVariantNames<V>]?: ExplicitValue<V, K> | FallbackValue<V, K>;
+type VariantValues<V extends AnyVariants> = {
+  [K in AllVariantNames<V>]?: Responsive<ExplicitValue<V, K> | FallbackValue<V, K>>;
 };
+
+type Responsive<T> =
+  | T
+  | ({ base?: T } & { [K in BreakpointName]?: T } & { [K in `@${string}`]?: T })
+  | readonly (T | null | undefined)[]
+  | `${string}:${string}`;
+
+export type VariantProps<T> = T extends (...args: never[]) => unknown
+  ? T extends { readonly '~variants'?: infer V extends AnyVariants }
+    ? VariantValues<V>
+    : never
+  : T extends AnyVariants
+    ? VariantValues<T>
+    : never;
+
+export type StyledComponent<V extends AnyVariants> = MotifComponent<
+  VariantValues<V> & Omit<BoxProps, keyof VariantValues<V>>,
+  ReactElement | null
+> & { readonly '~variants'?: V };
 
 export type CompoundVariant<V extends AnyVariants> = {
   [K in keyof V as V[K] extends ExplicitVariant ? K : never]?: V[K] extends ExplicitVariant
@@ -115,7 +136,7 @@ function mergeBags(
 export function styled<V extends AnyVariants = Record<string, never>>(
   Component: ElementType,
   config: StyledConfig<V>,
-): MotifComponent<VariantProps<V> & Omit<BoxProps, keyof VariantProps<V>>, ReactElement | null> {
+): StyledComponent<V> {
   const variantNames: string[] = [];
   const explicitVariants: Record<string, ExplicitVariant> = {};
   const fallbackVariants: Record<string, FallbackVariant> = {};
@@ -139,7 +160,7 @@ export function styled<V extends AnyVariants = Record<string, never>>(
   const needsTheme = Object.keys(fallbackVariants).length > 0;
 
   function renderStyled(
-    props: VariantProps<V> & Omit<BoxProps, keyof VariantProps<V>>,
+    props: VariantValues<V> & Omit<BoxProps, keyof VariantValues<V>>,
     theme: VariantContext['theme'],
     inherited: Record<string, unknown>,
   ): ReactElement {
@@ -176,61 +197,66 @@ export function styled<V extends AnyVariants = Record<string, never>>(
       props: propsRecord,
     };
 
-    let merged: Record<string, unknown> = { ...config.base };
+    // Run once per breakpoint when a variant value is responsive.
+    const build = (active: Record<string, unknown>): Record<string, unknown> => {
+      let merged: Record<string, unknown> = { ...config.base };
 
-    for (const variantName of variantNames) {
-      const value = effectiveVariants[variantName];
-      if (value === undefined) continue;
-      const explicit = explicitVariants[variantName];
-      const explicitKey = typeof value === 'boolean' ? (value ? 'true' : 'false') : String(value);
-      // Own-property only - a variant value of `constructor` / `toString` /
-      // `__proto__` would otherwise hit an inherited member and shadow the
-      // declared fallback variant.
-      const fromExplicit =
-        explicit !== undefined && Object.hasOwn(explicit, explicitKey)
-          ? explicit[explicitKey]
-          : undefined;
-      if (fromExplicit !== undefined) {
-        merged = mergeBags(merged, fromExplicit);
-        continue;
+      for (const variantName of variantNames) {
+        const value = active[variantName];
+        if (value === undefined) continue;
+        const explicit = explicitVariants[variantName];
+        const explicitKey = typeof value === 'boolean' ? (value ? 'true' : 'false') : String(value);
+        // Own-property only - a variant value of `constructor` / `toString` /
+        // `__proto__` would otherwise hit an inherited member and shadow the
+        // declared fallback variant.
+        const fromExplicit =
+          explicit !== undefined && Object.hasOwn(explicit, explicitKey)
+            ? explicit[explicitKey]
+            : undefined;
+        if (fromExplicit !== undefined) {
+          merged = mergeBags(merged, fromExplicit);
+          continue;
+        }
+        const fallback = fallbackVariants[variantName];
+        if (fallback !== undefined) {
+          merged = mergeBags(
+            merged,
+            (fallback as (val: unknown, ctx: VariantContext) => StyleBag)(
+              value,
+              variantCtx,
+            ) as Record<string, unknown>,
+          );
+        }
       }
-      const fallback = fallbackVariants[variantName];
-      if (fallback !== undefined) {
-        merged = mergeBags(
-          merged,
-          (fallback as (val: unknown, ctx: VariantContext) => StyleBag)(
-            value,
-            variantCtx,
-          ) as Record<string, unknown>,
-        );
-      }
-    }
 
-    if (config.compoundVariants !== undefined) {
-      for (const compound of config.compoundVariants) {
-        const { css, ...matchers } = compound as CompoundVariant<V> &
-          Record<string, unknown> & {
-            css: StyleBag;
-          };
-        let allMatch = true;
-        for (const matchKey in matchers) {
-          const expected = matchers[matchKey];
-          const actual = effectiveVariants[matchKey];
-          // String()-coerce non-boolean values on both sides (see web #308).
-          const actualKey =
-            typeof actual === 'boolean' ? (actual ? 'true' : 'false') : String(actual);
-          const expectedKey =
-            typeof expected === 'boolean' ? (expected ? 'true' : 'false') : String(expected);
-          if (actualKey !== expectedKey) {
-            allMatch = false;
-            break;
+      if (config.compoundVariants !== undefined) {
+        for (const compound of config.compoundVariants) {
+          const { css, ...matchers } = compound as CompoundVariant<V> &
+            Record<string, unknown> & {
+              css: StyleBag;
+            };
+          let allMatch = true;
+          for (const matchKey in matchers) {
+            const expected = matchers[matchKey];
+            const actual = active[matchKey];
+            // String()-coerce non-boolean values on both sides (see web #308).
+            const actualKey =
+              typeof actual === 'boolean' ? (actual ? 'true' : 'false') : String(actual);
+            const expectedKey =
+              typeof expected === 'boolean' ? (expected ? 'true' : 'false') : String(expected);
+            if (actualKey !== expectedKey) {
+              allMatch = false;
+              break;
+            }
+          }
+          if (allMatch) {
+            merged = mergeBags(merged, css as Record<string, unknown>);
           }
         }
-        if (allMatch) {
-          merged = mergeBags(merged, css as Record<string, unknown>);
-        }
       }
-    }
+      return merged;
+    };
+    const merged = resolveResponsiveVariants(effectiveVariants, build);
 
     const finalProps: Record<string, unknown> = mergeBags(merged, passThrough);
 
@@ -263,12 +289,12 @@ export function styled<V extends AnyVariants = Record<string, never>>(
   }
 
   function StyledThemed(
-    props: VariantProps<V> & Omit<BoxProps, keyof VariantProps<V>>,
+    props: VariantValues<V> & Omit<BoxProps, keyof VariantValues<V>>,
   ): ReactElement {
     return renderStyled(props, useTheme(), useContext(ctxToRead));
   }
   function StyledPlain(
-    props: VariantProps<V> & Omit<BoxProps, keyof VariantProps<V>>,
+    props: VariantValues<V> & Omit<BoxProps, keyof VariantValues<V>>,
   ): ReactElement {
     return renderStyled(props, undefined, useContext(ctxToRead));
   }
@@ -280,5 +306,5 @@ export function styled<V extends AnyVariants = Record<string, never>>(
   StyledThemed.displayName = displayName;
   StyledPlain.displayName = displayName;
 
-  return needsTheme ? StyledThemed : StyledPlain;
+  return (needsTheme ? StyledThemed : StyledPlain) as StyledComponent<V>;
 }

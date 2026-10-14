@@ -52,6 +52,7 @@ export { Combobox, Search, type ComboboxProps, type ComboboxItem } from './Combo
 export { MultiSelect, type MultiSelectProps } from './MultiSelect.js';
 export { ColorPicker, type ColorPickerProps } from './ColorPicker.js';
 export { FileUpload, type FileUploadProps } from './FileUpload.js';
+export { TagsInput, type TagsInputProps } from './TagsInput.js';
 export { TimeInput, type TimeInputProps } from './TimeInput.js';
 export { Collapsible } from './Collapsible.namespace.js';
 export {

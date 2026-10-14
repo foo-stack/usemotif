@@ -10,9 +10,9 @@ import {
   type ReactNode,
 } from 'react';
 import {
+  FlatList,
   Modal,
   Pressable,
-  ScrollView,
   TextInput,
   View,
   type TextInputProps,
@@ -211,37 +211,37 @@ function ComboboxList<T>({
             accessibilityState={{ busy: ctx.loading }}
             style={{ maxHeight: '60%' }}
           >
-            <ScrollView>
-              {ctx.options.length === 0 ? (
+            <FlatList
+              data={ctx.options}
+              keyExtractor={(_, i) => `${ctx.listboxId}-option-${i}`}
+              ListEmptyComponent={
                 <View accessibilityRole="text">
                   {nativeText(ctx.loading ? loadingMessage : emptyMessage)}
                 </View>
-              ) : (
-                ctx.options.map((opt, i) => {
-                  const optionId = `${ctx.listboxId}-option-${i}`;
-                  const selected = ctx.value === opt.value;
-                  return (
-                    <Pressable
-                      key={optionId}
-                      nativeID={optionId}
-                      accessibilityRole="button"
-                      accessibilityState={{ selected, disabled: opt.disabled === true }}
-                      disabled={opt.disabled}
-                      onPress={() => {
-                        if (opt.disabled === true) return;
-                        ctx.setValue(opt.value);
-                        ctx.setInputValue(opt.label);
-                        ctx.setOpen(false);
-                      }}
-                    >
-                      {renderOption !== undefined
-                        ? renderOption(opt, { selected, index: i })
-                        : nativeText(opt.label)}
-                    </Pressable>
-                  );
-                })
-              )}
-            </ScrollView>
+              }
+              renderItem={({ item: opt, index: i }) => {
+                const optionId = `${ctx.listboxId}-option-${i}`;
+                const selected = ctx.value === opt.value;
+                return (
+                  <Pressable
+                    nativeID={optionId}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected, disabled: opt.disabled === true }}
+                    disabled={opt.disabled}
+                    onPress={() => {
+                      if (opt.disabled === true) return;
+                      ctx.setValue(opt.value);
+                      ctx.setInputValue(opt.label);
+                      ctx.setOpen(false);
+                    }}
+                  >
+                    {renderOption !== undefined
+                      ? renderOption(opt, { selected, index: i })
+                      : nativeText(opt.label)}
+                  </Pressable>
+                );
+              }}
+            />
           </View>
         </Pressable>
       </Pressable>
@@ -530,33 +530,31 @@ function MultiSelectList<T>({
             {...({ 'aria-multiselectable': true } as any)}
             style={{ maxHeight: '60%' }}
           >
-            <ScrollView>
-              {ctx.filteredOptions.length === 0 ? (
-                <View accessibilityRole="text">{nativeText(emptyMessage)}</View>
-              ) : (
-                ctx.filteredOptions.map((opt, i) => {
-                  const optionId = `${ctx.listboxId}-option-${i}`;
-                  const selected = ctx.isSelected(opt.value);
-                  return (
-                    <Pressable
-                      key={optionId}
-                      nativeID={optionId}
-                      accessibilityRole="checkbox"
-                      accessibilityState={{ checked: selected, disabled: opt.disabled === true }}
-                      disabled={opt.disabled}
-                      onPress={() => {
-                        if (opt.disabled === true) return;
-                        ctx.toggleValue(opt.value);
-                      }}
-                    >
-                      {renderOption !== undefined
-                        ? renderOption(opt, { selected, index: i })
-                        : nativeText(opt.label)}
-                    </Pressable>
-                  );
-                })
-              )}
-            </ScrollView>
+            <FlatList
+              data={ctx.filteredOptions}
+              keyExtractor={(_, i) => `${ctx.listboxId}-option-${i}`}
+              ListEmptyComponent={<View accessibilityRole="text">{nativeText(emptyMessage)}</View>}
+              renderItem={({ item: opt, index: i }) => {
+                const optionId = `${ctx.listboxId}-option-${i}`;
+                const selected = ctx.isSelected(opt.value);
+                return (
+                  <Pressable
+                    nativeID={optionId}
+                    accessibilityRole="checkbox"
+                    accessibilityState={{ checked: selected, disabled: opt.disabled === true }}
+                    disabled={opt.disabled}
+                    onPress={() => {
+                      if (opt.disabled === true) return;
+                      ctx.toggleValue(opt.value);
+                    }}
+                  >
+                    {renderOption !== undefined
+                      ? renderOption(opt, { selected, index: i })
+                      : nativeText(opt.label)}
+                  </Pressable>
+                );
+              }}
+            />
           </View>
         </Pressable>
       </Pressable>

@@ -3,7 +3,7 @@ title: ScrollView
 description: A styled container that scrolls when its content overflows. Vertical by default; horizontal and two-axis on request.
 diataxis: reference
 covers: ['ScrollView', 'ScrollViewProps']
-last_verified: 2026-05-15
+last_verified: 2026-10-14
 ---
 
 import {
@@ -62,6 +62,22 @@ scrollbar visually while keeping the region scrollable and accessible.
       description: 'Hide the scrollbar visually. The region stays scrollable by wheel, touch, and keyboard.',
     },
     {
+      name: 'onEndReached',
+      type: '() => void',
+      description: 'Called when scrolling comes near the end, once per content length, so an infinite list loads its next page once. Also fires when the content does not fill the view.',
+    },
+    {
+      name: 'onEndReachedThreshold',
+      type: 'number',
+      default: '0.5',
+      description: 'How near the end `onEndReached` fires, in visible lengths: `0.5` is half a screen from the end.',
+    },
+    {
+      name: 'onRefresh / refreshing',
+      type: '() => void / boolean',
+      description: 'Pull to refresh on React Native: shows the platform refresh control, calls `onRefresh` on a pull, and shows the spinner while `refreshing`. Accepted and ignored on web.',
+    },
+    {
       name: '...BoxProps',
       type: 'BoxProps',
       description: 'Every Box prop. Set a fixed `h` (or `maxH`) so the content has a height to overflow.',
@@ -94,6 +110,21 @@ A horizontal carousel with a hidden scrollbar:
     {covers.map((c) => <Cover key={c.id} {...c} />)}
   </HStack>
 </ScrollView>`} />
+
+A feed that loads more near the end and refreshes on a pull:
+
+<CodeBlock lang="tsx" code={`<ScrollView
+  h="$full"
+  onEndReached={loadMore}
+  onRefresh={reload}
+  refreshing={isReloading}
+>
+  {posts.map((p) => <Post key={p.id} {...p} />)}
+</ScrollView>`} />
+
+`onEndReached` follows React Native's `FlatList`: it fires once the remaining distance is within
+the threshold, then not again until the content length changes, so a slow load does not queue
+several pages.
 
 ## Cross-platform notes
 

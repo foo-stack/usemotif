@@ -1,22 +1,28 @@
 import {
   type MotifComponent,
+  GROUP_ATTRIBUTE,
   PSEUDO_ELEMENT_SELECTOR,
   PSEUDO_SELECTOR,
+  PSEUDO_STATE_PROP_NAMES,
   STYLE_PROP_NAMES,
   buildAnimationCss,
   buildAnimationShorthand,
   extractKeyframeFromAnimation,
   liftPseudoOverriddenBaseProps,
   resolveResponsiveStylesToVars,
+  resolvePseudoElementBag,
+  resolveStateRules,
   resolveStylesToVars,
   resolveTransitionToVars,
   type AnimationValue,
   type BreakpointName,
   type ExitStyleBag,
+  type LayoutTransition,
   type MotionStyleProps,
   type MotionValueWideningOf,
   type PseudoElementStyleBag,
   type PseudoElementStyleProps,
+  type PseudoStatePropName,
   type StateStyleBag,
   type StateStyleProps,
   type StyleProps,
@@ -127,11 +133,33 @@ export type BoxProps = ResponsiveStyleProps &
      * both position and size; pass `'position'` or `'size'` to limit
      * the axes. When set, the Box wraps itself with
      * `useLayoutAnimation` so size / position changes between commits
-     * tween smoothly instead of snapping. Defaults: 300ms ease-in-out;
-     * customise via the {@link LayoutAnimationKind}-shaped follow-up
-     * prop set in a future release.
+     * tween smoothly instead of snapping. Defaults to 300ms ease-in-out;
+     * `layoutTransition` changes that.
      */
     layout?: boolean | 'position' | 'size';
+    /**
+     * Duration and easing of the `layout` animation, as literals or
+     * `$durations` / `$easings` tokens. Tokens emit CSS variables, so a
+     * theme switch applies.
+     *
+     * @example
+     * ```tsx
+     * <Box layout layoutTransition={{ duration: '$durations.5', easing: '$easings.decelerate' }} />
+     * ```
+     */
+    layoutTransition?: LayoutTransition;
+    /**
+     * Mark this Box as a group, so descendants can style themselves by its
+     * state with `_groupHover`, `_groupFocus`, and `_groupActive`.
+     *
+     * @example
+     * ```tsx
+     * <Box group>
+     *   <Text _groupHover={{ color: '$colors.action.primary.bg' }}>Read more</Text>
+     * </Box>
+     * ```
+     */
+    group?: boolean;
     /**
      * Native-only layout callback. Accepted as `undefined` so handles
      * built for both platforms (`useScrollTarget`, `useLayoutAnimation`)
@@ -232,6 +260,14 @@ export const Box: MotifComponent<BoxProps, ReactElement | null> = function (prop
     _checked,
     _selected,
     _expanded,
+    _invalid,
+    _pressed,
+    _focusWithin,
+    _readOnly,
+    _groupHover,
+    _groupFocus,
+    _groupActive,
+    group,
     _before,
     _after,
     enterStyle,
@@ -240,6 +276,7 @@ export const Box: MotifComponent<BoxProps, ReactElement | null> = function (prop
     animation,
     animateOnly,
     layout: _layout,
+    layoutTransition: _layoutTransition,
     onLayout: _onLayout,
     drag: _drag,
     dragConstraints: _dragConstraints,
@@ -265,6 +302,13 @@ export const Box: MotifComponent<BoxProps, ReactElement | null> = function (prop
     _checked !== undefined ||
     _selected !== undefined ||
     _expanded !== undefined ||
+    _invalid !== undefined ||
+    _pressed !== undefined ||
+    _focusWithin !== undefined ||
+    _readOnly !== undefined ||
+    _groupHover !== undefined ||
+    _groupFocus !== undefined ||
+    _groupActive !== undefined ||
     _before !== undefined ||
     _after !== undefined;
   const hasMotion =
@@ -286,6 +330,9 @@ export const Box: MotifComponent<BoxProps, ReactElement | null> = function (prop
   // present, so the no-MV path pays only one `for...in` traversal.
   const { motionBindings, restWithoutMv } = splitMotionValueProps(rest as Record<string, unknown>);
   const hasMotionValues = motionBindings.length > 0;
+  // Before the fast path, which a bare `<Box group>` takes. `rest` is this
+  // render's own object, so writing to it is safe; non-style keys pass through.
+  if (group === true) restWithoutMv[GROUP_ATTRIBUTE] = '';
 
   // Compiled-output fast path: when the build tool's motif plugin has
   // already extracted every style prop, `rest` carries no style props and
@@ -330,13 +377,22 @@ export const Box: MotifComponent<BoxProps, ReactElement | null> = function (prop
   const selectorRules =
     hasPseudo || exitStyle !== undefined
       ? buildSelectorRules(
-          _hover,
-          _focus,
-          _active,
-          _disabled,
-          _checked,
-          _selected,
-          _expanded,
+          {
+            _hover,
+            _focus,
+            _active,
+            _disabled,
+            _checked,
+            _selected,
+            _expanded,
+            _invalid,
+            _pressed,
+            _focusWithin,
+            _readOnly,
+            _groupHover,
+            _groupFocus,
+            _groupActive,
+          },
           _before,
           _after,
           exitStyle,
@@ -459,10 +515,10 @@ export const Box: MotifComponent<BoxProps, ReactElement | null> = function (prop
  * still get a usable handle to the underlying element.
  */
 function BoxWithLayout(props: BoxProps) {
-  const { layout, ref: userRef, ...rest } = props;
+  const { layout, layoutTransition, ref: userRef, ...rest } = props;
   const kind: LayoutAnimationKind =
     layout === true || layout === undefined ? 'all' : (layout as LayoutAnimationKind);
-  const { ref: layoutRef } = useLayoutAnimation<HTMLElement>({ kind });
+  const { ref: layoutRef } = useLayoutAnimation<HTMLElement>({ kind, ...layoutTransition });
 
   const composedRef = (node: HTMLElement | null): void => {
     layoutRef.current = node;
@@ -527,59 +583,18 @@ function BoxWithDrag(props: BoxProps) {
 }
 
 function buildSelectorRules(
-  hover: StateStyleBag | undefined,
-  focus: StateStyleBag | undefined,
-  active: StateStyleBag | undefined,
-  disabled: StateStyleBag | undefined,
-  checked: StateStyleBag | undefined,
-  selected: StateStyleBag | undefined,
-  expanded: StateStyleBag | undefined,
+  states: { readonly [K in PseudoStatePropName]: StateStyleBag | undefined },
   before: PseudoElementStyleBag | undefined,
   after: PseudoElementStyleBag | undefined,
   exit: ExitStyleBag | undefined,
 ): PseudoRule[] {
   const rules: PseudoRule[] = [];
-  if (hover !== undefined) {
-    rules.push({
-      pseudo: PSEUDO_SELECTOR._hover,
-      style: resolveStylesToVars(hover as Record<string, unknown>).style,
-    });
-  }
-  if (focus !== undefined) {
-    rules.push({
-      pseudo: PSEUDO_SELECTOR._focus,
-      style: resolveStylesToVars(focus as Record<string, unknown>).style,
-    });
-  }
-  if (active !== undefined) {
-    rules.push({
-      pseudo: PSEUDO_SELECTOR._active,
-      style: resolveStylesToVars(active as Record<string, unknown>).style,
-    });
-  }
-  if (disabled !== undefined) {
-    rules.push({
-      pseudo: PSEUDO_SELECTOR._disabled,
-      style: resolveStylesToVars(disabled as Record<string, unknown>).style,
-    });
-  }
-  if (checked !== undefined) {
-    rules.push({
-      pseudo: PSEUDO_SELECTOR._checked,
-      style: resolveStylesToVars(checked as Record<string, unknown>).style,
-    });
-  }
-  if (selected !== undefined) {
-    rules.push({
-      pseudo: PSEUDO_SELECTOR._selected,
-      style: resolveStylesToVars(selected as Record<string, unknown>).style,
-    });
-  }
-  if (expanded !== undefined) {
-    rules.push({
-      pseudo: PSEUDO_SELECTOR._expanded,
-      style: resolveStylesToVars(expanded as Record<string, unknown>).style,
-    });
+  // The name list's order is the emit order the compiler's PSEUDO_ORDER mirrors.
+  for (const name of PSEUDO_STATE_PROP_NAMES) {
+    const bag = states[name];
+    if (bag !== undefined) {
+      rules.push(...resolveStateRules(PSEUDO_SELECTOR[name], bag as Record<string, unknown>));
+    }
   }
   if (before !== undefined) {
     rules.push({
@@ -610,18 +625,6 @@ function buildSelectorRules(
     rules.push({ pseudo: EXIT_SELECTOR, style });
   }
   return rules;
-}
-
-/**
- * Resolve a pseudo-element bag to a CSS-shaped style. Handles `content`
- * specially (not a registered style prop, so `resolveStylesToVars`
- * drops it) and defaults `content: '""'` when omitted - without it,
- * browsers don't render `::before` / `::after`.
- */
-function resolvePseudoElementBag(bag: PseudoElementStyleBag): Record<string, string | number> {
-  const { content, ...rest } = bag;
-  const { style } = resolveStylesToVars(rest as Record<string, unknown>);
-  return { content: content ?? '""', ...style };
 }
 
 /**

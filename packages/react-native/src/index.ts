@@ -6,7 +6,7 @@
 
 export const PACKAGE_NAME = '@usemotif/react-native';
 
-export { configureBreakpoints, createTheme, getBreakpoints } from '@usemotif/core';
+export { configureBreakpoints, createTheme, extendTheme, getBreakpoints } from '@usemotif/core';
 export type {
   BreakpointName,
   MotifComponent,
@@ -230,6 +230,6 @@ export type {
 } from './_animation/types.js';
 
 export { styled } from './styled.js';
-export type { CompoundVariant, StyledConfig, VariantProps } from './styled.js';
+export type { CompoundVariant, StyledComponent, StyledConfig, VariantProps } from './styled.js';
 export { createStyledContext } from './styled-context.js';
 export type { StyledContext, VariantContext } from './styled-context.js';

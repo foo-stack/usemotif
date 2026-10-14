@@ -14,7 +14,14 @@
  * what the tests actually touch.
  */
 
-import { createElement, useLayoutEffect, useRef, type ComponentType, type ReactNode } from 'react';
+import {
+  createElement,
+  Fragment,
+  useLayoutEffect,
+  useRef,
+  type ComponentType,
+  type ReactNode,
+} from 'react';
 
 interface HostProps {
   children?: ReactNode;
@@ -78,6 +85,7 @@ export const Text = makeHost('Text', 'span');
 export const Image = makeHost('Image', 'img');
 export const TextInput = makeHost('TextInput', 'input');
 export const Modal = makeHost('Modal', 'div', true);
+export const RefreshControl = makeHost('RefreshControl', 'div');
 
 /**
  * ScrollView shim - surfaces the `stickyHeaderIndices` prop as a
@@ -137,6 +145,32 @@ export const ScrollView: ComponentType<HostProps> = (props: HostProps) => {
   );
 };
 ScrollView.displayName = 'ScrollView';
+
+/**
+ * FlatList shim - renders every item through `renderItem` (no windowing in a
+ * test DOM), or `ListEmptyComponent` when `data` is empty.
+ */
+export const FlatList: ComponentType<HostProps> = (props: HostProps) => {
+  const { data, renderItem, keyExtractor, ListEmptyComponent, ...rest } = props as HostProps & {
+    data: readonly unknown[];
+    renderItem: (info: { item: unknown; index: number }) => ReactNode;
+    keyExtractor?: (item: unknown, index: number) => string;
+    ListEmptyComponent?: ReactNode;
+  };
+  return createElement(
+    'div',
+    { 'data-motif-host': 'FlatList', ...rest },
+    data.length === 0
+      ? ListEmptyComponent
+      : data.map((item, index) =>
+          createElement(
+            Fragment,
+            { key: keyExtractor?.(item, index) ?? String(index) },
+            renderItem({ item, index }),
+          ),
+        ),
+  );
+};
 
 export const Linking = {
   openURL: (_url: string): Promise<void> => Promise.resolve(),

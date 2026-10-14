@@ -161,3 +161,41 @@ describe('Box - pseudo-state override cascade (#39)', () => {
     expect(baseBlock, css).toMatch(/padding:\s*8px/);
   });
 });
+
+describe('Box - responsive values inside state bags', () => {
+  it('nests the breakpoint under the state selector', () => {
+    render(<Box _hover={{ bg: { base: 'red', md: 'blue' }, opacity: [1, undefined, 0.5] }} />);
+    const el = container.firstElementChild as HTMLElement;
+    const cls = Array.from(el.classList).find((c) => c.startsWith('m-'))!;
+    const css = getEmittedCss();
+    expect(css).toContain(`.${cls}:hover { background-color: red; opacity: 1; }`);
+    expect(css).toContain(
+      `@media (min-width: 768px) { .${cls}:hover { background-color: blue; opacity: 0.5; } }`,
+    );
+  });
+});
+
+describe('Box - group states', () => {
+  it('marks a group and styles a child by the group state', () => {
+    render(
+      <Box group>
+        <Box _groupHover={{ color: 'red' }} _groupFocus={{ color: 'blue' }} />
+      </Box>,
+    );
+    const parent = container.firstElementChild as HTMLElement;
+    expect(parent.hasAttribute('data-motif-group')).toBe(true);
+    expect(parent.hasAttribute('group')).toBe(false);
+    const child = parent.firstElementChild as HTMLElement;
+    const cls = Array.from(child.classList).find((c) => c.startsWith('m-'))!;
+    const css = getEmittedCss();
+    expect(css).toContain(`[data-motif-group]:hover .${cls} { color: red; }`);
+    expect(css).toContain(`[data-motif-group]:focus-visible .${cls} { color: blue; }`);
+  });
+
+  it('renders no marker without group', () => {
+    render(<Box group={false} />);
+    expect((container.firstElementChild as HTMLElement).hasAttribute('data-motif-group')).toBe(
+      false,
+    );
+  });
+});

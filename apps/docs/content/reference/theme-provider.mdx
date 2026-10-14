@@ -3,7 +3,7 @@ title: ThemeProvider and Theme
 description: ThemeProvider mounts the catalogue and the active theme; Theme switches a subtree to a different active theme.
 diataxis: reference
 covers: ['ThemeProvider', 'Theme']
-last_verified: 2026-05-15
+last_verified: 2026-10-14
 ---
 
 import { ApiSignature, ArticleMeta, CodeBlock, Eyebrow } from '../../components/index.js';
@@ -76,6 +76,22 @@ When nested inside a parent `<Theme>` (or `<ThemeProvider>`), motif composes the
 and looks for a registered combination theme. Pre-generate the combinations you care about and
 pass them all to `<ThemeProvider themes={...}>` - they activate automatically when the chain
 matches.
+
+## Browser chrome
+
+On web the root provider also points the browser's own chrome at the active theme, from two
+optional theme fields:
+
+- **`colorScheme`** (`'light'` or `'dark'`) is set as `color-scheme` on `<html>`, and emitted in
+  the theme's CSS block, so scrollbars, native form controls and the default canvas match.
+- **`themeColor`**, a colour or a `$`-token, is resolved to a literal and written to
+  `<meta name="theme-color">`, which colours the mobile browser bar. A meta you rendered is
+  updated in place and restored on unmount; metas with a `media` attribute, your own light and
+  dark pair, are left alone.
+
+Both follow theme switches. The `@usemotif/tokens` presets set them: `colorScheme` to match, and
+`themeColor` to `$colors.surface.base`. A theme without the fields changes nothing. It runs in an
+effect, so server and first client render stay identical; React Native ignores both.
 
 ## Example
 

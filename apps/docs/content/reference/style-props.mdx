@@ -3,7 +3,7 @@ title: Style props
 description: The full catalogue of style props every motif primitive accepts - CSS properties, pseudo-state bags, pseudo-element bags, and motion props.
 diataxis: reference
 covers: ['styleProps', 'STYLE_PROP_NAMES', 'PSEUDO_STATE_PROPS', 'PSEUDO_STATE_PROP_NAMES', 'PSEUDO_ELEMENT_PROPS', 'PSEUDO_ELEMENT_PROP_NAMES', 'MOTION_PROPS', 'MOTION_PROP_NAMES']
-last_verified: 2026-06-22
+last_verified: 2026-10-14
 ---
 
 import { ApiSignature, ArticleMeta, CodeBlock, Eyebrow } from '../../components/index.js';
@@ -33,6 +33,21 @@ styleProps['backgroundColor'];   // { property: 'background-color', category: 'c
 `styleProps` is a map from prop name to its definition (`StylePropDefinition`). The definition
 carries the CSS property it serialises to, the value category (`color`, `length`, `keyword`,
 ...), and whether the prop is responsive-eligible.
+
+### Gradients
+
+`backgroundImage` reads a theme's `gradients` scale, so a gradient defined once is a token like
+any other, and `$gradients.` paths autocomplete on that prop:
+
+<CodeBlock lang="tsx" code={`const theme = createTheme({
+  name: 'brand',
+  tokens: { gradients: { hero: 'linear-gradient(90deg, #2563eb, #7c3aed)' } },
+});
+
+<Box backgroundImage="$gradients.hero" p="$4" />`} />
+
+It is web-only by design: React Native views have no background image, so native accepts the prop
+for parity and draws nothing.
 
 ## Shorthand props
 
@@ -64,12 +79,14 @@ See [`Direction`](/reference/direction) for setting the writing direction of a s
 
 ## Pseudo-state props
 
-Style bags applied when a pseudo-class is true. Four states are exposed.
+Style bags applied when a pseudo-class or ARIA state is true. Fourteen states are exposed.
 
 <CodeBlock lang="ts" code={`import { PSEUDO_STATE_PROP_NAMES } from '@usemotif/core';
 
 PSEUDO_STATE_PROP_NAMES;
-// ['_hover', '_focus', '_active', '_disabled', '_checked', '_selected', '_expanded'] as const`} />
+// ['_hover', '_focus', '_active', '_disabled', '_checked', '_selected', '_expanded',
+//  '_invalid', '_pressed', '_focusWithin', '_readOnly',
+//  '_groupHover', '_groupFocus', '_groupActive'] as const`} />
 
 | Prop | Pseudo |
 | --- | --- |
@@ -80,11 +97,57 @@ PSEUDO_STATE_PROP_NAMES;
 | `_checked` | `:checked`, `[aria-checked="true"]` (checkbox / switch / radio) |
 | `_selected` | `[aria-selected="true"]` (active tab / listbox option) |
 | `_expanded` | `[aria-expanded="true"]` (open accordion / collapsible / popover trigger) |
+| `_invalid` | `[aria-invalid="true"]` (a field that failed validation) |
+| `_pressed` | `[aria-pressed="true"]` (a toggle button that is on) |
+| `_focusWithin` | `:focus-within` (focus is on the element or inside it) |
+| `_readOnly` | `[readonly]`, `[aria-readonly="true"]` |
+| `_groupHover` | an ancestor Box with `group` is hovered |
+| `_groupFocus` | an ancestor Box with `group` has `:focus-visible` |
+| `_groupActive` | an ancestor Box with `group` is `:active` |
 
 On web, the runtime emits one CSS rule per unique pseudo-state bag, hashed into a class. On
 native, the bags drive `Pressable`'s state callbacks. `_checked` / `_selected` / `_expanded` cover
 the interactive ARIA states form and composite-widget elements expose - so a styled toggle, tab, or
 disclosure trigger can react to its own checked / selected / open state in pure CSS, with no JS.
+
+Two of the newer states read attributes on purpose. `_invalid` is `[aria-invalid]` rather than
+`:invalid`, which matches an empty required field before anyone has typed in it, and `_readOnly` is
+the `readonly` attribute rather than `:read-only`, which matches every element that is not
+editable. `_pressed` is a toggle's on state; a pointer held down is `_active`. On native, Box
+ignores these four, as it does `_checked`, `_selected` and `_expanded`.
+
+### Group states
+
+Set `group` on a Box and its descendants can react to its state. The group renders a
+`data-motif-group` attribute, and `_groupHover` and its peers key on it:
+
+<CodeBlock lang="tsx" code={`<Box group p="$4" borderRadius="$lg" bg="$colors.surface.raised">
+  <Text>Release notes</Text>
+  <Text color="$colors.text.muted" _groupHover={{ color: '$colors.action.primary.bg' }}>
+    Read more
+  </Text>
+</Box>
+// [data-motif-group]:hover .m-x { color: var(--colors-action-primary-bg); }`} />
+
+Any marked ancestor counts, so in nested groups the state of an outer group reaches an inner
+child too. The group states are web-only for now: React Native ignores `group` and the three
+props. The compiler extracts a child's group states, and leaves a `group` Box in place so its
+marker attribute is rendered.
+
+### Responsive values inside a state
+
+A value inside a state bag can be responsive, in any of the three syntaxes. On the web the
+breakpoint or container query nests around the state selector:
+
+<CodeBlock lang="tsx" code={`<Box
+  bg="$colors.surface.raised"
+  _hover={{ bg: { base: '$colors.surface.muted', md: '$colors.surface.interactive' } }}
+/>
+// .m-x:hover { background-color: var(--colors-surface-muted); }
+// @media (min-width: 768px) { .m-x:hover { background-color: var(--colors-surface-interactive); } }`} />
+
+The compiler extracts these the same way, to the same class. On React Native, `Pressable` resolves
+a state bag at the current viewport and container width, as it does its other props.
 
 ## Pseudo-element props
 
@@ -143,6 +206,22 @@ is lifted to a class so the exit rule wins the cascade - no inline-specificity s
 exit-aware boundary ([`Dialog`](/headless/overlay/dialog), [`Drawer`](/headless/overlay/drawer))
 manages unmount, make sure its `fallbackDurationMs` is at least the exit duration so the element
 isn't pulled before the animation finishes.
+
+### Layout animation
+
+`layout` is a Box prop rather than a style prop: set it and a change to the Box's position or size
+between renders animates instead of jumping (`'position'` or `'size'` limits it to one). It runs
+300ms ease-in-out unless `layoutTransition` says otherwise, with the same value forms as
+`transition`:
+
+<CodeBlock lang="tsx" code={`<Box layout layoutTransition={{ duration: '$durations.5', easing: '$easings.decelerate' }}>
+  {expanded ? <Details /> : <Summary />}
+</Box>`} />
+
+On the web the tokens become CSS variables, so a theme switch retimes the animation. On React
+Native they resolve against the active theme, and `cubic-bezier(...)` easings map to RN's
+`Easing.bezier`. The compiler leaves a Box with either prop in place, since the animation runs in
+the runtime component.
 
 ## Container query prop
 
