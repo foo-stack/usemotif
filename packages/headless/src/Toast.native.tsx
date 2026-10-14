@@ -11,6 +11,7 @@ import {
 } from 'react';
 import { Animated, View, type ViewStyle } from 'react-native';
 import { nativeText } from './_native-text.js';
+import { withPromise, type ToastFn } from './_toast-promise.js';
 import { useReducedMotion } from './_use-reduced-motion.js';
 
 /**
@@ -38,7 +39,7 @@ export interface ToastItem {
 type ToastInput = Omit<ToastItem, 'id'> & { id?: string };
 
 interface ToasterContextValue {
-  readonly toast: (input: ToastInput) => string;
+  readonly toast: ToastFn;
   readonly dismiss: (id: string) => void;
   readonly toasts: ToastItem[];
 }
@@ -126,9 +127,10 @@ export function Toaster({
     };
   }, []);
 
+  const toastFn = useMemo(() => withPromise(toast), [toast]);
   const ctx = useMemo<ToasterContextValue>(
-    () => ({ toast, dismiss, toasts }),
-    [toast, dismiss, toasts],
+    () => ({ toast: toastFn, dismiss, toasts }),
+    [toastFn, dismiss, toasts],
   );
 
   const overlayPosition: ViewStyle =
