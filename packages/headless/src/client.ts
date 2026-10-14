@@ -189,6 +189,8 @@ export type {
   TreeViewProps,
 } from './specialized.js';
 
+export { Toggle, ToggleGroup, ToggleGroupItem } from './toggle-group.js';
+export type { ToggleGroupItemProps, ToggleGroupProps, ToggleProps } from './toggle-group.js';
 export { Breadcrumb, NavigationMenu, Pagination, Stepper, Toolbar } from './navigation.js';
 export type {
   BreadcrumbProps,
