@@ -269,6 +269,135 @@ describe('DatePicker', () => {
   });
 });
 
+function day(label: RegExp): HTMLElement {
+  const cells = document.body.querySelectorAll<HTMLElement>('[role="gridcell"]');
+  const cell = Array.from(cells).find((el) => label.test(el.getAttribute('aria-label') ?? ''));
+  if (cell === undefined) throw new Error(`no day ${label}`);
+  return cell;
+}
+
+function selectedDays(): string[] {
+  return Array.from(document.body.querySelectorAll('[role="gridcell"][aria-selected="true"]')).map(
+    (el) => el.textContent ?? '',
+  );
+}
+
+describe('Calendar - range mode', () => {
+  it('builds a range from two clicks, swapping an earlier second pick', () => {
+    const onValueChange = vi.fn();
+    render(
+      <Calendar
+        mode="range"
+        defaultValue={{ start: JUNE_15_2024, end: null }}
+        locale="en-US"
+        onValueChange={onValueChange}
+      />,
+    );
+    expect(selectedDays()).toEqual(['15']);
+    act(() => day(/June 12, 2024/).click());
+    expect(onValueChange).toHaveBeenLastCalledWith({
+      start: new Date(2024, 5, 12),
+      end: JUNE_15_2024,
+    });
+    expect(selectedDays()).toEqual(['12', '13', '14', '15']);
+    act(() => day(/June 20, 2024/).click());
+    expect(onValueChange).toHaveBeenLastCalledWith({ start: new Date(2024, 5, 20), end: null });
+    expect(selectedDays()).toEqual(['20']);
+  });
+
+  it('picks with Enter on the focused day', () => {
+    render(<Calendar mode="range" defaultValue={{ start: JUNE_15_2024, end: null }} />);
+    const grid = container.querySelector<HTMLElement>('[role="grid"]')!;
+    press(grid, 'ArrowRight');
+    press(grid, 'ArrowRight');
+    press(grid, 'Enter');
+    expect(selectedDays()).toEqual(['15', '16', '17']);
+  });
+
+  it('tells renderDay where each day sits in the range', () => {
+    const seen = new Map<number, string>();
+    render(
+      <Calendar
+        mode="range"
+        value={{ start: new Date(2024, 5, 10), end: new Date(2024, 5, 12) }}
+        renderDay={(info) => {
+          if (info.date.getMonth() === 5 && info.date.getDate() <= 13) {
+            seen.set(
+              info.date.getDate(),
+              [info.isRangeStart, info.isInRange, info.isRangeEnd, info.isSelected]
+                .map(Number)
+                .join(''),
+            );
+          }
+          return info.date.getDate();
+        }}
+      />,
+    );
+    expect(seen.get(10)).toBe('1101');
+    expect(seen.get(11)).toBe('0101');
+    expect(seen.get(12)).toBe('0111');
+    expect(seen.get(13)).toBe('0000');
+  });
+
+  it('keeps a controlled range authoritative', () => {
+    render(
+      <Calendar
+        mode="range"
+        value={{ start: new Date(2024, 5, 10), end: new Date(2024, 5, 11) }}
+        locale="en-US"
+      />,
+    );
+    act(() => day(/June 20, 2024/).click());
+    expect(selectedDays()).toEqual(['10', '11']);
+  });
+
+  it('reports no range flags in single mode', () => {
+    const flags: boolean[] = [];
+    render(
+      <Calendar
+        defaultValue={JUNE_15_2024}
+        renderDay={(info) => {
+          flags.push(info.isRangeStart, info.isRangeEnd, info.isInRange);
+          return null;
+        }}
+      />,
+    );
+    expect(flags.length).toBe(42 * 3);
+    expect(flags.every((f) => !f)).toBe(true);
+  });
+});
+
+describe('DatePicker - range mode', () => {
+  it('stays open after the first pick, closes after the second, and labels both', () => {
+    render(<DatePicker mode="range" locale="en-US" />);
+    const trigger = container.querySelector('button')!;
+    expect(trigger.textContent).toBe('Pick dates');
+    act(() => trigger.click());
+    act(() => document.body.querySelector<HTMLElement>('[role="gridcell"][tabindex="0"]')!.click());
+    expect(document.body.querySelector('[role="grid"]')).not.toBeNull();
+    const startLabel = trigger.textContent ?? '';
+    expect(startLabel).not.toBe('Pick dates');
+    const grid = document.body.querySelector<HTMLElement>('[role="grid"]')!;
+    press(grid, 'ArrowRight');
+    press(grid, 'ArrowRight');
+    press(grid, 'Enter');
+    expect(document.body.querySelector('[role="grid"]')).toBeNull();
+    expect(trigger.textContent).not.toBe(startLabel);
+    expect(trigger.textContent?.startsWith(startLabel.split(',')[0]!)).toBe(true);
+  });
+
+  it('labels a finished range with both dates', () => {
+    render(
+      <DatePicker
+        mode="range"
+        locale="en-US"
+        defaultValue={{ start: new Date(2024, 5, 10), end: new Date(2024, 5, 14) }}
+      />,
+    );
+    expect(container.querySelector('button')!.textContent).toMatch(/Jun 10\D+14, 2024/);
+  });
+});
+
 describe('TimeInput', () => {
   it('renders <input type="time">', () => {
     render(<TimeInput />);
