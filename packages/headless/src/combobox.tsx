@@ -20,6 +20,7 @@ import {
 } from 'react';
 import { useClickOutside, useFloatingPosition, type Placement } from './positioning.js';
 import { defaultFilter } from './_combobox-filter.js';
+import { ListboxOptions } from './_listbox-options.js';
 import { useControllableState } from './use-controllable-state.js';
 
 // Stable empty selection for a controlled MultiSelect whose `value` is
@@ -329,35 +330,19 @@ function ComboboxList<T>({
             {ctx.loading ? loadingMessage : emptyMessage}
           </div>
         ) : (
-          ctx.options.map((opt, i) => {
-            const optionId = `${ctx.listboxId}-option-${i}`;
-            const highlighted = ctx.highlightedIndex === i;
-            const selected = ctx.value === opt.value;
-            const handleClick = (): void => {
-              if (opt.disabled === true) return;
+          <ListboxOptions
+            options={ctx.options}
+            idPrefix={ctx.listboxId}
+            highlightedIndex={ctx.highlightedIndex}
+            onHighlight={ctx.setHighlightedIndex}
+            isSelected={(v) => ctx.value === v}
+            onPick={(opt) => {
               ctx.setValue(opt.value);
               ctx.setInputValue(opt.label);
               ctx.setOpen(false);
-            };
-            return (
-              <div
-                key={optionId}
-                id={optionId}
-                role="option"
-                aria-selected={selected}
-                aria-disabled={opt.disabled || undefined}
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  handleClick();
-                }}
-                onMouseEnter={() => ctx.setHighlightedIndex(i)}
-              >
-                {renderOption !== undefined
-                  ? renderOption(opt, { highlighted, selected, index: i })
-                  : opt.label}
-              </div>
-            );
-          })
+            }}
+            renderOption={renderOption}
+          />
         )}
       </div>
     </Portal>
