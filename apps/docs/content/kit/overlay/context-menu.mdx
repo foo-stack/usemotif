@@ -1,0 +1,171 @@
+---
+title: ContextMenu
+description: A themed right-click menu over the headless ContextMenu - opens at the cursor in place of the browser menu, with the same keyboard model as Menu.
+diataxis: reference
+covers: ['ContextMenu', 'ContextMenuItemPropsThemed']
+last_verified: 2026-10-14
+---
+
+import {
+  ApiSignature,
+  ArticleMeta,
+  Callout,
+  CodeBlock,
+  Eyebrow,
+  Lede,
+} from '../../../components/index.js';
+
+<Eyebrow>UI kit / Overlay</Eyebrow>
+
+# ContextMenu
+
+<Lede>
+  ContextMenu replaces the browser's right-click menu on one region with your own actions. It opens
+  at the pointer, and once open it behaves like a [Menu](/kit/overlay/menu).
+</Lede>
+
+<ArticleMeta />
+
+## What it is
+
+The headless [ContextMenu](/headless/menu/context-menu) with a themed panel and rows. The trigger
+element's `contextmenu` event is intercepted: the browser menu is suppressed and the panel opens at
+the pointer position, scroll included. Focus moves to the first enabled item. ArrowDown and ArrowUp
+move between enabled items and wrap, Home and End jump to the ends, Enter or Space activates, and
+Escape or a click outside closes the menu and restores focus to where it was.
+
+The panel and rows are themed exactly like Menu: a `surface.raised` card at least 180px wide, rows
+that take `surface.interactive` on hover and keyboard focus, and `text.muted` for a disabled item.
+
+## Install
+
+<CodeBlock lang="bash" code={`yarn add @usemotif/ui`} />
+
+<CodeBlock lang="tsx" code={`import { ContextMenu } from '@usemotif/ui';`} />
+
+## Anatomy
+
+<CodeBlock lang="tsx" code={`<ContextMenu.Root>
+  <ContextMenu.Trigger>
+    <div>Right-click here</div>
+  </ContextMenu.Trigger>
+  <ContextMenu.Content>
+    <ContextMenu.Item>Item</ContextMenu.Item>
+    <ContextMenu.Separator />
+    <ContextMenu.Item>Item</ContextMenu.Item>
+  </ContextMenu.Content>
+</ContextMenu.Root>`} />
+
+## Usage
+
+<CodeBlock lang="tsx" code={`import { ContextMenu } from '@usemotif/ui';
+
+<ContextMenu.Root>
+  <ContextMenu.Trigger>
+    <FileRow file={file} />
+  </ContextMenu.Trigger>
+  <ContextMenu.Content>
+    <ContextMenu.Item onSelect={cut}>Cut</ContextMenu.Item>
+    <ContextMenu.Item onSelect={copy}>Copy</ContextMenu.Item>
+    <ContextMenu.Separator />
+    <ContextMenu.Item disabled>Paste</ContextMenu.Item>
+  </ContextMenu.Content>
+</ContextMenu.Root>`} />
+
+## API
+
+### ContextMenu.Root
+
+The headless `ContextMenu.Root`. Open state and position are internal.
+
+<ApiSignature
+  name="ContextMenu.Root"
+  status="stable"
+  signature={`function ContextMenu.Root(props: ContextMenuRootProps): JSX.Element`}
+  params={[
+    {
+      name: 'children',
+      type: 'ReactNode',
+      description: 'The Trigger and Content parts.',
+    },
+  ]}
+/>
+
+### ContextMenu.Trigger
+
+The headless `ContextMenu.Trigger`.
+
+<ApiSignature
+  name="ContextMenu.Trigger"
+  status="stable"
+  signature={`function ContextMenu.Trigger(props: ContextMenuTriggerProps): JSX.Element`}
+  params={[
+    {
+      name: 'children',
+      type: 'ReactElement',
+      required: true,
+      description: 'A single element. It is cloned to open the menu on `contextmenu`. If the child calls `preventDefault()` in its own handler, the menu does not open.',
+    },
+  ]}
+/>
+
+### ContextMenu.Content
+
+<ApiSignature
+  name="ContextMenu.Content"
+  status="stable"
+  signature={`function ContextMenu.Content(props: ContextMenuContentProps): JSX.Element | null`}
+  params={[
+    {
+      name: 'style',
+      type: 'CSSProperties',
+      description: 'Inline style merged over the positioning of the `role="menu"` wrapper.',
+    },
+    {
+      name: 'children',
+      type: 'ReactNode',
+      description: 'Items and separators.',
+    },
+  ]}
+/>
+
+### ContextMenu.Item
+
+<ApiSignature
+  name="ContextMenu.Item"
+  status="stable"
+  signature={`function ContextMenu.Item(props: ContextMenuItemPropsThemed): JSX.Element`}
+  params={[
+    {
+      name: 'onSelect',
+      type: '() => void',
+      description: 'Called when the item is clicked or activated with Enter or Space.',
+    },
+    {
+      name: 'disabled',
+      type: 'boolean',
+      default: 'false',
+      description: 'Skip the item in keyboard navigation and ignore activation. Sets `aria-disabled`.',
+    },
+    {
+      name: 'children',
+      type: 'ReactNode',
+      description: 'The item label.',
+    },
+  ]}
+/>
+
+### ContextMenu.Separator
+
+<ApiSignature
+  name="ContextMenu.Separator"
+  status="stable"
+  signature={`function ContextMenu.Separator(): JSX.Element`}
+/>
+
+A `role="separator"` hairline in `border.default`. It takes no props.
+
+<Callout variant="info" title="Related">
+  [ContextMenu (headless)](/headless/menu/context-menu) - the unstyled behaviour.
+  [Menu](/kit/overlay/menu) for the same list opened from a button.
+</Callout>

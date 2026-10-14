@@ -1,0 +1,202 @@
+---
+title: Popover
+description: A themed floating panel over the headless Popover - anchored to its trigger, opened by click, and dismissed by Escape or a click outside.
+diataxis: reference
+covers: ['Popover']
+last_verified: 2026-10-14
+---
+
+import {
+  ApiSignature,
+  ArticleMeta,
+  Callout,
+  CodeBlock,
+  Eyebrow,
+  Lede,
+} from '../../../components/index.js';
+
+<Eyebrow>UI kit / Overlay</Eyebrow>
+
+# Popover
+
+<Lede>
+  Popover opens a small panel next to the button that triggered it. Use it for controls that belong
+  to one spot on the page - a filter set, a share field, a short form - without taking over the
+  screen the way a modal does.
+</Lede>
+
+<ArticleMeta />
+
+## What it is
+
+The headless [Popover](/headless/overlay/popover) with a themed panel. The headless layer
+positions the panel against the trigger, wires `aria-expanded`, `aria-controls`, and
+`aria-haspopup="dialog"` on the trigger, and closes on Escape or a click outside. It is non-modal:
+focus stays where it was, and the page behind remains usable.
+
+The kit panel is a `surface.raised` box, 200px to 320px wide, with a `border.default` border and
+`lg` radius.
+
+## Install
+
+<CodeBlock lang="bash" code={`yarn add @usemotif/ui`} />
+
+<CodeBlock lang="tsx" code={`import { Popover } from '@usemotif/ui';`} />
+
+## Anatomy
+
+<CodeBlock lang="tsx" code={`<Popover.Root>
+  <Popover.Trigger>
+    <Button>Open</Button>
+  </Popover.Trigger>
+  <Popover.Content>
+    Panel content
+    <Popover.Close>
+      <Button>Done</Button>
+    </Popover.Close>
+  </Popover.Content>
+</Popover.Root>`} />
+
+## Usage
+
+<CodeBlock lang="tsx" code={`import { Popover } from '@usemotif/ui';
+import { Button } from 'usemotif';
+
+<Popover.Root>
+  <Popover.Trigger>
+    <Button variant="outline">Filters</Button>
+  </Popover.Trigger>
+  <Popover.Content placement="right">
+    <FilterControls />
+    <Popover.Close>
+      <Button>Apply</Button>
+    </Popover.Close>
+  </Popover.Content>
+</Popover.Root>`} />
+
+## API
+
+### Popover.Root
+
+The headless `Popover.Root`.
+
+<ApiSignature
+  name="Popover.Root"
+  status="stable"
+  signature={`function Popover.Root(props: PopoverRootProps): JSX.Element`}
+  params={[
+    {
+      name: 'open',
+      type: 'boolean',
+      description: 'Controlled open state. Pass alongside `onOpenChange`.',
+    },
+    {
+      name: 'defaultOpen',
+      type: 'boolean',
+      default: 'false',
+      description: 'Initial open state when uncontrolled.',
+    },
+    {
+      name: 'onOpenChange',
+      type: '(open: boolean) => void',
+      description: 'Called when the open state changes.',
+    },
+    {
+      name: 'children',
+      type: 'ReactNode',
+      description: 'The Trigger and Content parts.',
+    },
+  ]}
+/>
+
+### Popover.Trigger
+
+The headless `Popover.Trigger`.
+
+<ApiSignature
+  name="Popover.Trigger"
+  status="stable"
+  signature={`function Popover.Trigger(props: PopoverTriggerProps): JSX.Element`}
+  params={[
+    {
+      name: 'children',
+      type: 'ReactElement',
+      required: true,
+      description: 'A single element. It is cloned to toggle the panel on click and to carry the ARIA state.',
+    },
+  ]}
+/>
+
+### Popover.Content
+
+<ApiSignature
+  name="Popover.Content"
+  status="stable"
+  signature={`function Popover.Content(props: PopoverContentProps): JSX.Element | null`}
+  params={[
+    {
+      name: 'placement',
+      type: "'top' | 'bottom' | 'left' | 'right'",
+      default: "'bottom'",
+      description: 'Which side of the trigger the panel opens on.',
+    },
+    {
+      name: 'offset',
+      type: 'number',
+      default: '8',
+      description: 'Gap between the trigger and the panel, in pixels.',
+    },
+    {
+      name: 'dismissOnClickOutside',
+      type: 'boolean',
+      default: 'true',
+      description: 'Close on a click outside the panel. A click on the trigger toggles it instead.',
+    },
+    {
+      name: 'dismissOnEscape',
+      type: 'boolean',
+      default: 'true',
+      description: 'Close on Escape and return focus to the trigger.',
+    },
+    {
+      name: 'exitDurationMs',
+      type: 'number',
+      default: '0',
+      description: 'Keep the panel mounted this long after close, for an exit transition.',
+    },
+    {
+      name: 'style',
+      type: 'CSSProperties',
+      description: 'Inline style merged over the positioning of the wrapper around the themed panel.',
+    },
+    {
+      name: 'children',
+      type: 'ReactNode',
+      description: 'The panel content.',
+    },
+  ]}
+/>
+
+### Popover.Close
+
+The headless `Popover.Close`.
+
+<ApiSignature
+  name="Popover.Close"
+  status="stable"
+  signature={`function Popover.Close(props: PopoverCloseProps): JSX.Element`}
+  params={[
+    {
+      name: 'children',
+      type: 'ReactElement',
+      required: true,
+      description: 'A single element. It is cloned to close the panel on click.',
+    },
+  ]}
+/>
+
+<Callout variant="info" title="Related">
+  [Popover (headless)](/headless/overlay/popover) - the unstyled behaviour.
+  [HoverCard](/kit/overlay/hover-card) for a panel that opens on hover.
+  [Menu](/kit/overlay/menu) for a list of actions.
+</Callout>

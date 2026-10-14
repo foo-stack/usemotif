@@ -1,0 +1,120 @@
+---
+title: NavigationMenu
+description: A themed top-level navigation bar over the headless NavigationMenu - a labelled nav landmark of links or buttons, with the current item marked by aria-current="page".
+diataxis: reference
+covers: ['NavigationMenu', 'NavigationMenuProps', 'NavigationMenuItemProps']
+last_verified: 2026-10-14
+---
+
+import {
+  ApiSignature,
+  ArticleMeta,
+  Callout,
+  CodeBlock,
+  Eyebrow,
+  Lede,
+} from '../../../components/index.js';
+
+<Eyebrow>UI kit / Navigation</Eyebrow>
+
+# NavigationMenu
+
+<Lede>
+  NavigationMenu is a site's primary nav bar: a single row of links, with the page you are on
+  marked and emphasized.
+</Lede>
+
+<ArticleMeta />
+
+## What it is
+
+The headless [NavigationMenu](/headless/menu/navigation-menu) in its flat, single-level mode. It
+renders a `nav` landmark (labelled `Primary` by default) around a list, one list item per child,
+and sets `aria-current="page"` on the item whose `id` matches `current`. The kit does not expose the
+headless multi-level `items` tree.
+
+Each kit item is an `a` when it has an `href` and a `button` otherwise. Items render in
+`text.muted` and darken on hover; the current item turns `action.primary` at semibold weight.
+
+## Install
+
+<CodeBlock lang="bash" code={`yarn add @usemotif/ui`} />
+
+<CodeBlock lang="tsx" code={`import { NavigationMenu } from '@usemotif/ui';`} />
+
+## Anatomy
+
+<CodeBlock lang="tsx" code={`<NavigationMenu current="a">
+  <NavigationMenu.Item id="a" href="/a">A</NavigationMenu.Item>
+  <NavigationMenu.Item id="b" href="/b">B</NavigationMenu.Item>
+</NavigationMenu>`} />
+
+## Usage
+
+<CodeBlock lang="tsx" code={`import { NavigationMenu } from '@usemotif/ui';
+
+<NavigationMenu current="docs" aria-label="Main">
+  <NavigationMenu.Item id="home" href="/">Home</NavigationMenu.Item>
+  <NavigationMenu.Item id="docs" href="/docs">Docs</NavigationMenu.Item>
+  <NavigationMenu.Item id="blog" href="/blog">Blog</NavigationMenu.Item>
+</NavigationMenu>`} />
+
+## API
+
+### NavigationMenu
+
+<ApiSignature
+  name="NavigationMenu"
+  status="stable"
+  signature={`function NavigationMenu(props: NavigationMenuProps): JSX.Element`}
+  params={[
+    {
+      name: 'current',
+      type: 'string',
+      description: 'The `id` of the active item. It gets `aria-current="page"` and the active styling.',
+    },
+    {
+      name: 'aria-label',
+      type: 'string',
+      default: "'Primary'",
+      description: 'Accessible name for the `nav` landmark.',
+    },
+    {
+      name: 'children',
+      type: 'ReactNode',
+      description: 'The `NavigationMenu.Item` links.',
+    },
+  ]}
+/>
+
+### NavigationMenu.Item
+
+<ApiSignature
+  name="NavigationMenu.Item"
+  status="stable"
+  signature={`function NavigationMenu.Item(props: NavigationMenuItemProps): JSX.Element`}
+  params={[
+    {
+      name: 'id',
+      type: 'string',
+      required: true,
+      description: "Stable id, matched against the menu's `current`.",
+    },
+    {
+      name: 'href',
+      type: 'string',
+      description: 'Render the item as a link to this URL. Without it the item is a `button`.',
+    },
+    {
+      name: 'children',
+      type: 'ReactNode',
+      description: 'The item label.',
+    },
+  ]}
+/>
+
+<Callout variant="info" title="Related">
+  [NavigationMenu (headless)](/headless/menu/navigation-menu) - the unstyled behaviour, including
+  the multi-level mode with submenus. [Breadcrumb](/kit/navigation/breadcrumb) for the path to the
+  current page.
+</Callout>

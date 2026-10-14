@@ -1,0 +1,201 @@
+---
+title: Tabs
+description: Themed tabs over the headless Tabs - roving focus, arrow-key and Home or End navigation, and an active tab styled from aria-selected in pure CSS.
+diataxis: reference
+covers: ['Tabs']
+last_verified: 2026-10-14
+---
+
+import {
+  ApiSignature,
+  ArticleMeta,
+  Callout,
+  CodeBlock,
+  Eyebrow,
+  Lede,
+} from '../../../components/index.js';
+
+<Eyebrow>UI kit / Navigation</Eyebrow>
+
+# Tabs
+
+<Lede>
+  Tabs show one panel of related content at a time, picked from a row of labels. Selection follows
+  focus: arrowing to a tab activates it.
+</Lede>
+
+<ArticleMeta />
+
+## What it is
+
+The headless [Tabs](/headless/disclosure/tabs) with a themed list, tabs, and panels. The headless
+layer sets `role="tablist"`, `role="tab"` with `aria-selected`, and `role="tabpanel"`, and links
+each tab to its panel. ArrowRight and ArrowLeft (ArrowDown and ArrowUp when `orientation` is
+`vertical`) move to the next or previous enabled tab and wrap; Home and End jump to the first and
+last.
+
+The kit list is a row with a `border.default` bottom border. Each tab is a button in `text.muted`
+with a transparent underline; the selected tab turns `action.primary` with a matching underline,
+driven by its own `aria-selected` through the `_selected` style state. A panel is a `section` with
+top padding.
+
+## Install
+
+<CodeBlock lang="bash" code={`yarn add @usemotif/ui`} />
+
+<CodeBlock lang="tsx" code={`import { Tabs } from '@usemotif/ui';`} />
+
+## Anatomy
+
+<CodeBlock lang="tsx" code={`<Tabs.Root defaultValue="a">
+  <Tabs.List>
+    <Tabs.Tab value="a">A</Tabs.Tab>
+    <Tabs.Tab value="b">B</Tabs.Tab>
+  </Tabs.List>
+  <Tabs.Panel value="a">Panel A</Tabs.Panel>
+  <Tabs.Panel value="b">Panel B</Tabs.Panel>
+</Tabs.Root>`} />
+
+## Usage
+
+<CodeBlock lang="tsx" code={`import { Tabs } from '@usemotif/ui';
+
+<Tabs.Root defaultValue="account">
+  <Tabs.List>
+    <Tabs.Tab value="account">Account</Tabs.Tab>
+    <Tabs.Tab value="billing">Billing</Tabs.Tab>
+    <Tabs.Tab value="api" disabled>API</Tabs.Tab>
+  </Tabs.List>
+  <Tabs.Panel value="account">
+    <AccountSettings />
+  </Tabs.Panel>
+  <Tabs.Panel value="billing">
+    <BillingSettings />
+  </Tabs.Panel>
+</Tabs.Root>`} />
+
+Controlled:
+
+<CodeBlock lang="tsx" code={`const [tab, setTab] = useState('account');
+
+<Tabs.Root value={tab} onValueChange={setTab}>
+  {/* list and panels */}
+</Tabs.Root>`} />
+
+## API
+
+### Tabs.Root
+
+The headless `Tabs.Root`.
+
+<ApiSignature
+  name="Tabs.Root"
+  status="stable"
+  signature={`function Tabs.Root(props: TabsRootProps): JSX.Element`}
+  params={[
+    {
+      name: 'value',
+      type: 'string',
+      description: 'Controlled active tab value. Pass alongside `onValueChange`.',
+    },
+    {
+      name: 'defaultValue',
+      type: 'string',
+      description: 'Initially active tab when uncontrolled. With neither set, no tab is active.',
+    },
+    {
+      name: 'onValueChange',
+      type: '(v: string) => void',
+      description: 'Called with the value of the newly selected tab.',
+    },
+    {
+      name: 'orientation',
+      type: "'horizontal' | 'vertical'",
+      default: "'horizontal'",
+      description: "Which arrow keys move between tabs, and the list's `aria-orientation`.",
+    },
+    {
+      name: 'children',
+      type: 'ReactNode',
+      description: 'The List and Panel parts.',
+    },
+  ]}
+/>
+
+### Tabs.List
+
+<ApiSignature
+  name="Tabs.List"
+  status="stable"
+  signature={`function Tabs.List(props: TabsListProps): JSX.Element`}
+  params={[
+    {
+      name: 'children',
+      type: 'ReactNode',
+      description: 'The Tab parts.',
+    },
+  ]}
+/>
+
+### Tabs.Tab
+
+<ApiSignature
+  name="Tabs.Tab"
+  status="stable"
+  signature={`function Tabs.Tab(props: TabsTabPropsThemed): JSX.Element`}
+  params={[
+    {
+      name: 'value',
+      type: 'string',
+      required: true,
+      description: 'Identifies the tab and the panel it controls.',
+    },
+    {
+      name: 'disabled',
+      type: 'boolean',
+      default: 'false',
+      description: 'Disable the tab. Arrow keys, Home, and End skip it.',
+    },
+    {
+      name: 'children',
+      type: 'ReactNode',
+      description: 'The tab label.',
+    },
+  ]}
+/>
+
+`TabsTabPropsThemed` is the headless `TabsTabProps` without `asChild` and `style`.
+
+### Tabs.Panel
+
+<ApiSignature
+  name="Tabs.Panel"
+  status="stable"
+  signature={`function Tabs.Panel(props: TabsPanelPropsThemed): JSX.Element | null`}
+  params={[
+    {
+      name: 'value',
+      type: 'string',
+      required: true,
+      description: 'The tab value this panel belongs to.',
+    },
+    {
+      name: 'forceMount',
+      type: 'boolean',
+      default: 'false',
+      description: 'Keep the panel in the DOM, with the `hidden` attribute, while its tab is not active.',
+    },
+    {
+      name: 'children',
+      type: 'ReactNode',
+      description: 'The panel content.',
+    },
+  ]}
+/>
+
+`TabsPanelPropsThemed` is the headless `TabsPanelProps` without `asChild` and `style`.
+
+<Callout variant="info" title="Related">
+  [Tabs (headless)](/headless/disclosure/tabs) - the unstyled behaviour.
+  [SegmentedControl](/kit/forms/segmented-control) to pick a value rather than switch panels.
+</Callout>

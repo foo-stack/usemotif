@@ -1,0 +1,187 @@
+---
+title: Accordion
+description: A themed accordion over the headless Accordion - stacked sections in single or multiple mode, controlled or uncontrolled, with the open state styled from aria-expanded.
+diataxis: reference
+covers:
+  [
+    'Accordion',
+    'AccordionRootPropsThemed',
+    'AccordionItemPropsThemed',
+    'AccordionTriggerProps',
+    'AccordionContentProps',
+  ]
+last_verified: 2026-10-14
+---
+
+import {
+  ApiSignature,
+  ArticleMeta,
+  Callout,
+  CodeBlock,
+  Eyebrow,
+  Lede,
+} from '../../../components/index.js';
+
+<Eyebrow>UI kit / Navigation</Eyebrow>
+
+# Accordion
+
+<Lede>
+  Accordion stacks sections that each open and close behind a header. In `single` mode opening one
+  section closes the others; in `multiple` mode each section toggles on its own.
+</Lede>
+
+<ArticleMeta />
+
+## What it is
+
+The headless [Accordion](/headless/disclosure/accordion), a set of
+[Collapsible](/kit/navigation/collapsible) items that share one open-state array. Each trigger is a
+button with `aria-expanded` and `aria-controls`; each panel is a `role="region"` labelled by its
+trigger. Clicking an open section's trigger closes it, in either mode.
+
+The kit wraps the items in one bordered, rounded container and separates them with hairlines. A
+trigger is a full-width button with a chevron on the right. When it opens, its text turns
+`action.primary` and the chevron flips, driven by its own `aria-expanded` through the `_expanded`
+style state. Panel content renders in the `sm` size and `text.muted`.
+
+## Install
+
+<CodeBlock lang="bash" code={`yarn add @usemotif/ui`} />
+
+<CodeBlock lang="tsx" code={`import { Accordion } from '@usemotif/ui';`} />
+
+## Anatomy
+
+<CodeBlock lang="tsx" code={`<Accordion.Root>
+  <Accordion.Item value="a">
+    <Accordion.Trigger>Header</Accordion.Trigger>
+    <Accordion.Content>Panel</Accordion.Content>
+  </Accordion.Item>
+</Accordion.Root>`} />
+
+## Usage
+
+<CodeBlock lang="tsx" code={`import { Accordion } from '@usemotif/ui';
+
+<Accordion.Root type="single" defaultValue={['shipping']}>
+  <Accordion.Item value="shipping">
+    <Accordion.Trigger>Shipping</Accordion.Trigger>
+    <Accordion.Content>Orders ship in 2 to 3 business days.</Accordion.Content>
+  </Accordion.Item>
+  <Accordion.Item value="returns">
+    <Accordion.Trigger>Returns</Accordion.Trigger>
+    <Accordion.Content>Return anything within 30 days.</Accordion.Content>
+  </Accordion.Item>
+</Accordion.Root>`} />
+
+Several open at once, controlled:
+
+<CodeBlock lang="tsx" code={`const [open, setOpen] = useState<string[]>([]);
+
+<Accordion.Root type="multiple" value={open} onValueChange={setOpen}>
+  {/* items */}
+</Accordion.Root>`} />
+
+## API
+
+### Accordion.Root
+
+<ApiSignature
+  name="Accordion.Root"
+  status="stable"
+  signature={`function Accordion.Root(props: AccordionRootPropsThemed): JSX.Element`}
+  params={[
+    {
+      name: 'type',
+      type: "'single' | 'multiple'",
+      default: "'single'",
+      description: 'Whether opening a section closes the others.',
+    },
+    {
+      name: 'value',
+      type: 'string[]',
+      description: 'Controlled list of open item values. Pass alongside `onValueChange`.',
+    },
+    {
+      name: 'defaultValue',
+      type: 'string[]',
+      default: '[]',
+      description: 'Initially open item values when uncontrolled.',
+    },
+    {
+      name: 'onValueChange',
+      type: '(value: string[]) => void',
+      description: 'Called with the new list of open item values.',
+    },
+    {
+      name: 'children',
+      type: 'ReactNode',
+      description: 'The Item parts.',
+    },
+  ]}
+/>
+
+`AccordionRootPropsThemed` is the headless `AccordionRootProps`.
+
+### Accordion.Item
+
+<ApiSignature
+  name="Accordion.Item"
+  status="stable"
+  signature={`function Accordion.Item(props: AccordionItemPropsThemed): JSX.Element`}
+  params={[
+    {
+      name: 'value',
+      type: 'string',
+      required: true,
+      description: 'Stable id for the section, used in the open-state array.',
+    },
+    {
+      name: 'children',
+      type: 'ReactNode',
+      description: 'The Trigger and Content for this section.',
+    },
+  ]}
+/>
+
+### Accordion.Trigger
+
+<ApiSignature
+  name="Accordion.Trigger"
+  status="stable"
+  signature={`function Accordion.Trigger(props: AccordionTriggerProps): JSX.Element`}
+  params={[
+    {
+      name: 'children',
+      type: 'ReactNode',
+      description: 'The section header text.',
+    },
+  ]}
+/>
+
+### Accordion.Content
+
+<ApiSignature
+  name="Accordion.Content"
+  status="stable"
+  signature={`function Accordion.Content(props: AccordionContentProps): JSX.Element | null`}
+  params={[
+    {
+      name: 'forceMount',
+      type: 'boolean',
+      default: 'false',
+      description: 'Keep the panel in the DOM, with the `hidden` attribute, while the section is closed.',
+    },
+    {
+      name: 'children',
+      type: 'ReactNode',
+      description: 'The section body.',
+    },
+  ]}
+/>
+
+<Callout variant="info" title="Related">
+  [Accordion (headless)](/headless/disclosure/accordion) - the unstyled behaviour.
+  [Collapsible](/kit/navigation/collapsible) for a single section on its own.
+</Callout>

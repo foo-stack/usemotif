@@ -1,0 +1,153 @@
+---
+title: Collapsible
+description: A themed single disclosure over the headless Collapsible - one header that shows and hides one panel, controlled or uncontrolled, styled from aria-expanded.
+diataxis: reference
+covers:
+  [
+    'Collapsible',
+    'CollapsibleRootPropsThemed',
+    'CollapsibleTriggerProps',
+    'CollapsibleContentProps',
+  ]
+last_verified: 2026-10-14
+---
+
+import {
+  ApiSignature,
+  ArticleMeta,
+  Callout,
+  CodeBlock,
+  Eyebrow,
+  Lede,
+} from '../../../components/index.js';
+
+<Eyebrow>UI kit / Navigation</Eyebrow>
+
+# Collapsible
+
+<Lede>
+  Collapsible hides one section behind a header until someone asks for it. It suits content most
+  people skip: advanced settings, a long explanation, a secondary list.
+</Lede>
+
+<ArticleMeta />
+
+## What it is
+
+The headless [Collapsible](/headless/disclosure/collapsible) with a themed container. The trigger
+is a button that toggles the panel and carries `aria-expanded` and `aria-controls`; the panel is a
+`role="region"` labelled by the trigger. It is the single-section shape that
+[Accordion](/kit/navigation/accordion) is built from.
+
+The kit draws one bordered, rounded container. The trigger is a full-width button with a chevron
+on the right; when open, its text turns `action.primary` and the chevron flips, driven by its own
+`aria-expanded` through the `_expanded` style state. The panel sits under a hairline, in the `sm`
+size and `text.muted`.
+
+## Install
+
+<CodeBlock lang="bash" code={`yarn add @usemotif/ui`} />
+
+<CodeBlock lang="tsx" code={`import { Collapsible } from '@usemotif/ui';`} />
+
+## Anatomy
+
+<CodeBlock lang="tsx" code={`<Collapsible.Root>
+  <Collapsible.Trigger>Header</Collapsible.Trigger>
+  <Collapsible.Content>Panel</Collapsible.Content>
+</Collapsible.Root>`} />
+
+## Usage
+
+<CodeBlock lang="tsx" code={`import { Collapsible } from '@usemotif/ui';
+
+<Collapsible.Root defaultOpen>
+  <Collapsible.Trigger>Advanced options</Collapsible.Trigger>
+  <Collapsible.Content>
+    <AdvancedSettings />
+  </Collapsible.Content>
+</Collapsible.Root>`} />
+
+Controlled:
+
+<CodeBlock lang="tsx" code={`const [open, setOpen] = useState(false);
+
+<Collapsible.Root open={open} onOpenChange={setOpen}>
+  {/* trigger and content */}
+</Collapsible.Root>`} />
+
+## API
+
+### Collapsible.Root
+
+<ApiSignature
+  name="Collapsible.Root"
+  status="stable"
+  signature={`function Collapsible.Root(props: CollapsibleRootPropsThemed): JSX.Element`}
+  params={[
+    {
+      name: 'open',
+      type: 'boolean',
+      description: 'Controlled open state. Pass alongside `onOpenChange`.',
+    },
+    {
+      name: 'defaultOpen',
+      type: 'boolean',
+      default: 'false',
+      description: 'Initial open state when uncontrolled.',
+    },
+    {
+      name: 'onOpenChange',
+      type: '(open: boolean) => void',
+      description: 'Called when the trigger toggles the section.',
+    },
+    {
+      name: 'children',
+      type: 'ReactNode',
+      description: 'The Trigger and Content parts.',
+    },
+  ]}
+/>
+
+`CollapsibleRootPropsThemed` is the headless `CollapsibleRootProps`.
+
+### Collapsible.Trigger
+
+<ApiSignature
+  name="Collapsible.Trigger"
+  status="stable"
+  signature={`function Collapsible.Trigger(props: CollapsibleTriggerProps): JSX.Element`}
+  params={[
+    {
+      name: 'children',
+      type: 'ReactNode',
+      description: 'The header text.',
+    },
+  ]}
+/>
+
+### Collapsible.Content
+
+<ApiSignature
+  name="Collapsible.Content"
+  status="stable"
+  signature={`function Collapsible.Content(props: CollapsibleContentProps): JSX.Element | null`}
+  params={[
+    {
+      name: 'forceMount',
+      type: 'boolean',
+      default: 'false',
+      description: 'Keep the panel in the DOM, with the `hidden` attribute, while closed.',
+    },
+    {
+      name: 'children',
+      type: 'ReactNode',
+      description: 'The section body.',
+    },
+  ]}
+/>
+
+<Callout variant="info" title="Related">
+  [Collapsible (headless)](/headless/disclosure/collapsible) - the unstyled behaviour.
+  [Accordion](/kit/navigation/accordion) for several linked sections.
+</Callout>

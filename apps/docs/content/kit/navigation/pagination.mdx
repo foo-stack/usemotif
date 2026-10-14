@@ -1,0 +1,104 @@
+---
+title: Pagination
+description: Themed, controlled pagination over the headless Pagination - previous and next buttons, a window of page numbers with ellipses, and aria-current="page" on the current page.
+diataxis: reference
+covers: ['Pagination', 'PaginationProps']
+last_verified: 2026-10-14
+---
+
+import {
+  ApiSignature,
+  ArticleMeta,
+  Callout,
+  CodeBlock,
+  Eyebrow,
+  Lede,
+} from '../../../components/index.js';
+
+<Eyebrow>UI kit / Navigation</Eyebrow>
+
+# Pagination
+
+<Lede>
+  Pagination moves through numbered pages of results. It always shows the first and last page,
+  a window of pages around the current one, and an ellipsis for the gaps. Seven pages or fewer are
+  all shown.
+</Lede>
+
+<ArticleMeta />
+
+## What it is
+
+The headless [Pagination](/headless/navigation/pagination) with themed buttons. The headless layer
+computes the page window, renders a `nav` landmark (labelled `Pagination` by default), disables
+previous on the first page and next on the last, and clamps every move to `1` through `total`.
+Pagination is controlled only: hold `page` in state and update it from `onPageChange`.
+
+The kit draws each control as a 36px button with `md` radius: page numbers, `‹` and `›` for
+previous and next, and a muted `...` for each gap. The current page fills with
+`action.primary` and carries `aria-current="page"`; other pages take `surface.interactive` on
+hover.
+
+## Install
+
+<CodeBlock lang="bash" code={`yarn add @usemotif/ui`} />
+
+<CodeBlock lang="tsx" code={`import { Pagination } from '@usemotif/ui';`} />
+
+## Usage
+
+<CodeBlock lang="tsx" code={`import { Pagination } from '@usemotif/ui';
+import { useState } from 'react';
+
+function Results() {
+  const [page, setPage] = useState(1);
+  return <Pagination page={page} total={20} onPageChange={setPage} />;
+}`} />
+
+Two pages either side of the current one:
+
+<CodeBlock lang="tsx" code={`<Pagination page={page} total={50} siblings={2} onPageChange={setPage} aria-label="Search results" />`} />
+
+## API
+
+<ApiSignature
+  name="Pagination"
+  status="stable"
+  signature={`function Pagination(props: PaginationProps): JSX.Element`}
+  params={[
+    {
+      name: 'page',
+      type: 'number',
+      required: true,
+      description: 'The current page, counting from 1.',
+    },
+    {
+      name: 'total',
+      type: 'number',
+      required: true,
+      description: 'The number of pages.',
+    },
+    {
+      name: 'onPageChange',
+      type: '(next: number) => void',
+      description: 'Called with the requested page, clamped to `1` through `total`.',
+    },
+    {
+      name: 'siblings',
+      type: 'number',
+      default: '1',
+      description: 'Pages shown on each side of the current page.',
+    },
+    {
+      name: 'aria-label',
+      type: 'string',
+      default: "'Pagination'",
+      description: 'Accessible name for the `nav` landmark.',
+    },
+  ]}
+/>
+
+<Callout variant="info" title="Related">
+  [Pagination (headless)](/headless/navigation/pagination) - the page-window logic with your own
+  rendering.
+</Callout>
