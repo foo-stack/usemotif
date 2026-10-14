@@ -398,3 +398,63 @@ describe('vertical RangeSlider', () => {
     expect(thumbs[1]!.getAttribute('aria-valuenow')).toBe('61');
   });
 });
+
+describe('RangeSlider pointer drag', () => {
+  function prepTrack(): HTMLElement {
+    const track = container.firstElementChild as HTMLElement;
+    track.setPointerCapture = () => {};
+    track.getBoundingClientRect = () =>
+      ({ left: 0, top: 0, width: 100, height: 100, right: 100, bottom: 100 }) as DOMRect;
+    return track;
+  }
+  function fire(el: HTMLElement, type: string, clientX: number, clientY = 5): void {
+    act(() => {
+      el.dispatchEvent(new MouseEvent(type, { clientX, clientY, bubbles: true }));
+    });
+  }
+  function now(): string[] {
+    return Array.from(container.querySelectorAll('[role="slider"]')).map(
+      (t) => t.getAttribute('aria-valuenow') ?? '',
+    );
+  }
+
+  it('moves the nearest thumb to the pointer and drags it', () => {
+    render(<RangeSlider defaultValue={[20, 80]} />);
+    const track = prepTrack();
+    fire(track, 'pointerdown', 70);
+    expect(now()).toEqual(['20', '70']);
+    fire(track, 'pointermove', 40);
+    expect(now()).toEqual(['20', '40']);
+    fire(track, 'pointerup', 40);
+    fire(track, 'pointermove', 90);
+    expect(now()).toEqual(['20', '40']);
+  });
+
+  it('stops the dragged thumb at the other one', () => {
+    render(<RangeSlider defaultValue={[20, 50]} />);
+    const track = prepTrack();
+    fire(track, 'pointerdown', 25);
+    fire(track, 'pointermove', 90);
+    expect(now()).toEqual(['50', '50']);
+  });
+
+  it('breaks a tie between stacked thumbs by the side pressed', () => {
+    render(<RangeSlider defaultValue={[50, 50]} />);
+    const track = prepTrack();
+    fire(track, 'pointerdown', 30);
+    expect(now()).toEqual(['30', '50']);
+    fire(track, 'pointerup', 30);
+    render(<RangeSlider key="b" defaultValue={[50, 50]} />);
+    fire(prepTrack(), 'pointerdown', 70);
+    expect(now()).toEqual(['50', '70']);
+  });
+
+  it('drags vertically from the bottom, and not while disabled', () => {
+    render(<RangeSlider orientation="vertical" defaultValue={[20, 80]} />);
+    fire(prepTrack(), 'pointerdown', 5, 10); // 90% up the track
+    expect(now()).toEqual(['20', '90']);
+    render(<RangeSlider key="d" disabled defaultValue={[20, 80]} />);
+    fire(prepTrack(), 'pointerdown', 50);
+    expect(now()).toEqual(['20', '80']);
+  });
+});
