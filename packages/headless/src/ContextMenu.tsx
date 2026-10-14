@@ -19,8 +19,8 @@ import {
   type ReactNode,
   type Ref,
 } from 'react';
-import { mergeRefs } from './_compose-refs.js';
 import { inDomOrder } from './_dom-order.js';
+import { MenuItem, MenuLevelContext, navigateMenu, type MenuLevel } from './_menu-level.js';
 import { useClickOutside } from './positioning.js';
 import { MenuSeparator } from './Menu.js';
 
@@ -118,10 +118,32 @@ function Content({ style, children }: ContextMenuContentProps): ReactElement | n
     ctx.setOpen(false);
     restoreFocusRef.current?.focus();
   }, [ctx]);
-  useClickOutside(ctx.open, floatingRef, dismiss);
+  // Open submenus are portalled outside this panel, so clicks in them are
+  // not outside the menu either.
+  const panels = useRef(new Set<HTMLElement>());
+  const ignore = useMemo(
+    () => (target: Node) => [...panels.current].some((p) => p.contains(target)),
+    [],
+  );
+  useClickOutside(ctx.open, floatingRef, dismiss, ignore);
+  const [openSub, setOpenSub] = useState<string | null>(null);
+  useEffect(() => {
+    if (!ctx.open) setOpenSub(null);
+  }, [ctx.open]);
   // Memoized (above the early-return so the hook order is stable) so item
   // consumers don't re-render on every Content render.
-  const itemsValue = useMemo(() => ({ itemsRef, dismiss }), [itemsRef, dismiss]);
+  const level = useMemo<MenuLevel>(
+    () => ({
+      itemsRef,
+      activeIndex,
+      setActiveIndex,
+      closeTree: dismiss,
+      openSub,
+      setOpenSub,
+      panels,
+    }),
+    [activeIndex, dismiss, openSub],
+  );
 
   // Auto-focus first item on open (after capturing the prior focus owner).
   useEffect(() => {
@@ -141,50 +163,19 @@ function Content({ style, children }: ContextMenuContentProps): ReactElement | n
 
   if (!ctx.open) return null;
 
-  function focusItem(i: number): void {
-    if (itemsRef.current[i] !== undefined) {
-      setActiveIndex(i);
-      itemsRef.current[i].focus();
-    }
-  }
-
   function onKeyDown(e: KeyboardEvent<HTMLDivElement>): void {
-    // Escape works even with every item disabled - handle before the
-    // all-disabled early-return.
+    // Escape works even with every item disabled.
     if (e.key === 'Escape') {
       e.preventDefault();
       dismiss();
       return;
     }
-    // DOM order, not mount order, so navigation follows visual order.
-    const enabled = inDomOrder(itemsRef.current)
-      .map((el) => ({ el, i: itemsRef.current.indexOf(el) }))
-      .filter((it) => it.el.getAttribute('aria-disabled') !== 'true');
-    if (enabled.length === 0) return;
-    const cur = enabled.findIndex((it) => it.i === activeIndex);
-    switch (e.key) {
-      case 'ArrowDown':
-        e.preventDefault();
-        focusItem(enabled[(cur + 1) % enabled.length]!.i);
-        break;
-      case 'ArrowUp':
-        e.preventDefault();
-        focusItem(enabled[(cur - 1 + enabled.length) % enabled.length]!.i);
-        break;
-      case 'Home':
-        e.preventDefault();
-        focusItem(enabled[0]!.i);
-        break;
-      case 'End':
-        e.preventDefault();
-        focusItem(enabled[enabled.length - 1]!.i);
-        break;
-    }
+    navigateMenu(e, level);
   }
 
   return (
     <Portal>
-      <ContextMenuItemsContext.Provider value={itemsValue}>
+      <MenuLevelContext.Provider value={level}>
         <div
           ref={floatingRef}
           id={ctx.contentId}
@@ -201,99 +192,8 @@ function Content({ style, children }: ContextMenuContentProps): ReactElement | n
         >
           {children}
         </div>
-      </ContextMenuItemsContext.Provider>
+      </MenuLevelContext.Provider>
     </Portal>
-  );
-}
-
-const ContextMenuItemsContext = createContext<{
-  itemsRef: React.RefObject<HTMLElement[]>;
-  dismiss: () => void;
-} | null>(null);
-
-interface ContextMenuItemChildProps {
-  ref?: Ref<HTMLElement>;
-  role?: string;
-  tabIndex?: number;
-  'aria-disabled'?: boolean | undefined;
-  onClick?: (e: MouseEvent<HTMLElement>) => void;
-  onKeyDown?: (e: KeyboardEvent<HTMLElement>) => void;
-  style?: CSSProperties;
-}
-
-function Item({
-  onSelect,
-  disabled = false,
-  children,
-  style,
-  asChild = false,
-}: {
-  onSelect?: () => void;
-  disabled?: boolean;
-  children?: ReactNode;
-  style?: CSSProperties;
-  /** Project the menu-item semantics onto a provided element instead of the
-   * default `<div>` (so a styled wrapper can be the focusable item). */
-  asChild?: boolean;
-}): ReactElement {
-  const ctxValue = useContext(ContextMenuItemsContext);
-  if (ctxValue === null) throw new Error('ContextMenu.Item must be inside ContextMenu.Content.');
-  const itemsCtx = ctxValue;
-  const ref = useRef<HTMLElement | null>(null);
-
-  // Register once on mount / unregister on unmount. Keyed on the stable
-  // itemsRef so it doesn't re-run every render (which previously spliced
-  // the item out and back in, making the registry order render-dependent).
-  useEffect(() => {
-    const el = ref.current;
-    if (el === null) return;
-    const items = itemsCtx.itemsRef.current;
-    if (!items.includes(el)) items.push(el);
-    return () => {
-      const idx = items.indexOf(el);
-      if (idx !== -1) items.splice(idx, 1);
-    };
-  }, [itemsCtx.itemsRef]);
-
-  function activate(): void {
-    if (disabled) return;
-    onSelect?.();
-    itemsCtx.dismiss();
-  }
-
-  const itemProps = {
-    role: 'menuitem',
-    tabIndex: -1,
-    'aria-disabled': disabled || undefined,
-    onClick: (e: MouseEvent<HTMLElement>) => {
-      e.preventDefault();
-      activate();
-    },
-    onKeyDown: (e: KeyboardEvent<HTMLElement>) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        activate();
-      }
-    },
-  };
-  const cursorStyle: CSSProperties = {
-    cursor: disabled ? 'not-allowed' : 'pointer',
-    outline: 'none',
-  };
-
-  if (asChild && isValidElement(children)) {
-    const child = children as ReactElement<ContextMenuItemChildProps>;
-    return cloneElement(child, {
-      ...itemProps,
-      ref: mergeRefs(child.props.ref, ref),
-      style: { ...cursorStyle, ...child.props.style, ...style },
-    });
-  }
-
-  return (
-    <div ref={ref as Ref<HTMLDivElement>} {...itemProps} style={{ ...cursorStyle, ...style }}>
-      {children}
-    </div>
   );
 }
 
@@ -306,7 +206,8 @@ export {
   Root as ContextMenuRoot,
   Trigger as ContextMenuTrigger,
   Content as ContextMenuContent,
-  Item as ContextMenuItem,
 };
+
+export const ContextMenuItem = MenuItem;
 
 export const ContextMenuSeparator = MenuSeparator;

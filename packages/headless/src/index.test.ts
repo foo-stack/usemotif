@@ -159,6 +159,7 @@ describe('the barrel and the client chunk agree', () => {
     expect(barrel.Sheet.Root).toBe(barrel.Drawer.Root);
     expect(barrel.Accordion.Content).toBe(barrel.Collapsible.Content);
     expect(barrel.ContextMenu.Separator).toBe(barrel.Menu.Separator);
+    expect(barrel.ContextMenu.Item).toBe(barrel.Menu.Item);
     expect(barrel.Select.List).toBe(barrel.Combobox.List);
     expect(barrel.Search.Input).toBe(barrel.Combobox.Input);
   });
