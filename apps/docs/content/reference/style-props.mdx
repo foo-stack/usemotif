@@ -159,6 +159,22 @@ exit-aware boundary ([`Dialog`](/headless/overlay/dialog), [`Drawer`](/headless/
 manages unmount, make sure its `fallbackDurationMs` is at least the exit duration so the element
 isn't pulled before the animation finishes.
 
+### Layout animation
+
+`layout` is a Box prop rather than a style prop: set it and a change to the Box's position or size
+between renders animates instead of jumping (`'position'` or `'size'` limits it to one). It runs
+300ms ease-in-out unless `layoutTransition` says otherwise, with the same value forms as
+`transition`:
+
+<CodeBlock lang="tsx" code={`<Box layout layoutTransition={{ duration: '$durations.5', easing: '$easings.decelerate' }}>
+  {expanded ? <Details /> : <Summary />}
+</Box>`} />
+
+On the web the tokens become CSS variables, so a theme switch retimes the animation. On React
+Native they resolve against the active theme, and `cubic-bezier(...)` easings map to RN's
+`Easing.bezier`. The compiler leaves a Box with either prop in place, since the animation runs in
+the runtime component.
+
 ## Container query prop
 
 `_container` declares a container-query block. The keys are container-query syntax (`'@container (min-width: 480px)'`); the values are style bags.
