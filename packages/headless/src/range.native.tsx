@@ -1,3 +1,4 @@
+import { useDrag, type UseDragOptions } from '@usemotif/react-native';
 import { useCallback, useMemo, useRef, type ReactElement } from 'react';
 import {
   Pressable,
@@ -190,13 +191,20 @@ export interface RangeSliderProps {
   disabled?: boolean;
   accessibilityLabel?: string;
   style?: ViewStyle;
-  /** Lays the thumbs out in a column when `'vertical'`. Defaults to `'horizontal'`. */
+  thumbStyle?: ViewStyle;
+  fillStyle?: ViewStyle;
+  /** Lays the track out vertically, low values at the bottom. Defaults to `'horizontal'`. */
   orientation?: 'horizontal' | 'vertical';
   /** Points to mark along the track, each with an optional label. */
   marks?: ReadonlyArray<SliderMark>;
   markStyle?: ViewStyle;
   markLabelStyle?: ViewStyle;
 }
+/**
+ * Two thumbs over one track. Each thumb drags on its own through `useDrag`,
+ * stopping at the other, and steps by `step` through the accessibility
+ * increment and decrement actions.
+ */
 export function RangeSlider({
   value: controlled,
   defaultValue = [0, 100],
@@ -207,6 +215,8 @@ export function RangeSlider({
   disabled = false,
   accessibilityLabel,
   style,
+  thumbStyle,
+  fillStyle,
   orientation = 'horizontal',
   marks,
   markStyle,
@@ -217,68 +227,109 @@ export function RangeSlider({
     defaultValue,
     onChange: onValueChange,
   });
-  // The two-thumb drag UX needs PanResponder + per-thumb hit testing;
-  // the v0 native shape exposes the controlled value but leaves the
-  // visual + drag rendering to the caller. Tapping a thumb-sized
-  // Pressable nudges it by `step`.
-  const nudge = useCallback(
-    (idx: 0 | 1, delta: number) => {
+  const valueRef = useRef(value);
+  valueRef.current = value;
+  const horizontal = orientation === 'horizontal';
+
+  // A thumb is clamped at its neighbour rather than the pair being sorted, so
+  // a thumb pushed past the other never swaps identities with it.
+  const setThumb = useCallback(
+    (idx: 0 | 1, raw: number) => {
       if (disabled) return;
-      const next: [number, number] = [...value];
-      next[idx] = clamp(snap(value[idx] + delta, step, min), min, max);
-      const v: [number, number] = [
-        clamp(snap(Math.min(next[0], next[1]), step, min), min, max),
-        clamp(snap(Math.max(next[0], next[1]), step, min), min, max),
-      ];
-      commit(v);
+      const cur = valueRef.current;
+      const v = snap(raw, step, min);
+      const next: [number, number] =
+        idx === 0 ? [clamp(v, min, cur[1]), cur[1]] : [cur[0], clamp(v, cur[0], max)];
+      if (next[idx] !== cur[idx]) commit(next);
     },
-    [value, disabled, step, min, max, commit],
+    [disabled, step, min, max, commit],
   );
 
+  const track = useRef({ width: 0, height: 0 });
+  const dragFrom = useRef<[number, number]>([0, 0]);
+  const dragOptions = (idx: 0 | 1): UseDragOptions => ({
+    axis: horizontal ? 'x' : 'y',
+    onDragStart: () => {
+      dragFrom.current[idx] = valueRef.current[idx];
+    },
+    onDrag: ({ offset }) => {
+      const size = horizontal ? track.current.width : track.current.height;
+      if (size === 0) return;
+      const moved = horizontal ? offset.x : -offset.y;
+      setThumb(idx, dragFrom.current[idx] + (moved / size) * (max - min));
+    },
+  });
+  const drags = [useDrag(dragOptions(0)), useDrag(dragOptions(1))] as const;
+
+  const pct = (v: number): number => ((v - min) / (max - min)) * 100;
   return (
     <View
       accessibilityLabel={accessibilityLabel}
-      style={[
-        {
-          position: 'relative',
-          flexDirection: orientation === 'horizontal' ? 'row' : 'column-reverse',
-        },
-        style as ViewStyle,
-      ]}
+      onLayout={(e: LayoutChangeEvent) => {
+        const { width, height } = e.nativeEvent.layout;
+        track.current = { width, height };
+      }}
+      style={[{ position: 'relative' }, style as ViewStyle]}
     >
+      <View
+        style={[
+          { position: 'absolute' },
+          horizontal
+            ? {
+                left: `${pct(value[0])}%`,
+                width: `${pct(value[1]) - pct(value[0])}%`,
+                top: 0,
+                bottom: 0,
+              }
+            : {
+                bottom: `${pct(value[0])}%`,
+                height: `${pct(value[1]) - pct(value[0])}%`,
+                left: 0,
+                right: 0,
+              },
+          fillStyle as ViewStyle,
+        ]}
+      />
       <Marks
         marks={marks}
         orientation={orientation}
-        percentOf={(v) => ((v - min) / (max - min)) * 100}
+        percentOf={pct}
         markStyle={markStyle}
         markLabelStyle={markLabelStyle}
       />
-      <Pressable
-        accessibilityRole="adjustable"
-        accessibilityValue={withText(
-          { min, max: value[1], now: value[0] },
-          markValueText(marks, value[0]),
-        )}
-        accessibilityState={{ disabled }}
-        accessibilityActions={[{ name: 'increment' as const }, { name: 'decrement' as const }]}
-        onAccessibilityAction={(e) => {
-          if (e.nativeEvent.actionName === 'increment') nudge(0, step);
-          else if (e.nativeEvent.actionName === 'decrement') nudge(0, -step);
-        }}
-      />
-      <Pressable
-        accessibilityRole="adjustable"
-        accessibilityValue={withText(
-          { min: value[0], max, now: value[1] },
-          markValueText(marks, value[1]),
-        )}
-        accessibilityState={{ disabled }}
-        accessibilityActions={[{ name: 'increment' as const }, { name: 'decrement' as const }]}
-        onAccessibilityAction={(e) => {
-          if (e.nativeEvent.actionName === 'increment') nudge(1, step);
-          else if (e.nativeEvent.actionName === 'decrement') nudge(1, -step);
-        }}
-      />
+      {([0, 1] as const).map((idx) => {
+        const { Wrapper, dragProps } = drags[idx];
+        return (
+          <Wrapper key={idx}>
+            <View
+              {...(disabled ? {} : dragProps)}
+              accessibilityRole="adjustable"
+              accessibilityValue={withText(
+                idx === 0
+                  ? { min, max: value[1], now: value[0] }
+                  : { min: value[0], max, now: value[1] },
+                markValueText(marks, value[idx]),
+              )}
+              accessibilityState={{ disabled }}
+              accessibilityActions={[
+                { name: 'increment' as const },
+                { name: 'decrement' as const },
+              ]}
+              onAccessibilityAction={(e) => {
+                if (e.nativeEvent.actionName === 'increment') setThumb(idx, value[idx] + step);
+                else if (e.nativeEvent.actionName === 'decrement') setThumb(idx, value[idx] - step);
+              }}
+              style={[
+                { position: 'absolute' },
+                horizontal
+                  ? { left: `${pct(value[idx])}%`, top: 0 }
+                  : { bottom: `${pct(value[idx])}%`, left: 0 },
+                thumbStyle as ViewStyle,
+              ]}
+            />
+          </Wrapper>
+        );
+      })}
     </View>
   );
 }
