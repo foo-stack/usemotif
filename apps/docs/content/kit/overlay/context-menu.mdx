@@ -165,6 +165,20 @@ The headless `ContextMenu.Trigger`.
 
 A `role="separator"` hairline in `border.default`. It takes no props.
 
+### ContextMenu.Sub, ContextMenu.SubTrigger, ContextMenu.SubContent
+
+A submenu. `ContextMenu.SubTrigger` is themed like an item with a trailing chevron and opens on hover,
+click, Arrow Right, Enter or Space; `ContextMenu.SubContent` is the same raised card as the menu.
+Arrow Left or Escape closes it, and choosing an item inside closes the whole menu. The kit's
+Menu and ContextMenu share these parts.
+
+<CodeBlock lang="tsx" code={`<ContextMenu.Sub>
+  <ContextMenu.SubTrigger>Share</ContextMenu.SubTrigger>
+  <ContextMenu.SubContent>
+    <ContextMenu.Item onSelect={emailLink}>Email link</ContextMenu.Item>
+  </ContextMenu.SubContent>
+</ContextMenu.Sub>`} />
+
 <Callout variant="info" title="Related">
   [ContextMenu (headless)](/headless/menu/context-menu) - the unstyled behaviour.
   [Menu](/kit/overlay/menu) for the same list opened from a button.

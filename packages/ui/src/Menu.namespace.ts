@@ -1,5 +1,6 @@
 import { Menu as Headless } from '@usemotif/headless';
 import { MenuContent, MenuItem, MenuSeparator } from './Menu.js';
+import { MenuSubContent, MenuSubTrigger } from './MenuSub.js';
 
 /**
  * Namespace assembly, deliberately in its own module and deliberately without
@@ -16,4 +17,7 @@ export const Menu = {
   Content: MenuContent,
   Item: MenuItem,
   Separator: MenuSeparator,
+  Sub: Headless.Sub,
+  SubTrigger: MenuSubTrigger,
+  SubContent: MenuSubContent,
 };

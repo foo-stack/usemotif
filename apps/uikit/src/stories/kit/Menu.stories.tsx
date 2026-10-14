@@ -56,3 +56,28 @@ export const DefaultOpen: Story = {
     </Box>
   ),
 };
+
+/** A submenu row: hover it, or focus it and press ArrowRight, to open the nested menu. */
+export const WithSubmenu: Story = {
+  render: () => (
+    <Box pb={260} display="flex" justifyContent="center">
+      <Menu.Root defaultOpen>
+        <Menu.Trigger>
+          <Button>Actions</Button>
+        </Menu.Trigger>
+        <Menu.Content>
+          <Menu.Item onSelect={noop}>Rename</Menu.Item>
+          <Menu.Sub>
+            <Menu.SubTrigger>Share</Menu.SubTrigger>
+            <Menu.SubContent>
+              <Menu.Item onSelect={noop}>Email link</Menu.Item>
+              <Menu.Item onSelect={noop}>Copy link</Menu.Item>
+            </Menu.SubContent>
+          </Menu.Sub>
+          <Menu.Separator />
+          <Menu.Item onSelect={noop}>Delete</Menu.Item>
+        </Menu.Content>
+      </Menu.Root>
+    </Box>
+  ),
+};
