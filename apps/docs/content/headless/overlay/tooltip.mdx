@@ -2,7 +2,7 @@
 title: Tooltip
 description: A text affordance shown on hover or keyboard focus. Bound to the trigger through aria-describedby; never holds interactive content.
 diataxis: reference
-covers: ['Tooltip', 'TooltipProviderProps', 'TooltipRootProps', 'TooltipTriggerProps', 'TooltipContentProps']
+covers: ['Tooltip', 'TooltipProviderProps', 'TooltipRootProps', 'TooltipTriggerProps', 'TooltipContentProps', 'FloatingArrowProps']
 last_verified: 2026-10-15
 ---
 
@@ -153,6 +153,27 @@ children unchanged, since native tooltips open on press.
     },
   ]}
 />
+
+### Tooltip.Arrow
+
+<ApiSignature
+  name="Tooltip.Arrow"
+  status="stable"
+  signature={`function Tooltip.Arrow(props: FloatingArrowProps): JSX.Element | null`}
+  params={[
+    { name: 'size', type: 'number', default: '8', description: 'Width of the square the arrow is cut from, in px.' },
+    { name: 'borderColor', type: 'string', description: 'Draws the arrow\'s two outer edges in this colour, to continue a bordered surface.' },
+    { name: 'borderWidth', type: 'number', default: '1', description: 'Border width with `borderColor`, in px.' },
+    { name: 'style', type: 'CSSProperties', description: 'Style for the arrow, usually its `background`.' },
+  ]}
+/>
+
+An arrow on the edge facing the trigger, pointing at the trigger's centre. It is a square turned 45
+degrees and straddling the edge, so render it first inside `Tooltip.Content` with the surface's
+background, and the surface covers its inner half. It moves to the other edge when the surface
+flips, and stays on the trigger when the surface shifts along the viewport edge. It carries
+`aria-hidden` and `data-side` (`top`, `bottom`, `left`, or `right`), for styling by side. On React
+Native it renders nothing, since native overlays open as modals with no anchored edge.
 
 ## Accessibility
 

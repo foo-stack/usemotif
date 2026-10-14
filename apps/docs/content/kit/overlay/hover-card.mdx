@@ -3,7 +3,7 @@ title: HoverCard
 description: A themed preview card over the headless HoverCard - opens on hover or focus after a delay, stays open while the pointer moves onto it, and can hold interactive content.
 diataxis: reference
 covers: ['HoverCard']
-last_verified: 2026-10-14
+last_verified: 2026-10-15
 ---
 
 import {
@@ -64,6 +64,15 @@ The kit card is a `surface.raised` box, 240px to 360px wide, with a `border.defa
     <ProfileSummary id="jane" />
   </HoverCard.Content>
 </HoverCard.Root>`} />
+
+To point at the trigger, put `HoverCard.Arrow` first inside `HoverCard.Content`. The kit's arrow takes the
+raised surface, with its border, and follows the surface when it flips or shifts. See the
+[headless HoverCard](/headless/overlay/hover-card#hovercardarrow) for its props.
+
+<CodeBlock lang="tsx" code={`<HoverCard.Content>
+  <HoverCard.Arrow />
+  ...
+</HoverCard.Content>`} />
 
 ## API
 

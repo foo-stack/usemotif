@@ -73,6 +73,15 @@ opens, moving to a neighbour shows it at once instead of waiting the delay again
   <HStack gap="$space.1">{tools}</HStack>
 </Tooltip.Provider>`} />
 
+To point at the trigger, put `Tooltip.Arrow` first inside `Tooltip.Content`. The kit's arrow takes the
+inverse surface, and follows the surface when it flips or shifts. See the
+[headless Tooltip](/headless/overlay/tooltip#tooltiparrow) for its props.
+
+<CodeBlock lang="tsx" code={`<Tooltip.Content>
+  <Tooltip.Arrow />
+  ...
+</Tooltip.Content>`} />
+
 ## API
 
 ### Tooltip.Root
