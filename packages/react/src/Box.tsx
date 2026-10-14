@@ -6,14 +6,17 @@ import {
   buildAnimationCss,
   buildAnimationShorthand,
   extractKeyframeFromAnimation,
+  isTokenRef,
   liftPseudoOverriddenBaseProps,
   resolveResponsiveStylesToVars,
   resolvePseudoElementBag,
   resolveStylesToVars,
   resolveTransitionToVars,
+  tokenRefToCssVar,
   type AnimationValue,
   type BreakpointName,
   type ExitStyleBag,
+  type LayoutTransition,
   type MotionStyleProps,
   type MotionValueWideningOf,
   type PseudoElementStyleBag,
@@ -128,11 +131,21 @@ export type BoxProps = ResponsiveStyleProps &
      * both position and size; pass `'position'` or `'size'` to limit
      * the axes. When set, the Box wraps itself with
      * `useLayoutAnimation` so size / position changes between commits
-     * tween smoothly instead of snapping. Defaults: 300ms ease-in-out;
-     * customise via the {@link LayoutAnimationKind}-shaped follow-up
-     * prop set in a future release.
+     * tween smoothly instead of snapping. Defaults to 300ms ease-in-out;
+     * `layoutTransition` changes that.
      */
     layout?: boolean | 'position' | 'size';
+    /**
+     * Duration and easing of the `layout` animation, as literals or
+     * `$durations` / `$easings` tokens. Tokens emit CSS variables, so a
+     * theme switch applies.
+     *
+     * @example
+     * ```tsx
+     * <Box layout layoutTransition={{ duration: '$durations.5', easing: '$easings.decelerate' }} />
+     * ```
+     */
+    layoutTransition?: LayoutTransition;
     /**
      * Native-only layout callback. Accepted as `undefined` so handles
      * built for both platforms (`useScrollTarget`, `useLayoutAnimation`)
@@ -241,6 +254,7 @@ export const Box: MotifComponent<BoxProps, ReactElement | null> = function (prop
     animation,
     animateOnly,
     layout: _layout,
+    layoutTransition: _layoutTransition,
     onLayout: _onLayout,
     drag: _drag,
     dragConstraints: _dragConstraints,
@@ -460,10 +474,16 @@ export const Box: MotifComponent<BoxProps, ReactElement | null> = function (prop
  * still get a usable handle to the underlying element.
  */
 function BoxWithLayout(props: BoxProps) {
-  const { layout, ref: userRef, ...rest } = props;
+  const { layout, layoutTransition, ref: userRef, ...rest } = props;
   const kind: LayoutAnimationKind =
     layout === true || layout === undefined ? 'all' : (layout as LayoutAnimationKind);
-  const { ref: layoutRef } = useLayoutAnimation<HTMLElement>({ kind });
+  const duration = layoutTiming(layoutTransition?.duration, 'durations');
+  const easing = layoutTiming(layoutTransition?.easing, 'easings');
+  const { ref: layoutRef } = useLayoutAnimation<HTMLElement>({
+    kind,
+    ...(duration !== undefined ? { duration } : {}),
+    ...(easing !== undefined ? { easing } : {}),
+  });
 
   const composedRef = (node: HTMLElement | null): void => {
     layoutRef.current = node;
@@ -474,6 +494,13 @@ function BoxWithLayout(props: BoxProps) {
   };
 
   return <Box {...(rest as BoxProps)} ref={composedRef} />;
+}
+
+function layoutTiming(
+  value: string | undefined,
+  scale: 'durations' | 'easings',
+): string | undefined {
+  return value !== undefined && isTokenRef(value) ? tokenRefToCssVar(value, scale) : value;
 }
 
 /**

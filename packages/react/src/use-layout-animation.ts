@@ -15,8 +15,9 @@ export type LayoutAnimationKind = 'all' | 'position' | 'size';
 export interface UseLayoutAnimationOptions {
   /** Which axes to animate. Default `'all'`. */
   kind?: LayoutAnimationKind;
-  /** Transition duration in seconds. Default `0.3`. */
-  duration?: number;
+  /** Transition duration: seconds, or a CSS time such as `'500ms'` or
+   * `'var(--durations-5)'`. Default `0.3`. */
+  duration?: number | string;
   /** CSS easing function. Default `'ease-in-out'`. */
   easing?: string;
 }
@@ -139,7 +140,8 @@ export function useLayoutAnimation<T extends HTMLElement = HTMLElement>(
     el.style.transformOrigin = '0 0';
     el.style.transition = 'none';
 
-    const durationMs = (opts.duration ?? 0.3) * 1000;
+    const duration =
+      typeof opts.duration === 'string' ? opts.duration : `${(opts.duration ?? 0.3) * 1000}ms`;
     const easing = opts.easing ?? 'ease-in-out';
 
     const restore = (): void => {
@@ -156,7 +158,7 @@ export function useLayoutAnimation<T extends HTMLElement = HTMLElement>(
       // the transform back to identity.
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
       el.offsetWidth;
-      el.style.transition = `transform ${durationMs}ms ${easing}`;
+      el.style.transition = `transform ${duration} ${easing}`;
       el.style.transform = '';
 
       onEnd = (e: TransitionEvent): void => {

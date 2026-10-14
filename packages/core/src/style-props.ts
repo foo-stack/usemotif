@@ -720,6 +720,16 @@ export interface TransitionObject {
 }
 
 /**
+ * Timing for a Box's `layout` animation. Same value forms as
+ * {@link TransitionObject}: a literal CSS time and easing, or `$durations` /
+ * `$easings` token references. Each part defaults to `300ms` / `ease-in-out`.
+ */
+export interface LayoutTransition {
+  readonly duration?: string;
+  readonly easing?: string;
+}
+
+/**
  * Permitted shapes for the `transition` prop:
  *
  * - Raw CSS string (`"opacity 200ms ease"`) - passed through verbatim.
