@@ -200,3 +200,12 @@ describe('tokenRefToCssVar - dotted token keys', () => {
     expect(tokenRefToCssVar('$colors.blue.500')).toBe('var(--colors-blue-500)');
   });
 });
+
+describe('themeToCssBlock - colorScheme', () => {
+  it('emits color-scheme in the theme block when the theme sets one', () => {
+    const css = themeToCssBlock({ name: 'd', tokens: {}, colorScheme: 'dark' });
+    expect(css).toContain('[data-theme="d"] {');
+    expect(css).toContain('  color-scheme: dark;');
+    expect(themeToCssBlock({ name: 'n', tokens: {} })).not.toContain('color-scheme');
+  });
+});

@@ -142,3 +142,17 @@ describe('high-contrast themes', () => {
     expect(contrast(lightTheme, 'text.subtle', 'surface.base')).toBeLessThan(7);
   });
 });
+
+describe('default themes - browser chrome', () => {
+  it('declare their colour scheme, and a theme colour that resolves to the page background', () => {
+    expect(
+      [lightTheme, darkTheme, highContrastLightTheme, highContrastDarkTheme].map(
+        (t) => t.colorScheme,
+      ),
+    ).toEqual(['light', 'dark', 'light', 'dark']);
+    for (const theme of [lightTheme, darkTheme, highContrastLightTheme, highContrastDarkTheme]) {
+      expect(theme.themeColor).toBe('$colors.surface.base');
+      expect(resolveValue(theme.themeColor, theme)).toMatch(/^#[0-9a-f]{3,8}$/i);
+    }
+  });
+});

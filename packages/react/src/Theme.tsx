@@ -10,6 +10,7 @@ import {
   type Theme as ThemeType,
 } from '@usemotif/core';
 import { useContext, useEffect, useMemo, type ReactNode } from 'react';
+import { syncBrowserChrome } from './_browser-chrome.js';
 import { warnIfCssLayerNeverOrdered } from './_dev-warnings.js';
 import { CssLayerContext } from './css-layer-context.js';
 import { ThemeContext, type ThemeContextValue } from './theme-context.js';
@@ -126,6 +127,14 @@ export function ThemeProvider({
   useEffect(() => {
     if (process.env.NODE_ENV !== 'production') warnIfCssLayerNeverOrdered(cssLayer);
   }, [cssLayer]);
+
+  // The browser's own chrome follows the active theme. An effect, so the
+  // server render and the first client render stay identical.
+  const activeTheme = themes.find((t) => t.name === active);
+  useEffect(
+    () => (activeTheme === undefined ? undefined : syncBrowserChrome(activeTheme)),
+    [activeTheme],
+  );
 
   return (
     <ThemeContext.Provider value={value}>
