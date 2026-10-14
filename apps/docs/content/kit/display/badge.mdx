@@ -1,0 +1,96 @@
+---
+title: Badge
+description: A themed status pill - four intents and two sizes, with every Box style prop available at the call site.
+diataxis: reference
+covers: ['Badge']
+last_verified: 2026-10-14
+---
+
+import {
+  ApiSignature,
+  ArticleMeta,
+  Callout,
+  CodeBlock,
+  Eyebrow,
+  Lede,
+} from '../../../components/index.js';
+
+<Eyebrow>UI kit / Display</Eyebrow>
+
+# Badge
+
+<Lede>
+  Badge is a small, fully rounded status pill. Choose an `intent` and a `size`; the colours come
+  from the theme's `action` and `surface` tokens.
+</Lede>
+
+<ArticleMeta />
+
+## What it is
+
+`Badge` is `styled(Box, badgeRecipe)`: the `badgeRecipe` from `@usemotif/recipes` applied to a
+`Box`. It renders an inline flex row, so an icon and a label sit side by side, and it never
+wraps its text.
+
+Because it is a styled `Box`, it accepts every `Box` style prop alongside its variants. Use them
+for one-off adjustments at the call site.
+
+## Install
+
+<CodeBlock lang="bash" code={`yarn add @usemotif/ui`} />
+
+<CodeBlock lang="tsx" code={`import { Badge } from '@usemotif/ui';`} />
+
+## Usage
+
+<CodeBlock lang="tsx" code={`import { Badge } from '@usemotif/ui';
+
+<Badge intent="success">Active</Badge>
+<Badge intent="danger" size="md">Overdue</Badge>`} />
+
+Next to a heading:
+
+<CodeBlock lang="tsx" code={`import { Badge } from '@usemotif/ui';
+import { HStack, Text } from 'usemotif';
+
+<HStack gap="$space.2" alignItems="center">
+  <Text fontWeight="$fontWeights.semibold">Billing</Text>
+  <Badge intent="primary">New</Badge>
+</HStack>`} />
+
+## API
+
+<ApiSignature
+  name="Badge"
+  status="stable"
+  signature={`const Badge = styled(Box, badgeRecipe)`}
+  params={[
+    {
+      name: 'intent',
+      type: "'neutral' | 'primary' | 'danger' | 'success'",
+      default: "'neutral'",
+      description: 'Tone. Sets the background and text colour.',
+    },
+    {
+      name: 'size',
+      type: "'sm' | 'md'",
+      default: "'sm'",
+      description: 'Padding and font size. `sm` uses the `xs` font size, `md` the `sm` one.',
+    },
+    {
+      name: 'children',
+      type: 'ReactNode',
+      description: 'The label, and an icon if you want one.',
+    },
+    {
+      name: '...BoxProps',
+      type: 'BoxProps',
+      description: 'Every `Box` prop, including the style props.',
+    },
+  ]}
+/>
+
+<Callout variant="info" title="Related">
+  [Component recipes](/recipes/component-recipes) - `badgeRecipe`, for building your own badge over
+  a different base. [Chip](/kit/display/chip) for a tag the user can remove.
+</Callout>

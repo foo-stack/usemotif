@@ -1,0 +1,106 @@
+---
+title: Chip
+description: A compact themed tag with an optional leading icon and an optional remove button.
+diataxis: reference
+covers: ['Chip', 'ChipProps', 'ChipIntent']
+last_verified: 2026-10-14
+---
+
+import {
+  ApiSignature,
+  ArticleMeta,
+  Callout,
+  CodeBlock,
+  Eyebrow,
+  Lede,
+} from '../../../components/index.js';
+
+<Eyebrow>UI kit / Display</Eyebrow>
+
+# Chip
+
+<Lede>
+  Chip is a compact tag, like a Badge built for input affordances: it can lead with an icon and end
+  with a `×` button that removes it.
+</Lede>
+
+<ArticleMeta />
+
+## What it is
+
+A `Box` styled by the `chipRecipe` from `@usemotif/recipes`. The recipe adjusts the padding when
+an `icon` is present and when the chip is removable, so the content stays balanced either way.
+
+Setting `onRemove` renders a `×` button labelled "Remove" that calls it. Chip does not remove
+itself; your state owns the list of chips.
+
+## Install
+
+<CodeBlock lang="bash" code={`yarn add @usemotif/ui`} />
+
+<CodeBlock lang="tsx" code={`import { Chip } from '@usemotif/ui';`} />
+
+## Usage
+
+<CodeBlock lang="tsx" code={`import { useState } from 'react';
+import { Chip } from '@usemotif/ui';
+import { HStack } from 'usemotif';
+
+function Filters() {
+  const [tags, setTags] = useState(['react', 'typescript']);
+  return (
+    <HStack gap="$space.2">
+      {tags.map((tag) => (
+        <Chip key={tag} onRemove={() => setTags((t) => t.filter((x) => x !== tag))}>
+          {tag}
+        </Chip>
+      ))}
+    </HStack>
+  );
+}`} />
+
+A primary chip with an icon:
+
+<CodeBlock lang="tsx" code={`import { Chip } from '@usemotif/ui';
+
+<Chip intent="primary" icon={<TagIcon />}>
+  Featured
+</Chip>`} />
+
+## API
+
+<ApiSignature
+  name="Chip"
+  status="stable"
+  signature={`function Chip(props: ChipProps): JSX.Element`}
+  params={[
+    {
+      name: 'children',
+      type: 'ReactNode',
+      description: 'The chip label.',
+    },
+    {
+      name: 'icon',
+      type: 'ReactNode',
+      description: 'Optional leading glyph.',
+    },
+    {
+      name: 'intent',
+      type: "'neutral' | 'primary'",
+      default: "'neutral'",
+      description: 'Tone.',
+    },
+    {
+      name: 'onRemove',
+      type: '() => void',
+      description: 'When set, renders a `×` button labelled "Remove" that calls it.',
+    },
+  ]}
+/>
+
+`ChipIntent` is exported as `'neutral' | 'primary'`.
+
+<Callout variant="info" title="Related">
+  [Component recipes](/recipes/component-recipes) - `chipRecipe`, the styling data Chip is built on.
+  [Badge](/kit/display/badge) for a read-only status pill.
+</Callout>

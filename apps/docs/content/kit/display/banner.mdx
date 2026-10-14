@@ -1,0 +1,123 @@
+---
+title: Banner
+description: A full-width announcement bar - an intent tint, title and copy, a trailing action, and an optional dismiss button.
+diataxis: reference
+covers: ['Banner', 'BannerProps', 'BannerIntent']
+last_verified: 2026-10-14
+---
+
+import {
+  ApiSignature,
+  ArticleMeta,
+  Callout,
+  CodeBlock,
+  Eyebrow,
+  Lede,
+} from '../../../components/index.js';
+
+<Eyebrow>UI kit / Display</Eyebrow>
+
+# Banner
+
+<Lede>
+  Banner is the page-level cousin of Alert: a full-width bar for announcements, with room for an
+  action and a dismiss button. Its tint comes from the theme's `status` tokens.
+</Lede>
+
+<ArticleMeta />
+
+## What it is
+
+A `Box` styled by the `bannerRecipe` from `@usemotif/recipes`, laid out as a row: an optional
+icon, a column with the `title` and body copy, an optional `action`, and, when `onDismiss` is
+set, a `×` button labelled "Dismiss".
+
+The role follows the intent. `warning` and `danger` banners render with `role="alert"`; the
+other intents use `role="status"`.
+
+Banner is presentational. Pressing the dismiss button calls `onDismiss` and nothing else - your
+state decides whether the banner stays mounted.
+
+## Install
+
+<CodeBlock lang="bash" code={`yarn add @usemotif/ui`} />
+
+<CodeBlock lang="tsx" code={`import { Banner } from '@usemotif/ui';`} />
+
+## Usage
+
+<CodeBlock lang="tsx" code={`import { useState } from 'react';
+import { Banner } from '@usemotif/ui';
+
+function MaintenanceNotice() {
+  const [open, setOpen] = useState(true);
+  if (!open) return null;
+  return (
+    <Banner
+      intent="warning"
+      title="Scheduled maintenance"
+      onDismiss={() => setOpen(false)}
+    >
+      The dashboard will be read-only from 02:00 to 03:00 UTC.
+    </Banner>
+  );
+}`} />
+
+With an action:
+
+<CodeBlock lang="tsx" code={`import { Banner } from '@usemotif/ui';
+import { Button } from 'usemotif';
+
+<Banner intent="info" title="A new version is available" action={<Button>Reload</Button>}>
+  Reload to get the latest features.
+</Banner>`} />
+
+## API
+
+<ApiSignature
+  name="Banner"
+  status="stable"
+  signature={`function Banner(props: BannerProps): JSX.Element`}
+  params={[
+    {
+      name: 'intent',
+      type: "'neutral' | 'info' | 'success' | 'warning' | 'danger'",
+      default: "'neutral'",
+      description:
+        'Tone. Drives the tinted background, border, and text colour, and the role: `alert` for `warning` and `danger`, `status` otherwise.',
+    },
+    {
+      name: 'icon',
+      type: 'ReactNode',
+      description: 'Optional leading icon. Inherits the intent colour.',
+    },
+    {
+      name: 'title',
+      type: 'ReactNode',
+      description: 'Bold heading line.',
+    },
+    {
+      name: 'children',
+      type: 'ReactNode',
+      description: 'Body copy, rendered in a smaller size under the title.',
+    },
+    {
+      name: 'action',
+      type: 'ReactNode',
+      description: 'Trailing action area, for example a `Button`.',
+    },
+    {
+      name: 'onDismiss',
+      type: '() => void',
+      description:
+        'When set, renders a `×` dismiss button that calls it. The banner does not unmount itself.',
+    },
+  ]}
+/>
+
+`BannerIntent` is exported as the union of the five `intent` values.
+
+<Callout variant="info" title="Related">
+  [Component recipes](/recipes/component-recipes) - `bannerRecipe`, the styling data Banner is built
+  on. [Alert](/kit/display/alert) for an inline message inside content.
+</Callout>

@@ -1,0 +1,92 @@
+---
+title: Timeline
+description: A themed vertical timeline - a marker dot and connector line per event, with a title, optional timestamp, and detail.
+diataxis: reference
+covers: ['Timeline', 'TimelineProps', 'TimelineItem', 'TimelineStatus']
+last_verified: 2026-10-14
+---
+
+import {
+  ApiSignature,
+  ArticleMeta,
+  Callout,
+  CodeBlock,
+  Eyebrow,
+  Lede,
+} from '../../../components/index.js';
+
+<Eyebrow>UI kit / Display</Eyebrow>
+
+# Timeline
+
+<Lede>
+  Timeline lays out a sequence of events top to bottom: an order's progress, a deploy history, an
+  audit log. Pass the events as data and it draws the markers and the line between them.
+</Lede>
+
+<ArticleMeta />
+
+## What it is
+
+A column composed from `Box` and `Text`, one row per item. Each row has a marker column - a dot,
+then a connector line down to the next event, omitted after the last - beside the event's
+`title`, its `time` in muted text, and its `description` underneath.
+
+The dot takes the primary accent colour by default. Set an item's `status` to `success`,
+`warning`, or `danger` to colour it from the theme's `status` tokens instead.
+
+## Install
+
+<CodeBlock lang="bash" code={`yarn add @usemotif/ui`} />
+
+<CodeBlock lang="tsx" code={`import { Timeline } from '@usemotif/ui';`} />
+
+## Usage
+
+<CodeBlock lang="tsx" code={`import { Timeline } from '@usemotif/ui';
+
+<Timeline
+  items={[
+    { id: 'placed', title: 'Order placed', time: '09:30', status: 'success' },
+    { id: 'packed', title: 'Packed', time: '11:05', status: 'success' },
+    {
+      id: 'out',
+      title: 'Out for delivery',
+      time: '14:10',
+      description: 'Expected before 18:00.',
+    },
+  ]}
+/>`} />
+
+## API
+
+<ApiSignature
+  name="Timeline"
+  status="stable"
+  signature={`function Timeline(props: TimelineProps): JSX.Element`}
+  params={[
+    {
+      name: 'items',
+      type: 'ReadonlyArray<TimelineItem>',
+      required: true,
+      description: 'The events, rendered top to bottom in array order.',
+    },
+  ]}
+/>
+
+### TimelineItem
+
+<CodeBlock lang="ts" code={`interface TimelineItem {
+  id: string;              // React key for the row
+  title: ReactNode;        // event headline
+  description?: ReactNode; // detail under the title
+  time?: ReactNode;        // timestamp or meta beside the title
+  status?: TimelineStatus; // marker tone; defaults to the primary accent
+}
+
+type TimelineStatus = 'default' | 'success' | 'warning' | 'danger';`} />
+
+<Callout variant="info" title="Related">
+  [Stepper](/headless/navigation/stepper) for a sequence the user moves through, rather than a
+  record of what already happened.
+</Callout>

@@ -1,0 +1,107 @@
+---
+title: Stat
+description: A themed metric block - a muted label, a bold headline value, an optional trend-coloured delta, and a caption.
+diataxis: reference
+covers: ['Stat', 'StatProps', 'StatTrend']
+last_verified: 2026-10-14
+---
+
+import {
+  ApiSignature,
+  ArticleMeta,
+  Callout,
+  CodeBlock,
+  Eyebrow,
+  Lede,
+} from '../../../components/index.js';
+
+<Eyebrow>UI kit / Display</Eyebrow>
+
+# Stat
+
+<Lede>
+  Stat shows one number and what it means: a label above, the value in bold, and an optional change
+  indicator coloured by its direction.
+</Lede>
+
+<ArticleMeta />
+
+## What it is
+
+A column composed from `Box` and `Text`, styled by the `statRecipe` and `statDeltaRecipe` from
+`@usemotif/recipes`. The `label` sits above in muted text. The `value` and `delta` share a row,
+and `helpText` sits underneath as a caption.
+
+`trend` colours the delta and prefixes it with an arrow: `up` is green with `↑`, `down` is red
+with `↓`, and `neutral` is muted with no arrow.
+
+## Install
+
+<CodeBlock lang="bash" code={`yarn add @usemotif/ui`} />
+
+<CodeBlock lang="tsx" code={`import { Stat } from '@usemotif/ui';`} />
+
+## Usage
+
+<CodeBlock lang="tsx" code={`import { Stat } from '@usemotif/ui';
+
+<Stat label="Revenue" value="$48.2k" delta="12%" trend="up" helpText="vs last month" />`} />
+
+A row of stats in cards:
+
+<CodeBlock lang="tsx" code={`import { Card, Stat } from '@usemotif/ui';
+import { HStack } from 'usemotif';
+
+<HStack gap="$space.4">
+  <Card>
+    <Stat label="Active users" value="1,284" delta="3%" trend="up" />
+  </Card>
+  <Card>
+    <Stat label="Churn" value="2.1%" delta="0.4%" trend="down" />
+  </Card>
+</HStack>`} />
+
+## API
+
+<ApiSignature
+  name="Stat"
+  status="stable"
+  signature={`function Stat(props: StatProps): JSX.Element`}
+  params={[
+    {
+      name: 'label',
+      type: 'ReactNode',
+      required: true,
+      description: 'Metric name, in muted text above the value.',
+    },
+    {
+      name: 'value',
+      type: 'ReactNode',
+      required: true,
+      description: 'The headline figure.',
+    },
+    {
+      name: 'delta',
+      type: 'ReactNode',
+      description: 'Optional change indicator beside the value.',
+    },
+    {
+      name: 'trend',
+      type: "'up' | 'down' | 'neutral'",
+      default: "'neutral'",
+      description: 'Colours the delta and adds an arrow: `up` green, `down` red, `neutral` muted.',
+    },
+    {
+      name: 'helpText',
+      type: 'ReactNode',
+      description: 'Small caption under the value.',
+    },
+  ]}
+/>
+
+`StatTrend` is exported as `'up' | 'down' | 'neutral'`.
+
+<Callout variant="info" title="Related">
+  [Component recipes](/recipes/component-recipes) - `statRecipe` and `statDeltaRecipe`, the styling
+  data Stat is built on.
+</Callout>
