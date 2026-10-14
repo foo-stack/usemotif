@@ -7,6 +7,7 @@ import {
   type ReactNode,
 } from 'react';
 import { Modal, Pressable, View, type ViewStyle } from 'react-native';
+import { MenuCloseContext } from './_menu-close.js';
 import { useControllableState } from './use-controllable-state.js';
 
 /**
@@ -113,7 +114,9 @@ function Content({
         style={{ flex: 1, justifyContent: justify, backgroundColor: 'rgba(0,0,0,0.4)' }}
       >
         <Pressable onPress={(e) => e.stopPropagation?.()} style={style}>
-          <View accessibilityRole="menu">{children}</View>
+          <MenuCloseContext.Provider value={() => ctx.setOpen(false)}>
+            <View accessibilityRole="menu">{children}</View>
+          </MenuCloseContext.Provider>
         </Pressable>
       </Pressable>
     </Modal>
