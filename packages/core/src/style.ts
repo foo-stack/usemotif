@@ -189,6 +189,21 @@ export function resolveStylesToVars(props: Record<string, unknown>): ResolveStyl
 }
 
 /**
+ * Resolve a `_before` / `_after` bag to a CSS-shaped style. `content` is not a
+ * registered style prop, so it is carried by hand, and it defaults to `'""'`:
+ * without one, browsers render no pseudo-element. It comes first so the rule
+ * hashes the same wherever it is built; the runtime `Box` and the compiler
+ * both use this function.
+ */
+export function resolvePseudoElementBag(
+  bag: { readonly content?: string } & Record<string, unknown>,
+): Record<string, string | number> {
+  const { content, ...rest } = bag;
+  const { style } = resolveStylesToVars(rest);
+  return { content: content ?? '""', ...style };
+}
+
+/**
  * Resolve a single style-prop value - literal, token ref, or non-style - into
  * a CSS-var-friendly output. Returns `undefined` if the value should be
  * dropped (null / undefined / unresolvable).

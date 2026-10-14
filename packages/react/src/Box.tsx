@@ -8,6 +8,7 @@ import {
   extractKeyframeFromAnimation,
   liftPseudoOverriddenBaseProps,
   resolveResponsiveStylesToVars,
+  resolvePseudoElementBag,
   resolveStylesToVars,
   resolveTransitionToVars,
   type AnimationValue,
@@ -610,18 +611,6 @@ function buildSelectorRules(
     rules.push({ pseudo: EXIT_SELECTOR, style });
   }
   return rules;
-}
-
-/**
- * Resolve a pseudo-element bag to a CSS-shaped style. Handles `content`
- * specially (not a registered style prop, so `resolveStylesToVars`
- * drops it) and defaults `content: '""'` when omitted - without it,
- * browsers don't render `::before` / `::after`.
- */
-function resolvePseudoElementBag(bag: PseudoElementStyleBag): Record<string, string | number> {
-  const { content, ...rest } = bag;
-  const { style } = resolveStylesToVars(rest as Record<string, unknown>);
-  return { content: content ?? '""', ...style };
 }
 
 /**
