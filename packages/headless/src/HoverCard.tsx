@@ -20,6 +20,7 @@ import {
 } from 'react';
 import { mergeRefs } from './_compose-refs.js';
 import { useFloatingPosition, type Placement } from './positioning.js';
+import { ArrowContext } from './_arrow.js';
 
 /**
  * HoverCard - Tooltip-shaped, but for interactive content. Opens
@@ -189,12 +190,13 @@ function Content({
   children,
 }: HoverCardContentProps): ReactElement | null {
   const ctx = useHoverCardContext('HoverCard.Content');
-  const { position, floatingRef } = useFloatingPosition(
-    ctx.triggerRef,
-    ctx.open,
-    ctx.placement,
-    offset,
-  );
+  const {
+    position,
+    placement: side,
+    arrow,
+    floatingRef,
+  } = useFloatingPosition(ctx.triggerRef, ctx.open, ctx.placement, offset);
+  const anchor = useMemo(() => ({ placement: side, offset: arrow }), [side, arrow]);
   if (!ctx.open) return null;
   return (
     <Portal>
@@ -222,7 +224,7 @@ function Content({
           ...style,
         }}
       >
-        {children}
+        <ArrowContext.Provider value={anchor}>{children}</ArrowContext.Provider>
       </div>
     </Portal>
   );

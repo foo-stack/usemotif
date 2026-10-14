@@ -1,5 +1,5 @@
 import { HoverCard as Headless } from '@usemotif/headless';
-import { HoverCardContent } from './HoverCard.js';
+import { HoverCardArrow, HoverCardContent } from './HoverCard.js';
 
 /**
  * Namespace assembly, deliberately in its own module and deliberately without a
@@ -16,4 +16,5 @@ export const HoverCard = {
   Root: Headless.Root,
   Trigger: Headless.Trigger,
   Content: HoverCardContent,
+  Arrow: HoverCardArrow,
 };

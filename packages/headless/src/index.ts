@@ -79,6 +79,7 @@ import {
   TabsPanel,
   TabsRoot,
   TabsTab,
+  FloatingArrow,
   TooltipContent,
   TooltipProvider,
   TooltipRoot,
@@ -139,6 +140,7 @@ export const Tooltip = {
   Root: TooltipRoot,
   Trigger: TooltipTrigger,
   Content: TooltipContent,
+  Arrow: FloatingArrow,
 };
 
 export const Popover = {
@@ -146,12 +148,14 @@ export const Popover = {
   Trigger: PopoverTrigger,
   Content: PopoverContent,
   Close: PopoverClose,
+  Arrow: FloatingArrow,
 };
 
 export const HoverCard = {
   Root: HoverCardRoot,
   Trigger: HoverCardTrigger,
   Content: HoverCardContent,
+  Arrow: FloatingArrow,
 };
 
 export const Menu = {
@@ -365,6 +369,7 @@ export type {
   ToggleGroupProps,
   ToggleProps,
   ToolbarProps,
+  FloatingArrowProps,
   TooltipContentProps,
   TooltipProviderProps,
   TooltipRootProps,

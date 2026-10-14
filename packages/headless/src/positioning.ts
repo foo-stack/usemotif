@@ -12,6 +12,9 @@ export interface Position {
 /** A position, plus the side the floating element ended up on. */
 export interface PlacedPosition extends Position {
   readonly placement: Placement;
+  /** How far along the edge facing the reference its centre sits, in px from
+   * the floating element's start; where an arrow should point. */
+  readonly arrow: number;
 }
 
 /** The visible area to keep floating elements inside. */
@@ -100,7 +103,10 @@ export function computePosition(
   }
   if (vertical) left = clamp(left, floating.width, viewport.width);
   else top = clamp(top, floating.height, viewport.height);
-  return { top: top + window.scrollY, left: left + window.scrollX, placement: side };
+  const arrow = vertical
+    ? Math.min(Math.max(reference.left + reference.width / 2 - left, 0), floating.width)
+    : Math.min(Math.max(reference.top + reference.height / 2 - top, 0), floating.height);
+  return { top: top + window.scrollY, left: left + window.scrollX, placement: side, arrow };
 }
 
 /**
@@ -117,10 +123,11 @@ export function useFloatingPosition(
 ): {
   position: Position;
   placement: Placement;
+  arrow: number;
   floatingRef: React.RefObject<HTMLDivElement | null>;
 } {
   const floatingRef = useRef<HTMLDivElement | null>(null);
-  const [placed, setPlaced] = useState<PlacedPosition>({ top: 0, left: 0, placement });
+  const [placed, setPlaced] = useState<PlacedPosition>({ top: 0, left: 0, placement, arrow: 0 });
 
   const update = useCallback(() => {
     const ref = referenceRef.current;
@@ -152,7 +159,7 @@ export function useFloatingPosition(
     () => ({ top: placed.top, left: placed.left }),
     [placed.top, placed.left],
   );
-  return { position, placement: placed.placement, floatingRef };
+  return { position, placement: placed.placement, arrow: placed.arrow, floatingRef };
 }
 
 /** An element whose subtree is not "outside", or a test for one. */

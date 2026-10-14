@@ -1,6 +1,10 @@
 'use client';
 
-import { Tooltip as HeadlessTooltip, type TooltipContentProps } from '@usemotif/headless';
+import {
+  Tooltip as HeadlessTooltip,
+  type FloatingArrowProps,
+  type TooltipContentProps,
+} from '@usemotif/headless';
 import { Box } from 'usemotif';
 
 /**
@@ -41,4 +45,15 @@ function TooltipContent({ children, ...rest }: TooltipContentProps) {
  * Parts exported flat so `src/index.ts` can assemble the namespace in the
  * server graph. Internal: the barrel does not re-export these by name.
  */
-export { TooltipContent };
+/** The themed arrow: the surface's colour. Put it first inside `Tooltip.Content`. */
+function TooltipArrow({ style, ...rest }: FloatingArrowProps) {
+  return (
+    <HeadlessTooltip.Arrow
+      size={10}
+      {...rest}
+      style={{ background: 'var(--colors-surface-inverse, #111827)', ...style }}
+    />
+  );
+}
+
+export { TooltipArrow, TooltipContent };

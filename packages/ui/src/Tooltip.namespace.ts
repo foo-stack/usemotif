@@ -1,5 +1,5 @@
 import { Tooltip as Headless } from '@usemotif/headless';
-import { TooltipContent } from './Tooltip.js';
+import { TooltipArrow, TooltipContent } from './Tooltip.js';
 
 /**
  * Namespace assembly, deliberately in its own module and deliberately without a
@@ -17,4 +17,5 @@ export const Tooltip = {
   Root: Headless.Root,
   Trigger: Headless.Trigger,
   Content: TooltipContent,
+  Arrow: TooltipArrow,
 };

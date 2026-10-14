@@ -31,11 +31,13 @@ describe('computePosition', () => {
       top: 298,
       left: 300,
       placement: 'bottom',
+      arrow: 100,
     });
     expect(computePosition(ref, FLOAT, 'top', 8, VIEWPORT)).toEqual({
       top: 142,
       left: 300,
       placement: 'top',
+      arrow: 100,
     });
     expect(computePosition(ref, FLOAT, 'right', 8, VIEWPORT).placement).toBe('right');
     expect(computePosition(ref, FLOAT, 'left', 8, VIEWPORT).placement).toBe('left');
@@ -75,5 +77,19 @@ describe('computePosition', () => {
       top: 798,
       left: 330,
     });
+  });
+
+  it('points the arrow at the reference centre, after a shift too', () => {
+    // Centred under the reference, the arrow sits mid-edge.
+    expect(computePosition(rect(350, 250), FLOAT, 'bottom', 8, VIEWPORT).arrow).toBe(100);
+    // Shifted to the 8px margin: the reference centre (50) is 42px along.
+    const shifted = computePosition(rect(0, 250), FLOAT, 'bottom', 8, VIEWPORT);
+    expect(shifted.left).toBe(8);
+    expect(shifted.arrow).toBe(42);
+    // On a side placement it runs down the edge: the reference centre is at
+    // y 40 and the box is clamped to y 8, so 32px down.
+    const side = computePosition(rect(350, 20), FLOAT, 'right', 8, VIEWPORT);
+    expect(side.top).toBe(8);
+    expect(side.arrow).toBe(32);
   });
 });
