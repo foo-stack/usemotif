@@ -472,6 +472,42 @@ export const Animated = {
 };
 
 const passthrough = (t: number): number => t;
+/**
+ * `processColor` for hex, `rgb()` / `rgba()` and a few names, returning
+ * 0xAARRGGBB like the real one; anything else is `undefined`.
+ */
+export function processColor(color: unknown): number | undefined {
+  if (typeof color !== 'string') return undefined;
+  const named: Record<string, string> = {
+    black: '#000000',
+    white: '#ffffff',
+    red: '#ff0000',
+    transparent: '#00000000',
+  };
+  const value = named[color] ?? color;
+  let r: number;
+  let g: number;
+  let b: number;
+  let a = 1;
+  const hex = /^#([0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i.exec(value);
+  const rgb = /^rgba?\(\s*(\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\s*\)$/.exec(value);
+  if (hex !== null) {
+    const h = hex[1]!.length === 3 ? [...hex[1]!].map((c) => c + c).join('') : hex[1]!;
+    r = parseInt(h.slice(0, 2), 16);
+    g = parseInt(h.slice(2, 4), 16);
+    b = parseInt(h.slice(4, 6), 16);
+    if (h.length === 8) a = parseInt(h.slice(6, 8), 16) / 255;
+  } else if (rgb !== null) {
+    r = Number(rgb[1]);
+    g = Number(rgb[2]);
+    b = Number(rgb[3]);
+    if (rgb[4] !== undefined) a = Number(rgb[4]);
+  } else {
+    return undefined;
+  }
+  return ((Math.round(a * 255) << 24) | (r << 16) | (g << 8) | b) >>> 0;
+}
+
 export const Easing = {
   linear: passthrough,
   ease: passthrough,

@@ -91,3 +91,13 @@ describe('makeKeyframe (branded)', () => {
     expect(isKeyframe(null)).toBe(false);
   });
 });
+
+describe('makeKeyframe frames', () => {
+  it('keeps the definition so native can run it', () => {
+    const def = { from: { opacity: 0 }, '50%': { opacity: 0.4 }, to: { opacity: 1 } };
+    const kf = makeKeyframe(def);
+    expect(kf.frames).toBe(def);
+    expect(kf.name).toBe(keyframesToCss(def).name);
+    expect(kf.css).toBe(keyframesToCss(def).css);
+  });
+});
