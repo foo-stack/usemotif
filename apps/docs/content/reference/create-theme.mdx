@@ -2,8 +2,8 @@
 title: createTheme
 description: Construct a theme. A pass-through factory that narrows the tokens type so $-references are typed in callers.
 diataxis: reference
-covers: ['createTheme']
-last_verified: 2026-05-15
+covers: ['createTheme', 'extendTheme']
+last_verified: 2026-10-14
 ---
 
 import { ApiSignature, ArticleMeta, CodeBlock, Eyebrow } from '../../components/index.js';
@@ -95,6 +95,37 @@ export const lightTheme = createTheme({
 
 Both primitive and semantic tokens live in the same tree. Semantic tokens reference primitives by
 `$colors.<path>`; the resolver walks the dotted path until it reaches a literal value.
+
+## Extending a theme
+
+`extendTheme(base, { name, tokens })` derives a theme from an existing one, such as the
+`lightTheme` preset from `@usemotif/tokens`. The override tokens are deep-merged over the
+base's, scale by scale and key by key, so you restate only what changes:
+
+<CodeBlock lang="ts" code={`import { extendTheme } from 'usemotif';
+import { lightTheme } from '@usemotif/tokens';
+
+export const brandTheme = extendTheme(lightTheme, {
+  name: 'brand',
+  tokens: {
+    colors: {
+      violet: { 600: '#7C3AED' },
+      action: { primary: { bg: '$colors.violet.600' } },
+    },
+  },
+});`} />
+
+- **Leaves replace.** A value in the overrides replaces the base's, and a whole branch can
+  replace a leaf or the reverse.
+- **Animation presets replace whole.** Each `animations` entry is one preset, so overriding
+  `quick` replaces it rather than mixing its fields with the base's.
+- **The rest is inherited.** `fonts`, `root`, and `reducedMotion` carry over unless the second
+  argument gives them. `name` is required, because it becomes `data-theme`.
+- **Types stay literal.** The result keeps the paths of both the base and the overrides, so
+  `$colors.violet.600` and every preset path autocomplete. The presets themselves keep their
+  literal shape for the same reason.
+
+Neither argument is modified, so the base stays usable alongside the derived theme.
 
 ## Related
 
