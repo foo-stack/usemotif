@@ -802,9 +802,8 @@ export interface AnimationObject {
 export type AnimationValue = string | AnimationObject;
 
 /**
- * Motion props as React props - accepted on every styled primitive on web.
- * On native they are accepted at the type level for cross-platform parity
- * but currently no-op (T1.2 will bring native motion via Reanimated).
+ * Motion props as React props, accepted on every styled primitive on web and
+ * React Native. Native runs them through its motion driver rather than CSS.
  */
 export type MotionStyleProps = {
   /** Initial style on first mount. The element transitions from these
