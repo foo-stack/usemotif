@@ -10,6 +10,7 @@ import {
   useRef,
   useState,
   type CSSProperties,
+  type FocusEvent,
   type PointerEvent,
   type ReactElement,
   type ReactNode,
@@ -95,6 +96,9 @@ export interface ToasterProps {
   /** Override how the toast list renders. Receives the active
    * toasts + the dismiss handler. Default: bottom-right column. */
   renderToasts?: (toasts: ToastItem[], dismiss: (id: string) => void) => ReactNode;
+  /** Render one toast's content inside the default list, which keeps its
+   * placement, pausing, swiping, and exits. The signature native uses. */
+  renderToast?: (item: ToastItem, info: { dismiss: () => void }) => ReactElement;
   /** Default duration in ms for new toasts. Defaults to 5000. */
   defaultDuration?: number;
   /** Most toasts shown at once; past it the oldest are dropped, as on native.
@@ -113,9 +117,37 @@ export interface ToasterProps {
   /** Let a sideways swipe dismiss a toast in the default list. Defaults to
    * `true`. */
   swipeToDismiss?: boolean;
+  /** Where the default list sits. `'top'` and `'bottom'` centre it, as on
+   * native; the others pin a corner. Defaults to `'bottom-end'`. */
+  placement?: ToastPlacement;
   /** Inline style for the default container - only used when
    * `renderToasts` is not provided. */
   style?: CSSProperties;
+}
+
+/** Where the default toast list sits on screen. */
+export type ToastPlacement =
+  | 'top'
+  | 'bottom'
+  | 'top-start'
+  | 'top-end'
+  | 'bottom-start'
+  | 'bottom-end';
+
+const PLACEMENT: Readonly<Record<ToastPlacement, CSSProperties>> = {
+  top: { top: 16, left: '50%', transform: 'translateX(-50%)', alignItems: 'center' },
+  bottom: { bottom: 16, left: '50%', transform: 'translateX(-50%)', alignItems: 'center' },
+  'top-start': { top: 16, insetInlineStart: 16 },
+  'top-end': { top: 16, insetInlineEnd: 16 },
+  'bottom-start': { bottom: 16, insetInlineStart: 16 },
+  'bottom-end': { bottom: 16, insetInlineEnd: 16 },
+};
+
+/** A toast's dismiss timer, kept with its deadline so it can pause and resume. */
+interface DismissTimer {
+  timer: ReturnType<typeof setTimeout> | undefined;
+  deadline: number;
+  remaining: number;
 }
 
 let nextId = 0;
@@ -125,22 +157,26 @@ const INTERACTIVE = 'button, a[href], input, select, textarea, [role="button"]';
 export function Toaster({
   children,
   renderToasts,
+  renderToast,
   defaultDuration = 5000,
   maxVisible = Infinity,
   exitDurationMs = 0,
   swipeToDismiss = true,
+  placement = 'bottom-end',
   style,
 }: ToasterProps): ReactElement {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
   // Ids whose exit is in flight: still in `toasts` (so they stay on screen and
   // can animate) but flagged so each Toast renders `open={false}`.
   const [leaving, setLeaving] = useState<ReadonlySet<string>>(() => new Set());
-  const timersRef = useRef(new Map<string, ReturnType<typeof setTimeout>>());
+  const timersRef = useRef(new Map<string, DismissTimer>());
+  // While the pointer or focus is in the default list, every timer stands still.
+  const pausedRef = useRef(false);
 
   const clearTimer = useCallback((id: string) => {
-    const timer = timersRef.current.get(id);
-    if (timer !== undefined) {
-      clearTimeout(timer);
+    const entry = timersRef.current.get(id);
+    if (entry !== undefined) {
+      clearTimeout(entry.timer);
       timersRef.current.delete(id);
     }
   }, []);
@@ -184,6 +220,14 @@ export function Toaster({
     [animateExit, clearTimer],
   );
 
+  const startTimer = useCallback(
+    (id: string, entry: DismissTimer) => {
+      entry.deadline = Date.now() + entry.remaining;
+      entry.timer = setTimeout(() => dismiss(id), entry.remaining);
+    },
+    [dismiss],
+  );
+
   const toast = useCallback(
     (input: ToastInput): string => {
       nextId += 1;
@@ -213,13 +257,31 @@ export function Toaster({
         return next;
       });
       if (item.duration !== Infinity && (item.duration ?? 0) > 0) {
-        const timer = setTimeout(() => dismiss(id), item.duration);
-        timersRef.current.set(id, timer);
+        const entry: DismissTimer = { timer: undefined, deadline: 0, remaining: item.duration! };
+        timersRef.current.set(id, entry);
+        if (!pausedRef.current) startTimer(id, entry);
       }
       return id;
     },
-    [defaultDuration, dismiss, clearTimer, maxVisible],
+    [defaultDuration, clearTimer, maxVisible, startTimer],
   );
+
+  const pause = useCallback(() => {
+    if (pausedRef.current) return;
+    pausedRef.current = true;
+    const now = Date.now();
+    for (const entry of timersRef.current.values()) {
+      clearTimeout(entry.timer);
+      entry.timer = undefined;
+      entry.remaining = Math.max(0, entry.deadline - now);
+    }
+  }, []);
+
+  const resume = useCallback(() => {
+    if (!pausedRef.current) return;
+    pausedRef.current = false;
+    for (const [id, entry] of timersRef.current) startTimer(id, entry);
+  }, [startTimer]);
 
   // A toast dropped past `maxVisible` must not keep a timer that could later
   // dismiss (or, mid-exit, re-flag) an id that is no longer queued.
@@ -235,7 +297,7 @@ export function Toaster({
   useEffect(() => {
     const timers = timersRef.current;
     return () => {
-      for (const t of timers.values()) clearTimeout(t);
+      for (const t of timers.values()) clearTimeout(t.timer);
       timers.clear();
     };
   }, []);
@@ -257,6 +319,10 @@ export function Toaster({
             remove={remove}
             exitDurationMs={exitDurationMs}
             swipeToDismiss={swipeToDismiss}
+            placement={placement}
+            pause={pause}
+            resume={resume}
+            {...(renderToast !== undefined ? { renderToast } : {})}
             {...(style !== undefined ? { style } : {})}
           />
         )}
@@ -272,6 +338,10 @@ function DefaultToasterList({
   remove,
   exitDurationMs,
   swipeToDismiss,
+  placement,
+  pause,
+  resume,
+  renderToast,
   style,
 }: {
   toasts: ToastItem[];
@@ -280,18 +350,35 @@ function DefaultToasterList({
   remove: (id: string) => void;
   exitDurationMs: number;
   swipeToDismiss: boolean;
+  placement: ToastPlacement;
+  pause: () => void;
+  resume: () => void;
+  renderToast?: (item: ToastItem, info: { dismiss: () => void }) => ReactElement;
   style?: CSSProperties;
 }): ReactElement {
+  // Paused while either holds, so a toast does not vanish under the pointer or
+  // from under a keyboard user reading or acting on it.
+  const hold = useRef({ hover: false, focus: false });
+  const update = (key: 'hover' | 'focus', on: boolean): void => {
+    hold.current[key] = on;
+    if (hold.current.hover || hold.current.focus) pause();
+    else resume();
+  };
   return (
     <div
+      onMouseEnter={() => update('hover', true)}
+      onMouseLeave={() => update('hover', false)}
+      onFocus={() => update('focus', true)}
+      onBlur={(e: FocusEvent<HTMLDivElement>) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) update('focus', false);
+      }}
       // NOT a live region. Each toast carries its own role="alert"/"status"
       // (itself a live region), so marking the container `aria-live` too would
       // nest live regions and double-announce every toast on NVDA/JAWS. The
       // container is purely the positioning/stacking wrapper.
       style={{
         position: 'fixed',
-        bottom: 16,
-        right: 16,
+        ...PLACEMENT[placement],
         display: 'flex',
         flexDirection: 'column',
         gap: 8,
@@ -309,7 +396,9 @@ function DefaultToasterList({
           onExited={remove}
           onDismiss={() => dismiss(t.id)}
           swipeToDismiss={swipeToDismiss}
-        />
+        >
+          {renderToast?.(t, { dismiss: () => dismiss(t.id) })}
+        </Toast>
       ))}
     </div>
   );

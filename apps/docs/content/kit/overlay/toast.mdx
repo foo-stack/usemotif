@@ -116,13 +116,20 @@ const id = toast({
       name: 'exitDurationMs',
       type: 'number',
       default: '0',
-      description: 'Inherited from the headless props. The kit renders its own toast list, which the headless Toaster does not hold mounted for an exit, so dismissed toasts unmount immediately whatever this is set to.',
+      description: 'Inherited from the headless props. A dismissed toast is held for up to this long with `data-motif-state="exiting"` before it unmounts. The kit card has no exit animation of its own, so with a value set it simply lingers.',
+    },
+    {
+      name: 'placement',
+      type: "'top' | 'bottom' | 'top-start' | 'top-end' | 'bottom-start' | 'bottom-end'",
+      default: "'bottom-end'",
+      description: 'Where the toasts sit. `top` and `bottom` centre them.',
     },
   ]}
 />
 
-`ThemedToasterProps` is the headless `ToasterProps` without `renderToasts` and `style`: the kit
-supplies the list and its layout.
+`ThemedToasterProps` is the headless `ToasterProps` without `renderToasts`, `renderToast`, and
+`style`: the kit supplies each card. Toasts pause while the pointer is over them or focus is
+inside them, and resume with the time they had left.
 
 ### useToast
 

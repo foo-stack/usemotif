@@ -355,6 +355,7 @@ export type {
   ToasterProps,
   ToastFn,
   ToastItem,
+  ToastPlacement,
   ToastPromiseMessages,
   ToggleGroupItemProps,
   ToggleGroupProps,
