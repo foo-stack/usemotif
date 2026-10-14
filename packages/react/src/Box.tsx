@@ -6,13 +6,11 @@ import {
   buildAnimationCss,
   buildAnimationShorthand,
   extractKeyframeFromAnimation,
-  isTokenRef,
   liftPseudoOverriddenBaseProps,
   resolveResponsiveStylesToVars,
   resolvePseudoElementBag,
   resolveStylesToVars,
   resolveTransitionToVars,
-  tokenRefToCssVar,
   type AnimationValue,
   type BreakpointName,
   type ExitStyleBag,
@@ -477,13 +475,7 @@ function BoxWithLayout(props: BoxProps) {
   const { layout, layoutTransition, ref: userRef, ...rest } = props;
   const kind: LayoutAnimationKind =
     layout === true || layout === undefined ? 'all' : (layout as LayoutAnimationKind);
-  const duration = layoutTiming(layoutTransition?.duration, 'durations');
-  const easing = layoutTiming(layoutTransition?.easing, 'easings');
-  const { ref: layoutRef } = useLayoutAnimation<HTMLElement>({
-    kind,
-    ...(duration !== undefined ? { duration } : {}),
-    ...(easing !== undefined ? { easing } : {}),
-  });
+  const { ref: layoutRef } = useLayoutAnimation<HTMLElement>({ kind, ...layoutTransition });
 
   const composedRef = (node: HTMLElement | null): void => {
     layoutRef.current = node;
@@ -494,13 +486,6 @@ function BoxWithLayout(props: BoxProps) {
   };
 
   return <Box {...(rest as BoxProps)} ref={composedRef} />;
-}
-
-function layoutTiming(
-  value: string | undefined,
-  scale: 'durations' | 'easings',
-): string | undefined {
-  return value !== undefined && isTokenRef(value) ? tokenRefToCssVar(value, scale) : value;
 }
 
 /**
