@@ -124,6 +124,7 @@ function onMultiChange(next: ReadonlyArray<string>): void {
 }
 // Hoisted: an inline `defaultValue={new Date(...)}` object prop would trip the
 // lint. A fixed date keeps the selected-cell assertion deterministic.
+const NO_OPTIONS: ReadonlyArray<SelectOption> = [];
 const CAL_DEFAULT = new Date(2024, 0, 15);
 const CAL_RANGE = { start: new Date(2024, 0, 10), end: new Date(2024, 0, 12) };
 
@@ -969,6 +970,17 @@ describe('Combobox / Search - themed typeahead over the headless combobox', () =
     });
     expect(input.value).toBe('Svelte');
     expect(document.querySelector('[role="listbox"]')).toBeNull();
+  });
+
+  it('shows the loading message, and server results unfiltered', () => {
+    render(<Search options={NO_OPTIONS} loading loadingMessage="Fetching" placeholder="Search" />);
+    act(() => (container.querySelector('[role="combobox"]') as HTMLInputElement).focus());
+    const listbox = document.querySelector('[role="listbox"]') as HTMLElement;
+    expect(listbox.getAttribute('aria-busy')).toBe('true');
+    expect(listbox.textContent).toBe('Fetching');
+    render(<Search options={COMBO_OPTIONS} filter={false} inputValue="zzz" placeholder="Search" />);
+    act(() => (container.querySelector('[role="combobox"]') as HTMLInputElement).focus());
+    expect(document.querySelectorAll('[role="listbox"] [role="option"]').length).toBe(3);
   });
 
   it('Search wraps the combobox in a role=search landmark', () => {

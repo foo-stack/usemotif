@@ -5,6 +5,7 @@ import {
   Search as HeadlessSearch,
   type ComboboxOption,
 } from '@usemotif/headless';
+import type { ReactNode } from 'react';
 import { Box, type BoxProps } from 'usemotif';
 import { LIST_STYLE, renderThemedOption } from './_list-surface.js';
 
@@ -18,6 +19,18 @@ export interface ComboboxProps {
   readonly placeholder?: string;
   /** Width of the input and listbox (number → px). */
   readonly width?: number | string;
+  /** Controlled text in the input. */
+  readonly inputValue?: string;
+  /** Fires on every keystroke: the place to fetch options as the user types. */
+  readonly onInputValueChange?: (input: string) => void;
+  /** `false` shows `options` exactly as given, for results a server already matched. */
+  readonly filter?: ((option: ComboboxOption, input: string) => boolean) | false;
+  /** Results are being fetched; the list shows `loadingMessage` while it has no options. */
+  readonly loading?: boolean;
+  /** Shown while `loading` with no options. Defaults to `'Loading...'`. */
+  readonly loadingMessage?: ReactNode;
+  /** Shown when there are no options. Defaults to `'No options'`. */
+  readonly emptyMessage?: ReactNode;
 }
 
 // The themed text input projected into the headless Input (which clones the
@@ -41,22 +54,37 @@ function themedInput(width: number | string, placeholder: string) {
 }
 
 function rootProps(props: ComboboxProps) {
-  const { options, value, defaultValue, onValueChange } = props;
+  const { options, value, defaultValue, onValueChange, inputValue, onInputValueChange } = props;
+  const { filter, loading } = props;
   return {
     options,
     ...(value !== undefined ? { value } : {}),
     ...(defaultValue !== undefined ? { defaultValue } : {}),
     ...(onValueChange !== undefined ? { onValueChange } : {}),
+    ...(inputValue !== undefined ? { inputValue } : {}),
+    ...(onInputValueChange !== undefined ? { onInputValueChange } : {}),
+    ...(filter !== undefined ? { filter } : {}),
+    ...(loading !== undefined ? { loading } : {}),
+  };
+}
+
+function listProps(props: ComboboxProps) {
+  const { loadingMessage, emptyMessage } = props;
+  return {
+    ...(loadingMessage !== undefined ? { loadingMessage } : {}),
+    ...(emptyMessage !== undefined ? { emptyMessage } : {}),
   };
 }
 
 /**
  * Themed autocomplete over the accessible headless `Combobox` (typeahead
  * filtering, `role="combobox"`, listbox keyboard navigation). The input filters
- * the options as you type; picking one fills the input.
+ * the options as you type; picking one fills the input. For options fetched as
+ * the user types, pass `filter={false}`, `loading`, and `onInputValueChange`.
  *
  * ```tsx
  * <Combobox options={frameworks} defaultValue="react" onValueChange={setFw} />
+ * <Combobox options={results} filter={false} loading={pending} onInputValueChange={fetch} />
  * ```
  */
 export function Combobox({ placeholder = 'Search...', width = 240, ...rest }: ComboboxProps) {
@@ -69,7 +97,11 @@ export function Combobox({ placeholder = 'Search...', width = 240, ...rest }: Co
           >
         }
       </HeadlessCombobox.Input>
-      <HeadlessCombobox.List style={LIST_STYLE} renderOption={renderThemedOption} />
+      <HeadlessCombobox.List
+        {...listProps(rest)}
+        style={LIST_STYLE}
+        renderOption={renderThemedOption}
+      />
     </HeadlessCombobox.Root>
   );
 }
@@ -92,7 +124,11 @@ export function Search({ placeholder = 'Search...', width = 280, ...rest }: Comb
           >
         }
       </HeadlessSearch.Input>
-      <HeadlessSearch.List style={LIST_STYLE} renderOption={renderThemedOption} />
+      <HeadlessSearch.List
+        {...listProps(rest)}
+        style={LIST_STYLE}
+        renderOption={renderThemedOption}
+      />
     </HeadlessSearch.Root>
   );
 }
