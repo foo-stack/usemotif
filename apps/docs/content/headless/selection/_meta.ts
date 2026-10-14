@@ -11,6 +11,7 @@ const meta: MetaFile = {
   combobox: 'Combobox',
   'multi-select': 'MultiSelect',
   search: 'Search',
+  'tags-input': 'TagsInput',
 };
 
 export default meta;
