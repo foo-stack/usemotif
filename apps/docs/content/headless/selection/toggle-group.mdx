@@ -1,0 +1,117 @@
+---
+title: ToggleGroup
+description: A row of toggles holding one or several pressed values, with roving focus and one tab stop.
+diataxis: reference
+covers: ['ToggleGroup', 'ToggleGroupItem', 'ToggleGroupProps', 'ToggleGroupItemProps']
+last_verified: 2026-10-14
+---
+
+import { ApiSignature, ArticleMeta, CodeBlock, Eyebrow, Lede } from '../../../components/index.js';
+
+<Eyebrow>Headless / Selection</Eyebrow>
+
+# ToggleGroup
+
+<Lede>
+  ToggleGroup is a row of [Toggle](/headless/selection/toggle) buttons that share a value: text
+  alignment, where one is pressed, or text styles, where any number are.
+</Lede>
+
+<ArticleMeta />
+
+## What it is
+
+A `role="group"` holding `ToggleGroupItem` buttons, each with `aria-pressed`. In `single` mode
+pressing an item presses it and releases the others, and pressing the pressed item releases it.
+In `multiple` mode each item toggles on its own. The value is an array of the pressed items'
+`value`s in both modes.
+
+## Install
+
+<CodeBlock lang="bash" code={`yarn add @usemotif/headless`} />
+
+<CodeBlock lang="tsx" code={`import { ToggleGroup, ToggleGroupItem } from '@usemotif/headless';`} />
+
+## API
+
+<ApiSignature
+  name="ToggleGroup"
+  status="stable"
+  signature={`function ToggleGroup(props: ToggleGroupProps): JSX.Element`}
+  params={[
+    {
+      name: 'type',
+      type: "'single' | 'multiple'",
+      default: "'single'",
+      description: 'One pressed item at a time, or any number.',
+    },
+    {
+      name: 'value / defaultValue / onValueChange',
+      type: 'readonly string[] / readonly string[] / (value: readonly string[]) => void',
+      description: 'The pressed values, controlled or uncontrolled. In single mode it holds at most one.',
+    },
+    {
+      name: 'orientation',
+      type: "'horizontal' | 'vertical'",
+      default: "'horizontal'",
+      description: 'Which arrow keys move focus between items.',
+    },
+    {
+      name: 'disabled',
+      type: 'boolean',
+      description: 'Disables every item.',
+    },
+    {
+      name: 'aria-label / aria-labelledby',
+      type: 'string',
+      description: 'Names the group.',
+    },
+  ]}
+/>
+
+<ApiSignature
+  name="ToggleGroupItem"
+  status="stable"
+  signature={`function ToggleGroupItem(props: ToggleGroupItemProps): JSX.Element`}
+  params={[
+    {
+      name: 'value',
+      type: 'string',
+      required: true,
+      description: 'This item\'s value in the group.',
+    },
+    {
+      name: '...ButtonHTMLAttributes',
+      type: 'Omit<ButtonHTMLAttributes, "type" | "value">',
+      description: 'Every other button attribute, `disabled` and `aria-label` among them.',
+    },
+  ]}
+/>
+
+## Keyboard
+
+The group is one tab stop: the item last focused, else the first pressed item, else the first
+enabled item.
+
+| Key | Action |
+| --- | --- |
+| Arrow Right / Left (Down / Up when vertical) | Move focus to the next / previous enabled item, wrapping |
+| Home / End | Move focus to the first / last enabled item |
+| Enter / Space | Press or release the focused item |
+
+## Accessibility
+
+Each item is a real button with `aria-pressed` and `data-state`; disabled items are skipped by
+the arrow keys. Name the group with `aria-label` so a screen reader announces what the choice is
+about. On React Native the items are Pressables announced as toggle buttons, with
+`accessibilityState.checked`, and the group lays out in a row or a column.
+
+## Example
+
+<CodeBlock lang="tsx" code={`const [align, setAlign] = useState<readonly string[]>(['left']);
+
+<ToggleGroup value={align} onValueChange={setAlign} aria-label="Text alignment">
+  <ToggleGroupItem value="left" aria-label="Align left"><AlignLeft /></ToggleGroupItem>
+  <ToggleGroupItem value="center" aria-label="Align center"><AlignCenter /></ToggleGroupItem>
+  <ToggleGroupItem value="right" aria-label="Align right"><AlignRight /></ToggleGroupItem>
+</ToggleGroup>`} />
