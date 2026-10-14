@@ -150,7 +150,13 @@ export type {
 } from './CommandPalette.js';
 
 export { Progress, RangeSlider, RatingInput, Slider } from './range.js';
-export type { ProgressProps, RangeSliderProps, RatingInputProps, SliderProps } from './range.js';
+export type {
+  ProgressProps,
+  RangeSliderProps,
+  RatingInputProps,
+  SliderMark,
+  SliderProps,
+} from './range.js';
 
 export { DrawerContent, DrawerRoot, SheetContent } from './Drawer.js';
 export type { DrawerContentProps } from './Drawer.js';

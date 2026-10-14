@@ -328,6 +328,7 @@ export type {
   RangeSliderProps,
   RatingInputProps,
   SelectRootProps,
+  SliderMark,
   SliderProps,
   StepperProps,
   StepperStep,

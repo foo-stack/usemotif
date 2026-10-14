@@ -31,3 +31,16 @@ export const Values: Story = {
     </VStack>
   ),
 };
+
+const VOLUME_MARKS = [
+  { value: 0, label: 'Mute' },
+  { value: 25 },
+  { value: 50, label: 'Half' },
+  { value: 75 },
+  { value: 100, label: 'Max' },
+];
+
+/** Ticks along the track, some labelled. */
+export const WithMarks: Story = {
+  render: () => <Slider defaultValue={50} marks={VOLUME_MARKS} aria-label="Volume" />,
+};
