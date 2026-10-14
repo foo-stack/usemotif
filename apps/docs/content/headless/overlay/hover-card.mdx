@@ -3,7 +3,7 @@ title: HoverCard
 description: A hover-triggered floating panel for interactive content - profile previews, link cards. A hover bridge keeps it open as the cursor crosses.
 diataxis: reference
 covers: ['HoverCard', 'HoverCardRootProps', 'HoverCardTriggerProps', 'HoverCardContentProps']
-last_verified: 2026-05-15
+last_verified: 2026-10-14
 ---
 
 import {
@@ -81,7 +81,7 @@ and nothing focusable; a HoverCard holds content the user can act on.
       name: 'placement',
       type: 'Placement',
       default: '"bottom"',
-      description: 'Where the card sits relative to the trigger.',
+      description: 'The preferred side of the trigger: `top`, `bottom`, `left` or `right`. When that side lacks room the card flips to the opposite one, and it shifts along the edge to stay inside the viewport.',
     },
     {
       name: 'children',

@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 export type Placement = 'top' | 'bottom' | 'left' | 'right';
 
@@ -9,25 +9,78 @@ export interface Position {
   readonly left: number;
 }
 
+/** A position, plus the side the floating element ended up on. */
+export interface PlacedPosition extends Position {
+  readonly placement: Placement;
+}
+
+/** The visible area to keep floating elements inside. */
+export interface Viewport {
+  readonly width: number;
+  readonly height: number;
+}
+
+/** Gap kept between a floating element and the viewport edge, in px. */
+const VIEWPORT_MARGIN = 8;
+
+const OPPOSITE: Record<Placement, Placement> = {
+  top: 'bottom',
+  bottom: 'top',
+  left: 'right',
+  right: 'left',
+};
+
+function room(reference: DOMRect, side: Placement, viewport: Viewport): number {
+  switch (side) {
+    case 'top':
+      return reference.top;
+    case 'bottom':
+      return viewport.height - reference.bottom;
+    case 'left':
+      return reference.left;
+    case 'right':
+      return viewport.width - reference.right;
+  }
+}
+
+function clamp(value: number, size: number, extent: number): number {
+  const max = extent - size - VIEWPORT_MARGIN;
+  // An element bigger than the viewport pins to the near edge.
+  return max < VIEWPORT_MARGIN ? VIEWPORT_MARGIN : Math.min(Math.max(value, VIEWPORT_MARGIN), max);
+}
+
 /**
- * Compute a fixed position for a floating element relative to a
- * reference rect. v0 uses straightforward `getBoundingClientRect`
- * math - no collision detection or auto-flipping. Real
- * collision-aware positioning will land via `@floating-ui/react`
- * as a v1.x peer dep.
+ * Position a floating element beside a reference rect, keeping it in the
+ * viewport. When the requested side lacks room and the opposite side has it,
+ * the element flips (to the roomier side when neither fits); it then shifts
+ * along the other axis to stay inside the viewport. Returns document
+ * coordinates and the side used.
  *
- * `offset` is the gap between the reference edge and the floating
- * element, in pixels.
+ * `offset` is the gap between the reference edge and the floating element.
  */
 export function computePosition(
   reference: DOMRect,
   floating: { width: number; height: number },
   placement: Placement,
   offset = 8,
-): Position {
+  viewport: Viewport = { width: window.innerWidth, height: window.innerHeight },
+): PlacedPosition {
+  const vertical = placement === 'top' || placement === 'bottom';
+  const need = (vertical ? floating.height : floating.width) + offset + VIEWPORT_MARGIN;
+  let side = placement;
+  if (room(reference, side, viewport) < need) {
+    const other = OPPOSITE[side];
+    if (
+      room(reference, other, viewport) >= need ||
+      room(reference, other, viewport) > room(reference, side, viewport)
+    ) {
+      side = other;
+    }
+  }
+
   let top = 0;
   let left = 0;
-  switch (placement) {
+  switch (side) {
     case 'top':
       top = reference.top - floating.height - offset;
       left = reference.left + reference.width / 2 - floating.width / 2;
@@ -45,30 +98,36 @@ export function computePosition(
       left = reference.right + offset;
       break;
   }
-  return { top: top + window.scrollY, left: left + window.scrollX };
+  if (vertical) left = clamp(left, floating.width, viewport.width);
+  else top = clamp(top, floating.height, viewport.height);
+  return { top: top + window.scrollY, left: left + window.scrollX, placement: side };
 }
 
 /**
  * Hook: track the position of a floating element anchored to a
  * reference. Recomputes on resize + scroll + open-state change.
- * Returns `{ position, floatingRef }` - attach the ref to your
- * floating element.
+ * Returns `{ position, floatingRef, placement }` - attach the ref to your
+ * floating element; `placement` is the side it landed on after any flip.
  */
 export function useFloatingPosition(
   referenceRef: React.RefObject<HTMLElement | null>,
   open: boolean,
   placement: Placement,
   offset = 8,
-): { position: Position; floatingRef: React.RefObject<HTMLDivElement | null> } {
+): {
+  position: Position;
+  placement: Placement;
+  floatingRef: React.RefObject<HTMLDivElement | null>;
+} {
   const floatingRef = useRef<HTMLDivElement | null>(null);
-  const [position, setPosition] = useState<Position>({ top: 0, left: 0 });
+  const [placed, setPlaced] = useState<PlacedPosition>({ top: 0, left: 0, placement });
 
   const update = useCallback(() => {
     const ref = referenceRef.current;
     const float = floatingRef.current;
     if (ref === null || float === null) return;
     const rect = ref.getBoundingClientRect();
-    setPosition(
+    setPlaced(
       computePosition(
         rect,
         { width: float.offsetWidth, height: float.offsetHeight },
@@ -89,7 +148,11 @@ export function useFloatingPosition(
     };
   }, [open, update]);
 
-  return { position, floatingRef };
+  const position = useMemo<Position>(
+    () => ({ top: placed.top, left: placed.left }),
+    [placed.top, placed.left],
+  );
+  return { position, placement: placed.placement, floatingRef };
 }
 
 /** An element whose subtree is not "outside", or a test for one. */

@@ -21,6 +21,7 @@ import {
 } from 'react';
 import { mergeRefs } from './_compose-refs.js';
 import { useExitTransition } from './_use-exit-transition.js';
+import { computePosition } from './positioning.js';
 
 /**
  * Tooltip - text affordance shown on hover or keyboard focus.
@@ -36,11 +37,9 @@ import { useExitTransition } from './_use-exit-transition.js';
  * - Sets `aria-describedby` on the trigger so screen readers
  *   announce the tooltip alongside the trigger's accessible name.
  *
- * Positioning: the v0 implementation places the tooltip below the
- * trigger using `getBoundingClientRect()`. Real collision-aware
- * positioning needs `@floating-ui/react` (peer dep, queued for
- * a v1.x patch). For now, callers wanting custom placement pass
- * `placement='top' | 'bottom' | 'left' | 'right'`.
+ * Positioning: `placement` (`'top' | 'bottom' | 'left' | 'right'`) is the
+ * preferred side; like every overlay here, the tooltip flips to the
+ * opposite side and shifts along the edge to stay in the viewport.
  *
  * Tooltips are NOT for interactive content. If the content needs
  * interaction (links, buttons), use `<HoverCard>` or `<Popover>`
@@ -226,30 +225,13 @@ function Content({
     const trigger = ctx.triggerRef.current;
     const content = contentRef.current;
     if (trigger === null || content === null) return;
-    const rect = trigger.getBoundingClientRect();
-    const cw = content.offsetWidth;
-    const ch = content.offsetHeight;
-    let top = 0;
-    let left = 0;
-    switch (ctx.placement) {
-      case 'top':
-        top = rect.top - ch - offset;
-        left = rect.left + rect.width / 2 - cw / 2;
-        break;
-      case 'bottom':
-        top = rect.bottom + offset;
-        left = rect.left + rect.width / 2 - cw / 2;
-        break;
-      case 'left':
-        top = rect.top + rect.height / 2 - ch / 2;
-        left = rect.left - cw - offset;
-        break;
-      case 'right':
-        top = rect.top + rect.height / 2 - ch / 2;
-        left = rect.right + offset;
-        break;
-    }
-    setPosition({ top: top + window.scrollY, left: left + window.scrollX });
+    const { top, left } = computePosition(
+      trigger.getBoundingClientRect(),
+      { width: content.offsetWidth, height: content.offsetHeight },
+      ctx.placement,
+      offset,
+    );
+    setPosition({ top, left });
   }, [ctx.open, ctx.placement, ctx.triggerRef, offset]);
 
   if (!shouldRender) return null;
