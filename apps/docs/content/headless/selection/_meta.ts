@@ -9,6 +9,7 @@ const meta: MetaFile = {
   'toggle-group': 'ToggleGroup',
   select: 'Select',
   combobox: 'Combobox',
+  listbox: 'Listbox',
   'multi-select': 'MultiSelect',
   search: 'Search',
   'tags-input': 'TagsInput',
