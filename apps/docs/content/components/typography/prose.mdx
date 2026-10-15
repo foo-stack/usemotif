@@ -1,8 +1,8 @@
 ---
 title: Prose
-description: Prose styles content you don't control element by element - rendered Markdown, CMS HTML, MDX - with the theme's tokens. Web only.
+description: Prose styles content you don't control element by element - rendered Markdown, CMS HTML, MDX - with the theme's tokens, and renders Markdown on web and React Native.
 diataxis: reference
-covers: ['Prose', 'ProseProps']
+covers: ['Prose', 'ProseProps', 'parseMarkdown', 'parseInline', 'MdBlock', 'MdInline', 'MdAlign']
 last_verified: 2026-10-15
 ---
 
@@ -22,9 +22,9 @@ import { ApiSignature, ArticleMeta, Callout, CodeBlock, Eyebrow, Lede } from '..
 
 ## Install
 
-`Prose` is exported from `@usemotif/react`. It is web only: React Native has no raw HTML to style.
+`Prose` is exported from `usemotif`, for web and React Native.
 
-<CodeBlock lang="tsx" code={`import { Prose } from '@usemotif/react';`} />
+<CodeBlock lang="tsx" code={`import { Prose } from 'usemotif';`} />
 
 ## API
 
@@ -57,6 +57,24 @@ HTML from a CMS goes in through `dangerouslySetInnerHTML`:
   Prose does not clean HTML. Run anything that came from outside your code through a sanitizer
   before passing it in.
 </Callout>
+
+## Markdown
+
+`markdown` renders a Markdown string, on both platforms:
+
+<CodeBlock lang="tsx" code={`<Prose markdown={post.body} />`} />
+
+It covers headings, paragraphs, bullet and ordered lists (nested by indentation), quotes, fenced
+code, rules and tables, with bold, italic, code, links, images and line breaks inside them. On web
+it becomes the plain elements above, styled the same way. On React Native it becomes motif `Text`,
+`Box` and `Image`: links open through `Linking`, headings carry the header role, and a paragraph
+holding only an image renders the image.
+
+Nothing in the string is treated as HTML: a `<script>` tag is shown as text. Links whose scheme
+isn't http, https, mailto or tel are dropped. The parser is `parseMarkdown` in `@usemotif/core`,
+which returns the block tree if you want to render it yourself.
+
+Raw HTML and `children` are web only, since React Native has no HTML to style.
 
 ## Overriding it
 

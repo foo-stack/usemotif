@@ -172,6 +172,7 @@ export type {
 } from './use-animate.js';
 export { useDrag } from './use-drag.js';
 export { useGesture } from './use-gesture.js';
+export { Prose, type ProseProps } from './Prose.js';
 export type {
   GestureHandlers,
   GestureOptions,

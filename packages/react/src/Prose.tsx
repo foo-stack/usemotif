@@ -1,13 +1,26 @@
 'use client';
 
-import { type MotifComponent, type PseudoRule, tokenRefToCssVar } from '@usemotif/core';
-import type { ReactElement } from 'react';
+import {
+  type MotifComponent,
+  parseMarkdown,
+  type PseudoRule,
+  tokenRefToCssVar,
+} from '@usemotif/core';
+import { useMemo, type ReactElement } from 'react';
+import { renderMarkdown } from './_markdown.js';
 import { Box, type BoxProps } from './Box.js';
 import { useActiveCollector } from './collector-context.js';
 import { useCssLayer } from './css-layer-context.js';
 import { injectPseudoRules } from './style-cache.js';
 
-export interface ProseProps extends BoxProps {}
+export interface ProseProps extends BoxProps {
+  /**
+   * Markdown to render instead of `children`: headings, paragraphs, lists, quotes, code, rules,
+   * tables, emphasis, links and images. HTML in it stays text, and links with a scheme other
+   * than http, https, mailto or tel are dropped.
+   */
+  markdown?: string;
+}
 
 /** A `$components.prose.*` token, then the semantic one, then a literal. */
 const token = (chain: string): string => tokenRefToCssVar(chain as `$${string}`)!;
@@ -113,14 +126,15 @@ let rules: readonly PseudoRule[] | undefined;
 /**
  * Prose - styles content you do not control element by element: rendered Markdown, CMS HTML,
  * MDX. Headings, paragraphs, lists, links, code, quotes, tables and images take the theme's
- * tokens. Web only.
+ * tokens. On React Native, `Prose` renders its `markdown` with motif primitives instead.
  *
  * Every rule is wrapped in `:where()`, so it carries only its element's specificity and sits in
  * `<ThemeProvider cssLayer>`'s layer when one is set; an app overrides any of it with plain CSS.
  * The colours read `$components.prose.*` first (`color`, `muted`, `link`, `border`, `codeBg`,
  * `preBg`), then the semantic tokens.
  *
- * Raw HTML goes in through `dangerouslySetInnerHTML`, and must be sanitized first.
+ * `markdown` renders a Markdown string with no HTML parsing at all. Raw HTML goes in through
+ * `dangerouslySetInnerHTML` instead, and must be sanitized first.
  *
  * @example
  * ```tsx
@@ -132,9 +146,19 @@ let rules: readonly PseudoRule[] | undefined;
  */
 export const Prose: MotifComponent<ProseProps, ReactElement | null> = function ({
   className,
+  markdown,
+  children,
   ...rest
 }: ProseProps): ReactElement {
+  const rendered = useMemo(
+    () => (markdown === undefined ? undefined : renderMarkdown(parseMarkdown(markdown))),
+    [markdown],
+  );
   rules ??= buildRules();
   const prose = injectPseudoRules(rules, useActiveCollector(), useCssLayer())!;
-  return <Box className={className === undefined ? prose : `${prose} ${className}`} {...rest} />;
+  return (
+    <Box className={className === undefined ? prose : `${prose} ${className}`} {...rest}>
+      {rendered ?? children}
+    </Box>
+  );
 };
