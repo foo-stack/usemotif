@@ -167,7 +167,8 @@ const targets = [
     // `function X(p) {}`; nothing new is pulled in.
     // Bumped when Box's `layout` animation took `layoutTransition` timing.
     // Bumped when state bags took responsive values (nested at-rules).
-    budget: 12450,
+    // Bumped when Card parts (Header, Body, Footer, Media) assembled on Card.
+    budget: 12600,
   },
   {
     name: '@usemotif/ui - Modal only',

@@ -112,6 +112,7 @@ export default defineConfig({
     'src/Tabs.namespace.ts',
     'src/Breadcrumb.namespace.ts',
     'src/NavigationMenu.namespace.ts',
+    'src/Card.namespace.ts',
     'src/Card.tsx',
     'src/Badge.tsx',
     'src/Button.tsx',

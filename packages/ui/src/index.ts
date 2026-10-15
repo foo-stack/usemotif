@@ -6,7 +6,7 @@
  * Everything tree-shakes, so importing one component never pulls the rest.
  */
 
-export { Card } from './Card.js';
+export { Card } from './Card.namespace.js';
 export { Badge } from './Badge.js';
 export { Button, type ButtonProps } from './Button.js';
 export { TextField, type TextFieldProps } from './TextField.js';

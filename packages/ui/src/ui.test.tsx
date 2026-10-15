@@ -207,6 +207,50 @@ afterEach(() => {
 });
 
 describe('display components', () => {
+  it('Card composes Header, Body, Footer and Media parts', () => {
+    render(
+      <Card padding="none" data-testid="card">
+        <Card.Media data-testid="media">
+          <img alt="" src="data:," />
+        </Card.Media>
+        <Card.Header data-testid="header">Pro plan</Card.Header>
+        <Card.Body data-testid="body">Everything in Team.</Card.Body>
+        <Card.Footer data-testid="footer">
+          <button type="button">Choose</button>
+        </Card.Footer>
+      </Card>,
+    );
+    const card = container.querySelector('[data-testid="card"]')!;
+    const order = Array.from(card.children, (el) => el.getAttribute('data-testid'));
+    expect(order).toEqual(['media', 'header', 'body', 'footer']);
+    for (const id of ['header', 'body', 'footer']) {
+      expect(look(container.querySelector(`[data-testid="${id}"]`)!), id).not.toBe('|');
+    }
+    expect(container.querySelector('[data-testid="footer"]')!.getAttribute('style')).toContain(
+      'justify-content: flex-end',
+    );
+  });
+
+  it('an interactive Card is a link with hover and focus-visible states', () => {
+    render(
+      <Card as="a" interactive data-testid="card" {...({ href: '/plans/pro' } as object)}>
+        Pro
+      </Card>,
+    );
+    const card = container.querySelector('[data-testid="card"]')!;
+    expect(card.tagName).toBe('A');
+    expect(card.getAttribute('href')).toBe('/plans/pro');
+    expect(card.getAttribute('style') ?? '').toContain('cursor: pointer');
+    const css = Array.from(document.querySelectorAll('style'), (el) => el.textContent ?? '').join(
+      '\n',
+    );
+    const cls = (card.getAttribute('class') ?? '')
+      .split(' ')
+      .find((c) => css.includes(`.${c}:hover`));
+    expect(cls, 'a hover rule for the card').toBeDefined();
+    expect(css).toContain(`.${cls}:focus-visible`);
+  });
+
   it('Card and Badge render themed (recipe applied)', () => {
     render(
       <>
