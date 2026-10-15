@@ -7,6 +7,7 @@ export { FileTree, FileTreeDir, FileTreeFile } from './FileTree.js';
 export type { FileTreeDirProps, FileTreeFileProps, FileTreeProps } from './FileTree.js';
 export { Image, type ImageProps } from './Image.js';
 export { Lede, type LedeProps } from './Lede.js';
+export { ThemeBuilder } from './theme-builder/ThemeBuilder.js';
 export { TokenSwatches } from './TokenSwatches.js';
 export {
   ComponentDemoStrip,
