@@ -1097,6 +1097,40 @@ describe('Breadcrumb - themed trail over the headless landmark', () => {
     expect(nav.textContent).toContain('Home');
     expect(nav.textContent).toContain('Data');
   });
+
+  it('folds the middle crumbs past maxItems into a menu that navigates', () => {
+    const onNavigate = vi.fn();
+    render(
+      <Breadcrumb maxItems={3} onNavigate={onNavigate}>
+        <Breadcrumb.Item href="/">Home</Breadcrumb.Item>
+        <Breadcrumb.Item href="/a">Alpha</Breadcrumb.Item>
+        <Breadcrumb.Item href="/b">Beta</Breadcrumb.Item>
+        <Breadcrumb.Item href="/c">Gamma</Breadcrumb.Item>
+        <Breadcrumb.Item>Delta</Breadcrumb.Item>
+      </Breadcrumb>,
+    );
+    const nav = container.querySelector('nav') as HTMLElement;
+    const crumbs = Array.from(nav.querySelectorAll('li'), (li) => li.textContent?.replace('›', ''));
+    expect(crumbs).toEqual(['Home', '...', 'Gamma', 'Delta']);
+    expect(nav.querySelector('[aria-current="page"]')?.textContent).toBe('Delta');
+    const more = nav.querySelector('button[aria-label="Show hidden breadcrumbs"]') as HTMLElement;
+    expect(more.getAttribute('aria-haspopup')).toBe('menu');
+    click(more);
+    const items = Array.from(document.querySelectorAll('[role="menuitem"]'));
+    expect(items.map((el) => el.textContent)).toEqual(['Alpha', 'Beta']);
+    click(items[1]!);
+    expect(onNavigate).toHaveBeenCalledWith('/b');
+  });
+
+  it('shows every crumb while they fit in maxItems', () => {
+    render(
+      <Breadcrumb maxItems={3}>
+        <Breadcrumb.Item href="/">Home</Breadcrumb.Item>
+        <Breadcrumb.Item>Data</Breadcrumb.Item>
+      </Breadcrumb>,
+    );
+    expect(container.querySelector('button[aria-label="Show hidden breadcrumbs"]')).toBeNull();
+  });
 });
 
 describe('Toolbar - themed roving-focus container over the headless toolbar', () => {
