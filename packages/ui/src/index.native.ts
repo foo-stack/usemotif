@@ -23,6 +23,15 @@ export { Chip, type ChipIntent, type ChipProps } from './Chip.native.js';
 export { Spinner, type SpinnerProps } from './Spinner.js';
 export { Skeleton, type SkeletonProps } from './Skeleton.native.js';
 export { Progress, type ProgressProps } from './Progress.native.js';
+export {
+  AreaChart,
+  BarChart,
+  LineChart,
+  Sparkline,
+  type ChartPoint,
+  type SeriesChartProps,
+  type SparklineProps,
+} from './Charts.js';
 export { ProgressCircle, type ProgressCircleProps } from './ProgressCircle.native.js';
 
 export { Modal } from './Modal.namespace.js';
