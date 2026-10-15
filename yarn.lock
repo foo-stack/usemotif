@@ -8346,6 +8346,8 @@ __metadata:
   peerDependencies:
     "@usemotif/react": "workspace:^"
     react: ^18.0.0 || ^19.0.0
+  bin:
+    usemotif-icons: ./dist/cli.js
   languageName: unknown
   linkType: soft
 
