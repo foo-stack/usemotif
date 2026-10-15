@@ -58,6 +58,17 @@ The dot takes the primary accent colour by default. Set an item's `status` to `s
   ]}
 />`} />
 
+An icon in place of the dot, drawn in a ring in the marker's colour:
+
+<CodeBlock lang="tsx" code={`import { Truck } from '@usemotif/icons';
+
+{ id: 'out', title: 'Out for delivery', status: 'success', icon: <Truck size="xs" /> }`} />
+
+Events on alternating sides of the line, from the `md` breakpoint up. Below it, the timeline falls
+back to a single column:
+
+<CodeBlock lang="tsx" code={`<Timeline layout="alternate" items={releases} />`} />
+
 ## API
 
 <ApiSignature
@@ -71,6 +82,12 @@ The dot takes the primary accent colour by default. Set an item's `status` to `s
       required: true,
       description: 'The events, rendered top to bottom in array order.',
     },
+    {
+      name: 'layout',
+      type: "'single' | 'alternate'",
+      default: "'single'",
+      description: '`alternate` puts events on either side of the line from the `md` breakpoint up, the first on the left, and uses one column below it.',
+    },
   ]}
 />
 
@@ -82,6 +99,7 @@ The dot takes the primary accent colour by default. Set an item's `status` to `s
   description?: ReactNode; // detail under the title
   time?: ReactNode;        // timestamp or meta beside the title
   status?: TimelineStatus; // marker tone; defaults to the primary accent
+  icon?: ReactNode;        // shown in a ring in place of the dot
 }
 
 type TimelineStatus = 'default' | 'success' | 'warning' | 'danger';`} />
