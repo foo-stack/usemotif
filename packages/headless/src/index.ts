@@ -31,6 +31,7 @@ import {
   ComboboxInput,
   ComboboxList,
   ComboboxRoot,
+  CommandPaletteBreadcrumb,
   CommandPaletteInput,
   CommandPaletteList,
   CommandPaletteRoot,
@@ -238,6 +239,7 @@ export const CommandPalette = {
   Root: CommandPaletteRoot,
   Input: CommandPaletteInput,
   List: CommandPaletteList,
+  Breadcrumb: CommandPaletteBreadcrumb,
 };
 
 export {
@@ -293,6 +295,7 @@ export type {
   ComboboxOption,
   ComboboxRootProps,
   Command,
+  CommandPaletteBreadcrumbProps,
   CommandPaletteListProps,
   CommandPaletteRootProps,
   ContextMenuContentProps,
