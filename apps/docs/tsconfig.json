@@ -1,7 +1,7 @@
 {
   "extends": "@usemotif/tsconfig/app.json",
   "compilerOptions": {
-    "types": ["react", "vite/client"],
+    "types": ["react", "vite/client", "node"],
     "noEmit": true
   },
   "include": ["vorge.config.ts", "content/**/*", "theme/**/*", "components/**/*", "plugins/**/*"]
