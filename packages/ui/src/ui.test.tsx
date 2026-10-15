@@ -1080,6 +1080,27 @@ describe('Separator and Skeleton - display-floor primitives', () => {
     expect(el).not.toBeNull();
     expect(look(el)).not.toBe('|');
   });
+
+  it('Skeleton lines stacks text-height bars with a shorter last line', () => {
+    render(<Skeleton lines={3} width={320} />);
+    const stack = container.querySelector('[aria-hidden="true"]') as HTMLElement;
+    const style = stack.getAttribute('style') ?? '';
+    expect(style).toContain('width: 320px');
+    expect(style).toContain('font-size: var(--fontSizes-md)');
+    const bars = Array.from(stack.children) as HTMLElement[];
+    expect(bars.length).toBe(3);
+    const widths = bars.map(
+      (bar) => /(?:^|; )width: ([^;]+)/.exec(bar.getAttribute('style') ?? '')?.[1],
+    );
+    expect(widths).toEqual(['100%', '100%', '60%']);
+    for (const bar of bars) expect(bar.getAttribute('style') ?? '').toContain('height: 1em');
+  });
+
+  it('a single Skeleton line is full width', () => {
+    render(<Skeleton lines={1} />);
+    const bar = container.querySelector('[aria-hidden="true"]')!.firstElementChild!;
+    expect(bar.getAttribute('style') ?? '').toMatch(/(?:^|; )width: 100%/);
+  });
 });
 
 describe('Pagination - themed page controls over the headless navigation', () => {
