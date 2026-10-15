@@ -1,0 +1,43 @@
+{
+  "name": "@usemotif/eslint-plugin",
+  "version": "0.0.0",
+  "private": true,
+  "description": "ESLint (and oxlint) rules for motif: raw values where a token exists, unknown $-paths, and platform branching in shared components.",
+  "license": "MIT",
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "clean": "rm -rf dist .turbo *.tsbuildinfo"
+  },
+  "dependencies": {
+    "@usemotif/core": "workspace:*",
+    "@usemotif/tokens": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "eslint": "10.11.0",
+    "tsup": "^8.5.1",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.5"
+  },
+  "peerDependencies": {
+    "eslint": ">=9.0.0"
+  },
+  "peerDependenciesMeta": {
+    "eslint": {
+      "optional": true
+    }
+  }
+}
