@@ -2,6 +2,8 @@ import type { MetaFile } from '@vorge/core';
 
 const meta: MetaFile = {
   index: 'Forms',
+  button: 'Button',
+  'text-field': 'TextField',
   checkbox: 'Checkbox',
   radio: 'Radio',
   switch: 'Switch',

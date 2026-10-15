@@ -10,6 +10,7 @@ import {
   type AvatarGroupItem,
   Badge,
   Banner,
+  Button,
   Breadcrumb,
   Calendar,
   Chip,
@@ -54,6 +55,7 @@ import {
   Switch,
   TagsInput,
   Tabs,
+  TextField,
   TimeInput,
   Timeline,
   type TimelineItem,
@@ -214,6 +216,41 @@ describe('display components', () => {
     );
     expect(look(container.querySelector('[data-testid="card"]')!)).not.toBe('|');
     expect(look(container.querySelector('[data-testid="badge"]')!)).not.toBe('|');
+  });
+
+  it('Button applies the button recipe to a real button', () => {
+    let pressed = 0;
+    render(
+      <Button intent="danger" size="sm" onPress={() => (pressed += 1)}>
+        Delete
+      </Button>,
+    );
+    const button = container.querySelector('button')!;
+    expect(button.getAttribute('type')).toBe('button');
+    const style = button.getAttribute('style') ?? '';
+    expect(style).toContain('background-color: var(--colors-action-danger-bg)');
+    expect(style).toContain('height: 32px');
+    click(button);
+    expect(pressed).toBe(1);
+  });
+
+  it('TextField applies the input recipe to an input and marks it invalid', () => {
+    render(
+      <FormField label="Email" error="Required">
+        <TextField size="lg" invalid placeholder="you@example.com" />
+      </FormField>,
+    );
+    const input = container.querySelector('input')!;
+    expect(input.getAttribute('type')).toBe('text');
+    expect(input.getAttribute('placeholder')).toBe('you@example.com');
+    expect(input.getAttribute('aria-invalid')).toBe('true');
+    expect(input.getAttribute('aria-describedby')).not.toBeNull();
+    // The recipe resolves to real styles, not stray attributes on the input.
+    const style = input.getAttribute('style') ?? '';
+    expect(style).toContain('height: 48px');
+    expect(style).toContain('border-color: var(--colors-action-danger-bg)');
+    expect(input.hasAttribute('bg')).toBe(false);
+    expect(container.querySelector('label')!.getAttribute('for')).toBe(input.id);
   });
 
   it('Spinner announces itself and animates', () => {
