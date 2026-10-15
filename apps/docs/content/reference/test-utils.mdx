@@ -2,8 +2,25 @@
 title: Test utilities
 description: Cross-renderer conformance suite, default test theme, and Vitest matchers for asserting motif components in tests.
 diataxis: reference
-covers: ['renderStyles', 'assertConformance', 'defaultTestTheme', 'standardCases', 'motifMatchers', 'ConformanceCase', 'PrimitiveName', 'RendererAdapter', 'RendererOutput']
-last_verified: 2026-05-15
+covers:
+  [
+    'renderStyles',
+    'assertConformance',
+    'defaultTestTheme',
+    'standardCases',
+    'motifMatchers',
+    'ConformanceCase',
+    'PrimitiveName',
+    'RendererAdapter',
+    'RendererOutput',
+    'snapshotAcross',
+    'SnapshotAcrossOptions',
+    'settle',
+    'setTheme',
+    'defaultWidths',
+    'VISUAL_SETTINGS',
+  ]
+last_verified: 2026-10-15
 ---
 
 import { ApiSignature, ArticleMeta, CodeBlock, Eyebrow } from '../../components/index.js';
@@ -126,6 +143,36 @@ your own `styled()` components included, inside a `ThemeProvider` for `theme`, a
 root element's `RendererOutput` for the matchers above. Token variables resolve back to `theme`'s
 values, so expectations read `padding: 16` rather than `var(--space-4)`. The web conformance
 adapter renders every standard case through it.
+
+## Visual regression: `@usemotif/test-utils/visual`
+
+Playwright helpers that snapshot a component in every theme at every breakpoint, with the settle
+and tolerance motif's own docs are gated with. `@playwright/test` is an optional peer, needed only
+for this subpath.
+
+<CodeBlock lang="ts" filename="tests/pricing.spec.ts" code={`import { test } from '@playwright/test';
+import { snapshotAcross } from '@usemotif/test-utils/visual';
+
+test('pricing card', async ({ page }) => {
+  await page.goto('/pricing');
+  await snapshotAcross(page, {
+    name: 'pricing-card',
+    themes: ['light', 'dark'],
+    target: page.getByTestId('pricing-card'),
+  });
+});`} />
+
+That writes and checks `pricing-card-<theme>-<breakpoint>.png` for each pair: `base` at 375px, then
+each configured breakpoint at its minimum width (`defaultWidths()`). Run with `--update-snapshots`
+once to record them.
+
+| Export | What it does |
+| --- | --- |
+| `snapshotAcross(page, options)` | Sets each width, switches each theme, settles, and checks the screenshot. Options: `name`, `themes`, `widths`, `height` (800), `target` (the page), `switchTheme`. |
+| `settle(page)` | Waits for network idle and fonts, and cuts every animation and transition to zero. |
+| `setTheme(page, name)` | Renames the outermost `data-theme` boundary, which is how the default `switchTheme` works under a `ThemeProvider` that has every theme. |
+| `defaultWidths()` | `base: 375` plus the configured breakpoints. |
+| `VISUAL_SETTINGS` | `threshold: 0.02`, `maxDiffPixels: 200`, animations disabled, caret hidden. |
 
 ## Types
 
