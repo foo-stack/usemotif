@@ -101,9 +101,11 @@ describe('cssToStyle - comments', () => {
     expect(cssToStyle('padding: 4px; /* never closed')).toBeNull();
   });
 
+  // The backtracking regex this replaced took seconds on this input, growing with its square; the
+  // linear scan takes milliseconds. The bound leaves room for a busy CI runner.
   it('strips many unclosed comment openers in linear time', () => {
     const start = performance.now();
-    cssToStyle(`/*${'a/*'.repeat(50_000)}`);
-    expect(performance.now() - start).toBeLessThan(200);
+    cssToStyle(`/*${'a/*'.repeat(200_000)}`);
+    expect(performance.now() - start).toBeLessThan(2000);
   });
 });
