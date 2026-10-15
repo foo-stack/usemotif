@@ -4,9 +4,6 @@
   "private": true,
   "description": "Streaming SSR fixture: Astro with motif inside React islands.",
   "type": "module",
-  "engines": {
-    "node": ">=22.22.0"
-  },
   "scripts": {
     "dev": "astro dev --port 4300",
     "build:fixture": "astro build",
@@ -31,5 +28,8 @@
     "@types/react-dom": "^19.2.3",
     "playwright": "1.59.1",
     "typescript": "^6.0.3"
+  },
+  "engines": {
+    "node": ">=22.22.0"
   }
 }
