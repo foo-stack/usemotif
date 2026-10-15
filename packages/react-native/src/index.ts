@@ -66,8 +66,8 @@ export type { LinkProps } from './Link.js';
 export { Avatar } from './Avatar.js';
 export type { AvatarProps, AvatarSize } from './Avatar.js';
 
-export { Icon } from './Icon.js';
-export type { IconProps } from './Icon.js';
+export { Icon, IconProvider } from './Icon.js';
+export type { IconProps, IconProviderProps } from './Icon.js';
 
 export { NATIVE_SVG_COMPONENT, SVG_PRIMITIVES, Svg } from './Svg.js';
 export type { SvgPrimitives, SvgProps } from './Svg.js';

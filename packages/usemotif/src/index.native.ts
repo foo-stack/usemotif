@@ -140,11 +140,12 @@ export type {
   LinkProps,
 } from '@usemotif/react-native';
 
-export { Avatar, Icon, Path, Svg } from '@usemotif/react-native';
+export { Avatar, Icon, IconProvider, Path, Svg } from '@usemotif/react-native';
 export type {
   AvatarProps,
   AvatarSize,
   IconProps,
+  IconProviderProps,
   PathProps,
   SvgProps,
 } from '@usemotif/react-native';

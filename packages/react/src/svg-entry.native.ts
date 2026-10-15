@@ -12,5 +12,11 @@
  * `package.json`; web bundlers never see this file.
  */
 
-export { Icon, NATIVE_SVG_COMPONENT, SVG_PRIMITIVES, Svg } from '@usemotif/react-native';
-export type { IconProps, SvgPrimitives, SvgProps } from '@usemotif/react-native';
+export {
+  Icon,
+  IconProvider,
+  NATIVE_SVG_COMPONENT,
+  SVG_PRIMITIVES,
+  Svg,
+} from '@usemotif/react-native';
+export type { IconProps, IconProviderProps, SvgPrimitives, SvgProps } from '@usemotif/react-native';
