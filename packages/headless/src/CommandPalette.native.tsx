@@ -15,6 +15,7 @@ import { Modal, Pressable, ScrollView, Text, TextInput, View, type ViewStyle } f
 import { nativeText } from './_native-text.js';
 import { fuzzyScore } from './_fuzzy.js';
 import { useControllableState } from './use-controllable-state.js';
+import { useShortcut } from './use-shortcut.js';
 
 /**
  * Native CommandPalette - Dialog-presented searchable command list.
@@ -391,10 +392,9 @@ export {
 };
 
 /**
- * No-op on native - there's no global hardware keyboard on touch
- * devices. Apps should wire up a button or gesture to toggle the
- * palette open instead.
+ * An alias of `useShortcut`: on native it never fires, since touch devices
+ * have no global hardware keyboard, and returns the shortcut's label.
  */
-export function useCommandPaletteShortcut(_combo: string, _handler: () => void): void {
-  // intentionally empty - see jsdoc.
+export function useCommandPaletteShortcut(combo: string, handler: () => void): string {
+  return useShortcut(combo, handler, { allowInInputs: true });
 }

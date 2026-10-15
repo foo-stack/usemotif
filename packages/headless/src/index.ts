@@ -278,6 +278,7 @@ export {
   useControllableState,
   useDialogState,
   useReducedMotion,
+  useShortcut,
   useToast,
 } from './client.js';
 
@@ -382,4 +383,5 @@ export type {
   TreeViewBaseProps,
   TreeViewProps,
   UseControllableStateOptions,
+  UseShortcutOptions,
 } from './client.js';

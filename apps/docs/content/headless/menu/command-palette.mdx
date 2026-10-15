@@ -38,7 +38,9 @@ renders the search box; `CommandPalette.List` renders the grouped results. The R
 scrim-backed, Escape-dismissible.
 
 `useCommandPaletteShortcut` is a separate hook for the global activation key. It is not part of
-the compound API - call it wherever you own the open state.
+the compound API - call it wherever you own the open state. It is
+[`useShortcut`](/reference/use-shortcut) with typing in inputs allowed, and returns the shortcut's
+label for a `Kbd`.
 
 ## Install
 
