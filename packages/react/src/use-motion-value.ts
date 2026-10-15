@@ -9,6 +9,7 @@ import {
   type Theme,
 } from '@usemotif/core';
 import { useEffect, useRef, useState } from 'react';
+import { tagTransformLink } from './_scroll-timeline.js';
 import { useTheme } from './theme-context.js';
 
 /** Options for `useTransform`'s range form. */
@@ -193,6 +194,14 @@ export function useTransform(
   const transform = transformRef.current;
 
   const [derived] = useState(() => createMotionValue(transform(source.get()) as never));
+  // Lets a Box run this value on a CSS scroll timeline when `source` follows one.
+  tagTransformLink(
+    derived,
+    source,
+    typeof rangeOrFn === 'function' ? [] : rangeOrFn,
+    argsRef.current.resolvedRange,
+    argsRef.current.outputKind,
+  );
 
   useEffect(() => {
     // Re-seed in case the source value diverged between the lazy

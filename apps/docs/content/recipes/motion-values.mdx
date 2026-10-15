@@ -101,6 +101,27 @@ percentages, strips the unit, lerps numerically, and re-appends. The
 returned motion value drops straight into the `width` slot - no manual
 formatting, no per-frame setState.
 
+### Off the main thread where the browser allows
+
+In a browser with CSS scroll-driven animation (`animation-timeline`), the bar above doesn't run on
+scroll events at all. The Box compiles the binding to `@keyframes` on a scroll timeline, so the
+browser animates it on the compositor and the JS path stays idle. Elsewhere the same code runs on
+scroll events, as described above. Nothing to opt into, and nothing changes in what you write.
+
+A binding compiles when:
+
+- it's a `useScroll` progress value (`scrollXProgress` or `scrollYProgress`), bound directly or
+  through one range-form `useTransform`
+- the scroll is the page's, a `container`'s (a named `scroll()` timeline), or a `target`'s with the
+  default offset `['start end', 'end start']`, which is exactly a `view()` timeline's cover range
+- the output range is numbers, or lengths in one unit, and the input range sits within `0` to `1`
+- the Box has at most one transform-axis motion value (`x`, `scaleX` and the rest share
+  `transform`), and no inline animation of its own
+
+Anything else stays on the JS path: other target offsets, colour outputs, function-form
+`useTransform`, and chains of transforms. Both paths produce the same values, because CSS
+interpolates numbers and same-unit lengths linearly, as `useTransform` does.
+
 ## One signal fanning out to many derived values
 
 A single progress motion value can feed any number of derived values via
