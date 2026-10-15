@@ -1,0 +1,76 @@
+---
+title: Charts
+description: Sparkline, LineChart, AreaChart and BarChart - single-series charts drawn on the cross-platform SVG primitives, coloured by tokens, with a text alternative.
+diataxis: reference
+covers: ['Sparkline', 'LineChart', 'AreaChart', 'BarChart', 'ChartPoint', 'SparklineProps', 'SeriesChartProps']
+last_verified: 2026-10-15
+---
+
+import { ApiSignature, ArticleMeta, Callout, CodeBlock, Eyebrow, Lede } from '../../../components/index.js';
+
+<Eyebrow>UI kit / Display</Eyebrow>
+
+# Charts
+
+<Lede>
+  Four small charts for one series of numbers: a Sparkline for a trend beside text, and Line,
+  Area and Bar charts for a labelled series. They draw with the SVG primitives, so the same code
+  renders on web and React Native.
+</Lede>
+
+<ArticleMeta />
+
+## Install
+
+<CodeBlock lang="bash" code={`yarn add @usemotif/ui`} />
+
+<CodeBlock lang="tsx" code={`import { AreaChart, BarChart, LineChart, Sparkline } from '@usemotif/ui';`} />
+
+On React Native they need `react-native-svg`, like icons. Without it a chart renders an empty box
+that still carries its accessibility label.
+
+## Usage
+
+<CodeBlock lang="tsx" code={`const months = [
+  { label: 'Jan', value: 12 },
+  { label: 'Feb', value: 18 },
+  { label: 'Mar', value: 9 },
+];
+
+<Sparkline label="Weekly signups" data={[4, 6, 5, 9, 12]} area />
+<LineChart label="Revenue" data={months} />
+<AreaChart label="Revenue" data={months} />
+<BarChart label="Profit" data={months} color="$colors.status.success.fg" />`} />
+
+Bars grow from zero, and a negative value hangs below it. Area and Bar charts always include zero
+in their range; Line charts and Sparklines span the data.
+
+## API
+
+<ApiSignature
+  name="BarChart, LineChart, AreaChart"
+  status="stable"
+  signature={`function BarChart(props: SeriesChartProps): JSX.Element`}
+  params={[
+    { name: 'data', type: 'readonly ChartPoint[]', description: '`{ label, value }` for each point, in order.' },
+    { name: 'label', type: 'string', description: 'What the chart shows. Required: it starts the text alternative.' },
+    { name: 'color', type: 'string', description: 'A token reference or any colour. Defaults to `$components.chart.color`, then `$colors.action.primary.bg`.' },
+    { name: 'width, height', type: 'number', description: 'Size in px, 320 by 160 by default. On web the chart shrinks to fit its container.' },
+    { name: 'formatValue', type: '(value: number) => string', description: 'Formats values in the text alternative. Defaults to the locale number format.' },
+  ]}
+/>
+
+`Sparkline` takes `data: readonly number[]` instead, defaults to 120 by 32, and adds `area` (fill
+under the line) and `strokeWidth`.
+
+## Accessibility
+
+Each chart is one image to assistive technology (`role="img"` on both platforms) whose label is the `label` followed by the data. With a dozen points or fewer every
+value is read, as in `Profit: Jan 12, Feb 18, Mar 9`. Longer series are summarised by their range
+and their first and last points.
+
+<Callout variant="info" title="Theming">
+  The series colour reads `$components.chart.color` and the grid reads `$components.chart.grid`
+  before the semantic tokens, so a theme can restyle every chart without a `color` prop. See
+  [component tokens](/concepts/tokens).
+</Callout>

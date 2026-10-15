@@ -18,6 +18,7 @@ const meta: MetaFile = {
   progress: 'Progress',
   'progress-circle': 'ProgressCircle',
   'data-table': 'DataTable',
+  charts: 'Charts',
 };
 
 export default meta;
