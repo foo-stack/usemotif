@@ -1709,6 +1709,49 @@ describe('Timeline - themed vertical timeline (pure primitive)', () => {
     expect(container.textContent).toContain('14:10');
     expect(look(container.firstElementChild!)).not.toBe('|');
   });
+
+  it('draws an item icon in a ring in place of the dot', () => {
+    const items = [
+      { id: 'a', title: 'Shipped', status: 'success' as const, icon: <i data-testid="truck" /> },
+      { id: 'b', title: 'Delivered' },
+    ];
+    render(<Timeline items={items} />);
+    const ring = container.querySelector('[data-testid="truck"]')!.parentElement!;
+    const style = ring.getAttribute('style') ?? '';
+    expect(style).toContain('width: 24px');
+    expect(style).toContain('status-success-fg');
+  });
+
+  it('alternates sides from md up and stacks in one column below it', () => {
+    render(<Timeline layout="alternate" items={TIMELINE_ITEMS} />);
+    const css = Array.from(document.querySelectorAll('style'), (el) => el.textContent ?? '').join(
+      '\n',
+    );
+    // The base rule and the min-width rule each element's class carries.
+    const rules = (el: Element): { base: string; md: string } => {
+      const cls = (el.getAttribute('class') ?? '')
+        .split(' ')
+        .find((c) => css.includes(`@media (min-width: 768px) { .${c} {`))!;
+      const esc = cls.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      return {
+        base: new RegExp(`(?:^|\\n)\\.${esc} \\{([^}]*)\\}`).exec(css)?.[1] ?? '',
+        md:
+          new RegExp(`@media \\(min-width: 768px\\) \\{ \\.${esc} \\{([^}]*)\\}`).exec(css)?.[1] ??
+          '',
+      };
+    };
+    const rows = Array.from(container.firstElementChild!.children);
+    // Below md: marker then content. From md: content, marker, content.
+    expect(rules(rows[0]!)).toEqual({
+      base: ' grid-template-columns: auto 1fr; ',
+      md: ' grid-template-columns: 1fr auto 1fr; ',
+    });
+    const first = rules(rows[0]!.children[1]!);
+    expect(first.base).toContain('grid-column: 2');
+    expect(first.md).toContain('grid-column: 1');
+    expect(first.md).toContain('align-items: flex-end');
+    expect(rules(rows[1]!.children[1]!).md).toContain('grid-column: 3');
+  });
 });
 
 describe('AvatarGroup - overlapping avatars + overflow (pure primitive)', () => {
