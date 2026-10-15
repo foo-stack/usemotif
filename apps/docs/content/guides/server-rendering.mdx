@@ -117,6 +117,34 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 each flush only includes what is new. The dedup set stays populated, so two flushes never emit the
 same class twice.
 
+## Primitives in Server Components
+
+Everything from `@usemotif/react` is a client component, so it renders on the server but ships its
+code to the browser too. For layout that never needs the client, import the primitives from
+`@usemotif/react/rsc` in a Server Component instead:
+
+<CodeBlock lang="tsx" filename="app/page.tsx" code={`import { Box, HStack, Text } from '@usemotif/react/rsc';
+
+export default function Page() {
+  return (
+    <Box p={{ base: '$4', md: '$8' }}>
+      <HStack gap="$3" _hover={{ opacity: 0.9 }}>
+        <Text lines={1}>Rendered on the server</Text>
+      </HStack>
+    </Box>
+  );
+}`} />
+
+`Box`, `Stack`, `HStack`, `VStack` and `Text` from there resolve their styles to class names on the
+server. Their CSS ships as React's hoisted `<style precedence>`, which React deduplicates and moves
+into the document head as the page streams, so they need neither the style registry nor a client
+boundary. Tokens become CSS variables, so the theme reaches them through the cascade from the
+`ThemeProvider` above.
+
+A prop that needs the client hands that element to the client primitive: event handlers, `ref`,
+`enterStyle`, `exitStyle`, `layout`, `drag`, motion values and `Stack`'s `stagger`. A
+`ThemeProvider` `cssLayer` is client context, so it doesn't reach the server primitives.
+
 ## Hydration without a flash
 
 Three things to confirm before shipping:

@@ -53,6 +53,9 @@ export default defineConfig({
     // Test tooling for consumers: `renderStyles`. Runs under Node in a test
     // runner, so it carries no `'use client'`.
     testing: 'src/testing.ts',
+    // Server Component primitives. No directive: they render on the server, and reach the
+    // client primitives only through the rewritten `_client-entry` below.
+    rsc: 'src/rsc.tsx',
     'virtualizers/tanstack': 'src/virtualizers/tanstack.tsx',
   },
   format: ['esm', 'cjs'],
@@ -66,4 +69,18 @@ export default defineConfig({
   target: 'es2022',
   outDir: 'dist',
   onSuccess: prependUseClient,
+  esbuildPlugins: [
+    {
+      // The RSC entry's client fallbacks import the package's own `'use client'` entry, so a
+      // Server Component gets client references. Bundling `./index.js` in instead would put
+      // client code, and its module-level `createContext`, in the server graph.
+      name: 'client-entry-self-reference',
+      setup(build) {
+        build.onResolve({ filter: /\/_client-entry\.js$/ }, () => ({
+          path: '@usemotif/react',
+          external: true,
+        }));
+      },
+    },
+  ],
 });

@@ -1,6 +1,7 @@
 import type { MotifComponent } from '@usemotif/core';
-import type { ReactElement, CSSProperties } from 'react';
+import type { ReactElement } from 'react';
 import { Box, type BoxProps } from './Box.js';
+import { resolveLineClampStyle } from './_line-clamp.js';
 
 export type TextProps = BoxProps & {
   /**
@@ -49,26 +50,3 @@ export const Text: MotifComponent<TextProps, ReactElement | null> = function ({
   // `style: undefined` to an `style?: CSSProperties` field.
   return <Box as={as} {...(mergedStyle === undefined ? {} : { style: mergedStyle })} {...rest} />;
 };
-
-/**
- * The CSS for an N-line clamp. `lines<=1` emits the canonical single-
- * line ellipsis triplet; `lines>1` emits the `-webkit-line-clamp` set
- * (still the cross-browser truth for multi-line clamp - supported in
- * every evergreen browser despite the vendor prefix). All declarations
- * live in inline style so consumer `style` overrides take precedence.
- */
-function resolveLineClampStyle(lines: number): CSSProperties {
-  if (lines <= 1) {
-    return {
-      whiteSpace: 'nowrap',
-      overflow: 'hidden',
-      textOverflow: 'ellipsis',
-    };
-  }
-  return {
-    display: '-webkit-box',
-    WebkitLineClamp: lines,
-    WebkitBoxOrient: 'vertical',
-    overflow: 'hidden',
-  };
-}

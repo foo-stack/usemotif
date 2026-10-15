@@ -43,6 +43,11 @@
       "import": "./dist/server.js",
       "require": "./dist/server.cjs"
     },
+    "./rsc": {
+      "types": "./dist/rsc.d.ts",
+      "import": "./dist/rsc.js",
+      "require": "./dist/rsc.cjs"
+    },
     "./testing": {
       "types": "./dist/testing.d.ts",
       "import": "./dist/testing.js",
