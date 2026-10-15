@@ -140,6 +140,7 @@ export default defineConfig([
       'src/Card.namespace.ts',
       'src/Card.tsx',
       'src/Badge.tsx',
+      'src/DataTable.tsx',
       'src/Button.tsx',
       'src/TextField.tsx',
       'src/Spinner.tsx',

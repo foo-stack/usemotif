@@ -17,6 +17,7 @@ import {
   type Command,
   CommandPalette,
   Card,
+  DataTable,
   Checkbox,
   Collapsible,
   ColorPicker,
@@ -1876,5 +1877,32 @@ describe('SegmentedControl - single-select segments (pure primitive)', () => {
     click(radios[1]!);
     expect(radios[1]!.getAttribute('aria-checked')).toBe('true');
     expect(segValue).toBe('grid');
+  });
+});
+
+describe('DataTable - themed grid over the headless DataTable', () => {
+  it('themes the grid and marks the sorted column with an arrow', () => {
+    const rows = [
+      { id: 'a', n: 'Cara' },
+      { id: 'b', n: 'Abe' },
+    ];
+    render(
+      <DataTable
+        data={rows}
+        getRowId={(r) => r.id}
+        columns={[{ id: 'n', header: 'Name', value: (r) => r.n, sortable: true }]}
+        selectionMode="single"
+        defaultSelected={['a']}
+        aria-label="People"
+      />,
+    );
+    const grid = container.querySelector('[role="grid"]') as HTMLElement;
+    expect(grid.getAttribute('style') ?? '').toContain('var(--colors-surface-raised');
+    const head = container.querySelector('[role="columnheader"]') as HTMLElement;
+    click(head);
+    expect(head.getAttribute('aria-sort')).toBe('ascending');
+    expect(head.textContent).toBe('Name ▲');
+    const selectedRow = container.querySelector('[aria-selected="true"]') as HTMLElement;
+    expect(selectedRow.getAttribute('style') ?? '').toContain('status-info-tint');
   });
 });
