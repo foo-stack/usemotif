@@ -76,7 +76,8 @@ const targets = [
     // so the forms module stopped riding along with every Box import.
     // Bumped when Box gained layoutId (the shared-layout registry in useLayoutAnimation).
     // Bumped when Box reads the scroll-timeline slot (the compiler itself loads only with useScroll).
-    budget: 12400,
+    // Bumped when Box's style resolution moved into a shared resolver the Server Component primitives also use.
+    budget: 12500,
   },
   {
     name: '@usemotif/react-native - Box only',
@@ -175,7 +176,8 @@ const targets = [
     // Bumped when state bags took responsive values (nested at-rules).
     // Bumped when Card parts (Header, Body, Footer, Media) assembled on Card.
     // Bumped when Box gained layoutId (the shared-layout registry in useLayoutAnimation).
-    budget: 12800,
+    // Bumped when Box's style resolution moved into a shared resolver the Server Component primitives also use.
+    budget: 13000,
   },
   {
     name: '@usemotif/ui - Modal only',

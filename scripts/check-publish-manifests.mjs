@@ -129,7 +129,7 @@ const CLIENT_ENTRY_POLICY = {
   usemotif: { must: ['.'], mustNot: [] },
   '@usemotif/react': {
     must: ['.', './svg', './tanstack-virtual'],
-    mustNot: ['./server', './testing'],
+    mustNot: ['./server', './testing', './rsc'],
   },
   '@usemotif/headless': {
     must: [],
