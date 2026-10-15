@@ -171,6 +171,15 @@ export type {
   AnimationScope,
 } from './use-animate.js';
 export { useDrag } from './use-drag.js';
+export { useGesture } from './use-gesture.js';
+export type {
+  GestureHandlers,
+  GestureOptions,
+  PinchInfo,
+  SwipeDirection,
+  SwipeInfo,
+  UseGestureResult,
+} from './use-gesture.js';
 export type {
   DragAxis,
   DragConstraints,

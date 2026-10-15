@@ -35,6 +35,15 @@ export type {
 } from './types.js';
 
 export { isTokenRef, resolveOutputRangeTokens, resolveToken, resolveValue } from './token.js';
+export { createGestureRecognizer } from './gesture.js';
+export type {
+  GestureHandlers,
+  GestureOptions,
+  GestureRecognizer,
+  PinchInfo,
+  SwipeDirection,
+  SwipeInfo,
+} from './gesture.js';
 export type { ResolveTokenOptions } from './token.js';
 
 export { createTheme, extendTheme } from './createTheme.js';
