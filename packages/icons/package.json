@@ -10,6 +10,9 @@
     "url": "git+https://github.com/foo-stack/usemotif.git",
     "directory": "packages/icons"
   },
+  "bin": {
+    "usemotif-icons": "./dist/cli.js"
+  },
   "files": [
     "dist",
     "src",
