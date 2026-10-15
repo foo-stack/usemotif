@@ -13,6 +13,8 @@ export type ColorPickerProps = Omit<
   | 'saturationValueThumbStyle'
   | 'hueSliderStyle'
   | 'alphaSliderStyle'
+  | 'swatchStyle'
+  | 'eyeDropperStyle'
 >;
 
 // The headless renders its own SV plane / hue / alpha tracks (with the colour
@@ -36,6 +38,21 @@ const SV_THUMB_STYLE: CSSProperties = {
   boxShadow: '0 0 0 1px rgba(0, 0, 0, 0.35)',
 };
 const SLIDER_STYLE: CSSProperties = { width: 220, height: 12, borderRadius: '9999px' };
+const SWATCH_STYLE: CSSProperties = {
+  width: 22,
+  height: 22,
+  borderRadius: 'var(--radii-sm, 4px)',
+  boxShadow: 'inset 0 0 0 1px rgba(0, 0, 0, 0.15)',
+};
+const EYEDROPPER_STYLE: CSSProperties = {
+  alignSelf: 'flex-start',
+  padding: '4px 10px',
+  borderRadius: 'var(--radii-md, 8px)',
+  border: '1px solid var(--colors-border-default, #d1d5db)',
+  background: 'var(--colors-surface-raised, #fff)',
+  color: 'var(--colors-text-default, #111)',
+  cursor: 'pointer',
+};
 
 /**
  * Themed HSV colour picker over the accessible headless `ColorPicker` (drag the
@@ -55,6 +72,8 @@ export function ColorPicker(props: ColorPickerProps) {
       saturationValueThumbStyle={SV_THUMB_STYLE}
       hueSliderStyle={SLIDER_STYLE}
       alphaSliderStyle={SLIDER_STYLE}
+      swatchStyle={SWATCH_STYLE}
+      eyeDropperStyle={EYEDROPPER_STYLE}
     />
   );
 }

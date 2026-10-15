@@ -68,6 +68,17 @@ export interface ColorPickerProps {
   hueSliderStyle?: CSSProperties;
   /** Inline style for the alpha slider track. */
   alphaSliderStyle?: CSSProperties;
+  /** Preset colours offered as a radio group under the picker. */
+  swatches?: ReadonlyArray<string>;
+  /** Inline style for each swatch; its `background` is the colour. */
+  swatchStyle?: CSSProperties;
+  /** Adds a button that picks a colour from anywhere on screen, where the
+   * browser has the EyeDropper API. */
+  eyeDropper?: boolean;
+  /** Content of the eyedropper button. Defaults to "Pick". */
+  eyeDropperLabel?: ReactNode;
+  /** Inline style for the eyedropper button. */
+  eyeDropperStyle?: CSSProperties;
 }
 
 /**
@@ -102,6 +113,11 @@ export function ColorPicker({
   saturationValueThumbStyle,
   hueSliderStyle,
   alphaSliderStyle,
+  swatches,
+  swatchStyle,
+  eyeDropper = false,
+  eyeDropperLabel = 'Pick',
+  eyeDropperStyle,
 }: ColorPickerProps): ReactElement {
   const [format, commitFormat] = useControllableState<ColorFormat>({
     value: controlledFormat,
@@ -157,6 +173,20 @@ export function ColorPicker({
 
   const showAlpha = allowAlpha && format !== 'hex';
 
+  // Detected after mount, so the server render and the first client render agree.
+  const [canPickFromScreen, setCanPickFromScreen] = useState(false);
+  useEffect(() => setCanPickFromScreen('EyeDropper' in window), []);
+  const pickFromScreen = useCallback(async () => {
+    const Dropper = (window as { EyeDropper?: new () => { open(): Promise<{ sRGBHex: string }> } })
+      .EyeDropper;
+    if (Dropper === undefined) return;
+    try {
+      commit({ ...parseColor((await new Dropper().open()).sRGBHex), a: hsv.a });
+    } catch {
+      // The user dismissed the eyedropper (Escape): keep the colour.
+    }
+  }, [commit, hsv.a]);
+
   return (
     <div role="group" aria-label="Colour picker" style={{ display: 'inline-block', ...style }}>
       <SaturationValuePlane
@@ -173,6 +203,101 @@ export function ColorPicker({
       {formats.length > 0 ? (
         <FormatToggle format={format} options={formats} onChange={setFormat} />
       ) : null}
+      {swatches !== undefined && swatches.length > 0 ? (
+        <Swatches
+          colors={swatches}
+          current={formatColor(hsv, 'hex')}
+          disabled={disabled}
+          onPick={(c) => commit({ ...parseColor(c), a: hsv.a })}
+          swatchStyle={swatchStyle}
+        />
+      ) : null}
+      {eyeDropper && canPickFromScreen ? (
+        <button
+          type="button"
+          disabled={disabled}
+          aria-label="Pick a colour from the screen"
+          onClick={() => void pickFromScreen()}
+          style={eyeDropperStyle}
+        >
+          {eyeDropperLabel}
+        </button>
+      ) : null}
+    </div>
+  );
+}
+
+const SWATCH: CSSProperties = { width: 20, height: 20, cursor: 'pointer' };
+
+/**
+ * The preset colours as a radio group: one tab stop, the arrow keys move and
+ * select, Home and End jump to the ends, and the swatch matching the current
+ * colour is checked.
+ */
+function Swatches({
+  colors,
+  current,
+  disabled,
+  onPick,
+  swatchStyle,
+}: {
+  colors: ReadonlyArray<string>;
+  current: string;
+  disabled: boolean;
+  onPick: (color: string) => void;
+  swatchStyle: CSSProperties | undefined;
+}): ReactElement {
+  const refs = useRef<Array<HTMLDivElement | null>>([]);
+  const checked = colors.findIndex((c) => formatColor(parseColor(c), 'hex') === current);
+  const tabStop = checked === -1 ? 0 : checked;
+  function go(i: number): void {
+    const n = (i + colors.length) % colors.length;
+    refs.current[n]?.focus();
+    onPick(colors[n]!);
+  }
+  return (
+    <div
+      role="radiogroup"
+      aria-label="Swatches"
+      style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}
+    >
+      {colors.map((c, i) => (
+        <div
+          key={`${c}-${i}`}
+          ref={(el) => {
+            refs.current[i] = el;
+          }}
+          role="radio"
+          aria-checked={i === checked}
+          aria-label={c}
+          aria-disabled={disabled || undefined}
+          tabIndex={disabled ? -1 : i === tabStop ? 0 : -1}
+          onClick={() => {
+            if (!disabled) onPick(c);
+          }}
+          onKeyDown={(e: KeyboardEvent<HTMLDivElement>) => {
+            if (disabled) return;
+            const to =
+              e.key === 'ArrowRight' || e.key === 'ArrowDown'
+                ? i + 1
+                : e.key === 'ArrowLeft' || e.key === 'ArrowUp'
+                  ? i - 1
+                  : e.key === 'Home'
+                    ? 0
+                    : e.key === 'End'
+                      ? colors.length - 1
+                      : undefined;
+            if (to !== undefined) {
+              e.preventDefault();
+              go(to);
+            } else if (e.key === ' ' || e.key === 'Enter') {
+              e.preventDefault();
+              onPick(c);
+            }
+          }}
+          style={{ ...SWATCH, background: c, ...swatchStyle }}
+        />
+      ))}
     </div>
   );
 }

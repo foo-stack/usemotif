@@ -146,6 +146,13 @@ export interface ColorPickerProps {
   hueSliderStyle?: ViewStyle;
   /** Style applied to the alpha slider track. */
   alphaSliderStyle?: ViewStyle;
+  /** Preset colours offered as pressable swatches under the picker. */
+  swatches?: ReadonlyArray<string>;
+  /** Style for each swatch; its `backgroundColor` is the colour. */
+  swatchStyle?: ViewStyle;
+  /** Web only: native has no screen eyedropper, so this renders nothing. */
+  eyeDropper?: boolean;
+  eyeDropperLabel?: ReactNode;
 }
 
 /**
@@ -184,6 +191,8 @@ export function ColorPicker({
   saturationValueThumbStyle,
   hueSliderStyle,
   alphaSliderStyle,
+  swatches,
+  swatchStyle,
 }: ColorPickerProps): ReactElement {
   const [format, commitFormat] = useControllableState<ColorFormat>({
     value: controlledFormat,
@@ -266,6 +275,27 @@ export function ColorPicker({
       ) : null}
       {formats.length > 0 ? (
         <FormatToggle format={format} options={formats} disabled={disabled} onChange={setFormat} />
+      ) : null}
+      {swatches !== undefined && swatches.length > 0 ? (
+        <View
+          accessibilityRole="radiogroup"
+          style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}
+        >
+          {swatches.map((c, i) => {
+            const checked = formatColor(parseColor(c), 'hex') === formatColor(hsv, 'hex');
+            return (
+              <Pressable
+                key={`${c}-${i}`}
+                accessibilityRole="radio"
+                accessibilityLabel={c}
+                accessibilityState={{ checked, disabled }}
+                disabled={disabled}
+                onPress={() => commit({ ...parseColor(c), a: hsv.a })}
+                style={[{ width: 24, height: 24, backgroundColor: c }, swatchStyle]}
+              />
+            );
+          })}
+        </View>
       ) : null}
     </View>
   );
