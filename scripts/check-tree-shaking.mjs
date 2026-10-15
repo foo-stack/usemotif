@@ -614,7 +614,8 @@ const targets = [
     // Bumped when state bags took responsive values (nested at-rules).
     // Bumped when the group states joined core's selector map and Box marks a group.
     // Bumped when the four default status icons (Info, CircleCheck, TriangleAlert, CircleAlert) and Icon.
-    budget: 12500,
+    // Bumped when the shared dismiss part as Pressable and Text, so it also renders on native.
+    budget: 12700,
   },
   {
     name: '@usemotif/ui - FormField only',

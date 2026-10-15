@@ -172,6 +172,12 @@ export const FlatList: ComponentType<HostProps> = (props: HostProps) => {
   );
 };
 
+/** `AccessibilityInfo` shim: reduced motion is off, and the listener is a no-op. */
+export const AccessibilityInfo = {
+  isReduceMotionEnabled: (): Promise<boolean> => Promise.resolve(false),
+  addEventListener: (): { remove: () => void } => ({ remove: () => {} }),
+};
+
 export const Linking = {
   openURL: (_url: string): Promise<void> => Promise.resolve(),
   canOpenURL: (_url: string): Promise<boolean> => Promise.resolve(true),

@@ -8,7 +8,9 @@ const DIRECTIVE = "'use client';\n";
  * The modules that must stay in the server graph: the barrel, and the namespace
  * assembly it re-exports. Everything else the barrel reaches is client.
  */
-const SERVER_ENTRY = /^(index|.+\.namespace)\.(js|cjs)$/;
+// The barrel and the namespaces are the server graph; `index.native.js` is
+// React Native's entry, where the directive means nothing.
+const SERVER_ENTRY = /^(index(\.native)?|.+\.namespace)\.(js|cjs)$/;
 
 /**
  * Prepend `'use client'` to every emitted chunk except the barrel.
@@ -90,99 +92,115 @@ async function pointNamespaceCjsAtCjs(): Promise<void> {
   }
 }
 
-export default defineConfig({
-  // One entry per component (plus the barrel) with ESM splitting, so importing
-  // one component never drags in another's dependencies - notably, the display
-  // components stay free of Modal's `@usemotif/headless` import.
-  entry: [
-    'src/index.ts',
-    // Namespace assembly lives in the server graph, one module per compound
-    // component so an unused one shakes away instead of dragging the headless
-    // dependency into every consumer of the kit.
-    'src/Modal.namespace.ts',
-    'src/AlertDialog.namespace.ts',
-    'src/Drawer.namespace.ts',
-    'src/Popover.namespace.ts',
-    'src/HoverCard.namespace.ts',
-    'src/Tooltip.namespace.ts',
-    'src/Menu.namespace.ts',
-    'src/ContextMenu.namespace.ts',
-    'src/Accordion.namespace.ts',
-    'src/Collapsible.namespace.ts',
-    'src/Tabs.namespace.ts',
-    'src/Breadcrumb.namespace.ts',
-    'src/NavigationMenu.namespace.ts',
-    'src/Card.namespace.ts',
-    'src/Card.tsx',
-    'src/Badge.tsx',
-    'src/Button.tsx',
-    'src/TextField.tsx',
-    'src/Spinner.tsx',
-    'src/Alert.tsx',
-    'src/Modal.tsx',
-    'src/Tooltip.tsx',
-    'src/Toast.tsx',
-    'src/Switch.tsx',
-    'src/Tabs.tsx',
-    'src/Checkbox.tsx',
-    'src/Radio.tsx',
-    'src/Popover.tsx',
-    'src/Accordion.tsx',
-    'src/Select.tsx',
-    'src/Menu.tsx',
-    'src/MenuSub.tsx',
-    'src/MenuItems.tsx',
-    'src/Slider.tsx',
-    'src/Progress.tsx',
-    'src/ProgressCircle.tsx',
-    'src/Drawer.tsx',
-    'src/AlertDialog.tsx',
-    'src/ContextMenu.tsx',
-    'src/Separator.tsx',
-    'src/Skeleton.tsx',
-    'src/Pagination.tsx',
-    'src/Stepper.tsx',
-    'src/Breadcrumb.tsx',
-    'src/Toolbar.tsx',
-    'src/NavigationMenu.tsx',
-    'src/RangeSlider.tsx',
-    'src/RatingInput.tsx',
-    'src/Combobox.tsx',
-    'src/MultiSelect.tsx',
-    'src/ColorPicker.tsx',
-    'src/FileUpload.tsx',
-    'src/TagsInput.tsx',
-    'src/TimeInput.tsx',
-    'src/HoverCard.tsx',
-    'src/Collapsible.tsx',
-    'src/Calendar.tsx',
-    'src/DatePicker.tsx',
-    'src/CommandPalette.tsx',
-    'src/TreeView.tsx',
-    'src/Stat.tsx',
-    'src/EmptyState.tsx',
-    'src/Timeline.tsx',
-    'src/AvatarGroup.tsx',
-    'src/Chip.tsx',
-    'src/Banner.tsx',
-    'src/FormField.tsx',
-    'src/SegmentedControl.tsx',
-  ],
-  splitting: true,
-  format: ['esm', 'cjs'],
-  // tsup's dts pipeline trips TS 6's deprecated-`baseUrl` warning. Scope the
-  // ignoreDeprecations escape hatch to dts-only so the project's tsconfig
-  // stays strict for IDE / typecheck.
-  dts: { compilerOptions: { ignoreDeprecations: '6.0' } },
-  clean: true,
-  treeshake: true,
-  sourcemap: true,
-  target: 'es2022',
-  outDir: 'dist',
-  external: ['react', 'react-dom', 'usemotif', '@usemotif/headless', '@usemotif/recipes'],
-  esbuildPlugins: [externalizeNamespaceImports()],
-  onSuccess: async () => {
-    await prependUseClient();
-    await pointNamespaceCjsAtCjs();
+export default defineConfig([
+  {
+    // One entry per component (plus the barrel) with ESM splitting, so importing
+    // one component never drags in another's dependencies - notably, the display
+    // components stay free of Modal's `@usemotif/headless` import.
+    entry: [
+      'src/index.ts',
+      // Namespace assembly lives in the server graph, one module per compound
+      // component so an unused one shakes away instead of dragging the headless
+      // dependency into every consumer of the kit.
+      'src/Modal.namespace.ts',
+      'src/AlertDialog.namespace.ts',
+      'src/Drawer.namespace.ts',
+      'src/Popover.namespace.ts',
+      'src/HoverCard.namespace.ts',
+      'src/Tooltip.namespace.ts',
+      'src/Menu.namespace.ts',
+      'src/ContextMenu.namespace.ts',
+      'src/Accordion.namespace.ts',
+      'src/Collapsible.namespace.ts',
+      'src/Tabs.namespace.ts',
+      'src/Breadcrumb.namespace.ts',
+      'src/NavigationMenu.namespace.ts',
+      'src/Card.namespace.ts',
+      'src/Card.tsx',
+      'src/Badge.tsx',
+      'src/Button.tsx',
+      'src/TextField.tsx',
+      'src/Spinner.tsx',
+      'src/Alert.tsx',
+      'src/Modal.tsx',
+      'src/Tooltip.tsx',
+      'src/Toast.tsx',
+      'src/Switch.tsx',
+      'src/Tabs.tsx',
+      'src/Checkbox.tsx',
+      'src/Radio.tsx',
+      'src/Popover.tsx',
+      'src/Accordion.tsx',
+      'src/Select.tsx',
+      'src/Menu.tsx',
+      'src/MenuSub.tsx',
+      'src/MenuItems.tsx',
+      'src/Slider.tsx',
+      'src/Progress.tsx',
+      'src/ProgressCircle.tsx',
+      'src/Drawer.tsx',
+      'src/AlertDialog.tsx',
+      'src/ContextMenu.tsx',
+      'src/Separator.tsx',
+      'src/Skeleton.tsx',
+      'src/Pagination.tsx',
+      'src/Stepper.tsx',
+      'src/Breadcrumb.tsx',
+      'src/Toolbar.tsx',
+      'src/NavigationMenu.tsx',
+      'src/RangeSlider.tsx',
+      'src/RatingInput.tsx',
+      'src/Combobox.tsx',
+      'src/MultiSelect.tsx',
+      'src/ColorPicker.tsx',
+      'src/FileUpload.tsx',
+      'src/TagsInput.tsx',
+      'src/TimeInput.tsx',
+      'src/HoverCard.tsx',
+      'src/Collapsible.tsx',
+      'src/Calendar.tsx',
+      'src/DatePicker.tsx',
+      'src/CommandPalette.tsx',
+      'src/TreeView.tsx',
+      'src/Stat.tsx',
+      'src/EmptyState.tsx',
+      'src/Timeline.tsx',
+      'src/AvatarGroup.tsx',
+      'src/Chip.tsx',
+      'src/Banner.tsx',
+      'src/FormField.tsx',
+      'src/SegmentedControl.tsx',
+    ],
+    splitting: true,
+    format: ['esm', 'cjs'],
+    // tsup's dts pipeline trips TS 6's deprecated-`baseUrl` warning. Scope the
+    // ignoreDeprecations escape hatch to dts-only so the project's tsconfig
+    // stays strict for IDE / typecheck.
+    dts: { compilerOptions: { ignoreDeprecations: '6.0' } },
+    // The native build below writes beside this one, possibly first.
+    clean: ['**/*', '!index.native.js', '!index.native.js.map'],
+    treeshake: true,
+    sourcemap: true,
+    target: 'es2022',
+    outDir: 'dist',
+    external: ['react', 'react-dom', 'usemotif', '@usemotif/headless', '@usemotif/recipes'],
+    esbuildPlugins: [externalizeNamespaceImports()],
+    onSuccess: async () => {
+      await prependUseClient();
+      await pointNamespaceCjsAtCjs();
+    },
   },
-});
+  // React Native: one ESM file holding the components `index.native.ts` lists,
+  // with their `.native` variants. The `react-native` export condition points
+  // here; types come from the web declarations.
+  {
+    entry: { 'index.native': 'src/index.native.ts' },
+    format: ['esm'],
+    dts: false,
+    clean: false,
+    sourcemap: true,
+    target: 'es2022',
+    outDir: 'dist',
+    external: ['react', 'react-native', 'usemotif', '@usemotif/headless', '@usemotif/recipes'],
+  },
+]);
