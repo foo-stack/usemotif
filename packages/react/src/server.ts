@@ -49,6 +49,31 @@ export const asyncCollectorStorage: CollectorStorage = (() => {
 setCollectorStorage(asyncCollectorStorage);
 
 /**
+ * Writes the CSS `collector` gathered into HTML as it streams: held until the chunk that closes
+ * `<head>` and placed there, then ahead of each later chunk.
+ */
+function styleInjector(collector: SSRStyleCollector): (html: string) => string {
+  let headClosed = false;
+  return (html) => {
+    const tag = collector.getStyleTag();
+    if (tag === '') {
+      if (!headClosed && html.includes('</head>')) headClosed = true;
+      return html;
+    }
+    const head = headClosed ? -1 : html.indexOf('</head>');
+    if (head !== -1) {
+      headClosed = true;
+      collector._drain();
+      return html.slice(0, head) + tag + html.slice(head);
+    }
+    // Before `</head>` has passed, the CSS waits for the chunk that closes it.
+    if (!headClosed) return html;
+    collector._drain();
+    return tag + html;
+  };
+}
+
+/**
  * A Node stream to pipe a streaming React render through, which writes the CSS `collector`
  * gathered into the HTML as it goes: into `<head>` with the shell, then ahead of each later chunk,
  * so a Suspense boundary's styles arrive before the content they style. Pair it with
@@ -65,29 +90,43 @@ setCollectorStorage(asyncCollectorStorage);
  */
 export function motifStyleStream(collector: SSRStyleCollector): Transform {
   const decoder = new StringDecoder('utf8');
-  let headClosed = false;
+  const inject = styleInjector(collector);
   return new Transform({
     transform(chunk: Buffer | string, _encoding, done) {
-      let html = typeof chunk === 'string' ? chunk : decoder.write(chunk);
-      const tag = collector.getStyleTag();
-      if (tag !== '') {
-        const head = headClosed ? -1 : html.indexOf('</head>');
-        if (head !== -1) {
-          html = html.slice(0, head) + tag + html.slice(head);
-          headClosed = true;
-          collector._drain();
-        } else if (headClosed) {
-          html = tag + html;
-          collector._drain();
-        }
-        // Before `</head>` has passed, the CSS waits for the chunk that closes it.
-      } else if (!headClosed && html.includes('</head>')) {
-        headClosed = true;
-      }
-      done(null, html);
+      done(null, inject(typeof chunk === 'string' ? chunk : decoder.write(chunk)));
     },
     flush(done) {
       done(null, decoder.end());
+    },
+  });
+}
+
+/**
+ * {@link motifStyleStream} for web streams, for a render from `renderToReadableStream`: pipe the
+ * stream through it with `pipeThrough`, as in a TanStack Start handler.
+ *
+ * @example
+ * ```tsx
+ * const stream = await renderToReadableStream(
+ *   <CollectorContext.Provider value={collector}>{app}</CollectorContext.Provider>,
+ * );
+ * return new Response(stream.pipeThrough(motifStyleTransform(collector)));
+ * ```
+ */
+export function motifStyleTransform(
+  collector: SSRStyleCollector,
+): TransformStream<Uint8Array | string, Uint8Array> {
+  const decoder = new TextDecoder();
+  const encoder = new TextEncoder();
+  const inject = styleInjector(collector);
+  return new TransformStream({
+    transform(chunk, controller) {
+      const html = typeof chunk === 'string' ? chunk : decoder.decode(chunk, { stream: true });
+      if (html !== '') controller.enqueue(encoder.encode(inject(html)));
+    },
+    flush(controller) {
+      const rest = decoder.decode();
+      if (rest !== '') controller.enqueue(encoder.encode(inject(rest)));
     },
   });
 }

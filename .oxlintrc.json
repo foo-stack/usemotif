@@ -48,6 +48,7 @@
     "**/.vorge/**",
     "**/build/**",
     "**/coverage/**",
-    "**/*.tsbuildinfo"
+    "**/*.tsbuildinfo",
+    "**/routeTree.gen.ts"
   ]
 }

@@ -1,8 +1,8 @@
 ---
 title: Server-side rendering
-description: Wire SSRStyleCollector into a sync renderer, or stream collected styles from Next.js App Router or React Router 7.
+description: Wire SSRStyleCollector into a sync renderer, or stream collected styles from Next.js App Router, React Router 7 or TanStack Start.
 diataxis: howto
-covers: ['SSRStyleCollector', 'CollectorContext', 'motifStyleStream']
+covers: ['SSRStyleCollector', 'CollectorContext', 'motifStyleStream', 'motifStyleTransform']
 last_verified: 2026-10-15
 ---
 
@@ -166,6 +166,54 @@ export default function handleRequest(
 Put `ThemeProvider` in the root route's `Layout`, inside `<body>`. `apps/ssr-react-router` in
 the repository is this setup with a deferred loader, and CI serves its production build and checks
 the streamed HTML and the hydrated page on every change.
+
+## TanStack Start
+
+TanStack Start renders with web streams. Replace its stream handler with one that provides a
+collector and pipes React's stream through `motifStyleTransform`, the web-streams form of
+`motifStyleStream`, before the router's own transform:
+
+<CodeBlock lang="tsx" code={`// src/server.ts
+import { createServerEntry } from '@tanstack/react-start/server-entry';
+import { createStartHandler, defineHandlerCallback } from '@tanstack/react-start/server';
+import { motifHandler } from './motif-handler';
+
+export default createServerEntry({ fetch: createStartHandler(defineHandlerCallback(motifHandler)) });
+
+// src/motif-handler.tsx
+import {
+  createSsrStreamResponse,
+  getSsrStatus,
+  transformReadableStreamWithRouter,
+  type HandlerCallback,
+} from '@tanstack/react-router/ssr/server';
+import type { AnyRouter } from '@tanstack/react-router';
+import { StartServer } from '@tanstack/react-start/server';
+import { CollectorContext } from '@usemotif/react';
+import { motifStyleTransform, SSRStyleCollector } from '@usemotif/react/server';
+import { renderToReadableStream } from 'react-dom/server';
+
+export const motifHandler: HandlerCallback<AnyRouter> = async ({ request, router, responseHeaders }) => {
+  const collector = new SSRStyleCollector();
+  const stream = await renderToReadableStream(
+    <CollectorContext.Provider value={collector}>
+      <StartServer router={router} />
+    </CollectorContext.Provider>,
+    { signal: request.signal },
+  );
+  const body = transformReadableStreamWithRouter(router, stream.pipeThrough(motifStyleTransform(collector)), {
+    rendererSafePoint: 'script-close',
+    signal: request.signal,
+  });
+  return createSsrStreamResponse(
+    router,
+    new Response(body, { status: getSsrStatus(router), headers: responseHeaders }),
+  );
+};`} />
+
+Put `ThemeProvider` inside the root route's `shellComponent`, within `<body>`. `apps/ssr-tanstack-start`
+in the repository is this setup, and CI serves its production build and checks the streamed HTML
+and the hydrated page.
 
 ## Primitives in Server Components
 
