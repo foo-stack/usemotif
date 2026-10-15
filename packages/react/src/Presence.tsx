@@ -14,6 +14,7 @@ import {
 } from 'react';
 import { useExitPresence } from './_animation/presence-context.js';
 import { useIsomorphicLayoutEffect } from './_use-isomorphic-layout-effect.js';
+import { useViewTransitionValue, ViewTransitionNames } from './_view-transition.js';
 
 /** Props for {@link Presence}. */
 export interface PresenceProps {
@@ -31,6 +32,13 @@ export interface PresenceProps {
   exitDuration?: number;
   /** Called when the last exiting child has unmounted. */
   onExitComplete?: () => void;
+  /**
+   * Swap keyed children with the browser's View Transitions API instead: the old render is
+   * snapshotted and crossfaded into the new one, and a `layoutId` box in both morphs between
+   * them. `enterStyle`, `exitStyle` and layout FLIP stand down for the swap. Where the API is
+   * missing, or the reader prefers reduced motion, children enter and exit as usual.
+   */
+  viewTransition?: boolean;
 }
 
 interface ExitTargetProps {
@@ -86,8 +94,14 @@ export function Presence({
   mode = 'sync',
   exitDuration = 400,
   onExitComplete,
+  viewTransition = false,
 }: PresenceProps): ReactElement {
   const elements = Children.toArray(children).filter(isValidElement);
+  const keys = elements.map((element) => element.key).join('\u0000');
+  const swap = useViewTransitionValue(keys, viewTransition);
+  // The children last rendered for the keys on screen, held while a swap waits to start.
+  const shownElements = useRef(elements);
+  if (swap.value === keys) shownElements.current = elements;
   const committed = useRef<Entry[]>([]);
   const entries = mergeEntries(committed.current, elements, mode);
   const [, rerender] = useState(0);
@@ -104,6 +118,11 @@ export function Presence({
     rerender((n) => n + 1);
   }, []);
 
+  if (swap.active) {
+    return (
+      <ViewTransitionNames.Provider value>{shownElements.current}</ViewTransitionNames.Provider>
+    );
+  }
   return (
     <>
       {entries.map((entry) => (
