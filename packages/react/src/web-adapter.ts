@@ -12,6 +12,7 @@ import { HStack, Stack, VStack } from './Stack.js';
 import { Image } from './Image.js';
 import { Pressable } from './Pressable.js';
 import { Text } from './Text.js';
+import { TitleBar } from './TitleBar.js';
 import { renderStyles } from './testing.js';
 
 const PRIMITIVES: Record<PrimitiveName, ComponentType<Record<string, unknown>>> = {
@@ -23,6 +24,7 @@ const PRIMITIVES: Record<PrimitiveName, ComponentType<Record<string, unknown>>> 
   Container: Container as unknown as ComponentType<Record<string, unknown>>,
   Pressable: Pressable as unknown as ComponentType<Record<string, unknown>>,
   Image: Image as unknown as ComponentType<Record<string, unknown>>,
+  TitleBar: TitleBar as unknown as ComponentType<Record<string, unknown>>,
 };
 
 /**

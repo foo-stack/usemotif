@@ -14,6 +14,10 @@ function createWindow() {
   const window = new BrowserWindow({
     width: 960,
     height: 720,
+    // The demo draws its own title bar (motif's TitleBar). The OS keeps its window controls, and
+    // the overlay tells the page where they are so the bar can pad clear of them.
+    titleBarStyle: 'hidden',
+    titleBarOverlay: true,
     webPreferences: { contextIsolation: true, nodeIntegration: false },
   });
   void window.loadFile(INDEX_HTML);

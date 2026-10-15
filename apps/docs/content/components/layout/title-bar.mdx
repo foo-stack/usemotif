@@ -1,0 +1,82 @@
+---
+title: TitleBar
+description: A custom window title bar for Electron and Tauri that drags the window, keeps its slots clickable, and pads clear of the OS window controls.
+diataxis: reference
+covers: ['TitleBar', 'TitleBarProps']
+last_verified: 2026-10-15
+---
+
+import { ApiSignature, ArticleMeta, Callout, CodeBlock, Eyebrow, Lede } from '../../../components/index.js';
+
+<Eyebrow>Components / Layout</Eyebrow>
+
+# TitleBar
+
+<Lede>
+  TitleBar replaces the OS title bar in a frameless desktop window. The bar drags the window, a
+  `leading` and a `trailing` slot hold your own controls and stay clickable, and the bar keeps clear
+  of the OS window buttons.
+</Lede>
+
+<ArticleMeta />
+
+## Usage
+
+<CodeBlock lang="tsx" code={`import { TitleBar } from 'usemotif';
+
+<TitleBar
+  title={document.title}
+  px="$3"
+  bg="$colors.surface.muted"
+  leading={<IconButton aria-label="Menu" icon={Menu} onPress={openMenu} />}
+  trailing={<IconButton aria-label="Share" icon={Share} onPress={share} />}
+/>`} />
+
+Give it the window's full width, at the top. `children` replaces the centred `title` with your own
+content, such as tabs.
+
+## Electron
+
+Hide the OS title bar and turn on the controls overlay, which tells the page where the OS window
+buttons sit:
+
+<CodeBlock lang="js" filename="main.js" code={`new BrowserWindow({
+  titleBarStyle: 'hidden',
+  titleBarOverlay: true,
+});`} />
+
+The bar is an `app-region: drag` area and its slots are `no-drag`. Under the overlay it pads itself
+by the overlay's `titlebar-area-x` and `titlebar-area-width`, so on macOS it starts after the
+traffic lights and on Windows and Linux it stops before the caption buttons. Without an overlay the
+padding is 0.
+
+## Tauri
+
+Set `"decorations": false` (or a transparent title bar on macOS) in `tauri.conf.json` and allow
+`core:window:allow-start-dragging` in your capabilities. The bar and its title carry
+`data-tauri-drag-region`; the slots don't, so they stay clickable.
+
+## React Native desktop
+
+On react-native-windows and react-native-macos, TitleBar lays out the same slots. React Native has
+no drag-region API, so the window keeps dragging from the OS title bar there. The same component
+renders on all of them, so shared screens don't branch on platform.
+
+## API
+
+<ApiSignature
+  name="TitleBar"
+  status="stable"
+  signature={`function TitleBar(props: TitleBarProps): JSX.Element`}
+  params={[
+    { name: 'title', type: 'ReactNode', description: 'The window title, centred on one line.' },
+    { name: 'leading', type: 'ReactNode', description: 'Content before the title. Stays clickable.' },
+    { name: 'trailing', type: 'ReactNode', description: 'Content after the title, such as your own window buttons. Stays clickable.' },
+    { name: 'children', type: 'ReactNode', description: 'Replaces the title with your own content.' },
+    { name: '...rest', type: 'BoxProps', description: 'Style props for the bar. It defaults to 38px tall.' },
+  ]}
+/>
+
+<Callout variant="info" title="Related">
+  [Desktop](/guides/desktop) covers the four desktop targets.
+</Callout>
