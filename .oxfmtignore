@@ -10,6 +10,7 @@ coverage/
 
 # Next regenerates this on every build; let it own the formatting.
 apps/*/next-env.d.ts
+examples/*/next-env.d.ts
 
 # oxfmt collapses indentation inside multi-line JS template literals that
 # sit on JSX attributes (e.g. <CodeBlock code={`...`}>). The code samples in
