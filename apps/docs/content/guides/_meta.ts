@@ -6,6 +6,7 @@ const meta: MetaFile = {
   'cascade-layers': 'Cascade layers',
   'token-autocomplete': 'Token autocomplete',
   'strict-token-paths': 'Strict token paths',
+  'import-design-tokens': 'Import design tokens',
   desktop: 'Desktop',
   performance: 'Performance',
   'server-rendering': 'Server-side rendering',
