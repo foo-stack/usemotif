@@ -91,3 +91,19 @@ const C = styled.input.attrs({ type: 'text' })\`color: red;\`;
     expect(applyFromStyledComponents(src)).toBe(src);
   });
 });
+
+describe('cssToStyle - comments', () => {
+  it('drops comments, keeping an unclosed one as text', () => {
+    expect(cssToStyle('/* a */ padding: 4px; /* b */ margin: 0;')).toEqual({
+      padding: '4px',
+      margin: 0,
+    });
+    expect(cssToStyle('padding: 4px; /* never closed')).toBeNull();
+  });
+
+  it('strips many unclosed comment openers in linear time', () => {
+    const start = performance.now();
+    cssToStyle(`/*${'a/*'.repeat(50_000)}`);
+    expect(performance.now() - start).toBeLessThan(200);
+  });
+});

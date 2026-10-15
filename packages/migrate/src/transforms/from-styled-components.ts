@@ -36,9 +36,23 @@ const camel = (prop: string): string =>
     .replace(/^-(webkit|moz|ms)-/, (_, v: string) => `${v[0]!.toUpperCase()}${v.slice(1)}-`)
     .replace(/-([a-z])/g, (_, c: string) => c.toUpperCase());
 
+/** CSS with its comments removed, in one pass; an unclosed comment is left as it was. */
+function stripComments(css: string): string {
+  let out = '';
+  let at = 0;
+  for (;;) {
+    const start = css.indexOf('/*', at);
+    if (start === -1) return out + css.slice(at);
+    const end = css.indexOf('*/', start + 2);
+    if (end === -1) return out + css.slice(at);
+    out += css.slice(at, start);
+    at = end + 2;
+  }
+}
+
 /** A flat CSS body as a style object, or `null` when it holds something without a mapping. */
 export function cssToStyle(css: string): StyleObject | null {
-  const text = css.replace(/\/\*[\s\S]*?\*\//g, '');
+  const text = stripComments(css);
   let pos = 0;
   const block = (depth: number): StyleObject | null => {
     const out: StyleObject = {};

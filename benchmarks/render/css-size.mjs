@@ -52,20 +52,27 @@ const corpus = Array.from({ length: COMPONENTS }, () => {
 const motifSource = () =>
   `import { Box } from '@usemotif/react';\n${corpus
     .map(({ base, hover }, i) => {
-      const attrs = base.map(([prop, , value]) => `${prop}="${value}"`);
-      if (hover) attrs.push(`_hover={{ ${hover[0]}: '${hover[1]}' }}`);
+      const attrs = base.map(([prop, , value]) => `${prop}={${literal(value)}}`);
+      if (hover) attrs.push(`_hover={{ ${hover[0]}: ${literal(hover[1])} }}`);
       return `export const C${i} = () => <Box ${attrs.join(' ')} />;`;
     })
     .join('\n')}\n`;
+
+// A value as a JavaScript literal, safe to place inside generated source.
+const literal = (value) =>
+  JSON.stringify(value).replace(
+    /[<>\u2028\u2029]/g,
+    (c) => `\\u${c.charCodeAt(0).toString(16).padStart(4, '0')}`,
+  );
 
 const objectOf = ({ base, hover }, nest) => {
   const entries = base.map(([, css, value]) => [css, value]);
   if (hover) {
     const plain = entries.find(([css]) => css === hover[0])?.[1] ?? null;
     const rest = entries.filter(([css]) => css !== hover[0]);
-    return JSON.stringify(Object.fromEntries([...rest, [hover[0], nest(plain, hover[1])]]));
+    return literal(Object.fromEntries([...rest, [hover[0], nest(plain, hover[1])]]));
   }
-  return JSON.stringify(Object.fromEntries(entries));
+  return literal(Object.fromEntries(entries));
 };
 
 const stylexSource = () =>
@@ -81,7 +88,7 @@ const pandaSource = () =>
   `import { css } from './styled-system/css/index.mjs';\n${corpus
     .map((c, i) => {
       const style = JSON.parse(objectOf(c, (plain, hover) => ({ base: plain, _hover: hover })));
-      return `export const C${i} = () => <div className={css(${JSON.stringify(style)})} />;`;
+      return `export const C${i} = () => <div className={css(${literal(style)})} />;`;
     })
     .join('\n')}\n`;
 
