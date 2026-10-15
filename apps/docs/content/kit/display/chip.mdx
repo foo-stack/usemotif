@@ -68,6 +68,25 @@ A primary chip with an icon:
   Featured
 </Chip>`} />
 
+Filter chips. Give a chip `selected` (or `defaultSelected`) and `onSelectedChange` and its label
+becomes a toggle button with `aria-pressed`, filled with the primary colour while selected. A
+remove button, if there is one, stays a separate target:
+
+<CodeBlock lang="tsx" code={`import { Chip } from '@usemotif/ui';
+import { HStack } from 'usemotif';
+
+<HStack gap="$space.2" role="group" aria-label="Filter by status">
+  {STATUSES.map((status) => (
+    <Chip
+      key={status}
+      selected={active.has(status)}
+      onSelectedChange={(on) => toggleStatus(status, on)}
+    >
+      {status}
+    </Chip>
+  ))}
+</HStack>`} />
+
 ## API
 
 <ApiSignature
@@ -101,6 +120,21 @@ A primary chip with an icon:
       type: 'string',
       default: "'Remove'",
       description: 'Accessible name of the remove button. Name the chip in it when several sit together.',
+    },
+    {
+      name: 'selected',
+      type: 'boolean',
+      description: 'Makes the chip a toggle: its label becomes a button with `aria-pressed`, filled with the primary colour while `true`. Controlled.',
+    },
+    {
+      name: 'defaultSelected',
+      type: 'boolean',
+      description: 'The starting `selected` state when uncontrolled. Also makes the chip a toggle.',
+    },
+    {
+      name: 'onSelectedChange',
+      type: '(selected: boolean) => void',
+      description: 'Called with the new state when the chip is toggled.',
     },
   ]}
 />
