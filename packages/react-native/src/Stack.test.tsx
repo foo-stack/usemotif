@@ -126,6 +126,36 @@ describe('Stack - stagger', () => {
     }
   });
 
+  it('starts the wave from staggerFrom', async () => {
+    const { registerMotionDriver } = await import('./_animation/index.js');
+    const calls: Array<number | undefined> = [];
+    registerMotionDriver({
+      name: 'capture',
+      useEntryAnimation: (opts) => {
+        calls.push(opts.delayMs);
+        return null;
+      },
+      useExitAnimation: () => ({}),
+    });
+    try {
+      const { Box } = await import('./Box.js');
+      render(
+        <ThemeProvider themes={[theme]} active="test">
+          <Stack stagger={0.05} staggerFrom="center">
+            <Box enterStyle={{ opacity: 0 }} />
+            <Box enterStyle={{ opacity: 0 }} />
+            <Box enterStyle={{ opacity: 0 }} />
+          </Stack>
+        </ThemeProvider>,
+      );
+      expect(calls[0]).toBeCloseTo(50, 5);
+      expect(calls[1]).toBe(0);
+      expect(calls[2]).toBeCloseTo(50, 5);
+    } finally {
+      registerMotionDriver(null);
+    }
+  });
+
   it('omits delayMs for children outside any stagger provider', async () => {
     const { registerMotionDriver } = await import('./_animation/index.js');
     const calls: Array<{ delayMs: number | undefined }> = [];
