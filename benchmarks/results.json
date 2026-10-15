@@ -1,0 +1,52 @@
+{
+  "generatedAt": "2026-10-15",
+  "commit": "a9b8f8b11685",
+  "environment": "Node 24.10.0, darwin arm64, Apple M4 Max",
+  "note": "Each ratio is motif's ops/sec over the library's, measured in one run with Vitest bench in jsdom. Above 1 means motif is faster.",
+  "workloads": [
+    {
+      "id": "data-table",
+      "label": "Data table: 100 rows of 12 styled cells",
+      "variants": ["runtime", "compiled"]
+    },
+    {
+      "id": "deep-tree",
+      "label": "Deep tree: 150 nested styled boxes",
+      "variants": ["runtime", "compiled"]
+    },
+    {
+      "id": "theme-switch",
+      "label": "Theme switch across 300 styled boxes",
+      "variants": ["runtime"]
+    }
+  ],
+  "ratios": {
+    "data-table": {
+      "runtime": {
+        "Tamagui": 4.6,
+        "Emotion": 0.38,
+        "StyleX": 0.26,
+        "Panda": 0.35
+      },
+      "compiled": {
+        "Tamagui": 14.48,
+        "Emotion": 1.19,
+        "StyleX": 0.82,
+        "Panda": 1.1
+      }
+    },
+    "deep-tree": {
+      "runtime": {
+        "Tamagui": 26.55
+      },
+      "compiled": {
+        "Tamagui": 104.38
+      }
+    },
+    "theme-switch": {
+      "runtime": {
+        "Tamagui": 13.3
+      }
+    }
+  }
+}
