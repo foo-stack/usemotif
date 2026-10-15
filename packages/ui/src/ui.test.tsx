@@ -523,6 +523,21 @@ describe('Popover - themed surface over the headless behaviour', () => {
 });
 
 describe('Accordion - themed via _expanded over the headless disclosure', () => {
+  it('passes collapsible={false} through: the open trigger is disabled and stays open', () => {
+    render(
+      <Accordion.Root collapsible={false} defaultValue={ACCORDION_DEFAULT_OPEN}>
+        <Accordion.Item value="a">
+          <Accordion.Trigger>Shipping</Accordion.Trigger>
+          <Accordion.Content>Ships in 2-3 days.</Accordion.Content>
+        </Accordion.Item>
+      </Accordion.Root>,
+    );
+    const trigger = container.querySelector('button')!;
+    expect(trigger.getAttribute('aria-disabled')).toBe('true');
+    click(trigger);
+    expect(trigger.getAttribute('aria-expanded')).toBe('true');
+  });
+
   it('renders triggers that expose aria-expanded and toggle their panels', () => {
     render(
       <Accordion.Root type="single" defaultValue={ACCORDION_DEFAULT_OPEN}>

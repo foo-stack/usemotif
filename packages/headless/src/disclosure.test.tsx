@@ -132,6 +132,49 @@ describe('Accordion - single mode (default)', () => {
   });
 });
 
+describe('Accordion - collapsible={false}', () => {
+  function Locked({ type = 'single' }: { type?: 'single' | 'multiple' }): React.ReactElement {
+    return (
+      <Accordion.Root type={type} collapsible={false} defaultValue={['a']}>
+        <Accordion.Item value="a">
+          <Accordion.Trigger>
+            <button data-testid="ta">A</button>
+          </Accordion.Trigger>
+          <Accordion.Content>A body</Accordion.Content>
+        </Accordion.Item>
+        <Accordion.Item value="b">
+          <Accordion.Trigger>
+            <button data-testid="tb">B</button>
+          </Accordion.Trigger>
+          <Accordion.Content>B body</Accordion.Content>
+        </Accordion.Item>
+      </Accordion.Root>
+    );
+  }
+  const attr = (id: string, name: string): string | null =>
+    container.querySelector(`[data-testid="${id}"]`)!.getAttribute(name);
+
+  it('keeps the open item open and marks its trigger disabled', () => {
+    render(<Locked />);
+    expect(attr('ta', 'aria-disabled')).toBe('true');
+    expect(attr('tb', 'aria-disabled')).toBeNull();
+    click(container.querySelector('[data-testid="ta"]')!);
+    expect(attr('ta', 'aria-expanded')).toBe('true');
+    click(container.querySelector('[data-testid="tb"]')!);
+    expect(attr('ta', 'aria-expanded')).toBe('false');
+    expect(attr('tb', 'aria-expanded')).toBe('true');
+    expect(attr('ta', 'aria-disabled')).toBeNull();
+    expect(attr('tb', 'aria-disabled')).toBe('true');
+  });
+
+  it('has no effect in multiple mode', () => {
+    render(<Locked type="multiple" />);
+    expect(attr('ta', 'aria-disabled')).toBeNull();
+    click(container.querySelector('[data-testid="ta"]')!);
+    expect(attr('ta', 'aria-expanded')).toBe('false');
+  });
+});
+
 describe('Accordion - multiple mode', () => {
   it('multiple items can be open simultaneously', () => {
     render(

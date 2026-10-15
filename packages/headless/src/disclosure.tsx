@@ -42,6 +42,10 @@ interface CollapsibleContextValue {
   readonly triggerId: string;
 }
 const CollapsibleContext = createContext<CollapsibleContextValue | null>(null);
+// Set by an Accordion item whose panel cannot be closed, so its trigger can
+// say so (`aria-disabled`, per the WAI-ARIA accordion pattern).
+const CollapsibleLockedContext = createContext(false);
+
 function useCollapsibleContext(component: string): CollapsibleContextValue {
   const ctx = useContext(CollapsibleContext);
   if (ctx === null) throw new Error(`${component} must be inside <Collapsible.Root>.`);
@@ -83,6 +87,7 @@ interface CollapsibleTriggerChildProps {
   onClick?: (e: MouseEvent<HTMLElement>) => void;
   'aria-expanded'?: boolean;
   'aria-controls'?: string;
+  'aria-disabled'?: boolean;
   id?: string;
 }
 function CollapsibleTrigger({
@@ -91,12 +96,14 @@ function CollapsibleTrigger({
   children: ReactElement<CollapsibleTriggerChildProps>;
 }): ReactElement {
   const ctx = useCollapsibleContext('Collapsible.Trigger');
+  const locked = useContext(CollapsibleLockedContext);
   if (!isValidElement(children)) throw new Error('Collapsible.Trigger expects a single element.');
   const childOnClick = children.props.onClick;
   return cloneElement(children, {
     id: ctx.triggerId,
     'aria-expanded': ctx.open,
     'aria-controls': ctx.contentId,
+    ...(locked && { 'aria-disabled': true }),
     onClick: (e: MouseEvent<HTMLElement>) => {
       childOnClick?.(e);
       if (!e.defaultPrevented) ctx.setOpen(!ctx.open);
@@ -153,6 +160,7 @@ interface AccordionContextValue {
   readonly type: 'single' | 'multiple';
   readonly value: readonly string[];
   readonly toggle: (id: string) => void;
+  readonly collapsible: boolean;
 }
 const AccordionContext = createContext<AccordionContextValue | null>(null);
 function useAccordionContext(component: string): AccordionContextValue {
@@ -166,10 +174,22 @@ export interface AccordionRootProps {
   value?: string[];
   defaultValue?: string[];
   onValueChange?: (value: string[]) => void;
+  /**
+   * In `single` mode, `false` keeps one item always open: the open item's
+   * trigger no longer closes it and is marked disabled. Defaults to `true`.
+   */
+  collapsible?: boolean;
   children?: ReactNode;
 }
 function AccordionRoot(props: AccordionRootProps): ReactElement {
-  const { type = 'single', value: controlled, defaultValue = [], onValueChange, children } = props;
+  const {
+    type = 'single',
+    value: controlled,
+    defaultValue = [],
+    onValueChange,
+    collapsible = true,
+    children,
+  } = props;
   // Prop-presence detection so `value={undefined}` stays controlled-and-empty.
   const [rawValue, setValue] = useControllableState({
     value: controlled,
@@ -181,16 +201,17 @@ function AccordionRoot(props: AccordionRootProps): ReactElement {
   const toggle = useCallback(
     (id: string) => {
       const isOpen = value.includes(id);
+      if (isOpen && type === 'single' && !collapsible) return;
       let next: string[];
       if (isOpen) next = value.filter((v) => v !== id);
       else if (type === 'single') next = [id];
       else next = [...value, id];
       setValue(next);
     },
-    [value, type, setValue],
+    [value, type, collapsible, setValue],
   );
   return (
-    <AccordionContext.Provider value={{ type, value, toggle }}>
+    <AccordionContext.Provider value={{ type, value, toggle, collapsible }}>
       {children}
     </AccordionContext.Provider>
   );
@@ -204,9 +225,12 @@ export interface AccordionItemProps {
 function AccordionItem({ value, children }: AccordionItemProps): ReactElement {
   const ctx = useAccordionContext('Accordion.Item');
   const open = ctx.value.includes(value);
+  const locked = open && ctx.type === 'single' && !ctx.collapsible;
   return (
     <CollapsibleRoot open={open} onOpenChange={() => ctx.toggle(value)}>
-      {children}
+      <CollapsibleLockedContext.Provider value={locked}>
+        {children}
+      </CollapsibleLockedContext.Provider>
     </CollapsibleRoot>
   );
 }
