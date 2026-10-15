@@ -187,9 +187,10 @@ describe('native ColorPicker swatches', () => {
         onValueChange={onValueChange}
       />,
     );
-    // The format toggle is a radio group too; take the swatch group's radios.
-    const group = container.querySelector('[accessibilityRole="radiogroup"]')!;
-    const radios = Array.from(group.querySelectorAll('[accessibilityRole="radio"]'));
+    // The format toggle is a radio group too; find the swatches by their colours.
+    const radios = ['#ef4444', '#22c55e'].map(
+      (c) => container.querySelector(`[accessibilityRole="radio"][accessibilityLabel="${c}"]`)!,
+    );
     const checked = radios.map((el) => {
       const key = Object.keys(el).find((k) => k.startsWith('__reactProps'))!;
       return (el as unknown as Record<string, { accessibilityState: { checked: boolean } }>)[key]!
