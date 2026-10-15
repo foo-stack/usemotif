@@ -124,3 +124,30 @@ describe('syncCollectorStorage - module-level pointer', () => {
     expect(collector.getCss()).toContain('@media (min-width: 768px)');
   });
 });
+
+describe('motifStyleStream', () => {
+  it('puts collected CSS into <head> with the shell, then ahead of later chunks', async () => {
+    const { motifStyleStream, SSRStyleCollector: Collector } = await import('./server.js');
+    const collector = new Collector();
+    const stream = motifStyleStream(collector);
+    const out: string[] = [];
+    stream.on('data', (chunk: Buffer | string) => out.push(String(chunk)));
+    const write = (html: string): Promise<void> =>
+      new Promise((resolve) => stream.write(html, () => resolve()));
+
+    collector._append('m-a', '.m-a { color: red; }');
+    await write('<!DOCTYPE html><html><head><title>t</title>');
+    await write('</head><body><div class="m-a">shell</div>');
+    collector._append('m-b', '.m-b { color: blue; }');
+    await write('<div hidden id="S:0"><p class="m-b">late</p></div>');
+    await write('<script>done</script>');
+    stream.end();
+
+    expect(out).toEqual([
+      '<!DOCTYPE html><html><head><title>t</title>',
+      '<style data-motif-ssr>.m-a { color: red; }</style></head><body><div class="m-a">shell</div>',
+      '<style data-motif-ssr>.m-b { color: blue; }</style><div hidden id="S:0"><p class="m-b">late</p></div>',
+      '<script>done</script>',
+    ]);
+  });
+});

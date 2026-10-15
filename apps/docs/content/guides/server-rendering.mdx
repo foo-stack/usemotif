@@ -1,9 +1,9 @@
 ---
 title: Server-side rendering
-description: Wire SSRStyleCollector into a sync renderer or stream collected styles from Next.js App Router with the registry pattern.
+description: Wire SSRStyleCollector into a sync renderer, or stream collected styles from Next.js App Router or React Router 7.
 diataxis: howto
-covers: ['SSRStyleCollector', 'CollectorContext']
-last_verified: 2026-05-05
+covers: ['SSRStyleCollector', 'CollectorContext', 'motifStyleStream']
+last_verified: 2026-10-15
 ---
 
 import { ArticleMeta, Callout, CodeBlock, Eyebrow, Lede } from '../../components/index.js';
@@ -116,6 +116,56 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 `useServerInsertedHTML` fires on every flush; `_drain()` clears the collector's emitted rules so
 each flush only includes what is new. The dedup set stays populated, so two flushes never emit the
 same class twice.
+
+## React Router 7
+
+React Router's framework mode streams through a Node `entry.server`. Give each request its own
+collector, provide it with `CollectorContext`, and pipe React's stream through
+`motifStyleStream`, which writes the collected CSS into the HTML as it goes: into `<head>` with
+the shell, then ahead of each later chunk, so a Suspense boundary's styles arrive before its
+content.
+
+<CodeBlock lang="tsx" code={`// app/entry.server.tsx
+import { PassThrough } from 'node:stream';
+import { createReadableStreamFromReadable } from '@react-router/node';
+import { CollectorContext } from '@usemotif/react';
+import { motifStyleStream, SSRStyleCollector } from '@usemotif/react/server';
+import { isbot } from 'isbot';
+import { renderToPipeableStream } from 'react-dom/server';
+import { ServerRouter, type EntryContext } from 'react-router';
+
+export const streamTimeout = 5000;
+
+export default function handleRequest(
+  request: Request,
+  status: number,
+  headers: Headers,
+  context: EntryContext,
+) {
+  return new Promise<Response>((resolve, reject) => {
+    const collector = new SSRStyleCollector();
+    const ready = isbot(request.headers.get('user-agent') ?? '') ? 'onAllReady' : 'onShellReady';
+    const { pipe, abort } = renderToPipeableStream(
+      <CollectorContext.Provider value={collector}>
+        <ServerRouter context={context} url={request.url} />
+      </CollectorContext.Provider>,
+      {
+        [ready]() {
+          const body = new PassThrough();
+          headers.set('Content-Type', 'text/html');
+          resolve(new Response(createReadableStreamFromReadable(body), { headers, status }));
+          pipe(motifStyleStream(collector)).pipe(body);
+        },
+        onShellError: reject,
+      },
+    );
+    setTimeout(abort, streamTimeout + 1000);
+  });
+}`} />
+
+Put `ThemeProvider` in the root route's `Layout`, inside `<body>`. `apps/ssr-react-router` in
+the repository is this setup with a deferred loader, and CI serves its production build and checks
+the streamed HTML and the hydrated page on every change.
 
 ## Primitives in Server Components
 
