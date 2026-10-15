@@ -134,6 +134,7 @@ export default defineConfig({
     'src/MenuItems.tsx',
     'src/Slider.tsx',
     'src/Progress.tsx',
+    'src/ProgressCircle.tsx',
     'src/Drawer.tsx',
     'src/AlertDialog.tsx',
     'src/ContextMenu.tsx',

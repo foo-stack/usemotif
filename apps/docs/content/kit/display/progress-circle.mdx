@@ -1,0 +1,93 @@
+---
+title: ProgressCircle
+description: A ring progress indicator - a filling arc for a known value, a spinning arc for an unknown one.
+diataxis: reference
+covers: ['ProgressCircle', 'ProgressCircleProps']
+last_verified: 2026-10-15
+---
+
+import {
+  ApiSignature,
+  ArticleMeta,
+  Callout,
+  CodeBlock,
+  Eyebrow,
+  Lede,
+} from '../../../components/index.js';
+
+<Eyebrow>UI kit / Display</Eyebrow>
+
+# ProgressCircle
+
+<Lede>
+  ProgressCircle is the round sibling of Progress. Give it a `value` and the arc fills to it; pass
+  `null` and a quarter arc spins until the work is done.
+</Lede>
+
+<ArticleMeta />
+
+## What it is
+
+A `role="progressbar"` element around an SVG ring, carrying the same ARIA as
+[Progress](/kit/display/progress): `aria-valuenow`, `aria-valuemin` and `aria-valuemax` when the value
+is known, and none of them when it is not. The track uses `surface.muted` and the arc
+`action.primary.bg`, and the arc eases to each new value.
+
+The indeterminate spin stops under `prefers-reduced-motion`, leaving a still quarter arc.
+
+## Install
+
+<CodeBlock lang="bash" code={`yarn add @usemotif/ui`} />
+
+<CodeBlock lang="tsx" code={`import { ProgressCircle } from '@usemotif/ui';`} />
+
+## Usage
+
+<CodeBlock lang="tsx" code={`import { ProgressCircle } from '@usemotif/ui';
+
+<ProgressCircle value={70} aria-label="Uploading" />
+<ProgressCircle value={null} size={24} thickness={3} aria-label="Loading" />`} />
+
+## API
+
+<ApiSignature
+  name="ProgressCircle"
+  status="stable"
+  signature={`function ProgressCircle(props: ProgressCircleProps): JSX.Element`}
+  params={[
+    {
+      name: 'value',
+      type: 'number | null',
+      required: true,
+      description: '`0` to `max`, or `null` for an indeterminate spin.',
+    },
+    {
+      name: 'max',
+      type: 'number',
+      default: '100',
+      description: 'The value that fills the ring.',
+    },
+    {
+      name: 'size',
+      type: 'number',
+      default: '40',
+      description: 'Diameter in px.',
+    },
+    {
+      name: 'thickness',
+      type: 'number',
+      default: '4',
+      description: 'Ring width in px.',
+    },
+    {
+      name: 'aria-label',
+      type: 'string',
+      description: 'What is progressing. A progress indicator needs an accessible name.',
+    },
+  ]}
+/>
+
+<Callout variant="info" title="Related">
+  [Progress](/kit/display/progress) for a horizontal bar. [Spinner](/kit/display/spinner) for a
+  loading indicator with no value at all.
+</Callout>

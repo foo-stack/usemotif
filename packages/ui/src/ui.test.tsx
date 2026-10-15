@@ -35,6 +35,7 @@ import {
   Pagination,
   Popover,
   Progress,
+  ProgressCircle,
   Radio,
   RadioGroup,
   RangeSlider,
@@ -907,6 +908,53 @@ describe('Progress - themed bar over the headless progressbar', () => {
     const bar = container.querySelector('[role="progressbar"]') as HTMLElement;
     expect(bar).not.toBeNull();
     expect(bar.getAttribute('aria-valuenow')).toBeNull();
+  });
+});
+
+describe('ProgressCircle - themed ring with Progress semantics', () => {
+  const ring = (): SVGCircleElement => container.querySelectorAll('circle')[1] as SVGCircleElement;
+
+  it('fills the arc to the value and reports it', () => {
+    render(<ProgressCircle value={25} size={40} thickness={4} aria-label="Uploading" />);
+    const bar = container.querySelector('[role="progressbar"]')!;
+    expect(bar.getAttribute('aria-valuenow')).toBe('25');
+    expect(bar.getAttribute('aria-valuemax')).toBe('100');
+    expect(bar.getAttribute('aria-label')).toBe('Uploading');
+    const circumference = 2 * Math.PI * 18;
+    expect(Number(ring().getAttribute('stroke-dasharray'))).toBeCloseTo(circumference, 5);
+    expect(Number(ring().getAttribute('stroke-dashoffset'))).toBeCloseTo(circumference * 0.75, 5);
+    expect(
+      container.querySelector('svg')!.parentElement!.getAttribute('style') ?? '',
+    ).not.toContain('animation');
+  });
+
+  it('spins a quarter arc when indeterminate, without a value', () => {
+    render(<ProgressCircle value={null} aria-label="Loading" />);
+    const bar = container.querySelector('[role="progressbar"]')!;
+    expect(bar.getAttribute('aria-valuenow')).toBeNull();
+    const spinner = container.querySelector('svg')!.parentElement!;
+    const css = Array.from(document.querySelectorAll('style'), (el) => el.textContent ?? '').join(
+      '\n',
+    );
+    const animated = `${spinner.getAttribute('style') ?? ''} ${css}`;
+    expect(animated).toMatch(/infinite/);
+    expect(css).toMatch(/@keyframes/);
+  });
+
+  it('holds still under reduced motion', () => {
+    const original = window.matchMedia;
+    window.matchMedia = ((query: string) => ({
+      matches: query.includes('reduce'),
+      addEventListener: () => {},
+      removeEventListener: () => {},
+    })) as unknown as typeof window.matchMedia;
+    try {
+      render(<ProgressCircle value={null} aria-label="Loading" />);
+      const spinner = container.querySelector('svg')!.parentElement!;
+      expect(spinner.getAttribute('style') ?? '').not.toMatch(/animation-name|infinite/);
+    } finally {
+      window.matchMedia = original;
+    }
   });
 });
 
