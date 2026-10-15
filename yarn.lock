@@ -7317,7 +7317,11 @@ __metadata:
   peerDependencies:
     "@usemotif/headless": "workspace:^"
     react: ">=18.0.0"
+    react-native: ">=0.74.0"
     usemotif: "workspace:^"
+  peerDependenciesMeta:
+    react-native:
+      optional: true
   languageName: unknown
   linkType: soft
 
