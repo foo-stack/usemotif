@@ -9,7 +9,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, type ReactNode } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { Linking, Text } from 'react-native';
-import { NavigationMenu, type NavigationMenuItem } from './navigation.native.js';
+import { NavigationMenu, Stepper, type NavigationMenuItem } from './navigation.native.js';
 
 let container: HTMLElement;
 let root: Root;
@@ -112,5 +112,33 @@ describe('Native NavigationMenu - sub-item href + nested children (#264)', () =>
     const web = menuItems().find((el) => el.textContent?.includes('Web'))!;
     clickHost(web);
     expect(openURL).toHaveBeenCalledWith('https://example.dev/web');
+  });
+});
+
+describe('native Stepper', () => {
+  it('makes earlier steps pressable in linear mode and reports the id', () => {
+    const onStepChange = vi.fn();
+    render(
+      <Stepper
+        steps={[
+          { id: 'a', label: 'A' },
+          { id: 'b', label: 'B' },
+          { id: 'c', label: 'C' },
+        ]}
+        current="b"
+        linear
+        onStepChange={onStepChange}
+        renderStep={({ step }) => <Text>{step.label as string}</Text>}
+      />,
+    );
+    const steps = Array.from(container.querySelectorAll('[data-motif-host="Pressable"]'));
+    expect(steps).toHaveLength(3);
+    const disabled = steps.map((el) => {
+      const key = Object.keys(el).find((k) => k.startsWith('__reactProps'))!;
+      return (el as unknown as Record<string, { disabled?: boolean }>)[key]!.disabled;
+    });
+    expect(disabled).toEqual([false, true, true]);
+    act(() => (steps[0] as HTMLElement).click());
+    expect(onStepChange).toHaveBeenCalledWith('a');
   });
 });
