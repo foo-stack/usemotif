@@ -9,6 +9,7 @@ const meta: MetaFile = {
   'import-design-tokens': 'Import design tokens',
   'translating-labels': 'Translating built-in labels',
   'theme-builder': 'Theme builder',
+  gestures: 'Gestures',
   devtools: 'Devtools',
   tailwind: 'Tailwind bridge',
   desktop: 'Desktop',
