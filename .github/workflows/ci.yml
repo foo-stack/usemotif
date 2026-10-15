@@ -327,8 +327,12 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
 
+      # Astro needs Node 22.22 or later, so the fixture has no `build` script for the root build to
+      # reach on Node 20; it is built here, after the packages it depends on.
       - name: Build packages and the fixture
-        run: yarn turbo run build --filter=@usemotif/ssr-astro...
+        run: |
+          yarn turbo run build --filter=@usemotif/ssr-astro^...
+          yarn workspace @usemotif/ssr-astro build:fixture
 
       - name: Install Chromium
         run: yarn workspace @usemotif/ssr-astro exec playwright install --with-deps chromium
