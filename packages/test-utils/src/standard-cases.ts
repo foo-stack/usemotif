@@ -12,6 +12,19 @@ import type { ConformanceCase } from './conformance.js';
  * delivery detail; conformance is about the resolved values).
  */
 export const standardCases: readonly ConformanceCase[] = [
+  // TitleBar: style props reach the bar itself, on both renderers.
+  {
+    name: 'TitleBar / literal padding reaches the bar',
+    primitive: 'TitleBar',
+    props: { p: 16 },
+    expectStyle: { padding: 16 },
+  },
+  {
+    name: 'TitleBar / token background reaches the bar',
+    primitive: 'TitleBar',
+    props: { bg: '$blue.500' },
+    expectStyle: { backgroundColor: '#3b82f6' },
+  },
   // ─── Box: literal styles ────────────────────────────────────────────
   {
     name: 'Box / literal padding (number)',

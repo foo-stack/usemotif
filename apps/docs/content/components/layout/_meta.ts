@@ -15,6 +15,7 @@ const meta: MetaFile = {
   'aspect-ratio': 'AspectRatio',
   spacer: 'Spacer',
   'safe-area': 'SafeArea',
+  'title-bar': 'TitleBar',
 };
 
 export default meta;

@@ -401,3 +401,41 @@ exports[`react-web - snapshot suite (across standard cases) > Pressable / _hover
   },
 }
 `;
+
+exports[`react-web - snapshot suite (across standard cases) > TitleBar / literal padding reaches the bar 1`] = `
+{
+  "baseClassRule": {},
+  "containerRules": {},
+  "mediaRules": {},
+  "pseudoRules": {},
+  "style": {
+    "WebkitAppRegion": "drag",
+    "alignItems": "center",
+    "appRegion": "drag",
+    "display": "flex",
+    "flexShrink": 0,
+    "height": 38,
+    "padding": 16,
+    "userSelect": "none",
+  },
+}
+`;
+
+exports[`react-web - snapshot suite (across standard cases) > TitleBar / token background reaches the bar 1`] = `
+{
+  "baseClassRule": {},
+  "containerRules": {},
+  "mediaRules": {},
+  "pseudoRules": {},
+  "style": {
+    "WebkitAppRegion": "drag",
+    "alignItems": "center",
+    "appRegion": "drag",
+    "backgroundColor": "#3b82f6",
+    "display": "flex",
+    "flexShrink": 0,
+    "height": 38,
+    "userSelect": "none",
+  },
+}
+`;

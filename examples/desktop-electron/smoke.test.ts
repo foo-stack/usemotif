@@ -20,6 +20,16 @@ test('renders the shared demo in an Electron window', async () => {
     await expect(window.getByText('motif on the desktop')).toBeAttached();
     // The interactive control proves Button + state are in the tree.
     await expect(window.getByText(/Toggle theme/)).toBeAttached();
+    // The title bar drags the window and its trailing slot does not. jsdom drops `app-region`,
+    // so this is where TitleBar's drag region is proven.
+    const bar = window.getByText('motif desktop demo').locator('xpath=../..');
+    const region = (el: Element): string => {
+      const style = getComputedStyle(el);
+      return style.getPropertyValue('app-region') || style.getPropertyValue('-webkit-app-region');
+    };
+    expect(await bar.evaluate(region)).toBe('drag');
+    // The last child is the overlay inset; the trailing slot sits just before it.
+    expect(await bar.locator('xpath=./*[last()-1]').evaluate(region)).toBe('no-drag');
   } finally {
     await app.close();
   }

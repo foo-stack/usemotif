@@ -403,3 +403,37 @@ exports[`react-native - snapshot suite (across standard cases) > Pressable / _ho
   },
 }
 `;
+
+exports[`react-native - snapshot suite (across standard cases) > TitleBar / literal padding reaches the bar 1`] = `
+{
+  "baseClassRule": {},
+  "containerRules": {},
+  "mediaRules": {},
+  "pseudoRules": {},
+  "style": {
+    "alignItems": "center",
+    "direction": "ltr",
+    "flexDirection": "row",
+    "flexShrink": 0,
+    "height": 38,
+    "padding": 16,
+  },
+}
+`;
+
+exports[`react-native - snapshot suite (across standard cases) > TitleBar / token background reaches the bar 1`] = `
+{
+  "baseClassRule": {},
+  "containerRules": {},
+  "mediaRules": {},
+  "pseudoRules": {},
+  "style": {
+    "alignItems": "center",
+    "backgroundColor": "#3b82f6",
+    "direction": "ltr",
+    "flexDirection": "row",
+    "flexShrink": 0,
+    "height": 38,
+  },
+}
+`;
