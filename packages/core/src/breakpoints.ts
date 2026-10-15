@@ -155,7 +155,7 @@ export function isResponsiveObject(value: unknown): value is Record<string, unkn
   if (value === null || typeof value !== 'object') return false;
   if (Array.isArray(value)) return false;
   for (const key in value as Record<string, unknown>) {
-    if (RESPONSIVE_KEYS.has(key)) return true;
+    if (RESPONSIVE_KEYS.has(key) || isPreferenceKey(key)) return true;
     if (key.startsWith('@')) {
       const inner = key.slice(1);
       const dotIdx = inner.indexOf('.');
@@ -247,7 +247,32 @@ export function containerQueryForBreakpoint(name: BreakpointName, containerName?
 export type ResponsiveKey =
   | { readonly kind: 'base' }
   | { readonly kind: 'media'; readonly bp: BreakpointName }
-  | { readonly kind: 'container'; readonly bp: BreakpointName; readonly name?: string };
+  | { readonly kind: 'container'; readonly bp: BreakpointName; readonly name?: string }
+  | { readonly kind: 'preference'; readonly preference: PreferenceKey };
+
+/**
+ * User-preference conditions, usable as responsive keys beside the breakpoints:
+ * `bg={{ base: '$colors.surface.muted', '@contrast': '$colors.surface.base' }}`. On the web each
+ * is a media query; on React Native the ones the platform reports come from `AccessibilityInfo`
+ * and the window's shape.
+ */
+export const PREFERENCE_QUERIES = {
+  '@contrast': '@media (prefers-contrast: more)',
+  '@forcedColors': '@media (forced-colors: active)',
+  '@reducedTransparency': '@media (prefers-reduced-transparency: reduce)',
+  '@print': '@media print',
+  '@landscape': '@media (orientation: landscape)',
+} as const;
+
+/** A preference condition's responsive key. */
+export type PreferenceKey = keyof typeof PREFERENCE_QUERIES;
+
+/** The order preference rules are emitted in, after every width rule, so a preference wins. */
+export const PREFERENCE_ORDER = Object.keys(PREFERENCE_QUERIES) as readonly PreferenceKey[];
+
+function isPreferenceKey(key: string): key is PreferenceKey {
+  return Object.hasOwn(PREFERENCE_QUERIES, key);
+}
 
 /**
  * Parse a responsive **string DSL** value into the equivalent object form.
@@ -313,6 +338,8 @@ export function parseResponsiveDSL(input: string): Record<string, unknown> | nul
  * - `<bp>` (e.g. `md`) → media query.
  * - `@<bp>` (e.g. `@md`) → container query against nearest container.
  * - `@<name>.<bp>` (e.g. `@card.md`) → container query against named container.
+ * - `@contrast`, `@forcedColors`, `@reducedTransparency`, `@print`, `@landscape` → a preference
+ *   condition (see {@link PREFERENCE_QUERIES}).
  *
  * Container names must be non-empty; the breakpoint must exist in
  * {@link defaultBreakpoints}. Anything else returns `null`.
@@ -321,6 +348,7 @@ export function parseResponsiveKey(key: string): ResponsiveKey | null {
   if (key === BASE_BREAKPOINT_KEY) return { kind: 'base' };
   if (Object.hasOwn(defaultBreakpoints, key)) return { kind: 'media', bp: key as BreakpointName };
   if (!key.startsWith('@')) return null;
+  if (isPreferenceKey(key)) return { kind: 'preference', preference: key };
 
   const inner = key.slice(1);
   const dotIdx = inner.indexOf('.');

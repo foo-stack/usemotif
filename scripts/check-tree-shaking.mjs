@@ -60,7 +60,8 @@ const targets = [
     // Bumped when the style cache's realm-shared state.
     // Bumped when Box gained layoutId (the shared-layout registry in useLayoutAnimation).
     // Bumped when Box reads the scroll-timeline slot (the compiler itself loads only with useScroll).
-    budget: 11300, // gzip bytes
+    // Bumped when responsive values resolve the @contrast-style preference keys (the store on native).
+    budget: 11600, // gzip bytes
   },
   {
     name: '@usemotif/react - Button only',
@@ -77,7 +78,8 @@ const targets = [
     // Bumped when Box gained layoutId (the shared-layout registry in useLayoutAnimation).
     // Bumped when Box reads the scroll-timeline slot (the compiler itself loads only with useScroll).
     // Bumped when Box's style resolution moved into a shared resolver the Server Component primitives also use.
-    budget: 12500,
+    // Bumped when responsive values resolve the @contrast-style preference keys (the store on native).
+    budget: 12700,
   },
   {
     name: '@usemotif/react-native - Box only',
@@ -99,7 +101,8 @@ const targets = [
     // Lowered when the forms components' `forwardRef` calls were marked pure,
     // so the forms module stopped riding along with every Box import.
     // Bumped when Box gained layoutId (the shared-layout registry in useLayoutAnimation).
-    budget: 14600,
+    // Bumped when responsive values resolve the @contrast-style preference keys (the store on native).
+    budget: 15100,
   },
   {
     name: '@usemotif/headless - Dialog only',
@@ -159,7 +162,8 @@ const targets = [
     // Bumped by the `gradients` scale joining core's known scale names.
     // Bumped when state bags took responsive values (nested at-rules).
     // Bumped when styled() variants took responsive values.
-    budget: 6700,
+    // Bumped when responsive values resolve the @contrast-style preference keys (the store on native).
+    budget: 6900,
   },
   {
     name: '@usemotif/ui - Card only',
@@ -177,7 +181,8 @@ const targets = [
     // Bumped when Card parts (Header, Body, Footer, Media) assembled on Card.
     // Bumped when Box gained layoutId (the shared-layout registry in useLayoutAnimation).
     // Bumped when Box's style resolution moved into a shared resolver the Server Component primitives also use.
-    budget: 13000,
+    // Bumped when responsive values resolve the @contrast-style preference keys (the store on native).
+    budget: 13200,
   },
   {
     name: '@usemotif/ui - Modal only',
@@ -603,7 +608,8 @@ const targets = [
     // Bumped when state bags took responsive values (nested at-rules).
     // Bumped when the group states joined core's selector map and Box marks a group.
     // Bumped when the component reads a built-in label from the translatable messages catalogue.
-    budget: 12800,
+    // Bumped when responsive values resolve the @contrast-style preference keys (the store on native).
+    budget: 13000,
   },
   {
     name: '@usemotif/ui - Chip only',
@@ -612,7 +618,8 @@ const targets = [
     // Bumped when state bags took responsive values (nested at-rules).
     // Bumped when the group states joined core's selector map and Box marks a group.
     // Bumped when the component reads a built-in label from the translatable messages catalogue.
-    budget: 12600,
+    // Bumped when responsive values resolve the @contrast-style preference keys (the store on native).
+    budget: 12800,
   },
   {
     name: '@usemotif/ui - Banner only',
@@ -628,7 +635,8 @@ const targets = [
     // Bumped when Box gained layoutId (the shared-layout registry in useLayoutAnimation).
     // Bumped when Box reads the scroll-timeline slot (the compiler itself loads only with useScroll).
     // Bumped when the component reads a built-in label from the translatable messages catalogue.
-    budget: 13700,
+    // Bumped when responsive values resolve the @contrast-style preference keys (the store on native).
+    budget: 13900,
   },
   {
     name: '@usemotif/ui - FormField only',

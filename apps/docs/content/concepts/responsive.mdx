@@ -2,7 +2,7 @@
 title: Responsive
 description: Every style prop accepts a per-breakpoint object, an array, or a string DSL - viewport queries and container queries from one shape.
 diataxis: explanation
-covers: ['useMedia', 'useBreakpoint']
+covers: ['useMedia', 'useBreakpoint', 'PREFERENCE_QUERIES', 'PreferenceKey']
 last_verified: 2026-06-25
 ---
 
@@ -86,6 +86,30 @@ prefix the breakpoint with `@`.
 
 `@<bp>` binds to the nearest container ancestor. `@<name>.<bp>` binds to a container with that
 name. Container queries don't replace media queries - they sit alongside them in the same object.
+
+## User preferences are keys too
+
+Beside the widths, a responsive value takes five keys for what the user has asked for:
+
+<CodeBlock lang="tsx" code={`<Box
+  bg={{ base: '$colors.surface.muted', '@contrast': '$colors.surface.base' }}
+  borderWidth={{ base: 0, '@forcedColors': 1 }}
+  display={{ base: 'flex', '@print': 'none' }}
+  p={{ base: '$3', md: '$5', '@landscape': '$4' }}
+/>`} />
+
+| Key | Web | React Native |
+| --- | --- | --- |
+| `@contrast` | `@media (prefers-contrast: more)` | high text contrast (Android) or darker system colours (iOS), from `AccessibilityInfo` |
+| `@forcedColors` | `@media (forced-colors: active)` | never |
+| `@reducedTransparency` | `@media (prefers-reduced-transparency: reduce)` | reduce transparency (iOS), from `AccessibilityInfo` |
+| `@print` | `@media print` | never |
+| `@landscape` | `@media (orientation: landscape)` | the window is wider than it is tall |
+
+A preference wins over every width rule, so `p={{ md: '$5', '@landscape': '$4' }}` is `$4` in
+landscape at any width. On React Native the settings are read once for the app and followed as
+they change, and components re-render when one does. The compiler extracts these keys like any
+other, and `PREFERENCE_QUERIES` maps each key to its media query.
 
 ## One source, three queries
 
