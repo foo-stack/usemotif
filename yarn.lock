@@ -8614,10 +8614,13 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@usemotif/tokens@workspace:packages/tokens"
   dependencies:
+    "@types/node": "npm:^25.6.0"
     "@usemotif/core": "workspace:*"
     tsup: "npm:^8.5.1"
     typescript: "npm:^6.0.3"
     vitest: "npm:^4.1.5"
+  bin:
+    usemotif-tokens: ./dist/cli.js
   languageName: unknown
   linkType: soft
 
