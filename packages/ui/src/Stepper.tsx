@@ -3,6 +3,8 @@
 import { Stepper as HeadlessStepper, type StepperStep } from '@usemotif/headless';
 import type { CSSProperties, ReactElement } from 'react';
 import { Box } from 'usemotif';
+import { platformText } from './_platform-text.js';
+import { usePlatformStyle } from './_platform-style.js';
 
 export type { StepperStep };
 
@@ -64,7 +66,7 @@ function renderThemedStep(info: StepInfo): ReactElement {
         bg={circleBg}
         color={circleColor}
       >
-        {mark}
+        {platformText(mark, { color: circleColor, fontSize: '$fontSizes.sm', fontWeight: 600 })}
       </Box>
       <Box
         as="span"
@@ -72,7 +74,11 @@ function renderThemedStep(info: StepInfo): ReactElement {
         fontWeight={active ? 600 : 400}
         color={status === 'pending' ? '$colors.text.muted' : '$colors.text.default'}
       >
-        {step.label}
+        {platformText(step.label, {
+          fontSize: '$fontSizes.sm',
+          fontWeight: active ? 600 : 400,
+          color: status === 'pending' ? '$colors.text.muted' : '$colors.text.default',
+        })}
       </Box>
     </Box>
   );
@@ -101,12 +107,13 @@ export function Stepper({
   onStepChange,
   linear,
 }: StepperProps) {
+  const platformStyle = usePlatformStyle();
   return (
     <HeadlessStepper
       steps={steps}
       orientation={orientation}
       renderStep={renderThemedStep}
-      style={orientation === 'vertical' ? STYLE_VERTICAL : STYLE_HORIZONTAL}
+      style={platformStyle(orientation === 'vertical' ? STYLE_VERTICAL : STYLE_HORIZONTAL)}
       {...(current !== undefined ? { current } : {})}
       {...(onStepChange !== undefined ? { onStepChange } : {})}
       {...(linear !== undefined ? { linear } : {})}

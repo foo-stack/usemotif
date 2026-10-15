@@ -2,7 +2,10 @@
 
 import { Pagination as HeadlessPagination } from '@usemotif/headless';
 import type { ChangeEvent, CSSProperties, ReactElement } from 'react';
-import { Box, type BoxProps } from 'usemotif';
+import { Pressable, Box, type BoxProps } from 'usemotif';
+import { isNative } from './_platform.js';
+import { usePlatformStyle } from './_platform-style.js';
+import { platformText } from './_platform-text.js';
 
 export interface PaginationProps {
   /** Current page (1-based). Controlled. */
@@ -26,6 +29,7 @@ export interface PaginationProps {
 const DEFAULT_PAGE_SIZES: readonly number[] = [10, 20, 50];
 
 const NAV_STYLE: CSSProperties = { display: 'flex', alignItems: 'center', gap: 4 };
+const MUTED_TEXT = { color: '$colors.text.muted' } as const;
 const PAGE_HOVER = { bg: '$colors.surface.interactive' } as const;
 
 interface PageItemInfo {
@@ -51,14 +55,18 @@ function renderThemedPageItem(info: PageItemInfo): ReactElement {
         height={36}
         color="$colors.text.muted"
       >
-        ...
+        {platformText('...', MUTED_TEXT)}
       </Box>
     );
   }
   const label = info.type === 'previous' ? '‹' : info.type === 'next' ? '›' : String(info.page);
+  const color = info.selected
+    ? '$colors.text.inverse'
+    : info.disabled
+      ? '$colors.text.muted'
+      : '$colors.text.default';
   return (
-    <Box
-      as="button"
+    <Pressable
       display="inline-flex"
       alignItems="center"
       justifyContent="center"
@@ -70,25 +78,14 @@ function renderThemedPageItem(info: PageItemInfo): ReactElement {
       fontSize="$fontSizes.sm"
       cursor={info.disabled ? 'not-allowed' : 'pointer'}
       bg={info.selected ? '$colors.action.primary.bg' : 'transparent'}
-      color={
-        info.selected
-          ? '$colors.text.inverse'
-          : info.disabled
-            ? '$colors.text.muted'
-            : '$colors.text.default'
-      }
+      color={color}
       {...(info.selected || info.disabled ? {} : { _hover: PAGE_HOVER })}
-      // `type`/`disabled`/`onClick`/`aria-current` go to the underlying <button>;
-      // Box's element typing is for a generic HTMLElement, so cast past it.
-      {...({
-        type: 'button',
-        disabled: info.disabled,
-        onClick: info.onClick,
-        ...(info.selected && info.type === 'page' ? { 'aria-current': 'page' } : {}),
-      } as unknown as BoxProps)}
+      disabled={info.disabled}
+      onPress={info.onClick}
+      {...(info.selected && info.type === 'page' ? { 'aria-current': 'page' as const } : {})}
     >
-      {label}
-    </Box>
+      {platformText(label, { color, fontSize: '$fontSizes.sm' })}
+    </Pressable>
   );
 }
 
@@ -148,9 +145,13 @@ export function Pagination({
   onPageSizeChange,
   ...aria
 }: PaginationProps) {
+  const platformStyle = usePlatformStyle();
   const sizing =
     pageSize !== undefined && onPageSizeChange !== undefined
-      ? { pageSize, pageSizeOptions, onPageSizeChange, renderPageSize: renderThemedPageSize }
+      ? // The size picker is a web <select>; native gets the pages alone.
+        isNative
+        ? {}
+        : { pageSize, pageSizeOptions, onPageSizeChange, renderPageSize: renderThemedPageSize }
       : {};
   return (
     <HeadlessPagination
@@ -160,7 +161,7 @@ export function Pagination({
       boundaries={boundaries}
       renderItem={renderThemedPageItem}
       {...sizing}
-      style={NAV_STYLE}
+      style={platformStyle(NAV_STYLE)}
       {...(onPageChange !== undefined ? { onPageChange } : {})}
       {...(aria['aria-label'] !== undefined ? { 'aria-label': aria['aria-label'] } : {})}
     />

@@ -7,8 +7,10 @@ import {
   type TreeNodeInfo,
   type TreeViewProps as HeadlessTreeViewProps,
 } from '@usemotif/headless';
-import { useMemo, type CSSProperties, type MouseEvent, type ReactElement } from 'react';
-import { Box } from 'usemotif';
+import { useMemo, type CSSProperties, type ReactElement } from 'react';
+import { Box, Pressable } from 'usemotif';
+import { platformText } from './_platform-text.js';
+import { usePlatformStyle } from './_platform-style.js';
 
 export type { TreeNode };
 interface KitTreeOverrides<T> {
@@ -46,8 +48,15 @@ function renderThemedNode(info: TreeNodeInfo): ReactElement {
   const hasChildren =
     (node.children !== undefined && node.children.length > 0) || node.hasChildren === true;
   const disabled = node.disabled === true;
+  const color = isSelected
+    ? '$colors.text.inverse'
+    : disabled
+      ? '$colors.text.muted'
+      : '$colors.text.default';
   return (
-    <Box
+    <Pressable
+      // A div on web, as before: the headless treeitem is the focusable element.
+      as="div"
       display="flex"
       alignItems="center"
       gap="$space.1"
@@ -57,18 +66,12 @@ function renderThemedNode(info: TreeNodeInfo): ReactElement {
       borderRadius="$radii.md"
       fontSize="$fontSizes.sm"
       bg={isSelected ? '$colors.action.primary.bg' : 'transparent'}
-      color={
-        isSelected
-          ? '$colors.text.inverse'
-          : disabled
-            ? '$colors.text.muted'
-            : '$colors.text.default'
-      }
+      color={color}
       cursor={disabled ? 'not-allowed' : 'pointer'}
-      onClick={select}
+      onPress={select}
     >
       {hasChildren ? (
-        <Box
+        <Pressable
           as="span"
           display="inline-flex"
           alignItems="center"
@@ -76,23 +79,25 @@ function renderThemedNode(info: TreeNodeInfo): ReactElement {
           width={16}
           color={isSelected ? '$colors.text.inverse' : '$colors.text.muted'}
           // The row selects on click; stop here so toggling does not also select.
-          onClick={(e: MouseEvent) => {
-            e.stopPropagation();
+          onPress={(e?: { stopPropagation?: () => void }) => {
+            e?.stopPropagation?.();
             toggle();
           }}
         >
-          {isExpanded ? '▾' : '▸'}
-        </Box>
+          {platformText(isExpanded ? '▾' : '▸', {
+            color: isSelected ? '$colors.text.inverse' : '$colors.text.muted',
+          })}
+        </Pressable>
       ) : (
         <Box as="span" width={16} />
       )}
-      <Box as="span">{node.label}</Box>
+      <Box as="span">{platformText(node.label, { color, fontSize: '$fontSizes.sm' })}</Box>
       {isLoading ? (
         <Box as="span" ml="$space.2" fontSize="$fontSizes.xs" color="$colors.text.muted">
-          Loading
+          {platformText('Loading', { color: '$colors.text.muted', fontSize: '$fontSizes.xs' })}
         </Box>
       ) : null}
-    </Box>
+    </Pressable>
   );
 }
 
@@ -115,6 +120,7 @@ export function TreeView<T>({
   renderNode,
   ...rest
 }: TreeViewProps<T> | MultiTreeViewProps<T>): ReactElement {
+  const platformStyle = usePlatformStyle();
   const mergedStyle = useMemo<CSSProperties>(
     () => (style !== undefined ? { ...TREE_STYLE, ...style } : TREE_STYLE),
     [style],
@@ -122,7 +128,7 @@ export function TreeView<T>({
   return (
     <HeadlessTreeView<T>
       {...(rest as HeadlessTreeViewProps<T> | HeadlessMultiTreeViewProps<T>)}
-      style={mergedStyle}
+      style={platformStyle(mergedStyle)}
       renderNode={renderNode ?? (renderThemedNode as (info: TreeNodeInfo<T>) => ReactElement)}
     />
   );

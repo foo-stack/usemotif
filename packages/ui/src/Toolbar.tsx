@@ -2,6 +2,7 @@
 
 import { Toolbar as HeadlessToolbar } from '@usemotif/headless';
 import type { CSSProperties, ReactNode } from 'react';
+import { usePlatformStyle } from './_platform-style.js';
 
 export interface ToolbarProps {
   readonly orientation?: 'horizontal' | 'vertical';
@@ -45,10 +46,11 @@ const STYLE_VERTICAL: CSSProperties = {
  * ```
  */
 export function Toolbar({ orientation = 'horizontal', children, ...rest }: ToolbarProps) {
+  const platformStyle = usePlatformStyle();
   return (
     <HeadlessToolbar
       orientation={orientation}
-      style={orientation === 'vertical' ? STYLE_VERTICAL : STYLE_HORIZONTAL}
+      style={platformStyle(orientation === 'vertical' ? STYLE_VERTICAL : STYLE_HORIZONTAL)}
       {...(rest['aria-label'] !== undefined ? { 'aria-label': rest['aria-label'] } : {})}
     >
       {children}

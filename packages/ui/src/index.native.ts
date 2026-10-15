@@ -1,7 +1,7 @@
 /**
  * `@usemotif/ui` on React Native, served by the package's `react-native` export
- * condition. The display and overlay components; the form and navigation
- * families are web only for now.
+ * condition: every kit component, with native variants where the web one
+ * depends on the DOM.
  */
 
 import { CardBody, CardFooter, CardHeader, CardMedia, CardRoot } from './Card.native.js';
@@ -67,3 +67,47 @@ export {
   type RangeDatePickerProps,
 } from './DatePicker.native.js';
 export { FormField, type FormFieldProps } from './FormField.js';
+
+export { Tabs } from './Tabs.namespace.js';
+export { Accordion } from './Accordion.namespace.js';
+export {
+  type AccordionRootPropsThemed,
+  type AccordionItemPropsThemed,
+  type AccordionTriggerProps,
+  type AccordionContentProps,
+} from './Accordion.js';
+export { Collapsible } from './Collapsible.namespace.js';
+export {
+  type CollapsibleRootPropsThemed,
+  type CollapsibleTriggerProps,
+  type CollapsibleContentProps,
+} from './Collapsible.js';
+export { Separator, type SeparatorProps } from './Separator.js';
+export { Pagination, type PaginationProps } from './Pagination.js';
+export { Stepper, type StepperProps, type StepperStep } from './Stepper.js';
+export { Breadcrumb } from './Breadcrumb.namespace.js';
+export { type BreadcrumbProps, type BreadcrumbItemProps } from './Breadcrumb.js';
+export { Toolbar, type ToolbarProps } from './Toolbar.js';
+export { NavigationMenu } from './NavigationMenu.namespace.js';
+export { type NavigationMenuProps, type NavigationMenuItemProps } from './NavigationMenu.js';
+export {
+  CommandPalette,
+  useCommandPaletteShortcut,
+  type CommandPaletteProps,
+  type Command,
+} from './CommandPalette.js';
+export {
+  TreeView,
+  type MultiTreeViewProps,
+  type TreeViewProps,
+  type TreeNode,
+} from './TreeView.js';
+export { Stat, type StatProps, type StatTrend } from './Stat.js';
+export { EmptyState, type EmptyStateProps } from './EmptyState.js';
+export {
+  Timeline,
+  type TimelineProps,
+  type TimelineItem,
+  type TimelineStatus,
+} from './Timeline.js';
+export { AvatarGroup, type AvatarGroupProps, type AvatarGroupItem } from './AvatarGroup.js';
