@@ -119,6 +119,24 @@ The paths are `<recipe>.<variant value>.<prop>` for a variant and `<recipe>.<pro
 colour and radius the recipes set has one. A component token holds a reference or a CSS string;
 a bare number is emitted without a unit.
 
+## Font sizes follow the reader
+
+A number in `fontSizes` is authored in px and emitted on web in `rem`, so `md: 16` becomes
+`--fontSizes-md: 1rem` and a reader who raises the browser's text size gets larger text. On
+React Native, `Text` and `Input` already follow Dynamic Type on iOS and the font scale on Android.
+
+A layout that can't take unlimited growth sets a cap:
+
+<CodeBlock lang="ts" code={`createTheme({
+  name: 'light',
+  tokens: { ...lightTheme.tokens, fontScale: { max: 1.5 } },
+});
+// web:    --fontSizes-md: min(1rem, 24px)
+// native: <Text maxFontSizeMultiplier={1.5}>, unless the prop is set`} />
+
+The default themes set no cap. `rem` is relative to the root element, so an app that changes the
+`html` font size, such as the `62.5%` trick, scales its font-size tokens with it.
+
 ## `createTheme` types the tree
 
 A theme is a name plus a token tree:

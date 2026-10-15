@@ -59,3 +59,24 @@ describe('native Text - lines prop (#31)', () => {
     expect(styleAttr).toContain('"fontSize":16');
   });
 });
+
+describe('native Text - font scaling', () => {
+  it("caps the system text size at the theme's fontScale.max, and a prop overrides it", async () => {
+    const { ThemeProvider } = await import('./Theme.js');
+    const theme = { name: 't', tokens: { fontScale: { max: 1.5 } } };
+    render(
+      <ThemeProvider themes={[theme]} active="t">
+        <Text>capped</Text>
+        <Text maxFontSizeMultiplier={3}>override</Text>
+      </ThemeProvider>,
+    );
+    const texts = container.querySelectorAll('[data-motif-host="Text"]');
+    expect(texts[0]!.getAttribute('maxFontSizeMultiplier')).toBe('1.5');
+    expect(texts[1]!.getAttribute('maxFontSizeMultiplier')).toBe('3');
+  });
+
+  it('leaves the system text size uncapped without the token', () => {
+    render(<Text>free</Text>);
+    expect(container.firstElementChild!.getAttribute('maxFontSizeMultiplier')).toBeNull();
+  });
+});
