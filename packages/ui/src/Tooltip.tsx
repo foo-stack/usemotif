@@ -6,6 +6,7 @@ import {
   type TooltipContentProps,
 } from '@usemotif/headless';
 import { Box } from 'usemotif';
+import { platformText } from './_platform-text.js';
 
 /**
  * Themed tooltip - the accessible headless `Tooltip` (hover/focus open with
@@ -22,6 +23,8 @@ import { Box } from 'usemotif';
  * </Tooltip.Root>
  * ```
  */
+const TOOLTIP_TEXT = { color: '$colors.text.inverse', fontSize: '$fontSizes.sm' } as const;
+
 function TooltipContent({ children, ...rest }: TooltipContentProps) {
   return (
     <HeadlessTooltip.Content {...rest}>
@@ -35,7 +38,7 @@ function TooltipContent({ children, ...rest }: TooltipContentProps) {
         maxWidth={240}
         boxShadow="0 4px 12px rgba(0, 0, 0, 0.25)"
       >
-        {children}
+        {platformText(children, TOOLTIP_TEXT)}
       </Box>
     </HeadlessTooltip.Content>
   );

@@ -6,6 +6,7 @@ import {
   type MenuSubTriggerProps,
 } from '@usemotif/headless';
 import { Box } from 'usemotif';
+import { platformText } from './_platform-text.js';
 
 // Hoisted so the bag props are stable references (lint: no-new-object).
 const ITEM_HOVER = { bg: '$colors.surface.interactive' } as const;
@@ -17,6 +18,8 @@ export type MenuSubTriggerPropsThemed = Omit<MenuSubTriggerProps, 'style' | 'asC
  * A menu row that opens a submenu: themed like a menu item, with a trailing
  * chevron. Shared by the kit's Menu and ContextMenu.
  */
+const CHEVRON_TEXT = { color: '$colors.text.muted' } as const;
+
 export function MenuSubTrigger({ children, disabled }: MenuSubTriggerPropsThemed) {
   return (
     <HeadlessMenu.SubTrigger asChild {...(disabled !== undefined ? { disabled } : {})}>
@@ -33,9 +36,12 @@ export function MenuSubTrigger({ children, disabled }: MenuSubTriggerPropsThemed
         _hover={ITEM_HOVER}
         _focus={ITEM_FOCUS}
       >
-        {children}
+        {platformText(children, {
+          fontSize: '$fontSizes.sm',
+          color: disabled === true ? '$colors.text.muted' : '$colors.text.default',
+        })}
         <Box as="span" aria-hidden color="$colors.text.muted">
-          ›
+          {platformText('›', CHEVRON_TEXT)}
         </Box>
       </Box>
     </HeadlessMenu.SubTrigger>

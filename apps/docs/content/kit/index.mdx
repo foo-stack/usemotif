@@ -70,9 +70,14 @@ The kit's display components render on React Native from the same import: Metro 
 package's `react-native` export condition to a native build. That covers Card (with its parts),
 Badge, Alert, Banner, Chip, Spinner, Skeleton, Progress, ProgressCircle, Button and TextField.
 
-On native the text inside them sits in `Text`, carrying the colour and size the recipe gives the
-web element, and ProgressCircle draws with `react-native-svg`. TextField renders the platform
-`Input`, sized from the recipe. The overlay, form and navigation components are web only for now.
+So do the overlays: Modal, AlertDialog, Drawer, Sheet, Popover, Tooltip, HoverCard, Menu,
+ContextMenu and the Toaster, over the headless components' native versions, with the same tokens on
+their surfaces.
+
+On native, text inside any of these sits in `Text`, carrying the colour and size the web element
+would pass down, and ProgressCircle draws with `react-native-svg`. TextField renders the platform
+`Input`, sized from the recipe. Hover and keyboard-focus styles have no native equivalent. The form
+and navigation components are web only for now.
 
 <Callout variant="info" title="Where to next">
   [Display](/kit/display) - the presentational components, from status pills to loading

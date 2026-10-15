@@ -6,6 +6,7 @@ import {
   type MenuItemProps as HeadlessMenuItemProps,
 } from '@usemotif/headless';
 import { Box } from 'usemotif';
+import { platformText } from './_platform-text.js';
 
 // Hoisted so the bag props are stable references (lint: no-new-object). A menu
 // item highlights on both mouse hover and keyboard focus - the headless layer
@@ -60,7 +61,10 @@ function MenuItem({ children, onSelect, disabled }: MenuItemPropsThemed) {
         _hover={ITEM_HOVER}
         _focus={ITEM_FOCUS}
       >
-        {children}
+        {platformText(children, {
+          fontSize: '$fontSizes.sm',
+          color: disabled === true ? '$colors.text.muted' : '$colors.text.default',
+        })}
       </Box>
     </HeadlessMenu.Item>
   );

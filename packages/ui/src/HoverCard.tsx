@@ -6,6 +6,7 @@ import {
   type HoverCardContentProps,
 } from '@usemotif/headless';
 import { Box } from 'usemotif';
+import { platformText } from './_platform-text.js';
 
 /**
  * Themed hover card - the accessible headless `HoverCard` (opens on hover or
@@ -27,6 +28,8 @@ import { Box } from 'usemotif';
  * </HoverCard.Root>
  * ```
  */
+const SURFACE_TEXT = { color: '$colors.text.default' } as const;
+
 function HoverCardContent({ children, ...rest }: HoverCardContentProps) {
   return (
     <HeadlessHoverCard.Content {...rest}>
@@ -41,7 +44,7 @@ function HoverCardContent({ children, ...rest }: HoverCardContentProps) {
         maxWidth={360}
         boxShadow="0 8px 24px rgba(0, 0, 0, 0.18)"
       >
-        {children}
+        {platformText(children, SURFACE_TEXT)}
       </Box>
     </HeadlessHoverCard.Content>
   );

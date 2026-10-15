@@ -1,4 +1,6 @@
+import { existsSync } from 'node:fs';
 import { readdir, readFile, writeFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
 import type { Plugin } from 'esbuild';
 import { defineConfig } from 'tsup';
 
@@ -90,6 +92,26 @@ async function pointNamespaceCjsAtCjs(): Promise<void> {
     const patched = content.replace(/(['"])(\.\/[A-Za-z.]+)\.js\1/g, "'$2.cjs'");
     if (patched !== content) await writeFile(file, patched);
   }
+}
+
+/**
+ * For the native build, resolve each relative import to its `.native.tsx` /
+ * `.native.ts` sibling when one exists, so a shared component picks up native
+ * helpers (`_platform-text`) without a native copy of its own.
+ */
+function preferNativeModules(): Plugin {
+  return {
+    name: 'motif-prefer-native-modules',
+    setup(build) {
+      build.onResolve({ filter: /^\.\.?\// }, ({ path, resolveDir }) => {
+        const base = resolve(resolveDir, path.replace(/\.js$/, ''));
+        for (const ext of ['.native.tsx', '.native.ts']) {
+          if (existsSync(base + ext)) return { path: base + ext };
+        }
+        return undefined;
+      });
+    },
+  };
 }
 
 export default defineConfig([
@@ -202,5 +224,6 @@ export default defineConfig([
     target: 'es2022',
     outDir: 'dist',
     external: ['react', 'react-native', 'usemotif', '@usemotif/headless', '@usemotif/recipes'],
+    esbuildPlugins: [preferNativeModules()],
   },
 ]);
