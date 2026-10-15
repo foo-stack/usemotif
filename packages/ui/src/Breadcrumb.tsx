@@ -8,16 +8,21 @@ import {
   type ReactElement,
   type ReactNode,
 } from 'react';
-import { Box, type BoxProps } from 'usemotif';
+import { Box, Pressable } from 'usemotif';
 import { MenuContent, MenuItem } from './Menu.js';
+import { PlatformLink } from './_link.js';
+import { navigate } from './_navigate.js';
+import { platformText } from './_platform-text.js';
+import { usePlatformStyle } from './_platform-style.js';
 
 const NAV_STYLE: CSSProperties = { fontSize: 14 };
+const CURRENT_TEXT = { color: '$colors.text.default', fontWeight: 500 } as const;
 const LINK_HOVER = { color: '$colors.text.default' } as const;
 
 // A themed chevron between items (the headless wraps it in an aria-hidden span).
 const SEPARATOR = (
   <Box as="span" px="$space.1" color="$colors.text.muted">
-    ›
+    {platformText('›', { color: '$colors.text.muted' })}
   </Box>
 );
 
@@ -32,8 +37,9 @@ export interface BreadcrumbProps {
    */
   readonly maxItems?: number;
   /**
-   * Follows a folded crumb chosen from the menu. Defaults to
-   * `location.assign(href)`; pass your router's navigate for client-side routing.
+   * Follows a folded crumb chosen from the menu. Defaults to `location.assign(href)`
+   * on web and `Linking.openURL(href)` on native; pass your router's navigate for
+   * client-side routing.
    */
   readonly onNavigate?: (href: string) => void;
   readonly children?: ReactNode;
@@ -50,22 +56,14 @@ function BreadcrumbItem({ href, children }: BreadcrumbItemProps) {
   if (href === undefined) {
     return (
       <Box as="span" color="$colors.text.default" fontWeight={500}>
-        {children}
+        {platformText(children, CURRENT_TEXT)}
       </Box>
     );
   }
   return (
-    <Box
-      as="a"
-      color="$colors.text.muted"
-      cursor="pointer"
-      _hover={LINK_HOVER}
-      // `href` goes to the underlying <a>; Box's element typing is generic
-      // HTMLElement, so cast past it.
-      {...({ href, style: { textDecoration: 'none' } } as unknown as BoxProps)}
-    >
+    <PlatformLink href={href} color="$colors.text.muted" cursor="pointer" _hover={LINK_HOVER}>
       {children}
-    </Box>
+    </PlatformLink>
   );
 }
 
@@ -85,10 +83,11 @@ function BreadcrumbItem({ href, children }: BreadcrumbItemProps) {
 function BreadcrumbRoot({
   separator = SEPARATOR,
   maxItems,
-  onNavigate = assignLocation,
+  onNavigate = navigate,
   children,
   ...rest
 }: BreadcrumbProps) {
+  const platformStyle = usePlatformStyle();
   const items = Children.toArray(children).filter(isValidElement);
   const keep = maxItems === undefined ? items.length : Math.max(2, maxItems);
   const crumbs =
@@ -106,16 +105,12 @@ function BreadcrumbRoot({
   return (
     <HeadlessBreadcrumb
       separator={separator}
-      style={NAV_STYLE}
+      style={platformStyle(NAV_STYLE)}
       {...(rest['aria-label'] !== undefined ? { 'aria-label': rest['aria-label'] } : {})}
     >
       {crumbs}
     </HeadlessBreadcrumb>
   );
-}
-
-function assignLocation(href: string): void {
-  window.location.assign(href);
 }
 
 const FOLD_HOVER = { bg: '$colors.surface.interactive', color: '$colors.text.default' } as const;
@@ -131,19 +126,17 @@ function FoldedCrumbs({
   return (
     <HeadlessMenu.Root>
       <HeadlessMenu.Trigger>
-        <Box
-          as="button"
+        <Pressable
           px="$space.1"
           borderWidth={0}
           borderRadius="$radii.sm"
           bg="transparent"
           color="$colors.text.muted"
-          cursor="pointer"
           _hover={FOLD_HOVER}
-          {...({ type: 'button', 'aria-label': 'Show hidden breadcrumbs' } as unknown as BoxProps)}
+          aria-label="Show hidden breadcrumbs"
         >
-          ...
-        </Box>
+          {platformText('...', { color: '$colors.text.muted' })}
+        </Pressable>
       </HeadlessMenu.Trigger>
       <MenuContent>
         {items.map((item, i) => {

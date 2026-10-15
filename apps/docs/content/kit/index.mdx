@@ -66,11 +66,12 @@ re-themes in light and dark with the rest of your app.
 
 ## On React Native
 
-The kit's display components render on React Native from the same import: Metro resolves the
-package's `react-native` export condition to a native build. That covers Card (with its parts),
-Badge, Alert, Banner, Chip, Spinner, Skeleton, Progress, ProgressCircle, Button and TextField.
+Every kit component renders on React Native from the same import: Metro resolves the
+package's `react-native` export condition to a native build. That covers the display components:
+Card (with its parts), Badge, Alert, Banner, Chip, Spinner, Skeleton, Progress, ProgressCircle,
+Button and TextField.
 
-So do the overlays: Modal, AlertDialog, Drawer, Sheet, Popover, Tooltip, HoverCard, Menu,
+It covers the overlays: Modal, AlertDialog, Drawer, Sheet, Popover, Tooltip, HoverCard, Menu,
 ContextMenu and the Toaster, over the headless components' native versions, with the same tokens on
 their surfaces.
 
@@ -82,7 +83,12 @@ The form controls render on native as well. Most take the same props on both pla
 Switch, Radio and RadioGroup are the exception: on the web they are real `<input>` elements with
 `checked` and `onChange`, and on native they take their headless twins' `value`, `defaultValue` and
 `onValueChange`, as the platform controls do. Calendar and DatePicker drop their web surface styles
-on native. The navigation components are web only for now.
+on native.
+
+The navigation and disclosure components complete the set: Tabs, Accordion, Collapsible,
+Breadcrumb, Pagination, Stepper, Toolbar, NavigationMenu, TreeView and CommandPalette, along with
+Separator, Stat, EmptyState, Timeline and AvatarGroup. Links in Breadcrumb and NavigationMenu open
+with `Linking`, and Pagination leaves out its page-size select, which is a web `<select>`.
 
 <Callout variant="info" title="Where to next">
   [Display](/kit/display) - the presentational components, from status pills to loading
