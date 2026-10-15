@@ -251,6 +251,37 @@ describe('display components', () => {
     expect(css).toContain(`.${cls}:focus-visible`);
   });
 
+  it('Badge shows a count, capped at max with a plus', () => {
+    render(
+      <>
+        <Badge data-testid="a" count={7} />
+        <Badge data-testid="b" count={120} />
+        <Badge data-testid="c" count={12} max={9} label="12 unread" />
+      </>,
+    );
+    const text = (id: string): string | null =>
+      container.querySelector(`[data-testid="${id}"]`)!.textContent;
+    expect(text('a')).toBe('7');
+    expect(text('b')).toBe('99+');
+    expect(text('c')).toBe('9+');
+    const labelled = container.querySelector('[data-testid="c"]')!;
+    expect(labelled.getAttribute('role')).toBe('img');
+    expect(labelled.getAttribute('aria-label')).toBe('12 unread');
+    expect(container.querySelector('[data-testid="a"]')!.hasAttribute('role')).toBe(false);
+  });
+
+  it('a dot Badge is an empty 8px circle with its label', () => {
+    render(<Badge data-testid="dot" intent="success" size="md" dot label="Online" />);
+    const dot = container.querySelector('[data-testid="dot"]')!;
+    expect(dot.textContent).toBe('');
+    expect(dot.getAttribute('aria-label')).toBe('Online');
+    const style = dot.getAttribute('style') ?? '';
+    expect(style).toContain('width: 8px');
+    expect(style).toContain('height: 8px');
+    // The dot's zero padding wins over the md size's.
+    expect(style).toContain('padding-inline: 0');
+  });
+
   it('Card and Badge render themed (recipe applied)', () => {
     render(
       <>
