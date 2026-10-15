@@ -1,4 +1,6 @@
+import { existsSync } from 'node:fs';
 import { readFile, writeFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
 import type { Plugin } from 'esbuild';
 import { defineConfig } from 'tsup';
 
@@ -80,30 +82,68 @@ function externalClientChunk(): Plugin {
   };
 }
 
-export default defineConfig({
-  entry: ['src/index.ts', 'src/client.ts'],
-  format: ['esm', 'cjs'],
-  // tsup's dts pipeline trips TS 6's deprecated-`baseUrl` warning. Scope the
-  // ignoreDeprecations escape hatch to dts-only so the project's tsconfig
-  // stays strict for IDE / typecheck.
-  //
-  // Only the barrel gets declarations, deliberately. The runtime splits in two
-  // because a Server Component needs a module without the directive; types have
-  // no such constraint, and splitting them too breaks consumers. A namespace
-  // member like `Dialog.Root` is an unexported declaration, so a consumer
-  // writing `{ Root: Dialog.Root }` needs somewhere to name it from - and
-  // `./client` is intentionally not a public subpath, so there is nowhere.
-  // TS2883, raised in `@usemotif/ui` rather than here. One declaration file
-  // keeps every type reachable through the one entry consumers resolve.
-  dts: { entry: ['src/index.ts'], compilerOptions: { ignoreDeprecations: '6.0' } },
-  clean: true,
-  treeshake: true,
-  sourcemap: true,
-  target: 'es2022',
-  outDir: 'dist',
-  esbuildPlugins: [externalClientChunk()],
-  onSuccess: async () => {
-    await prependUseClient();
-    await pointCjsBarrelAtCjsChunk();
+/**
+ * For the native build, resolve each relative import to its `.native.tsx` /
+ * `.native.ts` sibling when one exists, as Metro would for source. Metro never
+ * gets the chance: the source imports carry ESM `.js` specifiers it cannot map
+ * to `.ts` files, so React Native consumers get this prebuilt bundle instead.
+ */
+function preferNativeModules(): Plugin {
+  return {
+    name: 'motif-prefer-native-modules',
+    setup(build) {
+      build.onResolve({ filter: /^\.\.?\// }, ({ path, resolveDir }) => {
+        const base = resolve(resolveDir, path.replace(/\.js$/, ''));
+        for (const ext of ['.native.tsx', '.native.ts']) {
+          if (existsSync(base + ext)) return { path: base + ext };
+        }
+        return undefined;
+      });
+    },
+  };
+}
+
+export default defineConfig([
+  {
+    entry: ['src/index.ts', 'src/client.ts'],
+    format: ['esm', 'cjs'],
+    // tsup's dts pipeline trips TS 6's deprecated-`baseUrl` warning. Scope the
+    // ignoreDeprecations escape hatch to dts-only so the project's tsconfig
+    // stays strict for IDE / typecheck.
+    //
+    // Only the barrel gets declarations, deliberately. The runtime splits in two
+    // because a Server Component needs a module without the directive; types have
+    // no such constraint, and splitting them too breaks consumers. A namespace
+    // member like `Dialog.Root` is an unexported declaration, so a consumer
+    // writing `{ Root: Dialog.Root }` needs somewhere to name it from - and
+    // `./client` is intentionally not a public subpath, so there is nowhere.
+    // TS2883, raised in `@usemotif/ui` rather than here. One declaration file
+    // keeps every type reachable through the one entry consumers resolve.
+    dts: { entry: ['src/index.ts'], compilerOptions: { ignoreDeprecations: '6.0' } },
+    // The native build below writes beside this one, possibly first.
+    clean: ['**/*', '!index.native.js', '!index.native.js.map'],
+    treeshake: true,
+    sourcemap: true,
+    target: 'es2022',
+    outDir: 'dist',
+    esbuildPlugins: [externalClientChunk()],
+    onSuccess: async () => {
+      await prependUseClient();
+      await pointCjsBarrelAtCjsChunk();
+    },
   },
-});
+  // React Native: one ESM file from the same barrel, with every `.native`
+  // variant swapped in and the client chunk inlined (there is no server graph
+  // to keep it out of). The `react-native` export condition points here. It
+  // carries no directive, and shares the barrel's declarations.
+  {
+    entry: { 'index.native': 'src/index.ts' },
+    format: ['esm'],
+    dts: false,
+    clean: false,
+    sourcemap: true,
+    target: 'es2022',
+    outDir: 'dist',
+    esbuildPlugins: [preferNativeModules()],
+  },
+]);
