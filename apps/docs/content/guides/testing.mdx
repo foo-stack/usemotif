@@ -92,6 +92,26 @@ library.
 Both are subset matches - extra keys are tolerated, so a renderer adding delivery-specific styles
 does not break the assertion.
 
+## Assert styles on React Native
+
+`@usemotif/react-native/testing` has a `renderStyles` that returns the same shape as the web one,
+so the same `toHaveStyle` and `toHaveStyleAt` assertions hold on both platforms. It renders with
+`test-renderer`, the renderer React Native Testing Library is built on; add it as a dev dependency.
+
+<CodeBlock lang="tsx" code={`import { renderStyles } from '@usemotif/react-native/testing';
+import { motifMatchers } from '@usemotif/test-utils';
+expect.extend(motifMatchers);
+
+const out = renderStyles(<Card padding={{ base: '$space.3', md: '$space.6' }} />, theme);
+expect(out).toHaveStyle({ padding: 12 });
+expect(out).toHaveStyleAt('@media (min-width: 768px)', { padding: 24 });
+expect(out).toHaveStyleAt(':active', { opacity: 0.8 });`} />
+
+Native has no media queries or `:active` rules, so they are simulated. The element renders at
+width 0 for `style`, and at each breakpoint's width for that breakpoint's rule, which holds what
+changes from the breakpoint below. It also renders pressed, through React Native's
+`testOnly_pressed`, for `:active`.
+
 ## Assert what assistive technology hears
 
 `motifMatchers` includes three accessibility matchers that read the same on both platforms. Pass

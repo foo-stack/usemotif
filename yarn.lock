@@ -7888,6 +7888,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/react-reconciler@npm:~0.34.0":
+  version: 0.34.0
+  resolution: "@types/react-reconciler@npm:0.34.0"
+  peerDependencies:
+    "@types/react": "*"
+  checksum: 10c0/4216eef57f1c6bbde544930c3fa5ff7278968b123c4232266463232603696e3d08a734022d79d47507d2cfcf3457b45ff18d2eea182508549a2333fd842e83d5
+  languageName: node
+  linkType: hard
+
 "@types/react@npm:^19.2.14":
   version: 19.2.14
   resolution: "@types/react@npm:19.2.14"
@@ -8446,20 +8455,27 @@ __metadata:
     react: "npm:^19.2.0"
     react-native: "npm:^0.83.0"
     react-test-renderer: "npm:^19.2.5"
+    test-renderer: "npm:^1.3.1"
     tsup: "npm:^8.5.1"
     typescript: "npm:^6.0.3"
     vitest: "npm:^4.1.5"
   peerDependencies:
     "@shopify/flash-list": ^2.0.0
+    "@usemotif/test-utils": "workspace:^"
     react: ">=18.0.0"
     react-native: ">=0.74.0"
     react-native-svg: ">=15.0.0"
+    test-renderer: ^1.0.0
   peerDependenciesMeta:
     "@shopify/flash-list":
+      optional: true
+    "@usemotif/test-utils":
       optional: true
     react-native:
       optional: true
     react-native-svg:
+      optional: true
+    test-renderer:
       optional: true
   languageName: unknown
   linkType: soft
@@ -17464,6 +17480,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"react-reconciler@npm:~0.34.0":
+  version: 0.34.0
+  resolution: "react-reconciler@npm:0.34.0"
+  dependencies:
+    scheduler: "npm:^0.28.0"
+  peerDependencies:
+    react: ^19.3.0
+  checksum: 10c0/9a73a044a1909e63687a8edc3f8b4e7cd236374061dd4c931427fc88c3e6efc3b2fd990376dba4bd955125c5c0563df891fb196ff9906a6bc2c63d0e93e26d36
+  languageName: node
+  linkType: hard
+
 "react-refresh@npm:^0.14.0, react-refresh@npm:^0.14.2":
   version: 0.14.2
   resolution: "react-refresh@npm:0.14.2"
@@ -18316,6 +18343,13 @@ __metadata:
   version: 0.27.0
   resolution: "scheduler@npm:0.27.0"
   checksum: 10c0/4f03048cb05a3c8fddc45813052251eca00688f413a3cee236d984a161da28db28ba71bd11e7a3dd02f7af84ab28d39fb311431d3b3772fed557945beb00c452
+  languageName: node
+  linkType: hard
+
+"scheduler@npm:^0.28.0":
+  version: 0.28.0
+  resolution: "scheduler@npm:0.28.0"
+  checksum: 10c0/783c8e5ce89d41273a02ed6dc0e3d24bd60e05c9e8f7e3adfc6c82e7c69935500d90e343f1ee26d592fc7504e8a2532573c6368def3e93bfe812391fa53efaf4
   languageName: node
   linkType: hard
 
@@ -19211,6 +19245,18 @@ __metadata:
     glob: "npm:^7.1.4"
     minimatch: "npm:^3.0.4"
   checksum: 10c0/019d33d81adff3f9f1bfcff18125fb2d3c65564f437d9be539270ee74b994986abb8260c7c2ce90e8f30162178b09dbbce33c6389273afac4f36069c48521f57
+  languageName: node
+  linkType: hard
+
+"test-renderer@npm:^1.3.1":
+  version: 1.3.1
+  resolution: "test-renderer@npm:1.3.1"
+  dependencies:
+    "@types/react-reconciler": "npm:~0.34.0"
+    react-reconciler: "npm:~0.34.0"
+  peerDependencies:
+    react: ^19.0.0
+  checksum: 10c0/fc99655e43ab3877de82b32f19937db600e9e846bc1d2126a32d815b68c1b6f27b9a54a46caf02dd4708e0100919f69b6f340baa8877c50e4bc8fb692dbc1367
   languageName: node
   linkType: hard
 

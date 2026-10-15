@@ -41,6 +41,11 @@
       "react-native": "./dist/_animation/reanimated.js",
       "import": "./dist/_animation/reanimated.js",
       "require": "./dist/_animation/reanimated.cjs"
+    },
+    "./testing": {
+      "types": "./dist/testing.d.ts",
+      "import": "./dist/testing.js",
+      "require": "./dist/testing.cjs"
     }
   },
   "publishConfig": {
@@ -63,24 +68,33 @@
     "react": "^19.2.0",
     "react-native": "^0.83.0",
     "react-test-renderer": "^19.2.5",
+    "test-renderer": "^1.3.1",
     "tsup": "^8.5.1",
     "typescript": "^6.0.3",
     "vitest": "^4.1.5"
   },
   "peerDependencies": {
     "@shopify/flash-list": "^2.0.0",
+    "@usemotif/test-utils": "workspace:^",
     "react": ">=18.0.0",
     "react-native": ">=0.74.0",
-    "react-native-svg": ">=15.0.0"
+    "react-native-svg": ">=15.0.0",
+    "test-renderer": "^1.0.0"
   },
   "peerDependenciesMeta": {
     "@shopify/flash-list": {
+      "optional": true
+    },
+    "@usemotif/test-utils": {
       "optional": true
     },
     "react-native": {
       "optional": true
     },
     "react-native-svg": {
+      "optional": true
+    },
+    "test-renderer": {
       "optional": true
     }
   }
