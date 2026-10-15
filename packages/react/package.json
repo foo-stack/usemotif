@@ -43,6 +43,11 @@
       "import": "./dist/server.js",
       "require": "./dist/server.cjs"
     },
+    "./testing": {
+      "types": "./dist/testing.d.ts",
+      "import": "./dist/testing.js",
+      "require": "./dist/testing.cjs"
+    },
     "./tanstack-virtual": {
       "types": "./dist/virtualizers/tanstack.d.ts",
       "import": "./dist/virtualizers/tanstack.js",
@@ -76,6 +81,7 @@
   "peerDependencies": {
     "@tanstack/react-virtual": "^3.0.0",
     "@usemotif/react-native": "workspace:^",
+    "@usemotif/test-utils": "workspace:^",
     "react": ">=18.0.0",
     "react-dom": ">=18.0.0"
   },
@@ -84,6 +90,9 @@
       "optional": true
     },
     "@usemotif/react-native": {
+      "optional": true
+    },
+    "@usemotif/test-utils": {
       "optional": true
     },
     "react-dom": {
