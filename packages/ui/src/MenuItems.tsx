@@ -10,6 +10,7 @@ import {
 } from '@usemotif/headless';
 import { createContext, useContext, type ReactNode } from 'react';
 import { Box, type BoxProps } from 'usemotif';
+import { platformText } from './_platform-text.js';
 
 // Hoisted so the bag props are stable references (lint: no-new-object).
 const ITEM_HOVER = { bg: '$colors.surface.interactive' } as const;
@@ -23,6 +24,9 @@ export type MenuRadioItemPropsThemed = Omit<MenuRadioItemProps, 'style' | 'asChi
  * not. The headless item projects its role, handlers and ref onto this row
  * through `asChild`, so everything else passes through to the Box.
  */
+const MARK_TEXT = { color: '$colors.action.primary.bg' } as const;
+const LABEL_TEXT = { fontSize: '$fontSizes.xs', color: '$colors.text.muted' } as const;
+
 function Row({
   mark,
   disabled,
@@ -48,9 +52,12 @@ function Row({
       _focus={ITEM_FOCUS}
     >
       <Box as="span" aria-hidden width={14} textAlign="center" color="$colors.action.primary.bg">
-        {mark}
+        {platformText(mark, MARK_TEXT)}
       </Box>
-      {children}
+      {platformText(children, {
+        fontSize: '$fontSizes.sm',
+        color: disabled === true ? '$colors.text.muted' : '$colors.text.default',
+      })}
     </Box>
   );
 }
@@ -126,7 +133,7 @@ export function MenuLabel({ children }: Omit<MenuLabelProps, 'style'>) {
         fontSize="$fontSizes.xs"
         color="$colors.text.muted"
       >
-        {children}
+        {platformText(children, LABEL_TEXT)}
       </Box>
     </HeadlessMenu.Label>
   );

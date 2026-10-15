@@ -1,3 +1,5 @@
+import { existsSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vitest/config';
 
@@ -6,7 +8,23 @@ import { defineConfig } from 'vitest/config';
 // `usemotif`, `@usemotif/headless` and the icon glyphs' SVG primitives.
 const conditions = ['react-native', 'import', 'module', 'default'];
 
+// Resolve `./x.js` to a `x.native.tsx` / `x.native.ts` sibling when one exists,
+// as the native build does.
+const preferNative = {
+  name: 'prefer-native-modules',
+  enforce: 'pre' as const,
+  resolveId(source: string, importer: string | undefined) {
+    if (importer === undefined || !/^\.\.?\//.test(source)) return null;
+    const base = resolve(dirname(importer), source.replace(/\.js$/, ''));
+    for (const ext of ['.native.tsx', '.native.ts']) {
+      if (existsSync(base + ext)) return base + ext;
+    }
+    return null;
+  },
+};
+
 export default defineConfig({
+  plugins: [preferNative],
   resolve: {
     conditions,
     alias: {

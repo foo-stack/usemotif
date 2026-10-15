@@ -6,6 +6,7 @@ import {
 } from '@usemotif/headless';
 import type { ReactNode } from 'react';
 import { Box } from 'usemotif';
+import { platformText } from './_platform-text.js';
 
 // Hoisted stable references (lint: no-new-object). The item highlights on both
 // mouse hover and keyboard focus - `asChild` makes this themed Box the focusable
@@ -60,7 +61,10 @@ function ContextMenuItem({ children, onSelect, disabled }: ContextMenuItemPropsT
         _hover={ITEM_HOVER}
         _focus={ITEM_FOCUS}
       >
-        {children}
+        {platformText(children, {
+          fontSize: '$fontSizes.sm',
+          color: disabled === true ? '$colors.text.muted' : '$colors.text.default',
+        })}
       </Box>
     </HeadlessContextMenu.Item>
   );

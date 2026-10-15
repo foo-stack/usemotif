@@ -6,6 +6,7 @@ import {
   type PopoverContentProps,
 } from '@usemotif/headless';
 import { Box } from 'usemotif';
+import { platformText } from './_platform-text.js';
 
 /**
  * Themed popover - the accessible headless `Popover` (trigger `aria-expanded`
@@ -25,6 +26,8 @@ import { Box } from 'usemotif';
  * </Popover.Root>
  * ```
  */
+const SURFACE_TEXT = { color: '$colors.text.default' } as const;
+
 function PopoverContent({ children, ...rest }: PopoverContentProps) {
   return (
     <HeadlessPopover.Content {...rest}>
@@ -39,7 +42,7 @@ function PopoverContent({ children, ...rest }: PopoverContentProps) {
         maxWidth={320}
         boxShadow="0 8px 24px rgba(0, 0, 0, 0.18)"
       >
-        {children}
+        {platformText(children, SURFACE_TEXT)}
       </Box>
     </HeadlessPopover.Content>
   );
