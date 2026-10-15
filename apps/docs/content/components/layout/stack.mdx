@@ -54,6 +54,17 @@ every responsive key, every pseudo-state applies - `gap` is the prop you reach f
       description: 'Flex direction. Use `HStack` for `\"row\"` or `VStack` for `\"column\"` if you prefer the named shorthand.',
     },
     {
+      name: 'stagger',
+      type: 'number',
+      description: 'Seconds between the entry animations of direct children, so children with `enterStyle` arrive in a wave. Added to each child\'s own delay. Collapses to `0` under reduced motion on web.',
+    },
+    {
+      name: 'staggerFrom',
+      type: '\"first\" | \"last\" | \"center\" | number',
+      default: '\"first\"',
+      description: 'Where the wave starts. Each child waits `stagger` times its distance from that child; a number names a child index.',
+    },
+    {
       name: '...BoxProps',
       type: 'BoxProps',
       description: 'Every prop Box accepts - minus `display` and `flexDirection`, which Stack manages.',
@@ -102,3 +113,13 @@ Responsive direction - column on phones, row on desktops:
   [HStack](/components/layout/hstack) and [VStack](/components/layout/vstack) are direction-fixed
   shorthands. [Wrap](/components/layout/wrap) is a Stack-like container with `flex-wrap: wrap`.
 </Callout>
+
+Children that enter in a wave from the middle outwards:
+
+<CodeBlock lang="tsx" code={`<HStack gap="$2" stagger={0.05} staggerFrom="center">
+  {cards.map((card) => (
+    <Box key={card.id} enterStyle={{ opacity: 0, transform: 'translateY(8px)' }}>
+      {card.title}
+    </Box>
+  ))}
+</HStack>`} />

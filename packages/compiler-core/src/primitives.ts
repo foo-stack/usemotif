@@ -73,11 +73,15 @@ const BASE_NON_STRIPPABLE: ReadonlySet<string> = new Set([
   ...MOTION_NON_STRIPPABLE,
   ...GROUP_NON_STRIPPABLE,
 ]);
-/** Text adds `lines`; the Stack family adds `stagger`. Each is a single
+/** Text adds `lines`; the Stack family adds `stagger` and `staggerFrom`. Each is a single
  * shared instance (read-only - only `.has()` is called) so the three Stack
  * variants don't allocate three identical sets. */
 const TEXT_NON_STRIPPABLE: ReadonlySet<string> = new Set([...BASE_NON_STRIPPABLE, 'lines']);
-const STACK_NON_STRIPPABLE: ReadonlySet<string> = new Set([...BASE_NON_STRIPPABLE, 'stagger']);
+const STACK_NON_STRIPPABLE: ReadonlySet<string> = new Set([
+  ...BASE_NON_STRIPPABLE,
+  'stagger',
+  'staggerFrom',
+]);
 
 export const PRIMITIVE_INFO: Readonly<Record<string, PrimitiveInfo>> = {
   Box: {
