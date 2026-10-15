@@ -168,7 +168,7 @@ function Content({
     ctx.setOpen(false);
     ctx.triggerRef.current?.focus();
   }, [ctx]);
-  const { position, floatingRef } = useFloatingPosition(
+  const { style: floating, floatingRef } = useFloatingPosition(
     ctx.triggerRef,
     ctx.open,
     placement,
@@ -251,9 +251,7 @@ function Content({
           tabIndex={-1}
           onKeyDown={onKeyDown}
           style={{
-            position: 'absolute',
-            top: position.top,
-            left: position.left,
+            ...floating,
             zIndex: 1000,
             ...style,
           }}

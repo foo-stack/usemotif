@@ -708,7 +708,7 @@ function NavigationMenuSubmenu({
   contentRef?: React.MutableRefObject<HTMLElement | null>;
   onClose: () => void;
 }): ReactElement {
-  const { position, floatingRef } = useFloatingPosition(
+  const { style: floating, floatingRef } = useFloatingPosition(
     anchorRef,
     true,
     level === 1 ? 'bottom' : 'right',
@@ -766,9 +766,7 @@ function NavigationMenuSubmenu({
       <div
         ref={setFloating}
         style={{
-          position: 'absolute',
-          top: position.top,
-          left: position.left,
+          ...floating,
           zIndex: 1000,
         }}
       >

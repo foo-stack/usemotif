@@ -414,7 +414,8 @@ const targets = [
     // Bumped by overlay background isolation: Overlay marks background
     // content inert + aria-hidden and locks scroll, which every headless-
     // backed entry carries through the shared floor.
-    budget: 18300,
+    // Bumped for anchor positioning and the Popover API in useFloatingPosition.
+    budget: 18400,
   },
   {
     name: '@usemotif/ui - Toolbar only',
