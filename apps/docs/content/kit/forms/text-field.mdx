@@ -1,0 +1,86 @@
+---
+title: TextField
+description: A themed single-line text input in three sizes, with an invalid state that sets aria-invalid.
+diataxis: reference
+covers: ['TextField', 'TextFieldProps']
+last_verified: 2026-10-15
+---
+
+import {
+  ApiSignature,
+  ArticleMeta,
+  Callout,
+  CodeBlock,
+  Eyebrow,
+  Lede,
+} from '../../../components/index.js';
+
+<Eyebrow>UI kit / Forms</Eyebrow>
+
+# TextField
+
+<Lede>
+  TextField is the kit's text input. Pick a `size`, and set `invalid` to show the danger border and
+  mark the field invalid for assistive technology.
+</Lede>
+
+<ArticleMeta />
+
+## What it is
+
+`TextField` is the `inputRecipe` from `@usemotif/recipes` applied to a `Box` rendered as an
+`<input>`. It takes every input attribute (`value`, `onChange`, `placeholder`, `type`, and the
+rest) and defaults `type` to `"text"`.
+
+Put it inside [FormField](/kit/display/form-field) for the label, help text and error message:
+FormField gives it an `id`, `aria-describedby`, and `aria-invalid` when there is an error.
+
+## Install
+
+<CodeBlock lang="bash" code={`yarn add @usemotif/ui`} />
+
+<CodeBlock lang="tsx" code={`import { TextField } from '@usemotif/ui';`} />
+
+## Usage
+
+<CodeBlock lang="tsx" code={`import { FormField, TextField } from '@usemotif/ui';
+
+<FormField label="Email" error={error}>
+  <TextField
+    type="email"
+    value={email}
+    onChange={(e) => setEmail(e.currentTarget.value)}
+    invalid={error !== undefined}
+  />
+</FormField>`} />
+
+## API
+
+<ApiSignature
+  name="TextField"
+  status="stable"
+  signature={`function TextField(props: TextFieldProps): JSX.Element`}
+  params={[
+    {
+      name: 'size',
+      type: "'sm' | 'md' | 'lg'",
+      default: "'md'",
+      description: 'Height (32, 40 or 48px), inline padding and font size.',
+    },
+    {
+      name: 'invalid',
+      type: 'boolean',
+      description: 'Shows the danger border and sets `aria-invalid`.',
+    },
+    {
+      name: '...InputHTMLAttributes',
+      type: 'InputHTMLAttributes<HTMLInputElement>',
+      description: 'Every input attribute except `size` and the HTML drag events.',
+    },
+  ]}
+/>
+
+<Callout variant="info" title="Related">
+  [Input](/components/forms/input) is the primitive, with `startElement` and `endElement`
+  adornments and `Field` wiring.
+</Callout>

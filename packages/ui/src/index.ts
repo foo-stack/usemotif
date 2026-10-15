@@ -8,6 +8,8 @@
 
 export { Card } from './Card.js';
 export { Badge } from './Badge.js';
+export { Button, type ButtonProps } from './Button.js';
+export { TextField, type TextFieldProps } from './TextField.js';
 export { Spinner, type SpinnerProps } from './Spinner.js';
 export { Alert, type AlertIntent, type AlertProps } from './Alert.js';
 export { Modal } from './Modal.namespace.js';
