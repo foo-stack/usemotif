@@ -35,11 +35,9 @@ export type MdBlock =
     };
 
 const FENCE = /^ {0,3}(`{3,}|~{3,})\s*([^`\s]*)/;
-const HEADING = /^ {0,3}(#{1,6})(?:\s+(.*?))?(?:\s+#+)?\s*$/;
 const HR = /^ {0,3}([-*_])(?:\s*\1){2,}\s*$/;
 const QUOTE = /^ {0,3}> ?/;
 const ITEM = /^( {0,3})([-*+]|\d{1,9}[.)])( +|$)/;
-const TABLE_RULE = /^\s*\|?\s*:?-+:?\s*(\|\s*:?-+:?\s*)*\|?\s*$/;
 
 /** A link or image target is kept only when it cannot run script. */
 function safeUrl(url: string): string {
@@ -48,14 +46,40 @@ function safeUrl(url: string): string {
   return scheme === undefined || ['http', 'https', 'mailto', 'tel'].includes(scheme) ? trimmed : '';
 }
 
+/** A GFM table's delimiter row: cells of dashes, with colons marking alignment. */
+function isTableRule(line: string): boolean {
+  return line.includes('-') && cells(line).every((cell) => /^:?-+:?$/.test(cell));
+}
+
 function cells(line: string): string[] {
   const inner = line.trim().replace(/^\|/, '').replace(/\|$/, '');
   return inner.split(/(?<!\\)\|/).map((cell) => cell.trim().replace(/\\\|/g, '|'));
 }
 
+/** An ATX heading, read by hand: the usual regex for it backtracks quadratically on spaces. */
+function parseHeading(line: string): MdBlock | null {
+  const indent = line.length - line.trimStart().length;
+  if (indent > 3) return null;
+  let level = 0;
+  while (line[indent + level] === '#') level++;
+  if (level < 1 || level > 6 || !isSpace(line[indent + level])) return null;
+  let content = line.slice(indent + level).trim();
+  // A closing run of `#`, when a space separates it from the text.
+  let end = content.length;
+  while (end > 0 && content[end - 1] === '#') end--;
+  if (end === 0) content = '';
+  else if (end < content.length && isSpace(content[end - 1]))
+    content = content.slice(0, end).trimEnd();
+  return { type: 'heading', level: level as 1 | 2 | 3 | 4 | 5 | 6, children: parseInline(content) };
+}
+
 function startsBlock(line: string): boolean {
   return (
-    FENCE.test(line) || HEADING.test(line) || HR.test(line) || QUOTE.test(line) || ITEM.test(line)
+    FENCE.test(line) ||
+    parseHeading(line) !== null ||
+    HR.test(line) ||
+    QUOTE.test(line) ||
+    ITEM.test(line)
   );
 }
 
@@ -88,10 +112,9 @@ function parseBlocks(lines: readonly string[]): MdBlock[] {
       out.push({ type: 'code', lang: fence[2] ?? '', value: body.join('\n') });
       continue;
     }
-    const heading = HEADING.exec(line);
+    const heading = parseHeading(line);
     if (heading !== null) {
-      const level = heading[1]!.length as 1 | 2 | 3 | 4 | 5 | 6;
-      out.push({ type: 'heading', level, children: parseInline(heading[2] ?? '') });
+      out.push(heading);
       i++;
       continue;
     }
@@ -117,7 +140,7 @@ function parseBlocks(lines: readonly string[]): MdBlock[] {
       i = parseList(lines, i, out);
       continue;
     }
-    if (line.includes('|') && i + 1 < lines.length && TABLE_RULE.test(lines[i + 1]!)) {
+    if (line.includes('|') && i + 1 < lines.length && isTableRule(lines[i + 1]!)) {
       const align = cells(lines[i + 1]!).map(
         (rule): MdAlign =>
           rule.startsWith(':') && rule.endsWith(':')
@@ -194,68 +217,130 @@ function parseList(lines: readonly string[], start: number, out: MdBlock[]): num
   return i;
 }
 
-const INLINE_ESCAPE = /^\\([!-/:-@[-`{-~])/;
+const ESCAPE = /\\([!-/:-@[-`{-~])/y;
+// Bounded so a run of unclosed brackets costs linear time rather than a rescan per bracket.
+const IMAGE = /!\[([^\]]{0,1000})\]\( {0,8}<?([^)\s>]{0,2048})>?(?: {1,8}"[^"]{0,1000}")? {0,8}\)/y;
+const LINK =
+  /\[((?:\\.|[^\]\\]){0,1000})\]\( {0,8}<?([^)\s>]{0,2048})>?(?: {1,8}"[^"]{0,1000}")? {0,8}\)/y;
 
-/** Parse inline Markdown. */
+const isSpace = (c: string | undefined): boolean => c === undefined || /\s/.test(c);
+
+/**
+ * Parse inline Markdown. Runs in time linear in the input: a closing delimiter is found by a
+ * forward search, and a delimiter with no closer left is remembered so later openers do not
+ * search again.
+ */
 export function parseInline(text: string): MdInline[] {
   const out: MdInline[] = [];
+  const unclosed = new Set<string>();
   let buffer = '';
   const flush = (): void => {
     if (buffer !== '') out.push({ type: 'text', value: buffer });
     buffer = '';
   };
+  const at = (re: RegExp, i: number): RegExpExecArray | null => {
+    re.lastIndex = i;
+    return re.exec(text);
+  };
+  /** Where `delim` next closes after `from`: preceded by a non-space, not part of a longer run. */
+  const closer = (delim: string, from: number, exact: boolean): number => {
+    if (unclosed.has(delim)) return -1;
+    let pos = text.indexOf(delim, from);
+    while (pos !== -1) {
+      const after = text[pos + delim.length];
+      const runs = exact && (after === delim[0] || text[pos - 1] === delim[0]);
+      if (!isSpace(text[pos - 1]) && !runs) return pos;
+      pos = text.indexOf(delim, pos + 1);
+    }
+    unclosed.add(delim);
+    return -1;
+  };
+  // No link or image can start past the last `)`.
+  const lastParen = text.lastIndexOf(')');
   let i = 0;
   while (i < text.length) {
-    const rest = text.slice(i);
-    const escape = INLINE_ESCAPE.exec(rest);
+    const c = text[i]!;
+    const escape = c === '\\' ? at(ESCAPE, i) : null;
     if (escape !== null) {
       buffer += escape[1];
       i += 2;
       continue;
     }
-    const lineBreak = /^(?: {2,}|\\)\n/.exec(rest);
-    if (lineBreak !== null) {
+    if (c === '\\' && text[i + 1] === '\n') {
       flush();
       out.push({ type: 'break' });
-      i += lineBreak[0].length;
+      i += 2;
       continue;
     }
-    const code = /^(`+)([^]*?[^`])\1(?!`)/.exec(rest);
-    if (code !== null) {
+    if (c === ' ') {
+      // A run of spaces is taken whole, so it is scanned once: two or more before a newline
+      // are a hard break.
+      let run = 1;
+      while (text[i + run] === ' ') run++;
+      if (run >= 2 && text[i + run] === '\n') {
+        flush();
+        out.push({ type: 'break' });
+        i += run + 1;
+      } else {
+        buffer += text.slice(i, i + run);
+        i += run;
+      }
+      continue;
+    }
+    if (c === '`') {
+      let run = 1;
+      while (text[i + run] === '`') run++;
+      const fence = '`'.repeat(run);
+      const end = closer(fence, i + run, true);
+      if (end === -1) {
+        buffer += fence;
+        i += run;
+        continue;
+      }
       flush();
-      out.push({ type: 'code', value: code[2]!.replace(/\n/g, ' ').trim() });
-      i += code[0].length;
+      out.push({
+        type: 'code',
+        value: text
+          .slice(i + run, end)
+          .replace(/\n/g, ' ')
+          .trim(),
+      });
+      i = end + run;
       continue;
     }
-    const image = /^!\[([^\]]*)\]\(\s*<?([^)\s>]*)>?(?:\s+"[^"]*")?\s*\)/.exec(rest);
+    const image = c === '!' && i < lastParen ? at(IMAGE, i) : null;
     if (image !== null) {
       flush();
       out.push({ type: 'image', src: safeUrl(image[2]!), alt: image[1]! });
       i += image[0].length;
       continue;
     }
-    const link = /^\[((?:\\.|[^\]])*)\]\(\s*<?([^)\s>]*)>?(?:\s+"[^"]*")?\s*\)/.exec(rest);
+    const link = c === '[' && i < lastParen ? at(LINK, i) : null;
     if (link !== null) {
       flush();
       out.push({ type: 'link', href: safeUrl(link[2]!), children: parseInline(link[1]!) });
       i += link[0].length;
       continue;
     }
-    const strong = /^(\*\*|__)(?=\S)([^]*?\S)\1/.exec(rest);
-    if (strong !== null) {
-      flush();
-      out.push({ type: 'strong', children: parseInline(strong[2]!) });
-      i += strong[0].length;
+    if ((c === '*' || c === '_') && !isSpace(text[i + 1])) {
+      const double = text[i + 1] === c;
+      const delim = double ? c + c : c;
+      // `_` inside a word is part of it, as in snake_case.
+      const intraword = c === '_' && /\w/.test(text[i - 1] ?? '');
+      const start = i + delim.length;
+      const end = intraword || isSpace(text[start]) ? -1 : closer(delim, start + 1, !double);
+      if (end !== -1) {
+        flush();
+        const children = parseInline(text.slice(start, end));
+        out.push(double ? { type: 'strong', children } : { type: 'em', children });
+        i = end + delim.length;
+        continue;
+      }
+      buffer += delim;
+      i += delim.length;
       continue;
     }
-    const em = /^(\*|_)(?=\S)([^]*?\S)\1(?!\1)/.exec(rest);
-    if (em !== null && (em[1] === '*' || !/\w/.test(text[i - 1] ?? ''))) {
-      flush();
-      out.push({ type: 'em', children: parseInline(em[2]!) });
-      i += em[0].length;
-      continue;
-    }
-    buffer += text[i];
+    buffer += c;
     i++;
   }
   flush();

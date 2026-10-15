@@ -82,3 +82,24 @@ describe('parseInline', () => {
     expect(parseInline('snake_case_name')).toEqual([text('snake_case_name')]);
   });
 });
+
+describe('parseMarkdown - untrusted input', () => {
+  // Each input is built to make a backtracking or rescanning parser go quadratic or worse.
+  const ADVERSARIAL = {
+    'unclosed strong': '**a '.repeat(50_000),
+    'unclosed emphasis': '_a '.repeat(50_000),
+    'unclosed code': '`a '.repeat(50_000),
+    'heading padded with spaces': `# a${' '.repeat(200_000)}b`,
+    'escaped link text': `[${'\\\\'.repeat(5_000)}x`,
+    'unclosed links': '[a]('.repeat(50_000),
+    'table-like rows': `${'| a '.repeat(20_000)}\n${'|-'.repeat(20_000)}x`,
+  };
+
+  for (const [name, source] of Object.entries(ADVERSARIAL)) {
+    it(`parses ${name} in linear time`, () => {
+      const start = performance.now();
+      parseMarkdown(source);
+      expect(performance.now() - start).toBeLessThan(500);
+    });
+  }
+});
