@@ -596,7 +596,8 @@ const targets = [
     // Pure presentational (Box + Text, no headless) - display floor.
     // Bumped when state bags took responsive values (nested at-rules).
     // Bumped when the group states joined core's selector map and Box marks a group.
-    budget: 12000,
+    // Bumped for keepMounted='activity' (the Activity boundary and its feature check).
+    budget: 12100,
   },
   {
     name: '@usemotif/ui - Timeline only',

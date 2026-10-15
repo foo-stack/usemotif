@@ -153,6 +153,11 @@ Root's `orientation`.
       description: 'Keep the panel mounted when inactive - hidden via the `hidden` attribute. Use it to preserve panel state across tab switches.',
     },
     {
+      name: 'keepMounted',
+      type: "'activity'",
+      description: 'Keep the panel mounted when inactive, hidden through React `<Activity>`: its state survives, its effects pause, and its updates run at low priority. React 19.2 or later, on web and native; otherwise the panel unmounts.',
+    },
+    {
       name: 'children',
       type: 'ReactNode',
       description: 'The panel content.',
@@ -188,6 +193,10 @@ list once, then uses the arrow keys, and tabs straight out to the panel.
 By default an inactive panel is unmounted. `forceMount` keeps it mounted with the `hidden`
 attribute, which preserves its internal state - a half-filled form, a scroll position - across
 tab switches.
+
+`keepMounted="activity"` does the same through React's `<Activity>`, which also pauses the hidden
+panel's effects and renders its updates at low priority, so a heavy panel kept around costs less
+while another tab is open.
 
 ## Examples
 

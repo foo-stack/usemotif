@@ -18,6 +18,7 @@ import {
 } from 'react';
 import { mergeRefs } from './_compose-refs.js';
 import { useControllableState } from './use-controllable-state.js';
+import { KeepMountedBoundary, keepsMounted, type KeepMounted } from './_keep-mounted.js';
 
 // Stable empty selection for a controlled Accordion cleared to
 // `value={undefined}` - keeps a constant identity across renders.
@@ -404,6 +405,12 @@ function TabsTab({
 export interface TabsPanelProps {
   value: string;
   forceMount?: boolean;
+  /**
+   * `'activity'` keeps the panel mounted while another tab is selected, hidden through React's
+   * `<Activity>`, so its state survives and its updates run at low priority. Needs React 19.2;
+   * on older versions the panel unmounts as usual.
+   */
+  keepMounted?: KeepMounted;
   /** Render the panel semantics onto the single child element instead of a
    * `<div>`. */
   asChild?: boolean;
@@ -413,13 +420,15 @@ export interface TabsPanelProps {
 function TabsPanel({
   value,
   forceMount = false,
+  keepMounted,
   asChild = false,
   children,
   style,
 }: TabsPanelProps): ReactElement | null {
   const ctx = useTabsContext('Tabs.Panel');
   const active = ctx.value === value;
-  if (!active && !forceMount) return null;
+  const keep = keepsMounted(keepMounted);
+  if (!active && !forceMount && !keep) return null;
   const panelProps = {
     role: 'tabpanel' as const,
     id: `${ctx.idPrefix}-panel-${value}`,
@@ -428,10 +437,13 @@ function TabsPanel({
     tabIndex: 0,
     style,
   };
-  if (asChild && isValidElement(children)) {
-    return cloneElement(children as ReactElement, panelProps);
-  }
-  return <div {...panelProps}>{children}</div>;
+  const panel =
+    asChild && isValidElement(children) ? (
+      cloneElement(children as ReactElement, panelProps)
+    ) : (
+      <div {...panelProps}>{children}</div>
+    );
+  return keep ? <KeepMountedBoundary visible={active}>{panel}</KeepMountedBoundary> : panel;
 }
 
 // Suppress unused warning - kept for future imperative APIs.

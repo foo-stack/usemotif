@@ -7,6 +7,7 @@ import { Pressable } from './Pressable.js';
 import { Text, type TextProps } from './Text.js';
 import { useViewportWidth } from './responsive.js';
 import { useBreakpointWidths } from './theme-context.js';
+import { KeepMountedBoundary, keepsMounted, type KeepMounted } from './_keep-mounted.js';
 
 /**
  * Portal on native - RN doesn't have a native portal primitive.
@@ -134,6 +135,11 @@ export function FocusScope({ children }: FocusScopeProps): ReactElement {
 export interface ShowHideProps {
   above?: 'sm' | 'md' | 'lg' | 'xl' | '2xl';
   below?: 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+  /**
+   * `'activity'` keeps the children mounted while they are not shown, hidden through React's
+   * `<Activity>`, so their state survives a resize across the breakpoint. Needs React 19.2.
+   */
+  keepMounted?: KeepMounted;
   children?: ReactNode;
 }
 function useViewportMatch(above?: BreakpointName, below?: BreakpointName): boolean {
@@ -148,12 +154,23 @@ function useViewportMatch(above?: BreakpointName, below?: BreakpointName): boole
   return aboveOk && belowOk;
 }
 
-export function Show({ above, below, children }: ShowHideProps): ReactElement | null {
-  return useViewportMatch(above, below) ? <>{children}</> : null;
+export function Show({ above, below, keepMounted, children }: ShowHideProps): ReactElement | null {
+  return showWhen(useViewportMatch(above, below), keepMounted, children);
 }
 
-export function Hide({ above, below, children }: ShowHideProps): ReactElement | null {
-  return useViewportMatch(above, below) ? null : <>{children}</>;
+export function Hide({ above, below, keepMounted, children }: ShowHideProps): ReactElement | null {
+  return showWhen(!useViewportMatch(above, below), keepMounted, children);
+}
+
+function showWhen(
+  visible: boolean,
+  keepMounted: KeepMounted | undefined,
+  children: ReactNode,
+): ReactElement | null {
+  if (keepsMounted(keepMounted)) {
+    return <KeepMountedBoundary visible={visible}>{children}</KeepMountedBoundary>;
+  }
+  return visible ? <>{children}</> : null;
 }
 
 export type { TextProps };

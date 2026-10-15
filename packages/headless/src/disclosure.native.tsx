@@ -10,6 +10,7 @@ import {
 } from 'react';
 import { Pressable, View, type ViewStyle } from 'react-native';
 import { useControllableState } from './use-controllable-state.js';
+import { KeepMountedBoundary, keepsMounted, type KeepMounted } from './_keep-mounted.js';
 
 /**
  * Native disclosure family - Collapsible / Accordion / Tabs.
@@ -300,19 +301,27 @@ function TabsTab({ value, disabled = false, children, style }: TabsTabProps): Re
 export interface TabsPanelProps {
   value: string;
   forceMount?: boolean;
+  /**
+   * `'activity'` keeps the panel mounted while another tab is selected, hidden through React's
+   * `<Activity>`, so its state survives and its updates run at low priority. Needs React 19.2;
+   * on older versions the panel unmounts as usual.
+   */
+  keepMounted?: KeepMounted;
   children?: ReactNode;
   style?: ViewStyle;
 }
 function TabsPanel({
   value,
   forceMount = false,
+  keepMounted,
   children,
   style,
 }: TabsPanelProps): ReactElement | null {
   const ctx = useTabsContext('Tabs.Panel');
   const active = ctx.value === value;
-  if (!active && !forceMount) return null;
-  return (
+  const keep = keepsMounted(keepMounted);
+  if (!active && !forceMount && !keep) return null;
+  const panel = (
     <View
       nativeID={`${ctx.idPrefix}-panel-${value}`}
       accessibilityLabelledBy={`${ctx.idPrefix}-tab-${value}`}
@@ -321,4 +330,5 @@ function TabsPanel({
       {children}
     </View>
   );
+  return keep ? <KeepMountedBoundary visible={active}>{panel}</KeepMountedBoundary> : panel;
 }

@@ -64,9 +64,14 @@ function TabsTab({ value, disabled, children }: TabsTabPropsThemed) {
 }
 
 /** A tab panel - themed content region; the headless role/visibility lands on it. */
-function TabsPanel({ value, forceMount, children }: TabsPanelPropsThemed) {
+function TabsPanel({ value, forceMount, keepMounted, children }: TabsPanelPropsThemed) {
   return (
-    <HeadlessTabs.Panel asChild value={value} {...(forceMount !== undefined ? { forceMount } : {})}>
+    <HeadlessTabs.Panel
+      asChild
+      value={value}
+      {...(forceMount !== undefined ? { forceMount } : {})}
+      {...(keepMounted !== undefined ? { keepMounted } : {})}
+    >
       <Box as="section" pt="$space.4" color="$colors.text.default">
         {children}
       </Box>
