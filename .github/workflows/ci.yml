@@ -118,6 +118,14 @@ jobs:
       - name: Docs ESM consistency
         run: yarn docs-esm:check
 
+      # Every public export has to appear in some docs page's `covers:`
+      # frontmatter, and every `covers:` entry has to still be exported. Read
+      # from the built type declarations, so it runs after Build. The exports
+      # that were undocumented when the check arrived are recorded in
+      # `scripts/docs-coverage-gaps.json`, and that list may only shrink.
+      - name: Docs coverage check
+        run: yarn docs-coverage:check
+
       # The writing rule bans the em dash, the en dash and the ellipsis
       # character. Removing four thousand of them once was a sweep; this is what
       # makes it a rule. A character standing alone inside quotes is allowed,

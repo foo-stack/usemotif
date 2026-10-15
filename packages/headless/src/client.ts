@@ -188,8 +188,9 @@ export type {
   TimeInputProps,
 } from './datetime.js';
 
-export { ColorPicker, FileUpload, TreeView } from './specialized.js';
+export { ColorPicker, FileUpload, TreeView, formatColor, parseColor } from './specialized.js';
 export type {
+  ColorFormat,
   ColorPickerProps,
   FileRejection,
   FileRejectionReason,
