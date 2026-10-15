@@ -33,6 +33,7 @@ export { type MenuSubTriggerPropsThemed } from './MenuSub.js';
 export { type MenuCheckboxItemPropsThemed, type MenuRadioItemPropsThemed } from './MenuItems.js';
 export { Slider, type SliderProps } from './Slider.js';
 export { Progress, type ProgressProps } from './Progress.js';
+export { ProgressCircle, type ProgressCircleProps } from './ProgressCircle.js';
 export { Drawer, Sheet } from './Drawer.namespace.js';
 export { type DrawerContentProps, type SheetContentProps } from './Drawer.js';
 export { AlertDialog } from './AlertDialog.namespace.js';

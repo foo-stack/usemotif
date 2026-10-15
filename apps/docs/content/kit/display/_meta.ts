@@ -16,6 +16,7 @@ const meta: MetaFile = {
   'form-field': 'FormField',
   separator: 'Separator',
   progress: 'Progress',
+  'progress-circle': 'ProgressCircle',
 };
 
 export default meta;
