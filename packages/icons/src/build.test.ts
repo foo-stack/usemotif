@@ -29,6 +29,14 @@ describe('svgToGlyph', () => {
     expect(source).not.toContain('Bell</');
   });
 
+  it('strips comments that removing another comment would join together', () => {
+    const result = svgToGlyph(
+      'x.svg',
+      '<svg viewBox="0 0 24 24"><!<!---->--><path d="M0 0" /></svg>',
+    );
+    expect((result as { source: string }).source).toContain('<Path d="M0 0" />');
+  });
+
   it('names components from file names', () => {
     expect(componentName('arrow-up-right.svg')).toBe('ArrowUpRight');
     expect(componentName('2fa.svg')).toBe('Icon2fa');

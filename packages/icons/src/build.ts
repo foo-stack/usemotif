@@ -61,8 +61,13 @@ class Unsupported extends Error {}
 
 function parse(svg: string): SvgElement {
   const stack: SvgElement[] = [{ tag: '#root', attrs: {}, children: [] }];
-  // Comments, the prolog and doctype carry nothing to draw.
-  const body = svg.replace(/<!--[^]*?-->|<\?[^]*?\?>|<!DOCTYPE[^>]*>/gi, '');
+  // Comments, the prolog and doctype carry nothing to draw. Stripped until nothing changes, so
+  // a removal cannot join two fragments into a new `<!--`.
+  let body = svg;
+  for (let previous = ''; previous !== body; ) {
+    previous = body;
+    body = body.replace(/<!--[^]*?-->|<\?[^]*?\?>|<!DOCTYPE[^>]*>/gi, '');
+  }
   const TAG = /<(\/?)([A-Za-z][\w:-]*)((?:\s+[^\s=/>]+(?:\s*=\s*(?:"[^"]*"|'[^']*'))?)*)\s*(\/?)>/g;
   for (const m of body.matchAll(TAG)) {
     const [, closing, rawTag, rawAttrs = '', selfClosing] = m;
