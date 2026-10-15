@@ -2,8 +2,8 @@
 title: Testing
 description: Test motif components with Testing Library, assert resolved styles, and run the cross-renderer conformance suite from @usemotif/test-utils.
 diataxis: howto
-covers: ['assertConformance', 'standardCases', 'motifMatchers', 'defaultTestTheme']
-last_verified: 2026-05-15
+covers: ['assertConformance', 'standardCases', 'motifMatchers', 'defaultTestTheme', 'accessibleFacts', 'AccessibleFacts', 'NativeTestInstance']
+last_verified: 2026-10-15
 ---
 
 import { ArticleMeta, Callout, CodeBlock, Eyebrow, Lede } from '../../components/index.js';
@@ -91,6 +91,31 @@ library.
 
 Both are subset matches - extra keys are tolerated, so a renderer adding delivery-specific styles
 does not break the assertion.
+
+## Assert what assistive technology hears
+
+`motifMatchers` includes three accessibility matchers that read the same on both platforms. Pass
+a DOM element on web, or a React Native test instance from `@testing-library/react-native`:
+
+<CodeBlock lang="tsx" code={`expect.extend(motifMatchers);
+
+// web
+const trigger = screen.getByText('Shipping details').closest('button');
+// native
+const trigger = screen.getByText('Shipping details').parent;
+
+expect(trigger).toHaveRole('button');
+expect(trigger).toHaveAccessibleName('Shipping details');
+expect(trigger).toBeExpanded();`} />
+
+Roles are ARIA's names on both sides: `<h2>` and `accessibilityRole="header"` are both
+`heading`, `<img alt="">` is `presentation`, and an `<input type="email">` is a `textbox`. The
+name comes from `aria-labelledby`, `aria-label`, `alt` or a form control's `<label>` on web, from
+`accessibilityLabel` or `aria-label` on native, and from text content otherwise. `toBeExpanded`
+reads `aria-expanded`, or `accessibilityState.expanded` on native, and throws on an element that
+reports no expanded state at all, so a negated assertion can't pass by accident.
+
+`accessibleFacts(target)` returns all three at once.
 
 ## Run the conformance suite
 
