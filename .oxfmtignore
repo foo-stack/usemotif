@@ -12,6 +12,9 @@ coverage/
 apps/*/next-env.d.ts
 examples/*/next-env.d.ts
 
+# TanStack Router regenerates its route tree on every build.
+apps/*/src/routeTree.gen.ts
+
 # oxfmt collapses indentation inside multi-line JS template literals that
 # sit on JSX attributes (e.g. <CodeBlock code={`...`}>). The code samples in
 # these MDX files are user-facing and must keep their authored indentation.

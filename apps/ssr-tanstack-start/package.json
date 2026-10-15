@@ -1,0 +1,32 @@
+{
+  "name": "@usemotif/ssr-tanstack-start",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Streaming SSR fixture: TanStack Start with motif's style collector streamed into the HTML.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite dev --port 4200",
+    "build": "vite build",
+    "start": "node .output/server/index.mjs",
+    "smoke": "node smoke.mjs",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf .output dist .tanstack .turbo"
+  },
+  "dependencies": {
+    "@tanstack/react-router": "1.170.44",
+    "@tanstack/react-start": "1.169.2",
+    "@usemotif/react": "workspace:*",
+    "@usemotif/tokens": "workspace:*",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "6.1.2",
+    "playwright": "1.59.1",
+    "typescript": "^6.0.3",
+    "vite": "8.3.4"
+  }
+}

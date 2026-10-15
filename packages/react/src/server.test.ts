@@ -151,3 +151,29 @@ describe('motifStyleStream', () => {
     ]);
   });
 });
+
+describe('motifStyleTransform', () => {
+  it('does the same for web streams', async () => {
+    const { motifStyleTransform, SSRStyleCollector: Collector } = await import('./server.js');
+    const collector = new Collector();
+    const chunks = ['<html><head>', '</head><body>shell', '<div hidden id="S:0">late</div>'];
+    collector._append('m-a', '.m-a { color: red; }');
+    const source = new ReadableStream<string>({
+      start(controller) {
+        controller.enqueue(chunks[0]!);
+        controller.enqueue(chunks[1]!);
+        collector._append('m-b', '.m-b { color: blue; }');
+        controller.enqueue(chunks[2]!);
+        controller.close();
+      },
+    });
+    const out: string[] = [];
+    const reader = source.pipeThrough(motifStyleTransform(collector)).getReader();
+    const decoder = new TextDecoder();
+    for (let r = await reader.read(); !r.done; r = await reader.read())
+      out.push(decoder.decode(r.value));
+    expect(out.join('')).toBe(
+      '<html><head><style data-motif-ssr>.m-a { color: red; }\n.m-b { color: blue; }</style></head><body>shell<div hidden id="S:0">late</div>',
+    );
+  });
+});
