@@ -24,3 +24,4 @@ export {
 } from './primitives.js';
 
 export { darkTheme, highContrastDarkTheme, highContrastLightTheme, lightTheme } from './themes.js';
+export { generatePalette, type Palette, type PaletteScale, type PaletteStep } from './palette.js';

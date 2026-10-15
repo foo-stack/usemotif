@@ -2,8 +2,8 @@
 title: Theming
 description: A theme becomes active by sitting under a ThemeProvider; switching themes is an attribute swap, not a re-render.
 diataxis: explanation
-covers: ['createTheme', 'ThemeProvider']
-last_verified: 2026-05-15
+covers: ['createTheme', 'ThemeProvider', 'generatePalette', 'Palette', 'PaletteScale', 'PaletteStep']
+last_verified: 2026-10-15
 ---
 
 import { ArticleMeta, Callout, CodeBlock, Eyebrow, Lede } from '../../components/index.js';
@@ -52,6 +52,38 @@ export const darkTheme = createTheme({
 
 Both themes share the same primitive layer (`ink`, `paper`). Only the semantic layer (`surface`,
 `text`) differs. Components reference the semantic paths and the right values arrive.
+
+### A palette from one colour
+
+`generatePalette` in `@usemotif/tokens` builds a 12-step light scale and a 12-step dark scale from
+one brand colour, spaced evenly in OKLCH:
+
+<CodeBlock lang="ts" code={`import { generatePalette } from '@usemotif/tokens';
+
+const brand = generatePalette('#7c3aed');
+// brand.light[9] === '#7c3aed', brand.dark[9] === '#7c3aed'
+
+export const lightTheme = createTheme({
+  name: 'light',
+  tokens: {
+    colors: {
+      brand: brand.light,
+      action: { primary: { bg: '$colors.brand.9' } },
+      text: { accent: '$colors.brand.11' },
+    },
+  },
+});`} />
+
+| Steps | Use |
+| --- | --- |
+| 1, 2 | App and subtle backgrounds |
+| 3 to 5 | Component backgrounds: rest, hover, pressed |
+| 6 to 8 | Borders, from subtle to strong |
+| 9, 10 | The colour itself, and its hover |
+| 11, 12 | Text, held to 4.5:1 and 7:1 contrast against step 2 |
+
+Hue stays fixed. Chroma is reduced on any step that would fall outside sRGB, so every value is a
+plain hex colour. A colour it cannot parse throws.
 
 ## ThemeProvider makes themes available
 
