@@ -7,7 +7,7 @@
  */
 
 export { Card } from './Card.namespace.js';
-export { Badge } from './Badge.js';
+export { Badge, type BadgeProps } from './Badge.js';
 export { Button, type ButtonProps } from './Button.js';
 export { TextField, type TextFieldProps } from './TextField.js';
 export { Spinner, type SpinnerProps } from './Spinner.js';
