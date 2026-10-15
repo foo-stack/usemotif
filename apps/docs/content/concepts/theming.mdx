@@ -2,7 +2,7 @@
 title: Theming
 description: A theme becomes active by sitting under a ThemeProvider; switching themes is an attribute swap, not a re-render.
 diataxis: explanation
-covers: ['createTheme', 'ThemeProvider', 'generatePalette', 'Palette', 'PaletteScale', 'PaletteStep']
+covers: ['createTheme', 'ThemeProvider', 'generatePalette', 'Palette', 'PaletteScale', 'PaletteStep', 'registerStyleTarget']
 last_verified: 2026-10-15
 ---
 
@@ -107,6 +107,33 @@ export function App({ children }: { children: React.ReactNode }) {
 The `themes` prop is the catalogue: every theme that might be active. The `active` prop is the
 current one. Pass both - the catalogue stays stable, and `active` is the only thing that changes
 when the user toggles.
+
+### Shadow roots and iframes
+
+Styles in the main document's `<head>` don't reach a shadow root or an iframe's document. When a
+tree renders into one, pass it as `styleTarget`, and motif adopts its CSS there as a constructable
+stylesheet: the theme, every rule it emits at runtime for state, breakpoint and container styles,
+and any server-rendered rules.
+
+<CodeBlock lang="tsx" code={`const shadow = host.attachShadow({ mode: 'open' });
+
+createRoot(shadow).render(
+  <ThemeProvider themes={themes} active="light" styleTarget={shadow}>
+    <Widget />
+  </ThemeProvider>,
+);
+
+// An iframe: portal into its body and target its document.
+createPortal(
+  <ThemeProvider themes={themes} active="light" styleTarget={iframe.contentDocument}>
+    <Preview />
+  </ThemeProvider>,
+  iframe.contentDocument.body,
+);`} />
+
+Inside an iframe, media-query breakpoints follow the iframe's width. Outside React,
+`registerStyleTarget(target)` from `@usemotif/react` does the same and returns a function that
+removes it.
 
 ## Switches are attribute swaps
 

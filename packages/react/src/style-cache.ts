@@ -19,6 +19,16 @@ interface StyleCacheState {
   styleEl: HTMLStyleElement | null;
   /** Whether we've already scanned the DOM for SSR-injected styles. */
   hydrated: boolean;
+  /** Every rule emitted in the browser, in order, for style targets registered later. */
+  readonly emitted: string[];
+  /** Shadow roots and documents that receive the emitted CSS, each through its own sheet. */
+  readonly targets: Set<StyleTargetEntry>;
+  targetsQueued: boolean;
+}
+
+interface StyleTargetEntry {
+  readonly sheet: CSSStyleSheet;
+  readonly extra: string;
 }
 
 interface SharedState {
@@ -35,7 +45,15 @@ const SHARED_KEY = Symbol.for('usemotif.styleCache');
 function shared(): SharedState {
   const registry = globalThis as unknown as Record<symbol, SharedState | undefined>;
   return (registry[SHARED_KEY] ??= {
-    cache: { injected: new Set<string>(), pendingCss: [], styleEl: null, hydrated: false },
+    cache: {
+      injected: new Set<string>(),
+      pendingCss: [],
+      styleEl: null,
+      hydrated: false,
+      emitted: [],
+      targets: new Set(),
+      targetsQueued: false,
+    },
     storage: syncCollectorStorage,
   });
 }
@@ -207,6 +225,8 @@ function assertBrowserOrCollector(): void {
 
 function emitToBrowser(css: string): void {
   const { cache } = shared();
+  cache.emitted.push(css);
+  syncStyleTargets();
   if (cache.styleEl !== null) {
     cache.styleEl.appendChild(document.createTextNode(`\n${css}`));
     return;
@@ -220,6 +240,47 @@ function emitToBrowser(css: string): void {
   el.appendChild(document.createTextNode(css));
   document.head.appendChild(el);
   cache.styleEl = el;
+}
+
+/** Rewrite every target's sheet from the CSS emitted so far, once per microtask. */
+function syncStyleTargets(): void {
+  const { cache } = shared();
+  if (cache.targets.size === 0 || cache.targetsQueued) return;
+  cache.targetsQueued = true;
+  queueMicrotask(() => {
+    cache.targetsQueued = false;
+    const runtime = cache.emitted.join('\n');
+    for (const target of cache.targets) target.sheet.replaceSync(`${target.extra}\n${runtime}`);
+  });
+}
+
+/**
+ * Send motif's CSS into a shadow root or another document, such as an iframe's, through
+ * `adoptedStyleSheets`: every rule emitted so far, the server-rendered rules in this document,
+ * and each later one, after `extra`. Returns the function that removes it. `ThemeProvider`'s
+ * `styleTarget` calls this with its theme CSS as `extra`.
+ */
+export function registerStyleTarget(target: Document | ShadowRoot, extra = ''): () => void {
+  const { cache } = shared();
+  const doc = target instanceof ShadowRoot ? target.ownerDocument : target;
+  // A sheet can only be adopted by the document that constructed it, so an iframe's comes from
+  // the iframe's own window.
+  const Sheet = (doc.defaultView as (Window & typeof globalThis) | null)?.CSSStyleSheet;
+  if (Sheet === undefined) return () => {};
+  const server = Array.from(
+    document.querySelectorAll('style[data-motif-ssr]'),
+    (el) => el.textContent ?? '',
+  );
+  const entry: StyleTargetEntry = { sheet: new Sheet(), extra: [extra, ...server].join('\n') };
+  entry.sheet.replaceSync(`${entry.extra}\n${cache.emitted.join('\n')}`);
+  // `?? []` for environments that leave the list unset until it is first assigned.
+  const adopted = (): CSSStyleSheet[] => target.adoptedStyleSheets ?? [];
+  target.adoptedStyleSheets = [...adopted(), entry.sheet];
+  cache.targets.add(entry);
+  return () => {
+    cache.targets.delete(entry);
+    target.adoptedStyleSheets = adopted().filter((sheet) => sheet !== entry.sheet);
+  };
 }
 
 /**

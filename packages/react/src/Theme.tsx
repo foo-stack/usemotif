@@ -15,6 +15,8 @@ import { warnIfCssLayerNeverOrdered } from './_dev-warnings.js';
 import { CssLayerContext } from './css-layer-context.js';
 import { ThemeContext, type ThemeContextValue } from './theme-context.js';
 import { useViewTransitionValue } from './_view-transition.js';
+import { useIsomorphicLayoutEffect } from './_use-isomorphic-layout-effect.js';
+import { registerStyleTarget } from './style-cache.js';
 
 export interface ThemeProviderProps {
   /**
@@ -80,6 +82,12 @@ export interface ThemeProviderProps {
    * motion, the switch is instant as usual.
    */
   viewTransition?: boolean;
+  /**
+   * A shadow root or another document, such as an iframe's, that this tree renders into. The
+   * theme CSS and every rule motif emits at runtime are adopted there as a constructable
+   * stylesheet, since styles in the main document's `<head>` don't reach it.
+   */
+  styleTarget?: Document | ShadowRoot | null | undefined;
   children?: ReactNode;
 }
 
@@ -109,6 +117,7 @@ export function ThemeProvider({
   breakpoints,
   cssLayer,
   viewTransition = false,
+  styleTarget,
   children,
 }: ThemeProviderProps) {
   const { value: active } = useViewTransitionValue(requested, viewTransition);
@@ -126,6 +135,13 @@ export function ThemeProvider({
   // no theme registers any of the three fields, in which case we skip
   // the second `<style>` element entirely.
   const runtimeBlock = useMemo(() => themesRuntimeCss(themes, cssLayer), [themes, cssLayer]);
+  useIsomorphicLayoutEffect(
+    () =>
+      styleTarget === null || styleTarget === undefined
+        ? undefined
+        : registerStyleTarget(styleTarget, `${cssBlock}\n${runtimeBlock}`),
+    [styleTarget, cssBlock, runtimeBlock],
+  );
   const value: ThemeContextValue = useMemo(
     () => ({ themes, active, chain: [active], breakpoints: widths }),
     [themes, active, widths],
