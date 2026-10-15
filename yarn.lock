@@ -8048,7 +8048,9 @@ __metadata:
   resolution: "@usemotif-bench/rn-startup@workspace:benchmarks/rn-startup"
   dependencies:
     "@types/react": "npm:^19.2.14"
+    "@usemotif/core": "workspace:*"
     "@usemotif/react-native": "workspace:*"
+    "@usemotif/tokens": "workspace:*"
     react: "npm:^19.2.0"
     react-native: "npm:0.83.6"
     typescript: "npm:^6.0.3"

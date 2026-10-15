@@ -105,12 +105,23 @@ export function resolveToken(
   theme: Theme,
   options: ResolveTokenOptions = {},
 ): TokenValue | undefined {
+  // A screen asks for the same few refs once per element, so each theme remembers its answers.
+  // Themes are treated as immutable, as everywhere else: a changed theme is a new object.
+  let memo = RESOLVED.get(theme);
+  if (memo === undefined) RESOLVED.set(theme, (memo = new Map()));
+  const key = options.defaultScale === undefined ? ref : `${options.defaultScale}\u0000${ref}`;
+  const known = memo.get(key);
+  if (known !== undefined) return known;
   const resolved = resolveTokenInner(ref, theme, options, new Set());
+  // A ref that fails stays out of the memo, so it keeps reaching the dev warning below.
+  if (resolved !== undefined) memo.set(key, resolved);
   if (resolved === undefined && process.env.NODE_ENV !== 'production') {
     warnUnresolvedTokenRef(ref, theme, options.defaultScale);
   }
   return resolved;
 }
+
+const RESOLVED = new WeakMap<Theme, Map<string, TokenValue>>();
 
 function resolveTokenInner(
   ref: TokenRef,

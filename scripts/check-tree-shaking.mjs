@@ -63,7 +63,8 @@ const targets = [
     // Bumped when responsive values resolve the @contrast-style preference keys (the store on native).
     // Bumped for fallback chains in token refs and the recipes' component token paths.
     // Bumped for view transitions for Presence and ThemeProvider (the layoutId naming context Box reads).
-    budget: 11900, // gzip bytes
+    // Bumped for the per-theme memo in resolveToken.
+    budget: 12000, // gzip bytes
   },
   {
     name: '@usemotif/react - Button only',
@@ -238,7 +239,8 @@ const targets = [
     // any `@usemotif/headless` behaviour, so it stays near the Card-only floor.
     // Bumped when the group states joined core's selector map and Box marks a group.
     // Bumped for view transitions for Presence and ThemeProvider (the layoutId naming context Box reads).
-    budget: 12200,
+    // Bumped for the per-theme memo in resolveToken.
+    budget: 12300,
   },
   {
     name: '@usemotif/ui - Tabs only',
@@ -261,7 +263,8 @@ const targets = [
     // Bumped when four more state props joined core's selector map.
     // Bumped when the group states joined core's selector map and Box marks a group.
     // Bumped for view transitions for Presence and ThemeProvider (the layoutId naming context Box reads).
-    budget: 12300,
+    // Bumped for the per-theme memo in resolveToken.
+    budget: 12500,
   },
   {
     name: '@usemotif/ui - Radio only',
@@ -376,7 +379,8 @@ const targets = [
     // content inert + aria-hidden and locks scroll, which every headless-
     // backed entry carries through the shared floor.
     // Bumped for view transitions for Presence and ThemeProvider (the layoutId naming context Box reads).
-    budget: 18400,
+    // Bumped for the per-theme memo in resolveToken.
+    budget: 18500,
   },
   {
     name: '@usemotif/ui - Separator only',
@@ -385,7 +389,8 @@ const targets = [
     // Bumped when four more state props joined core's selector map.
     // Bumped when the group states joined core's selector map and Box marks a group.
     // Bumped for view transitions for Presence and ThemeProvider (the layoutId naming context Box reads).
-    budget: 12000,
+    // Bumped for the per-theme memo in resolveToken.
+    budget: 12100,
   },
   {
     name: '@usemotif/ui - Skeleton only',
@@ -394,7 +399,8 @@ const targets = [
     // Bumped when the group states joined core's selector map and Box marks a group.
     // Bumped for fallback chains in token refs and the recipes' component token paths.
     // Bumped for view transitions for Presence and ThemeProvider (the layoutId naming context Box reads).
-    budget: 12300,
+    // Bumped for the per-theme memo in resolveToken.
+    budget: 12400,
   },
   {
     name: '@usemotif/ui - Pagination only',
@@ -428,7 +434,8 @@ const targets = [
     // backed entry carries through the shared floor.
     // Bumped for anchor positioning and the Popover API in useFloatingPosition.
     // Bumped for view transitions for Presence and ThemeProvider (the layoutId naming context Box reads).
-    budget: 18600,
+    // Bumped for the per-theme memo in resolveToken.
+    budget: 18700,
   },
   {
     name: '@usemotif/ui - Toolbar only',
@@ -602,7 +609,8 @@ const targets = [
     // Bumped when the group states joined core's selector map and Box marks a group.
     // Bumped for fallback chains in token refs and the recipes' component token paths.
     // Bumped for view transitions for Presence and ThemeProvider (the layoutId naming context Box reads).
-    budget: 12400,
+    // Bumped for the per-theme memo in resolveToken.
+    budget: 12500,
   },
   {
     name: '@usemotif/ui - EmptyState only',
@@ -613,7 +621,8 @@ const targets = [
     // Bumped for keepMounted='activity' (the Activity boundary and its feature check).
     // Bumped for view transitions for Presence and ThemeProvider (the layoutId naming context Box reads).
     // Bumped for style targets (the style cache keeps emitted CSS and syncs it to adopted sheets).
-    budget: 12300,
+    // Bumped for the per-theme memo in resolveToken.
+    budget: 12400,
   },
   {
     name: '@usemotif/ui - Timeline only',
@@ -627,7 +636,8 @@ const targets = [
     // Bumped when the group states joined core's selector map and Box marks a group.
     // Bumped for fallback chains in token refs and the recipes' component token paths.
     // Bumped for view transitions for Presence and ThemeProvider (the layoutId naming context Box reads).
-    budget: 12600,
+    // Bumped for the per-theme memo in resolveToken.
+    budget: 12700,
   },
   {
     name: '@usemotif/ui - AvatarGroup only',
@@ -683,7 +693,8 @@ const targets = [
     // Bumped when the group states joined core's selector map and Box marks a group.
     // Bumped for fallback chains in token refs and the recipes' component token paths.
     // Bumped for view transitions for Presence and ThemeProvider (the layoutId naming context Box reads).
-    budget: 12400,
+    // Bumped for the per-theme memo in resolveToken.
+    budget: 12500,
   },
   {
     name: '@usemotif/ui - SegmentedControl only',

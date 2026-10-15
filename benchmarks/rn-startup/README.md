@@ -99,3 +99,21 @@ emitted numbers does exist** and is wired into `bench.yml` (the
 `device-bench` lane), self-tested against the fixture; only the
 on-device measurement step awaits a device cloud (Sauce / BrowserStack /
 EAS) or a hosted simulator, queued for a v1.x patch.
+
+## Theme resolution at startup
+
+`yarn workspace @usemotif-bench/rn-startup theme-cost` measures, under `node --jitless` as a
+stand-in for Hermes's interpreter, what resolving token props costs on a first screen of 300
+boxes with six token props each, against the same props already resolved to literals, which is
+the most a build-time theme snapshot could hand the renderer.
+
+Measured on 2026-10-15 (Apple silicon, Node 24):
+
+|                                             | First screen, cold | Saving a snapshot could add |
+| ------------------------------------------- | ------------------ | --------------------------- |
+| Before the per-theme memo in `resolveToken` | 2.3 to 2.5 ms      | about 2.2 ms                |
+| With it                                     | 0.6 to 0.7 ms      | about 0.1 ms                |
+
+Resolving every token in the light theme once takes about 0.3 ms. The cost was the same few refs
+resolved again for every element, which the memo removes, so a compiler-metro snapshot is not
+built: what is left for it to save is a tenth of a millisecond.
