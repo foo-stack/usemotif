@@ -141,6 +141,11 @@ const CLIENT_ENTRY_POLICY = {
     // inverse. The exemptions are the server graph: the barrel, and the
     // namespace assembly it re-exports.
     mustInternalAllExcept: ['./dist/index.js', './dist/index.cjs', './dist/*.namespace.*'],
+    // The directive-free barrel may only re-export. A component that is not
+    // its own tsup entry gets inlined here instead, and its module-level
+    // `styled()` call then runs in the server graph, where `styled` is a client
+    // reference, so importing the kit from a Server Component throws.
+    reexportOnly: ['./dist/index.js'],
   },
   '@usemotif/react-native': { must: [], mustNot: ['.', './flash-list', './reanimated'] },
 };
@@ -308,6 +313,37 @@ function checkCjsEntriesLoad(pkg, manifest, offenders, useFlag) {
 }
 
 /**
+ * Assert a server-graph barrel holds nothing but `export ... from` lines and bare
+ * chunk imports, so no client code can be inlined into it and run on the server.
+ */
+function checkReexportOnly(pkg, destDir, tarball, offenders) {
+  for (const path of CLIENT_ENTRY_POLICY[pkg.name]?.reexportOnly ?? []) {
+    const content = readFromTarball(destDir, tarball, `package/${path.replace(/^\.\//, '')}`);
+    if (content === null) {
+      offenders.push(`${pkg.name} \u2192 ${path} is missing from the tarball.`);
+      continue;
+    }
+    const stray = content
+      .split('\n')
+      .map((line) => line.trim())
+      .find(
+        (line) =>
+          line !== '' &&
+          !line.startsWith('//# sourceMappingURL=') &&
+          // Code splitting adds bare imports of the (client) chunks it shares.
+          !/^import '[^']+';$/.test(line) &&
+          !/^export (\{[^}]*\}|\*) from '[^']+';$/.test(line),
+      );
+    if (stray !== undefined) {
+      offenders.push(
+        `${pkg.name} \u2192 ${path} must only re-export, but has: ${stray.slice(0, 80)}. ` +
+          `Give the component its own tsup entry so it lands in a client chunk.`,
+      );
+    }
+  }
+}
+
+/**
  * Assert the internal client chunks a split package relies on are present in
  * the tarball and carry the directive. These are unreachable from the exports
  * map by design, so nothing else in this file would look at them.
@@ -410,6 +446,7 @@ function main() {
         }
         assertClientPackageIsClassified(pkg, offenders);
         checkUseClientEntries(pkg, manifest, destDir, tarball, offenders);
+        checkReexportOnly(pkg, destDir, tarball, offenders);
         checkInternalClientChunks(pkg, destDir, tarball, offenders);
         checkCjsEntriesLoad(pkg, manifest, offenders, requireEsmOptOut);
         const clean = offenders.length === before;

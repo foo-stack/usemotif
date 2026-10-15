@@ -114,6 +114,8 @@ export default defineConfig({
     'src/NavigationMenu.namespace.ts',
     'src/Card.tsx',
     'src/Badge.tsx',
+    'src/Button.tsx',
+    'src/TextField.tsx',
     'src/Spinner.tsx',
     'src/Alert.tsx',
     'src/Modal.tsx',
