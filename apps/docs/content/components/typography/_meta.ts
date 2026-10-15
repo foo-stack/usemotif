@@ -8,6 +8,7 @@ const meta: MetaFile = {
   blockquote: 'Blockquote',
   code: 'Code',
   kbd: 'Kbd',
+  prose: 'Prose',
 };
 
 export default meta;
