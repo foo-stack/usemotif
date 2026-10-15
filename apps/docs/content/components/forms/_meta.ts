@@ -2,6 +2,7 @@ import type { MetaFile } from '@vorge/core';
 
 const meta: MetaFile = {
   index: 'Forms',
+  form: 'Form',
   field: 'Field',
   label: 'Label',
   input: 'Input',

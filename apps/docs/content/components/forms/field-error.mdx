@@ -3,7 +3,7 @@ title: FieldError
 description: A form-field error message. Carries role="alert" and claims the error id so a newly shown error is announced.
 diataxis: reference
 covers: ['FieldError', 'FieldErrorProps']
-last_verified: 2026-05-15
+last_verified: 2026-10-15
 ---
 
 import {
@@ -28,6 +28,11 @@ import {
 <ComponentDemoStrip demo="field-error" />
 
 <ArticleMeta />
+
+<Callout variant="info" title="Inside a Form">
+  Leave FieldError empty inside a [Form](/components/forms/form) and it shows the message the form
+  holds for its field, and nothing while the field is valid. Given children, it shows those.
+</Callout>
 
 ## What it is
 

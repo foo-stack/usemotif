@@ -1,0 +1,87 @@
+---
+title: Form
+description: A form that checks the browser's native constraints before it submits, shows each failure on its field, and runs a React 19 action. Web.
+diataxis: reference
+covers: ['Form', 'FormProps', 'FormActionResult']
+last_verified: 2026-10-15
+---
+
+import { ApiSignature, ArticleMeta, Callout, CodeBlock, Eyebrow, Lede } from '../../../components/index.js';
+
+<Eyebrow>Components / Forms</Eyebrow>
+
+# Form
+
+<Lede>
+  Form puts the browser's own validation (`required`, `type="email"`, `pattern`, `min`) in front
+  of a React 19 action, and shows every failure through the field's `FieldError` instead of the
+  browser's bubble.
+</Lede>
+
+<ArticleMeta />
+
+## Usage
+
+<CodeBlock lang="tsx" code={`import { Button, Field, FieldError, Form, Input, Label } from '@usemotif/react';
+
+async function signUp(data: FormData) {
+  'use server';
+  if (await emailTaken(data.get('email'))) return { errors: { email: 'Already registered' } };
+}
+
+<Form action={signUp}>
+  <Field>
+    <Label>Email</Label>
+    <Input name="email" type="email" required />
+    <FieldError />
+  </Field>
+  <Button type="submit">Sign up</Button>
+</Form>`} />
+
+## What happens on submit
+
+1. Form checks every control's native constraints. Nothing is sent while any fails.
+2. Each failing field turns invalid: its control gets `aria-invalid` and points `aria-describedby`
+   at the error, and an empty `FieldError` shows the browser's message for it. Focus moves to the
+   first invalid control.
+3. From then on, a field rechecks as it's edited, and its message clears once it passes.
+4. A submit that passes calls `onSubmit`, then runs `action` with the form's `FormData` as a React
+   19 form action, so `useFormStatus` in a child reports it pending.
+5. Errors the action returns, keyed by control `name`, land on those fields. Each clears on the
+   field's first edit.
+
+A message comes from the control's `validationMessage`, so it's the browser's wording in the
+user's language. Set your own with `setCustomValidity`. A control outside any `Field` has no
+`FieldError` to show, so for that one the browser shows its bubble.
+
+## With useActionState
+
+When the action's state lives in `useActionState`, pass its errors in:
+
+<CodeBlock lang="tsx" code={`const [state, formAction] = useActionState(signUp, {});
+
+<Form action={formAction} errors={state.errors}>
+  {/* fields */}
+</Form>`} />
+
+`errors` is keyed by control `name`, like an action's result, and is shown from the first render,
+so errors from a server render arrive already on their fields.
+
+## API
+
+<ApiSignature
+  name="Form"
+  status="stable"
+  signature={`function Form(props: FormProps): JSX.Element`}
+  params={[
+    { name: 'action', type: '(formData: FormData) => FormActionResult | void | Promise<FormActionResult | void>', description: 'Runs once every control passes, as a React 19 form action. Return `{ errors }` keyed by control name to show messages on fields.' },
+    { name: 'onSubmit', type: '(event: FormEvent<HTMLFormElement>) => void', description: 'Called on a submit that passed validation, before the action.' },
+    { name: 'errors', type: 'Record<string, string>', description: 'Messages keyed by control name from elsewhere, such as useActionState.' },
+    { name: '...rest', type: 'BoxProps', description: 'Style props and form attributes, applied to the form element.' },
+  ]}
+/>
+
+<Callout variant="info" title="Web first">
+  Form is in `@usemotif/react`. React Native has no form element or native constraint validation,
+  so there's no native Form yet.
+</Callout>
