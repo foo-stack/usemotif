@@ -43,6 +43,7 @@ function SubmenuLevelProvider({ children }: { children: ReactNode }): ReactEleme
 }
 import { useFloatingPosition } from './positioning.js';
 import { pageWindow } from './_page-window.js';
+import { activeStepIndex, canSelectStep } from './_steps.js';
 
 /**
  * Navigation family - Pagination, Breadcrumb, Stepper,
@@ -175,17 +176,40 @@ export interface StepperProps {
     index: number;
     status: 'pending' | 'active' | 'complete' | 'error';
     isLast: boolean;
+    /** Whether the step can be clicked to, with `onStepChange`. */
+    selectable: boolean;
   }) => ReactElement;
   orientation?: 'horizontal' | 'vertical';
+  /** Makes the steps buttons that report the id clicked. */
+  onStepChange?: (id: string) => void;
+  /** With `onStepChange`, allow going back to earlier steps but not skipping
+   * ahead: only steps before the active one can be clicked. */
+  linear?: boolean;
   style?: CSSProperties;
 }
+
+/** Strips a button's own chrome, keeping its focus ring, so a step looks as
+ * `renderStep` draws it. */
+const STEP_BUTTON: CSSProperties = {
+  background: 'none',
+  border: 0,
+  padding: 0,
+  margin: 0,
+  font: 'inherit',
+  color: 'inherit',
+  textAlign: 'inherit',
+};
+
 export function Stepper({
   steps,
   current,
   renderStep,
   orientation = 'horizontal',
+  onStepChange,
+  linear = false,
   style,
 }: StepperProps): ReactElement {
+  const active = activeStepIndex(steps, current);
   return (
     <ol
       style={{
@@ -200,14 +224,28 @@ export function Stepper({
       {steps.map((step, i) => {
         const status: StepperStep['status'] =
           current === step.id ? 'active' : (step.status ?? 'pending');
+        const selectable = onStepChange !== undefined && canSelectStep(i, active, linear);
+        const content = renderStep({
+          step,
+          index: i,
+          status: status ?? 'pending',
+          isLast: i === steps.length - 1,
+          selectable,
+        });
         return (
           <li key={step.id} aria-current={status === 'active' ? 'step' : undefined}>
-            {renderStep({
-              step,
-              index: i,
-              status: status ?? 'pending',
-              isLast: i === steps.length - 1,
-            })}
+            {onStepChange === undefined ? (
+              content
+            ) : (
+              <button
+                type="button"
+                disabled={!selectable}
+                onClick={() => onStepChange(step.id)}
+                style={{ ...STEP_BUTTON, cursor: selectable ? 'pointer' : 'default' }}
+              >
+                {content}
+              </button>
+            )}
           </li>
         );
       })}

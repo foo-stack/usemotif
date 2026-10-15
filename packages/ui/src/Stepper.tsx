@@ -11,6 +11,10 @@ export interface StepperProps {
   /** Active step id (overrides each step's own `status`). */
   readonly current?: string;
   readonly orientation?: 'horizontal' | 'vertical';
+  /** Makes the steps clickable, reporting the id clicked. */
+  readonly onStepChange?: (id: string) => void;
+  /** With `onStepChange`, only steps before the active one can be clicked. */
+  readonly linear?: boolean;
 }
 
 const STYLE_HORIZONTAL: CSSProperties = { gap: 24, alignItems: 'center' };
@@ -21,6 +25,7 @@ interface StepInfo {
   readonly index: number;
   readonly status: 'pending' | 'active' | 'complete' | 'error';
   readonly isLast: boolean;
+  readonly selectable: boolean;
 }
 
 // Module-scoped so it's a stable `renderStep` reference (lint: no-new-fn-as-prop).
@@ -89,7 +94,13 @@ function renderThemedStep(info: StepInfo): ReactElement {
  * />
  * ```
  */
-export function Stepper({ steps, current, orientation = 'horizontal' }: StepperProps) {
+export function Stepper({
+  steps,
+  current,
+  orientation = 'horizontal',
+  onStepChange,
+  linear,
+}: StepperProps) {
   return (
     <HeadlessStepper
       steps={steps}
@@ -97,6 +108,8 @@ export function Stepper({ steps, current, orientation = 'horizontal' }: StepperP
       renderStep={renderThemedStep}
       style={orientation === 'vertical' ? STYLE_VERTICAL : STYLE_HORIZONTAL}
       {...(current !== undefined ? { current } : {})}
+      {...(onStepChange !== undefined ? { onStepChange } : {})}
+      {...(linear !== undefined ? { linear } : {})}
     />
   );
 }

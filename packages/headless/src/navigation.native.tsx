@@ -17,6 +17,7 @@ import {
 } from 'react-native';
 import { nativeText } from './_native-text.js';
 import { pageWindow } from './_page-window.js';
+import { activeStepIndex, canSelectStep } from './_steps.js';
 
 /**
  * Native navigation family - Pagination / Breadcrumb / Stepper /
@@ -154,8 +155,14 @@ export interface StepperProps {
     index: number;
     status: 'pending' | 'active' | 'complete' | 'error';
     isLast: boolean;
+    /** Whether the step can be pressed to, with `onStepChange`. */
+    selectable: boolean;
   }) => ReactElement;
   orientation?: 'horizontal' | 'vertical';
+  /** Makes the steps pressable, reporting the id pressed. */
+  onStepChange?: (id: string) => void;
+  /** With `onStepChange`, only steps before the active one can be pressed. */
+  linear?: boolean;
   style?: ViewStyle;
 }
 export function Stepper({
@@ -163,8 +170,11 @@ export function Stepper({
   current,
   renderStep,
   orientation = 'horizontal',
+  onStepChange,
+  linear = false,
   style,
 }: StepperProps): ReactElement {
+  const active = activeStepIndex(steps, current);
   return (
     <View
       style={[{ flexDirection: orientation === 'vertical' ? 'column' : 'row' }, style as ViewStyle]}
@@ -177,12 +187,30 @@ export function Stepper({
             key={step.id}
             {...(status === 'active' ? { accessibilityState: { selected: true } } : {})}
           >
-            {renderStep({
-              step,
-              index: i,
-              status: status ?? 'pending',
-              isLast: i === steps.length - 1,
-            })}
+            {onStepChange === undefined ? (
+              renderStep({
+                step,
+                index: i,
+                status: status ?? 'pending',
+                isLast: i === steps.length - 1,
+                selectable: false,
+              })
+            ) : (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityState={{ disabled: !canSelectStep(i, active, linear) }}
+                disabled={!canSelectStep(i, active, linear)}
+                onPress={() => onStepChange(step.id)}
+              >
+                {renderStep({
+                  step,
+                  index: i,
+                  status: status ?? 'pending',
+                  isLast: i === steps.length - 1,
+                  selectable: canSelectStep(i, active, linear),
+                })}
+              </Pressable>
+            )}
           </View>
         );
       })}
