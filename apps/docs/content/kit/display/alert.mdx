@@ -58,6 +58,22 @@ colour:
   Invoices now live under Settings.
 </Alert>`} />
 
+Dismissible, with an action. The dismiss button and action area are the same ones
+[Banner](/kit/display/banner) uses:
+
+<CodeBlock lang="tsx" code={`import { Alert, Button } from '@usemotif/ui';
+
+{visible ? (
+  <Alert
+    intent="warning"
+    title="Card expiring"
+    action={<Button size="sm" intent="neutral" onPress={openBilling}>Update</Button>}
+    onDismiss={() => setVisible(false)}
+  >
+    Your card expires next month.
+  </Alert>
+) : null}`} />
+
 ## API
 
 <ApiSignature
@@ -85,6 +101,16 @@ colour:
       name: 'children',
       type: 'ReactNode',
       description: 'Body copy, rendered in a smaller size under the title.',
+    },
+    {
+      name: 'action',
+      type: 'ReactNode',
+      description: 'A trailing action area, such as a link or a `Button`.',
+    },
+    {
+      name: 'onDismiss',
+      type: '() => void',
+      description: 'Renders a `×` button labelled "Dismiss" that calls this. You own visibility: the Alert does not unmount itself.',
     },
   ]}
 />

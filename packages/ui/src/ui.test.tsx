@@ -277,6 +277,32 @@ describe('display components', () => {
     expect(el.getAttribute('style') ?? '').toContain('status-danger-tint');
   });
 
+  it('Alert renders an action and a dismiss button in the intent colour', () => {
+    const onDismiss = vi.fn();
+    render(
+      <Alert
+        intent="danger"
+        title="Payment failed"
+        action={<a href="#billing">Update card</a>}
+        onDismiss={onDismiss}
+      >
+        Update your card.
+      </Alert>,
+    );
+    const el = container.querySelector('[role="alert"]') as HTMLElement;
+    expect(el.querySelector('a[href="#billing"]')?.textContent).toBe('Update card');
+    const dismiss = el.querySelector('button[aria-label="Dismiss"]') as HTMLElement;
+    expect(dismiss.getAttribute('type')).toBe('button');
+    expect(dismiss.getAttribute('style') ?? '').toContain('status-danger-fg');
+    click(dismiss);
+    expect(onDismiss).toHaveBeenCalledTimes(1);
+  });
+
+  it('Alert renders no dismiss button without onDismiss', () => {
+    render(<Alert title="Saved" />);
+    expect(container.querySelector('[aria-label="Dismiss"]')).toBeNull();
+  });
+
   it('Alert supports the warning intent and tints per intent', () => {
     render(
       <>

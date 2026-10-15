@@ -2,7 +2,8 @@
 
 import type { ReactNode } from 'react';
 import { bannerRecipe } from '@usemotif/recipes';
-import { Box, Text, type BoxProps } from 'usemotif';
+import { Box, Text } from 'usemotif';
+import { StatusActions } from './_status-actions.js';
 
 export type BannerIntent = 'neutral' | 'info' | 'success' | 'warning' | 'danger';
 
@@ -21,8 +22,6 @@ export interface BannerProps {
    * owns visibility (a Banner is presentational - it doesn't unmount itself). */
   readonly onDismiss?: () => void;
 }
-
-const DISMISS_HOVER = { opacity: 0.65 } as const;
 
 /**
  * A themed full-width announcement bar - the page-level cousin of `Alert`. Soft
@@ -69,29 +68,7 @@ export function Banner({
           </Text>
         ) : null}
       </Box>
-      {action !== undefined ? <Box flexShrink={0}>{action}</Box> : null}
-      {onDismiss !== undefined ? (
-        <Box
-          as="button"
-          flexShrink={0}
-          display="inline-flex"
-          alignItems="center"
-          justifyContent="center"
-          w={24}
-          h={24}
-          borderWidth={0}
-          borderRadius="$radii.md"
-          bg="transparent"
-          color={fg}
-          cursor="pointer"
-          _hover={DISMISS_HOVER}
-          onClick={onDismiss}
-          aria-label="Dismiss"
-          {...({ type: 'button' } as unknown as BoxProps)}
-        >
-          ×
-        </Box>
-      ) : null}
+      <StatusActions action={action} onDismiss={onDismiss} color={fg} />
     </Box>
   );
 }

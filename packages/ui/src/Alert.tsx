@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { alertRecipe } from '@usemotif/recipes';
 import { Box, Text } from 'usemotif';
+import { StatusActions } from './_status-actions.js';
 
 export type AlertIntent = 'neutral' | 'info' | 'success' | 'warning' | 'danger';
 
@@ -13,6 +14,11 @@ export interface AlertProps {
   readonly icon?: ReactNode;
   /** Body content. */
   readonly children?: ReactNode;
+  /** Trailing action area, such as a `<Button>`. */
+  readonly action?: ReactNode;
+  /** When provided, renders a `×` dismiss button calling this. The consumer
+   * owns visibility: the Alert does not unmount itself. */
+  readonly onDismiss?: () => void;
 }
 
 /**
@@ -22,12 +28,19 @@ export interface AlertProps {
  * `role="alert"`.
  *
  * ```tsx
- * <Alert intent="danger" title="Payment failed">
+ * <Alert intent="danger" title="Payment failed" onDismiss={hide}>
  *   Update your card and try again.
  * </Alert>
  * ```
  */
-export function Alert({ intent = 'neutral', title, icon, children }: AlertProps) {
+export function Alert({
+  intent = 'neutral',
+  title,
+  icon,
+  children,
+  action,
+  onDismiss,
+}: AlertProps) {
   const fg = `$colors.status.${intent}.fg`;
   return (
     <Box role="alert" {...alertRecipe.base} {...alertRecipe.variants.intent[intent]}>
@@ -44,6 +57,7 @@ export function Alert({ intent = 'neutral', title, icon, children }: AlertProps)
           </Text>
         ) : null}
       </Box>
+      <StatusActions action={action} onDismiss={onDismiss} color={fg} />
     </Box>
   );
 }
