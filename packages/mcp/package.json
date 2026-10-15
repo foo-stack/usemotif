@@ -1,6 +1,6 @@
 {
   "name": "@usemotif/mcp",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "private": true,
   "description": "MCP server that gives coding agents a motif project's theme tokens, token-path checks, and the motif docs.",
   "license": "MIT",

@@ -1,5 +1,38 @@
 # @usemotif/compiler-babel
 
+## 1.9.0
+
+### Minor Changes
+
+- b463e7f: `atomic: true` compiles each static declaration to one shared `a-<hash>` class instead of an inline style. Declarations that override another on the same element (a shorthand and its longhand, a base value and its breakpoint or state value) keep the default output, so the cascade is unchanged. A new `css-size` benchmark measures it against the default output, StyleX and Panda; on that corpus it is not smaller, and the compiler page says so.
+
+### Patch Changes
+
+- fa19dce: The compiler extracts literal `_before` and `_after` bags into `::before` and `::after` rules, so an element that uses them can still be stripped to a plain tag on web; a dynamic bag keeps the wrapper. The rules hash and print exactly as the runtime's do, because both now build them with `resolvePseudoElementBag`, which core exports.
+- Updated dependencies [b463e7f]
+- Updated dependencies [d1eaf9d]
+- Updated dependencies [fa19dce]
+- Updated dependencies [f0f6896]
+- Updated dependencies [ea26ae5]
+- Updated dependencies [092aaf6]
+- Updated dependencies [cf1df67]
+- Updated dependencies [a6f1773]
+- Updated dependencies [32e3ec9]
+- Updated dependencies [f844a0f]
+- Updated dependencies [91ff720]
+- Updated dependencies [82ff67b]
+- Updated dependencies [a4e22e2]
+- Updated dependencies [bc0fa43]
+- Updated dependencies [d8df809]
+- Updated dependencies [dd77382]
+- Updated dependencies [3805e1e]
+- Updated dependencies [ae8fca9]
+- Updated dependencies [b1459c0]
+- Updated dependencies [d75bb04]
+- Updated dependencies [26edfd6]
+  - @usemotif/compiler-core@1.9.0
+  - @usemotif/core@1.9.0
+
 ## 1.8.0
 
 ### Patch Changes

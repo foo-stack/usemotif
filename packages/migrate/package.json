@@ -1,6 +1,6 @@
 {
   "name": "@usemotif/migrate",
-  "version": "1.8.0",
+  "version": "1.9.0",
   "description": "Codemod toolkit for motif-js. `npx @usemotif/migrate rename-v3 <path>` rewrites v1 or v2 import specifiers to their v3 (@usemotif/*) names; `from-styled-components` and `from-tamagui` move code over from those libraries.",
   "homepage": "https://github.com/foo-stack/usemotif/tree/main/packages/migrate#readme",
   "bugs": "https://github.com/foo-stack/usemotif/issues",

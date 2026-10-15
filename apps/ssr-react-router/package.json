@@ -1,6 +1,6 @@
 {
   "name": "@usemotif/ssr-react-router",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "private": true,
   "description": "Streaming SSR fixture: React Router 7 framework mode with motif's style collector streamed into the HTML.",
   "type": "module",

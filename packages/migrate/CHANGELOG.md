@@ -1,5 +1,16 @@
 # @usemotif/migrate
 
+## 1.9.0
+
+### Minor Changes
+
+- e4e9911: Add `import-tokens`, which turns a W3C Design Tokens file into a typed `createTheme` module. Each token lands in the motif scale its type names, aliases become `$`-references so the file's primitive and semantic layers carry over, and composite types with no single scale are skipped with a warning. `designTokensToTheme` and `printThemeModule` expose the same conversion to code.
+- 7ee32db: Add `from-styled-components` and `from-tamagui` codemods. They parse each file and convert what maps directly: static styled-components templates become `styled()` configs with state props, and Tamagui imports, state props and `styled()` configs move to motif. What they can't convert stays in place under a `// usemotif-migrate:` comment that says why, and the CLI reports how many each file has left.
+
+### Patch Changes
+
+- 81d9cbf: `usemotif-icons build` strips SVG comments until none are left, so removing one cannot form another. The styled-components codemod strips CSS comments in linear time, where a string of unclosed `/*` used to take quadratic time.
+
 ## 1.8.0
 
 ## 1.7.0

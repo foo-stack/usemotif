@@ -1,5 +1,70 @@
 # @usemotif/ui
 
+## 1.9.0
+
+### Minor Changes
+
+- bfe42c2: `collapsible={false}` on `Accordion.Root` keeps one item always open in single mode: the open item's trigger no longer closes it and is marked disabled (`aria-disabled` on web, `accessibilityState.disabled` on native). Collapsible stays the default.
+- 41a5764: `Alert` gains `action` and `onDismiss`, rendered by the same trailing action slot and dismiss button as `Banner`.
+- 7f00850: `badgeRecipe` gains a `dot` variant. The kit `Badge` adds `count` with `max` (above it the badge reads, for example, "99+"), `dot`, and a `label` that gives the badge an accessible name.
+- 89ef075: `Breadcrumb` gains `maxItems`: past it, the middle crumbs fold into a `...` button that opens a menu of them. `onNavigate` routes a crumb picked from that menu, defaulting to `location.assign`.
+- f9d9353: `cardRecipe` gains an `interactive` variant (pointer cursor, hover border and shadow, a focus-visible ring) for a card rendered as a link or button. The kit `Card` adds `Card.Header`, `Card.Body`, `Card.Footer` and `Card.Media` parts.
+- 5b602d5: `Sparkline`, `LineChart`, `AreaChart` and `BarChart`: single-series charts on the cross-platform SVG primitives. Colours come from tokens (`$components.chart.color`, then `$colors.action.primary.bg`), and each chart is one image to assistive technology, labelled with its title and its values.
+- 309f57d: `ColorPicker` takes `swatches`, preset colours shown as a keyboard-navigable radio group with the matching swatch checked. It also takes `eyeDropper`, which adds a button that picks a colour from the screen through the browser EyeDropper API, shown only where the browser supports it. On React Native the swatches render as pressable radios and there is no eyedropper. The kit ColorPicker themes both.
+- 77db1ad: CommandPalette commands can open nested pages: a command with `children` shows them as a page with its own search, Backspace on an empty input or Escape goes back (the Android back button on native), and the new `CommandPalette.Breadcrumb` part shows the trail. The kit renders a themed breadcrumb. `Command.onSelect` is now optional, since a command with `children` does not need one.
+- 7ef707d: Add `DataTable`: a `role="grid"` data table with sortable columns, single or multiple row selection, resizable columns, windowed rows for large data sets, and the grid keyboard model. Headless ships it unstyled; the kit ships a themed version. Web only for now.
+- d850fb1: `FileUpload` takes `maxSize` and `maxFiles`, and an `onReject` callback that receives every refused file from a pick or drop with every rule it broke: `type`, `size` or `count`. A file counts against `maxFiles` only once it passes the type and size rules. One rule set applies on web and native, including to dropped files. Without `multiple`, extra files are now reported as `count` rejections instead of being dropped silently. The kit `FileUpload` passes all three through, and `FileRejection` and `FileRejectionReason` are exported.
+- 5115958: `Chip` can be a filter toggle: with `selected`, `defaultSelected` or `onSelectedChange`, its label is a button with `aria-pressed`, and the remove button stays a separate target. `chipRecipe` gains a `selected` variant for the toggled fill.
+- c3b14ff: `Stepper` takes `onStepChange`, which makes each step a button (a Pressable on React Native) reporting the id clicked, and `linear`, which allows going back to earlier steps but not skipping ahead. `renderStep` receives `selectable`. Without `onStepChange` the Stepper renders as before. The kit Stepper passes both props through.
+- bf5611c: `keepMounted="activity"` on `Tabs.Panel`, `Dialog.Content` and `Drawer.Content`, and on `Show` and `Hide`, keeps hidden content mounted through React's `<Activity>`: its state survives, its effects pause, and its updates run at low priority. It is feature-detected, so on React before 19.2 the content unmounts as before. Native Dialog and Drawer render a React Native `Modal`, which cannot stay mounted while closed, so the prop is web-only there.
+- c6b1d44: Add `Button` (the button recipe over `Pressable`) and `TextField` (the input recipe over an `<input>`, with `invalid` setting `aria-invalid`) to the kit.
+- 9210451: The kit's display components render on React Native: a `react-native` export condition serves a native build with Card (and its parts), Badge, Alert, Banner, Chip, Spinner, Skeleton, Progress, ProgressCircle, Button and TextField. `@usemotif/ui` now depends on `@usemotif/core`, which `usemotif` already brings in.
+- 6fc3a26: The kit's form controls render on React Native. Checkbox, Switch, Radio and RadioGroup take their headless twins' `value`, `defaultValue` and `onValueChange` on native; the rest keep their props. The web CSS the kit passes to headless parts is converted for native (token variables resolved, shorthands split), and web output is unchanged.
+- 57a93e6: The kit's navigation and disclosure components render on React Native: Tabs, Accordion, Collapsible, Breadcrumb, Pagination, Stepper, Toolbar, NavigationMenu, TreeView and CommandPalette, plus Separator, Stat, EmptyState, Timeline and AvatarGroup. Links open with `Linking` on native, and Breadcrumb's `onNavigate` defaults to it there. Web output is unchanged.
+- 78fa288: The kit's overlays render on React Native: Modal, AlertDialog, Drawer, Sheet, Popover, Tooltip, HoverCard, Menu, ContextMenu and the Toaster, over headless's native components. Text inside surfaces and menu items is wrapped in `Text` on native; web output is unchanged.
+- f7f8db4: `modal={false}` on `Dialog.Root`, and so on Drawer, Sheet and the kit Modal, Drawer and Sheet, leaves the page usable while the dialog is open. It drops the background `inert` and scroll lock and `aria-modal`, uses a click-through layer around the surface, and removes the focus trap. Focus still moves in on open and back on close, and Escape and a press outside still close it. On React Native the dialog stays in RN's `Modal`, and `modal={false}` only stops marking it modal to assistive tech.
+- 9b6bed7: Options take a `group`. Select, Combobox, Search, MultiSelect and Listbox wrap each consecutive run of a group in a `role="group"` labelled by its heading, which `renderGroupLabel` restyles. Options keep flat indexes, so keyboard navigation and type-ahead move straight through, and filtering drops empty groups. A grouped list renders every row instead of windowing. On React Native the options sheets show each heading above the first option of its group. The kit lists render themed headings.
+- 658c058: An `Arrow` part for Popover, Tooltip and HoverCard: `Popover.Arrow`, `Tooltip.Arrow` and `HoverCard.Arrow`. It sits on the edge facing the trigger and points at the trigger's centre, moving to the other edge when the surface flips and staying on the trigger when it shifts. `computePosition` and `useFloatingPosition` report the arrow position as `arrow`. Headless arrows take `size`, `borderColor`, `borderWidth` and `style`. The kit's arrows match each surface. On React Native the part renders nothing. `FloatingArrowProps` is exported.
+- 0971b08: Pagination gains `boundaries`, the count of pages always shown at each end, and an optional page-size part (`pageSize`, `pageSizeOptions`, `onPageSizeChange`, plus `renderPageSize` in headless). Changing the size reports the page that keeps the first item of the current page in view. The kit renders it as a themed select.
+- d33aaec: Add `ProgressCircle`: a ring progress indicator with the same ARIA as `Progress`. A value fills the arc, `null` spins a quarter arc, and the spin stops under `prefers-reduced-motion`.
+- c48c8f6: `Skeleton` gains `lines`: stacked text-line bars, one `em` of the font size tall (`$fontSizes.md` by default), with the last line shorter.
+- 1b5f02d: `Alert` and `Banner` show an intent-matched icon from `@usemotif/icons` by default (`Info`, `CircleCheck`, `TriangleAlert`, `CircleAlert`; none for `neutral`). Pass `icon` to replace it or `icon={null}` to remove it. `@usemotif/ui` now depends on `@usemotif/icons`.
+- 5bc0f7e: New `TagsInput`, an input that turns entries into tags. Enter or a delimiter (a comma by default) adds the typed entry, a paste adds every entry in it, and Backspace in an empty input removes the last tag; entries are trimmed and de-duplicated, and `validate` and `max` filter them. With `suggestions`, the input becomes the headless Combobox's input and a picked suggestion becomes a tag. It works on web and React Native, and the kit draws each tag as a removable `Chip`. `Chip` gains `removeLabel` to name its remove button.
+- 7c72245: `Timeline` items take an `icon`, drawn in a ring in place of the marker dot, and `layout="alternate"` puts events on either side of the line from the `md` breakpoint up, falling back to one column below it.
+- c1ebaa0: The web `Toaster` takes a `placement`: `'top'` and `'bottom'` centre the list, as on React Native, and four corner placements are web-only. The default stays `'bottom-end'`. Its default list pauses every toast's dismiss timer while the pointer is over it or focus is inside it, and resumes each with its remaining time. A new `renderToast(item, { dismiss })`, the signature React Native already has, renders each toast's content inside the default list. The kit `Toaster` now renders through it, so it gains placement, pausing, and the default list's swipe and exit handling.
+- 3051f6e: `Tooltip.Provider` groups tooltips. Once one is showing, moving to another trigger in the group opens that tooltip at once and hides the first. The delay returns when no tooltip in the group has been open for `skipDelayDuration`, which defaults to 300ms. On React Native the Provider renders its children unchanged. The kit `Tooltip` namespace exposes it too.
+- d75bb04: Add `MessagesProvider` and `useMessages` to translate every accessible label and placeholder motif writes itself, in headless, the kit and the primitives: landmark names, dismiss and remove buttons, list and picker messages, colour picker and date picker labels, the password toggle and the rest of `MotifMessages`. English stays the default, nested providers layer, and a component's own prop still wins. Pagination's previous and next buttons now have accessible names, and MultiSelect's remove button names its option.
+
+### Patch Changes
+
+- 06bd980: `parseColor`, `formatColor` and the `ColorFormat` type, documented on the headless ColorPicker page, are now exported from `@usemotif/headless`; the barrel had never listed them. `@usemotif/ui` exports the `BadgeProps` type.
+- Updated dependencies [7f00850]
+- Updated dependencies [d1eaf9d]
+- Updated dependencies [f9d9353]
+- Updated dependencies [81d9cbf]
+- Updated dependencies [fa19dce]
+- Updated dependencies [f0f6896]
+- Updated dependencies [ea26ae5]
+- Updated dependencies [5115958]
+- Updated dependencies [092aaf6]
+- Updated dependencies [cf1df67]
+- Updated dependencies [a6f1773]
+- Updated dependencies [9e1c29d]
+- Updated dependencies [32e3ec9]
+- Updated dependencies [f844a0f]
+- Updated dependencies [91ff720]
+- Updated dependencies [82ff67b]
+- Updated dependencies [a4e22e2]
+- Updated dependencies [d8df809]
+- Updated dependencies [dd77382]
+- Updated dependencies [ae8fca9]
+- Updated dependencies [b1459c0]
+- Updated dependencies [d75bb04]
+- Updated dependencies [26edfd6]
+  - @usemotif/recipes@1.9.0
+  - @usemotif/core@1.9.0
+  - @usemotif/icons@1.9.0
+
 ## 1.8.0
 
 ### Minor Changes

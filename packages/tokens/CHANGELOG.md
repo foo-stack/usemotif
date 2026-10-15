@@ -1,5 +1,39 @@
 # @usemotif/tokens
 
+## 1.9.0
+
+### Minor Changes
+
+- d1eaf9d: Themes can declare `colorScheme` (`'light'` or `'dark'`) and `themeColor`, a colour or `$`-token. On web the theme's CSS block emits `color-scheme`, and the root `ThemeProvider` sets `color-scheme` on `<html>` and writes the resolved colour to `<meta name="theme-color">` for the active theme, restoring what was there on switch or unmount. Metas with a `media` attribute are left alone. The `@usemotif/tokens` presets declare both, with `themeColor` set to `$colors.surface.base`. React Native ignores the two fields.
+- ea26ae5: `extendTheme(base, { name, tokens })` derives a theme by deep-merging token overrides onto a base theme. Leaves replace, `animations` presets replace whole, and `fonts`, `root` and `reducedMotion` are inherited unless given. The result is typed with the merged literal shape, so the base's and the overrides' `$`-paths both autocomplete. It is exported from `@usemotif/core`, `@usemotif/react`, `@usemotif/react-native` and `usemotif`.
+
+  The `@usemotif/tokens` presets (`lightTheme`, `darkTheme` and the high-contrast pair) are now typed with their literal token shape instead of the wide `Theme`. Their `$`-paths become visible to the token types, and they still satisfy `Theme`. Code that read a token key the preset does not have now fails to compile instead of typing as `undefined`.
+
+- 5c12e1d: `generatePalette(color)` builds a 12-step light and dark scale from one brand colour in OKLCH. Step 9 is the colour itself, steps 11 and 12 are text held to 4.5:1 and 7:1 contrast against step 2, and chroma is reduced on any step that would leave sRGB.
+- 159845c: `usemotif-tokens export <theme> --format <css|json|w3c|swift|kotlin>` writes a theme as CSS custom properties, resolved JSON, W3C Design Tokens with references kept as aliases, or SwiftUI and Compose constants. `exportTheme` from `@usemotif/tokens/export` does the same from code.
+
+### Patch Changes
+
+- Updated dependencies [d1eaf9d]
+- Updated dependencies [fa19dce]
+- Updated dependencies [f0f6896]
+- Updated dependencies [ea26ae5]
+- Updated dependencies [092aaf6]
+- Updated dependencies [cf1df67]
+- Updated dependencies [a6f1773]
+- Updated dependencies [32e3ec9]
+- Updated dependencies [f844a0f]
+- Updated dependencies [91ff720]
+- Updated dependencies [82ff67b]
+- Updated dependencies [a4e22e2]
+- Updated dependencies [d8df809]
+- Updated dependencies [dd77382]
+- Updated dependencies [ae8fca9]
+- Updated dependencies [b1459c0]
+- Updated dependencies [d75bb04]
+- Updated dependencies [26edfd6]
+  - @usemotif/core@1.9.0
+
 ## 1.8.0
 
 ### Patch Changes

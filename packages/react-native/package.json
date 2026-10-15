@@ -1,6 +1,6 @@
 {
   "name": "@usemotif/react-native",
-  "version": "1.8.0",
+  "version": "1.9.0",
   "description": "React Native implementations of motif-js primitives. The native counterpart of @usemotif/react.",
   "homepage": "https://github.com/foo-stack/usemotif/tree/main/packages/react-native#readme",
   "bugs": "https://github.com/foo-stack/usemotif/issues",
