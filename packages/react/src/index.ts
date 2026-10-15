@@ -245,6 +245,7 @@ export {
   flushPendingCss,
   injectAtRules,
   injectPseudoRules,
+  registerStyleTarget,
 } from './style-cache.js';
 export type { AtRule, PseudoRule } from './style-cache.js';
 

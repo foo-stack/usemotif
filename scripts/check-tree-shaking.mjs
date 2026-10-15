@@ -83,7 +83,8 @@ const targets = [
     // Bumped when responsive values resolve the @contrast-style preference keys (the store on native).
     // Bumped for fallback chains in token refs and the recipes' component token paths.
     // Bumped for view transitions for Presence and ThemeProvider (the layoutId naming context Box reads).
-    budget: 13000,
+    // Bumped for style targets (the style cache keeps emitted CSS and syncs it to adopted sheets).
+    budget: 13100,
   },
   {
     name: '@usemotif/react-native - Box only',
@@ -191,7 +192,8 @@ const targets = [
     // Bumped when responsive values resolve the @contrast-style preference keys (the store on native).
     // Bumped for fallback chains in token refs and the recipes' component token paths.
     // Bumped for view transitions for Presence and ThemeProvider (the layoutId naming context Box reads).
-    budget: 13500,
+    // Bumped for style targets (the style cache keeps emitted CSS and syncs it to adopted sheets).
+    budget: 13600,
   },
   {
     name: '@usemotif/ui - Modal only',
@@ -269,7 +271,8 @@ const targets = [
     // Bumped when state bags took responsive values (nested at-rules).
     // Bumped when the group states joined core's selector map and Box marks a group.
     // Bumped for view transitions for Presence and ThemeProvider (the layoutId naming context Box reads).
-    budget: 12200,
+    // Bumped for style targets (the style cache keeps emitted CSS and syncs it to adopted sheets).
+    budget: 12300,
   },
   {
     name: '@usemotif/ui - Popover only',
@@ -609,7 +612,8 @@ const targets = [
     // Bumped when the group states joined core's selector map and Box marks a group.
     // Bumped for keepMounted='activity' (the Activity boundary and its feature check).
     // Bumped for view transitions for Presence and ThemeProvider (the layoutId naming context Box reads).
-    budget: 12200,
+    // Bumped for style targets (the style cache keeps emitted CSS and syncs it to adopted sheets).
+    budget: 12300,
   },
   {
     name: '@usemotif/ui - Timeline only',
@@ -634,7 +638,8 @@ const targets = [
     // Bumped when the component reads a built-in label from the translatable messages catalogue.
     // Bumped when responsive values resolve the @contrast-style preference keys (the store on native).
     // Bumped for fallback chains in token refs and the recipes' component token paths.
-    budget: 13200,
+    // Bumped for style targets (the style cache keeps emitted CSS and syncs it to adopted sheets).
+    budget: 13400,
   },
   {
     name: '@usemotif/ui - Chip only',
@@ -645,7 +650,8 @@ const targets = [
     // Bumped when the component reads a built-in label from the translatable messages catalogue.
     // Bumped when responsive values resolve the @contrast-style preference keys (the store on native).
     // Bumped for fallback chains in token refs and the recipes' component token paths.
-    budget: 13000,
+    // Bumped for style targets (the style cache keeps emitted CSS and syncs it to adopted sheets).
+    budget: 13200,
   },
   {
     name: '@usemotif/ui - Banner only',
@@ -664,7 +670,8 @@ const targets = [
     // Bumped when responsive values resolve the @contrast-style preference keys (the store on native).
     // Bumped for fallback chains in token refs and the recipes' component token paths.
     // Bumped for view transitions for Presence and ThemeProvider (the layoutId naming context Box reads).
-    budget: 14200,
+    // Bumped for style targets (the style cache keeps emitted CSS and syncs it to adopted sheets).
+    budget: 14300,
   },
   {
     name: '@usemotif/ui - FormField only',
@@ -686,7 +693,8 @@ const targets = [
     // can emit base props as a class instead of inline styles.
     // Bumped when the group states joined core's selector map and Box marks a group.
     // Bumped for view transitions for Presence and ThemeProvider (the layoutId naming context Box reads).
-    budget: 12500,
+    // Bumped for style targets (the style cache keeps emitted CSS and syncs it to adopted sheets).
+    budget: 12600,
   },
 ];
 
