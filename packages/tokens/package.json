@@ -10,6 +10,9 @@
     "url": "git+https://github.com/foo-stack/usemotif.git",
     "directory": "packages/tokens"
   },
+  "bin": {
+    "usemotif-tokens": "./dist/cli.js"
+  },
   "files": [
     "dist",
     "src",
@@ -28,6 +31,11 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
+    },
+    "./export": {
+      "types": "./dist/export.d.ts",
+      "import": "./dist/export.js",
+      "require": "./dist/export.cjs"
     }
   },
   "publishConfig": {
@@ -43,6 +51,7 @@
     "@usemotif/core": "workspace:*"
   },
   "devDependencies": {
+    "@types/node": "^25.6.0",
     "tsup": "^8.5.1",
     "typescript": "^6.0.3",
     "vitest": "^4.1.5"
