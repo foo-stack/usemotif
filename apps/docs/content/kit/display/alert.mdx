@@ -49,8 +49,9 @@ width and carries an action or a dismiss button, use [Banner](/kit/display/banne
   Update your card and try again.
 </Alert>`} />
 
-With a leading icon. Pass any node; an SVG that draws with `currentColor` picks up the intent
-colour:
+Every intent but `neutral` shows a matching status icon by default. Pass `icon` to replace it with
+any node (an SVG that draws with `currentColor` picks up the intent colour), or `icon={null}` to
+show none:
 
 <CodeBlock lang="tsx" code={`import { Alert } from '@usemotif/ui';
 
@@ -95,7 +96,8 @@ Dismissible, with an action. The dismiss button and action area are the same one
     {
       name: 'icon',
       type: 'ReactNode',
-      description: 'Optional leading icon. Inherits the intent colour through `currentColor`.',
+      default: 'the intent\'s status icon',
+      description: 'Leading icon, drawn in the intent colour through `currentColor`. Defaults to an icon from `@usemotif/icons` matching the intent: `Info`, `CircleCheck`, `TriangleAlert`, or `CircleAlert`; `neutral` has none. Pass a node to replace it, or `null` for no icon.',
     },
     {
       name: 'children',

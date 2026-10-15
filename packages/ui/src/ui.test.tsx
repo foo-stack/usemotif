@@ -373,6 +373,27 @@ describe('display components', () => {
     expect(onDismiss).toHaveBeenCalledTimes(1);
   });
 
+  it('Alert and Banner show an intent icon by default, replaceable or removable', () => {
+    render(
+      <>
+        <Alert intent="danger" title="Failed" />
+        <Alert intent="neutral" title="Note" />
+        <Alert intent="success" title="Custom" icon={<i data-testid="custom" />} />
+        <Alert intent="info" title="None" icon={null} />
+        <Banner intent="warning" title="Maintenance" />
+      </>,
+    );
+    const alerts = container.querySelectorAll('[role="alert"], [role="status"]');
+    const svgs = Array.from(alerts, (el) => el.querySelectorAll('svg').length);
+    // danger and the warning Banner get an icon; neutral, the custom one and null do not draw one.
+    expect(svgs).toEqual([1, 0, 0, 0, 1]);
+    expect(alerts[0]!.querySelector('svg')!.getAttribute('aria-hidden')).toBe('true');
+    expect(alerts[0]!.querySelector('svg')!.parentElement!.getAttribute('style') ?? '').toContain(
+      'status-danger-fg',
+    );
+    expect(alerts[2]!.querySelector('[data-testid="custom"]')).not.toBeNull();
+  });
+
   it('Alert renders no dismiss button without onDismiss', () => {
     render(<Alert title="Saved" />);
     expect(container.querySelector('[aria-label="Dismiss"]')).toBeNull();

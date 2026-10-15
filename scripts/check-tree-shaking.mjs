@@ -612,7 +612,8 @@ const targets = [
     // Bumped when Box's `layout` animation took `layoutTransition` timing.
     // Bumped when state bags took responsive values (nested at-rules).
     // Bumped when the group states joined core's selector map and Box marks a group.
-    budget: 12300,
+    // Bumped when the four default status icons (Info, CircleCheck, TriangleAlert, CircleAlert) and Icon.
+    budget: 12500,
   },
   {
     name: '@usemotif/ui - FormField only',

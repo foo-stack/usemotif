@@ -7280,6 +7280,7 @@ __metadata:
     "@types/node": "npm:^25.6.0"
     "@types/react": "npm:^19.2.14"
     "@usemotif/headless": "workspace:*"
+    "@usemotif/icons": "workspace:*"
     "@usemotif/recipes": "workspace:*"
     "@usemotif/tokens": "workspace:*"
     jsdom: "npm:^29.1.0"
