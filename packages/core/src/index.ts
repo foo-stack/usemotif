@@ -36,6 +36,8 @@ export type {
 
 export { isTokenRef, resolveOutputRangeTokens, resolveToken, resolveValue } from './token.js';
 export { createGestureRecognizer } from './gesture.js';
+export { parseInline, parseMarkdown } from './markdown.js';
+export type { MdAlign, MdBlock, MdInline } from './markdown.js';
 export type {
   GestureHandlers,
   GestureOptions,

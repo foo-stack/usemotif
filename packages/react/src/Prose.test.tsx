@@ -50,3 +50,23 @@ describe('Prose (web)', () => {
     expect(css).toMatch(/@layer motif \{[^]*:where\(\.m-[a-z0-9]+\) li::marker/);
   });
 });
+
+describe('Prose markdown (web)', () => {
+  it('renders Markdown as plain elements, never as raw HTML', () => {
+    const { html } = render(
+      <Prose
+        markdown={
+          '# Hi\n\nSome **bold** and a [link](https://a.dev).\n\n- one\n- two\n\n| a | b |\n|---|--:|\n| 1 | 2 |\n\n<script>x</script> [bad](javascript:alert(1))'
+        }
+      />,
+    );
+    expect(html).toContain('<h1>Hi</h1>');
+    expect(html).toContain(
+      '<p>Some <strong>bold</strong> and a <a href="https://a.dev">link</a>.</p>',
+    );
+    expect(html).toContain('<ul><li>one</li><li>two</li></ul>');
+    expect(html).toContain('<th style="text-align:right">b</th>');
+    expect(html).toContain('&lt;script&gt;x&lt;/script&gt;');
+    expect(html).not.toContain('javascript:');
+  });
+});
