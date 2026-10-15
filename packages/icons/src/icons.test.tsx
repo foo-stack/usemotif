@@ -5,6 +5,8 @@ import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { act } from 'react';
 import { createRoot } from 'react-dom/client';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { IconProvider } from '@usemotif/react/svg';
 import {
   ActivitySquare,
   Check,
@@ -148,5 +150,17 @@ describe('@usemotif/icons - barrel index integrity', () => {
       }
     }
     expect(missing).toEqual([]);
+  });
+});
+
+describe('@usemotif/icons - IconProvider', () => {
+  it('a glyph takes its size and stroke width from the nearest provider', () => {
+    const html = renderToStaticMarkup(
+      <IconProvider size="lg" strokeWidth={1.25}>
+        <Heart />
+      </IconProvider>,
+    );
+    expect(html).toContain('width="24"');
+    expect(html).toContain('stroke-width="1.25"');
   });
 });

@@ -3,7 +3,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import type { Theme } from '@usemotif/core';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { NATIVE_SVG_COMPONENT, SVG_PRIMITIVES, Svg } from './Svg.js';
-import { Icon } from './Icon.js';
+import { Icon, IconProvider } from './Icon.js';
 import { ThemeProvider } from './Theme.js';
 
 function FakeSvg(): React.ReactElement {
@@ -108,5 +108,20 @@ describe('@usemotif/react-native - Svg/Icon pass-through + a11y (#250)', () => {
     const host = container.querySelector('[testID="labelled"]')!;
     expect(host.getAttribute('accessibilitylabel')).toBe('Menu');
     expect(host.getAttribute('accessibilityrole')).toBe('image');
+  });
+
+  it('IconProvider sets the default size and stroke width, and an icon prop wins', () => {
+    const first: { props?: Record<string, unknown> } = {};
+    const second: { props?: Record<string, unknown> } = {};
+    render(
+      <IconProvider size="sm" strokeWidth={1.5}>
+        <IconProvider size="xl">
+          <Icon SvgComponent={recordingSvg(first)} />
+        </IconProvider>
+        <Icon size={28} strokeWidth={3} SvgComponent={recordingSvg(second)} />
+      </IconProvider>,
+    );
+    expect(first.props).toMatchObject({ width: 32, height: 32, strokeWidth: 1.5 });
+    expect(second.props).toMatchObject({ width: 28, strokeWidth: 3 });
   });
 });

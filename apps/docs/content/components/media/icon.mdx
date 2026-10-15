@@ -2,7 +2,7 @@
 title: Icon
 description: A semantic SVG glyph. Decorative by default - aria-hidden until you give it an aria-label.
 diataxis: reference
-covers: ['Icon', 'IconProps']
+covers: ['Icon', 'IconProps', 'IconProvider', 'IconProviderProps']
 last_verified: 2026-05-15
 ---
 
@@ -58,7 +58,7 @@ The `@usemotif/icons` package uses the `render` form throughout.
       name: 'size',
       type: '"xs" | "sm" | "md" | "lg" | "xl" | number',
       default: '"md"',
-      description: 'Size token (12 / 16 / 20 / 24 / 32px) or a raw pixel number.',
+      description: 'Size token (12 / 16 / 20 / 24 / 32px) or a raw pixel number. Falls back to the nearest `IconProvider` before `"md"`.',
     },
     {
       name: 'aria-label',
@@ -82,6 +82,38 @@ The `@usemotif/icons` package uses the `render` form throughout.
     },
   ]}
 />
+
+## Subtree defaults
+
+`IconProvider` sets the default `size` and `strokeWidth` for every Icon below it, the
+`@usemotif/icons` glyphs included. A prop on the icon itself still wins, and a nested provider
+overrides only what it sets, inheriting the rest from the one above.
+
+<CodeBlock lang="tsx" code={`import { IconProvider } from 'usemotif';
+
+<IconProvider size="sm" strokeWidth={1.5}>
+  <Toolbar />
+</IconProvider>`} />
+
+<ApiSignature
+  name="IconProvider"
+  status="stable"
+  signature={`function IconProvider(props: IconProviderProps): JSX.Element`}
+  params={[
+    {
+      name: 'size',
+      type: '"xs" | "sm" | "md" | "lg" | "xl" | number',
+      description: 'Default size for every Icon below. Unset inherits from an outer provider.',
+    },
+    {
+      name: 'strokeWidth',
+      type: 'number | string',
+      description: 'Default stroke width for every Icon below. Unset inherits from an outer provider, then the glyph default of 2 on web.',
+    },
+  ]}
+/>
+
+It is also exported from `@usemotif/react/svg`, next to the Icon the glyphs render through.
 
 ## Accessibility
 
