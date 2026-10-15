@@ -1,0 +1,81 @@
+---
+title: Prose
+description: Prose styles content you don't control element by element - rendered Markdown, CMS HTML, MDX - with the theme's tokens. Web only.
+diataxis: reference
+covers: ['Prose', 'ProseProps']
+last_verified: 2026-10-15
+---
+
+import { ApiSignature, ArticleMeta, Callout, CodeBlock, Eyebrow, Lede } from '../../../components/index.js';
+
+<Eyebrow>Components / Typography</Eyebrow>
+
+# Prose
+
+<Lede>
+  Prose is a Box that styles the plain elements inside it - headings, paragraphs, lists, links,
+  code, quotes, tables and images - with the active theme's tokens. Use it around Markdown output
+  or HTML from a CMS, where you can't put style props on each element.
+</Lede>
+
+<ArticleMeta />
+
+## Install
+
+`Prose` is exported from `@usemotif/react`. It is web only: React Native has no raw HTML to style.
+
+<CodeBlock lang="tsx" code={`import { Prose } from '@usemotif/react';`} />
+
+## API
+
+<ApiSignature
+  name="Prose"
+  status="stable"
+  signature={`function Prose(props: ProseProps): JSX.Element`}
+  params={[
+    {
+      name: '...BoxProps',
+      type: 'BoxProps',
+      description: 'Every Box prop. Style props style the wrapper itself, such as `maxWidth="65ch"`.',
+    },
+  ]}
+/>
+
+## Examples
+
+Rendered Markdown:
+
+<CodeBlock lang="tsx" code={`<Prose maxWidth="65ch" mx="auto">
+  <ReactMarkdown>{post.body}</ReactMarkdown>
+</Prose>`} />
+
+HTML from a CMS goes in through `dangerouslySetInnerHTML`:
+
+<CodeBlock lang="tsx" code={`<Prose dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(entry.html) }} />`} />
+
+<Callout variant="warning" title="Sanitize first">
+  Prose does not clean HTML. Run anything that came from outside your code through a sanitizer
+  before passing it in.
+</Callout>
+
+## Overriding it
+
+Every rule is wrapped in `:where()`, so it has only the specificity of the element it targets.
+An app's own CSS overrides any of it without `!important`:
+
+<CodeBlock lang="css" code={`.post h2 { letter-spacing: -0.01em; }
+.post a { text-decoration-thickness: 2px; }`} />
+
+When `<ThemeProvider cssLayer>` is set the rules sit in that layer, so an unlayered stylesheet
+wins outright. See [Cascade layers](/guides/cascade-layers).
+
+The colours read [component tokens](/concepts/tokens) first, then the semantic tokens:
+
+| Token | Falls back to | Styles |
+| --- | --- | --- |
+| `$components.prose.color` | `$colors.text.default` | Body text and headings |
+| `$components.prose.muted` | `$colors.text.muted` | Quotes and list markers |
+| `$components.prose.link` | `$colors.action.primary.bg` | Links |
+| `$components.prose.border` | `$colors.border.default` | Quote rules, `hr`, table rows |
+| `$components.prose.codeBg` | `$colors.surface.muted` | Inline code |
+| `$components.prose.preBg` | `$colors.surface.sunken` | Code blocks |

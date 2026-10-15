@@ -246,6 +246,7 @@ export type { CompoundVariant, StyledComponent, StyledConfig, VariantProps } fro
 export { createStyledContext } from './styled-context.js';
 export type { StyledContext, VariantContext } from './styled-context.js';
 export { TitleBar, type TitleBarProps } from './TitleBar.js';
+export { Prose, type ProseProps } from './Prose.js';
 export {
   styledSlots,
   type SlotComponents,
