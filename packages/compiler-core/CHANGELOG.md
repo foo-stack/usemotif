@@ -1,5 +1,40 @@
 # @usemotif/compiler-core
 
+## 1.9.0
+
+### Minor Changes
+
+- b463e7f: `atomic: true` compiles each static declaration to one shared `a-<hash>` class instead of an inline style. Declarations that override another on the same element (a shorthand and its longhand, a base value and its breakpoint or state value) keep the default output, so the cascade is unchanged. A new `css-size` benchmark measures it against the default output, StyleX and Panda; on that corpus it is not smaller, and the compiler page says so.
+- fa19dce: The compiler extracts literal `_before` and `_after` bags into `::before` and `::after` rules, so an element that uses them can still be stripped to a plain tag on web; a dynamic bag keeps the wrapper. The rules hash and print exactly as the runtime's do, because both now build them with `resolvePseudoElementBag`, which core exports.
+- a6f1773: Group states: set `group` on a Box and its descendants can style themselves by its state with `_groupHover`, `_groupFocus` (`:focus-visible`) and `_groupActive`. The group renders a `data-motif-group` attribute, exported from core as `GROUP_ATTRIBUTE`, and the child's rule keys on it, as in `[data-motif-group]:hover .m-x`. Responsive values work inside group states too. The compiler extracts a child's group states and keeps a `group` Box as a wrapper. It is web-only for now: React Native ignores `group` and the three props.
+- 82ff67b: Four more state props: `_invalid` (`[aria-invalid="true"]`), `_pressed` (`[aria-pressed="true"]`), `_focusWithin` (`:focus-within`) and `_readOnly` (`[readonly]`, `[aria-readonly="true"]`), alongside `_checked`, `_selected` and `_expanded`. The compiler extracts them like the other states. React Native ignores them, as it does the other ARIA states.
+- d8df809: State bags (`_hover`, `_focus` and the rest) accept responsive values in the object, array and DSL syntaxes. On the web each breakpoint or container query nests around the state selector, as in `@media (min-width: 768px) { .m-x:hover { ... } }`. The compiler extracts them to the same class the runtime builds. On React Native, `Pressable` resolves a state bag at the current viewport and container width. Flat bags emit and hash exactly as before. Core exports `resolveStateRules` and the `StateStyleValue` type.
+
+### Patch Changes
+
+- 32e3ec9: `layoutTransition` on Box sets the duration and easing of `layout` animations, as literals or `$durations` / `$easings` tokens, defaulting to 300ms ease-in-out. The web `useLayoutAnimation` hook's `duration` and `easing` also accept a CSS time string and `$durations` / `$easings` tokens. On React Native, layout animations now honour `cubic-bezier(...)` easings, and token easings in an `animation` object no longer fall back when they resolve to a cubic-bezier. The compiler no longer strips a Box that uses `layout` or `layoutTransition` to a plain element, which had dropped the animation.
+- bc0fa43: Add `Presence`, which animates keyed children in and out: a child that leaves stays mounted until its `exitStyle` finishes, and `mode="wait"` holds a new child back until the old one has exited. Add `layoutId` to `Box` and `useLayoutAnimation`: when a Box with an id unmounts and another with the same id mounts, the new one animates from the old one's position and size. The compiler leaves a Box with `layoutId` in place.
+- 3805e1e: `staggerFrom` on `Stack`, `HStack` and `VStack` starts the `stagger` wave from the first child (the default), the last, the center, or a given index. The compiler keeps the runtime wrapper when it is set.
+- Updated dependencies [d1eaf9d]
+- Updated dependencies [fa19dce]
+- Updated dependencies [f0f6896]
+- Updated dependencies [ea26ae5]
+- Updated dependencies [092aaf6]
+- Updated dependencies [cf1df67]
+- Updated dependencies [a6f1773]
+- Updated dependencies [32e3ec9]
+- Updated dependencies [f844a0f]
+- Updated dependencies [91ff720]
+- Updated dependencies [82ff67b]
+- Updated dependencies [a4e22e2]
+- Updated dependencies [d8df809]
+- Updated dependencies [dd77382]
+- Updated dependencies [ae8fca9]
+- Updated dependencies [b1459c0]
+- Updated dependencies [d75bb04]
+- Updated dependencies [26edfd6]
+  - @usemotif/core@1.9.0
+
 ## 1.8.0
 
 ### Patch Changes

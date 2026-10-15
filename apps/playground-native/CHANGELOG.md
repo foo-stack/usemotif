@@ -1,5 +1,37 @@
 # @motif-js/playground-native
 
+## 0.0.20
+
+### Patch Changes
+
+- Updated dependencies [47d9d06]
+- Updated dependencies [d1eaf9d]
+- Updated dependencies [ea26ae5]
+- Updated dependencies [092aaf6]
+- Updated dependencies [a6f1773]
+- Updated dependencies [f57c760]
+- Updated dependencies [6571a17]
+- Updated dependencies [6f31389]
+- Updated dependencies [bf5611c]
+- Updated dependencies [32e3ec9]
+- Updated dependencies [91ff720]
+- Updated dependencies [82ff67b]
+- Updated dependencies [65d281b]
+- Updated dependencies [5c12e1d]
+- Updated dependencies [a4e22e2]
+- Updated dependencies [bc0fa43]
+- Updated dependencies [f4045fc]
+- Updated dependencies [d8df809]
+- Updated dependencies [dd77382]
+- Updated dependencies [3805e1e]
+- Updated dependencies [61a5cac]
+- Updated dependencies [8b13a7a]
+- Updated dependencies [159845c]
+- Updated dependencies [d75bb04]
+- Updated dependencies [26edfd6]
+  - @usemotif/react-native@1.9.0
+  - @usemotif/tokens@1.9.0
+
 ## 0.0.19
 
 ### Patch Changes

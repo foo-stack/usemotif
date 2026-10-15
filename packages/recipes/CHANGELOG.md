@@ -1,5 +1,14 @@
 # @usemotif/recipes
 
+## 1.9.0
+
+### Minor Changes
+
+- 7f00850: `badgeRecipe` gains a `dot` variant. The kit `Badge` adds `count` with `max` (above it the badge reads, for example, "99+"), `dot`, and a `label` that gives the badge an accessible name.
+- f9d9353: `cardRecipe` gains an `interactive` variant (pointer cursor, hover border and shadow, a focus-visible ring) for a card rendered as a link or button. The kit `Card` adds `Card.Header`, `Card.Body`, `Card.Footer` and `Card.Media` parts.
+- f0f6896: Token references accept fallback chains: `'$components.button.primary.bg ?? $colors.action.primary.bg'` resolves to the first alternative the theme defines, with a trailing literal as the default. On web a chain emits nested `var()` fallbacks. Themes gain an optional `components` scale, and every colour and radius in the recipes now reads `$components.<recipe>.<variant>.<prop>` before its semantic token, so a theme can restyle the kit without forking it. Strict token paths and the lint rule check the last alternative of a chain.
+- 5115958: `Chip` can be a filter toggle: with `selected`, `defaultSelected` or `onSelectedChange`, its label is a button with `aria-pressed`, and the remove button stays a separate target. `chipRecipe` gains a `selected` variant for the toggled fill.
+
 ## 1.8.0
 
 ## 1.7.0

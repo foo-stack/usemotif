@@ -1,5 +1,20 @@
 # @usemotif/compiler-web
 
+## 1.9.0
+
+### Minor Changes
+
+- b463e7f: `atomic: true` compiles each static declaration to one shared `a-<hash>` class instead of an inline style. Declarations that override another on the same element (a shorthand and its longhand, a base value and its breakpoint or state value) keep the default output, so the cascade is unchanged. A new `css-size` benchmark measures it against the default output, StyleX and Panda; on that corpus it is not smaller, and the compiler page says so.
+- ba8d7c6: `cache: true` (or a directory) keeps each module's compiled code, source map and extracted CSS on disk, keyed by its source, the compiler options and the compiler version, and replays them on the next build. Transforming 300 components went from 282 ms to 22 ms from the cache.
+- f2a241f: Add `@usemotif/compiler-web/turbopack`, a loader that runs motif extraction under Turbopack, which runs loaders but not bundler plugins. Each module's extracted CSS is written to a content-hashed file and imported by the module, in `next dev` and `next build` alike. The loader ships as ESM and CommonJS.
+
+### Patch Changes
+
+- fa19dce: The compiler extracts literal `_before` and `_after` bags into `::before` and `::after` rules, so an element that uses them can still be stripped to a plain tag on web; a dynamic bag keeps the wrapper. The rules hash and print exactly as the runtime's do, because both now build them with `resolvePseudoElementBag`, which core exports.
+- Updated dependencies [b463e7f]
+- Updated dependencies [fa19dce]
+  - @usemotif/compiler-babel@1.9.0
+
 ## 1.8.0
 
 ### Patch Changes

@@ -1,5 +1,15 @@
 # @usemotif/icons
 
+## 1.9.0
+
+### Minor Changes
+
+- 9e1c29d: `usemotif-icons build <folder> --out <folder>` turns SVG files into tree-shakable icon components drawn through the cross-platform SVG primitives, keeping the `viewBox` and the root's presentation attributes. SVGs that need what React Native cannot draw (text, images, `use`, gradients, masks, clip paths, filters, CSS) are skipped with the reason, and the command exits non-zero.
+
+### Patch Changes
+
+- 81d9cbf: `usemotif-icons build` strips SVG comments until none are left, so removing one cannot form another. The styled-components codemod strips CSS comments in linear time, where a string of unclosed `/*` used to take quadratic time.
+
 ## 1.8.0
 
 ## 1.7.0

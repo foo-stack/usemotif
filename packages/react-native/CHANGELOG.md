@@ -1,5 +1,60 @@
 # @usemotif/react-native
 
+## 1.9.0
+
+### Minor Changes
+
+- 47d9d06: `TextArea` takes `autoResize` and `maxRows`, and grows and shrinks with its content from `rows` lines up to `maxRows`. On web it uses `field-sizing: content` with `lh`-based bounds, and falls back to a measured height where the browser lacks `field-sizing`. On React Native the height follows `onContentSizeChange`, and the text scrolls once the cap is reached.
+- ea26ae5: `extendTheme(base, { name, tokens })` derives a theme by deep-merging token overrides onto a base theme. Leaves replace, `animations` presets replace whole, and `fonts`, `root` and `reducedMotion` are inherited unless given. The result is typed with the merged literal shape, so the base's and the overrides' `$`-paths both autocomplete. It is exported from `@usemotif/core`, `@usemotif/react`, `@usemotif/react-native` and `usemotif`.
+
+  The `@usemotif/tokens` presets (`lightTheme`, `darkTheme` and the high-contrast pair) are now typed with their literal token shape instead of the wide `Theme`. Their `$`-paths become visible to the token types, and they still satisfy `Theme`. Code that read a token key the preset does not have now fails to compile instead of typing as `undefined`.
+
+- 092aaf6: Font-size tokens follow the reader's text size. On web, numeric `fontSizes` tokens are emitted in `rem` instead of `px` (`md: 16` becomes `1rem`), so the browser text-size setting applies; an app that changes the root `html` font size will see its font-size tokens scale with it. A new optional `fontScale: { max }` token caps the growth: `min(1rem, 24px)` on web for `max: 1.5`, and `maxFontSizeMultiplier` on native `Text` and `Input`, which already follow Dynamic Type and Android's font scale.
+- a6f1773: Group states: set `group` on a Box and its descendants can style themselves by its state with `_groupHover`, `_groupFocus` (`:focus-visible`) and `_groupActive`. The group renders a `data-motif-group` attribute, exported from core as `GROUP_ATTRIBUTE`, and the child's rule keys on it, as in `[data-motif-group]:hover .m-x`. Responsive values work inside group states too. The compiler extracts a child's group states and keeps a `group` Box as a wrapper. It is web-only for now: React Native ignores `group` and the three props.
+- f57c760: Add `IconProvider`, which sets the default `size` and `strokeWidth` for every `Icon` and `@usemotif/icons` glyph in its subtree. A prop on the icon still wins, and nested providers override only what they set.
+- 6571a17: `ScrollView` and `VirtualList` take `onEndReached` and `onEndReachedThreshold`, with FlatList's semantics: the callback fires within the threshold, in visible lengths, once per content length, and also when the content does not fill the view. The TanStack and FlashList `VirtualList` implementations wire them up. On React Native, `ScrollView` and the FlashList implementation take typed `onRefresh` and `refreshing` for pull to refresh. The web accepts both and ignores them, so shared code typechecks.
+- 6f31389: `Input` takes `startElement` and `endElement`, shown inside the field before and after the text. With either set, the field renders as a row that carries the border, background and, on web, focus ring, around a borderless input, so the adornments take the width they need and the field keeps a plain Input's height. Without them the Input renders exactly as before. On React Native, string adornments are wrapped in `<Text>`.
+
+  The form components' `forwardRef` exports are now marked pure, so a bundle that imports only `Box` no longer carries the forms module. "Box only" falls from 11816 to 10806 gzipped bytes on web, and from 15285 to 14161 on React Native.
+
+- bf5611c: `keepMounted="activity"` on `Tabs.Panel`, `Dialog.Content` and `Drawer.Content`, and on `Show` and `Hide`, keeps hidden content mounted through React's `<Activity>`: its state survives, its effects pause, and its updates run at low priority. It is feature-detected, so on React before 19.2 the content unmounts as before. Native Dialog and Drawer render a React Native `Modal`, which cannot stay mounted while closed, so the prop is web-only there.
+- 32e3ec9: `layoutTransition` on Box sets the duration and easing of `layout` animations, as literals or `$durations` / `$easings` tokens, defaulting to 300ms ease-in-out. The web `useLayoutAnimation` hook's `duration` and `easing` also accept a CSS time string and `$durations` / `$easings` tokens. On React Native, layout animations now honour `cubic-bezier(...)` easings, and token easings in an `animation` object no longer fall back when they resolve to a cubic-bezier. The compiler no longer strips a Box that uses `layout` or `layoutTransition` to a plain element, which had dropped the animation.
+- 91ff720: `<Prose markdown>` renders Markdown on web and React Native: headings, paragraphs, nested lists, quotes, fenced code, rules and GFM tables, with emphasis, code, links and images inline. Web renders plain elements that Prose styles; native renders motif `Text`, `Box` and `Image`, with links opening through `Linking`. HTML in the source stays text, and links with a scheme other than http, https, mailto or tel are dropped. The parser is exported from `@usemotif/core` as `parseMarkdown`, and `Prose` is now exported from `usemotif` on both platforms.
+- 82ff67b: Four more state props: `_invalid` (`[aria-invalid="true"]`), `_pressed` (`[aria-pressed="true"]`), `_focusWithin` (`:focus-within`) and `_readOnly` (`[readonly]`, `[aria-readonly="true"]`), alongside `_checked`, `_selected` and `_expanded`. The compiler extracts them like the other states. React Native ignores them, as it does the other ARIA states.
+- 65d281b: `renderStyles` in `@usemotif/react-native/testing` returns an element's resolved styles in the same shape as the web `renderStyles`, so `toHaveStyle` and `toHaveStyleAt` hold on both platforms. It renders with `test-renderer` (an optional peer), and simulates breakpoints by rendering at each breakpoint's width and press states through `testOnly_pressed`.
+- a4e22e2: Responsive values take user-preference keys beside the breakpoints: `@contrast`, `@forcedColors`, `@reducedTransparency`, `@print` and `@landscape`. On the web each is a media query emitted after every width rule, so a preference wins; the compiler extracts them too. On React Native, `@contrast` and `@reducedTransparency` follow `AccessibilityInfo`, `@landscape` follows the window, and components re-render when a setting changes.
+- bc0fa43: Add `Presence`, which animates keyed children in and out: a child that leaves stays mounted until its `exitStyle` finishes, and `mode="wait"` holds a new child back until the old one has exited. Add `layoutId` to `Box` and `useLayoutAnimation`: when a Box with an id unmounts and another with the same id mounts, the new one animates from the old one's position and size. The compiler leaves a Box with `layoutId` in place.
+- d8df809: State bags (`_hover`, `_focus` and the rest) accept responsive values in the object, array and DSL syntaxes. On the web each breakpoint or container query nests around the state selector, as in `@media (min-width: 768px) { .m-x:hover { ... } }`. The compiler extracts them to the same class the runtime builds. On React Native, `Pressable` resolves a state bag at the current viewport and container width. Flat bags emit and hash exactly as before. Core exports `resolveStateRules` and the `StateStyleValue` type.
+- dd77382: `styled()` variant props accept responsive values in the object, array and string DSL forms, as in `size={{ base: 'sm', md: 'lg' }}`. A component resolves its variants once per breakpoint the value names, so compound variants match per breakpoint, and folds the result into responsive style props, state bags included. `VariantProps` now takes the component itself, `VariantProps<typeof Button>`, as well as a variants config. `styled()` returns the new exported `StyledComponent<V>` type, and core exports `resolveResponsiveVariants`. Variant prop types widen to include the responsive forms.
+- 3805e1e: `staggerFrom` on `Stack`, `HStack` and `VStack` starts the `stagger` wave from the first child (the default), the last, the center, or a given index. The compiler keeps the runtime wrapper when it is set.
+- 61a5cac: Add `styledSlots`, which styles several named parts of a component from one config and returns a `styled` component per slot. Base styles, variants, compound variants and defaults are keyed by slot, and a variant set on one slot reaches every slot rendered inside it with no prop threading, on web and React Native.
+- 8b13a7a: Add `TitleBar`, a custom window title bar for frameless desktop windows. On web it drags the window under Electron's `app-region` and Tauri's `data-tauri-drag-region`, keeps its `leading` and `trailing` slots clickable, and pads clear of the OS window controls under Window Controls Overlay. On React Native desktop it lays out the same slots. `TitleBar` joins the conformance suite's primitives.
+- d75bb04: Add `MessagesProvider` and `useMessages` to translate every accessible label and placeholder motif writes itself, in headless, the kit and the primitives: landmark names, dismiss and remove buttons, list and picker messages, colour picker and date picker labels, the password toggle and the rest of `MotifMessages`. English stays the default, nested providers layer, and a component's own prop still wins. Pagination's previous and next buttons now have accessible names, and MultiSelect's remove button names its option.
+- 26edfd6: `useGesture` recognises swipe, long press, double tap and pinch, from pointer events on web and touches on native. Both hooks feed one recognizer, `createGestureRecognizer` in `@usemotif/core`, so each gesture has the same thresholds everywhere.
+
+### Patch Changes
+
+- f4045fc: With the Reanimated driver registered and gesture-handler installed, a drag no longer remounts the dragged element when it starts. The driver handed back a new `Wrapper` component on every render, so the re-render at gesture start swapped the subtree under the gesture.
+- Updated dependencies [d1eaf9d]
+- Updated dependencies [fa19dce]
+- Updated dependencies [f0f6896]
+- Updated dependencies [ea26ae5]
+- Updated dependencies [092aaf6]
+- Updated dependencies [cf1df67]
+- Updated dependencies [a6f1773]
+- Updated dependencies [32e3ec9]
+- Updated dependencies [f844a0f]
+- Updated dependencies [91ff720]
+- Updated dependencies [82ff67b]
+- Updated dependencies [a4e22e2]
+- Updated dependencies [d8df809]
+- Updated dependencies [dd77382]
+- Updated dependencies [ae8fca9]
+- Updated dependencies [b1459c0]
+- Updated dependencies [d75bb04]
+- Updated dependencies [26edfd6]
+  - @usemotif/core@1.9.0
+
 ## 1.8.0
 
 ### Patch Changes

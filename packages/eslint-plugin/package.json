@@ -1,6 +1,6 @@
 {
   "name": "@usemotif/eslint-plugin",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "private": true,
   "description": "ESLint (and oxlint) rules for motif: raw values where a token exists, unknown $-paths, and platform branching in shared components.",
   "license": "MIT",

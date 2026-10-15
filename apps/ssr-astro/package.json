@@ -1,6 +1,6 @@
 {
   "name": "@usemotif/ssr-astro",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "private": true,
   "description": "Streaming SSR fixture: Astro with motif inside React islands.",
   "type": "module",

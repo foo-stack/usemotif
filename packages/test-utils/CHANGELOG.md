@@ -1,5 +1,35 @@
 # @usemotif/test-utils
 
+## 1.9.0
+
+### Minor Changes
+
+- 381cd4c: `toHaveRole`, `toHaveAccessibleName` and `toBeExpanded` join `motifMatchers`. They accept a web DOM element or a React Native test instance and assert the same ARIA meaning on both: native role names such as `header` read as `heading`, and the name comes from labels, `accessibilityLabel` or text. `accessibleFacts` returns the role, name and expanded state together.
+- 8b13a7a: Add `TitleBar`, a custom window title bar for frameless desktop windows. On web it drags the window under Electron's `app-region` and Tauri's `data-tauri-drag-region`, keeps its `leading` and `trailing` slots clickable, and pads clear of the OS window controls under Window Controls Overlay. On React Native desktop it lays out the same slots. `TitleBar` joins the conformance suite's primitives.
+- ab0aa09: Add `@usemotif/test-utils/visual`: `snapshotAcross` snapshots a page or element in every theme at every breakpoint with the settle and tolerance motif's docs use, plus the `settle`, `setTheme`, `defaultWidths` and `VISUAL_SETTINGS` it's built from. `@playwright/test` is an optional peer.
+
+### Patch Changes
+
+- Updated dependencies [d1eaf9d]
+- Updated dependencies [fa19dce]
+- Updated dependencies [f0f6896]
+- Updated dependencies [ea26ae5]
+- Updated dependencies [092aaf6]
+- Updated dependencies [cf1df67]
+- Updated dependencies [a6f1773]
+- Updated dependencies [32e3ec9]
+- Updated dependencies [f844a0f]
+- Updated dependencies [91ff720]
+- Updated dependencies [82ff67b]
+- Updated dependencies [a4e22e2]
+- Updated dependencies [d8df809]
+- Updated dependencies [dd77382]
+- Updated dependencies [ae8fca9]
+- Updated dependencies [b1459c0]
+- Updated dependencies [d75bb04]
+- Updated dependencies [26edfd6]
+  - @usemotif/core@1.9.0
+
 ## 1.8.0
 
 ### Patch Changes

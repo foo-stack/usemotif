@@ -1,5 +1,13 @@
 # @usemotif/compiler-metro
 
+## 1.9.0
+
+### Patch Changes
+
+- Updated dependencies [b463e7f]
+- Updated dependencies [fa19dce]
+  - @usemotif/compiler-babel@1.9.0
+
 ## 1.8.0
 
 ### Patch Changes

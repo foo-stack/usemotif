@@ -1,6 +1,6 @@
 {
   "name": "@usemotif/ssr-tanstack-start",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "private": true,
   "description": "Streaming SSR fixture: TanStack Start with motif's style collector streamed into the HTML.",
   "type": "module",
