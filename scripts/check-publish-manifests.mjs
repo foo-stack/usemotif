@@ -143,7 +143,13 @@ const CLIENT_ENTRY_POLICY = {
     // go stale on the first content change, so the rule is stated as the
     // inverse. The exemptions are the server graph: the barrel, and the
     // namespace assembly it re-exports.
-    mustInternalAllExcept: ['./dist/index.js', './dist/index.cjs', './dist/*.namespace.*'],
+    // `index.native.js` is React Native's entry, where the directive means nothing.
+    mustInternalAllExcept: [
+      './dist/index.js',
+      './dist/index.cjs',
+      './dist/index.native.*',
+      './dist/*.namespace.*',
+    ],
     // The directive-free barrel may only re-export. A component that is not
     // its own tsup entry gets inlined here instead, and its module-level
     // `styled()` call then runs in the server graph, where `styled` is a client

@@ -64,6 +64,16 @@ re-themes in light and dark with the rest of your app.
 | [Overlay](/kit/overlay)       | Modal, AlertDialog, Drawer and Sheet, Popover, HoverCard, Tooltip, Menu, ContextMenu, CommandPalette, Toaster.                                                        |
 | [Navigation](/kit/navigation) | Tabs, Accordion, Collapsible, Breadcrumb, Pagination, Stepper, NavigationMenu, Toolbar, TreeView.                                                                     |
 
+## On React Native
+
+The kit's display components render on React Native from the same import: Metro resolves the
+package's `react-native` export condition to a native build. That covers Card (with its parts),
+Badge, Alert, Banner, Chip, Spinner, Skeleton, Progress, ProgressCircle, Button and TextField.
+
+On native the text inside them sits in `Text`, carrying the colour and size the recipe gives the
+web element, and ProgressCircle draws with `react-native-svg`. TextField renders the platform
+`Input`, sized from the recipe. The overlay, form and navigation components are web only for now.
+
 <Callout variant="info" title="Where to next">
   [Display](/kit/display) - the presentational components, from status pills to loading
   placeholders. [Forms](/kit/forms) - the controls that collect input, from checkboxes to file
