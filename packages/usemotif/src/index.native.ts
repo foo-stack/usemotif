@@ -218,6 +218,14 @@ export type {
 } from '@usemotif/react-native';
 
 export { createStyledContext, styled } from '@usemotif/react-native';
+export {
+  styledSlots,
+  type SlotComponents,
+  type SlotRecipeConfig,
+  type SlotStyles,
+  type SlotVariants,
+  type SlotVariantsOf,
+} from '@usemotif/react-native';
 export type {
   CompoundVariant,
   StyledComponent,

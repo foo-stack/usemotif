@@ -212,6 +212,14 @@ export type {
 } from '@usemotif/react';
 
 export { createStyledContext, styled } from '@usemotif/react';
+export {
+  styledSlots,
+  type SlotComponents,
+  type SlotRecipeConfig,
+  type SlotStyles,
+  type SlotVariants,
+  type SlotVariantsOf,
+} from '@usemotif/react';
 export type {
   CompoundVariant,
   StyledComponent,
