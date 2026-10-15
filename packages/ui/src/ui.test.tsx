@@ -1711,6 +1711,50 @@ describe('Chip - removable tag (pure primitive)', () => {
     click(btn);
     expect(chipRemoved).toBe(true);
   });
+
+  it('toggles as a filter with aria-pressed, apart from its remove button', () => {
+    const onSelectedChange = vi.fn();
+    const onRemove = vi.fn();
+    render(
+      <Chip
+        data-testid="chip"
+        defaultSelected={false}
+        onSelectedChange={onSelectedChange}
+        onRemove={onRemove}
+      >
+        Design
+      </Chip>,
+    );
+    const toggle = container.querySelector('button[aria-pressed]') as HTMLElement;
+    expect(toggle.textContent).toBe('Design');
+    expect(toggle.getAttribute('aria-pressed')).toBe('false');
+    const chip = toggle.parentElement!;
+    const before = chip.getAttribute('style') ?? '';
+    click(toggle);
+    expect(toggle.getAttribute('aria-pressed')).toBe('true');
+    expect(onSelectedChange).toHaveBeenLastCalledWith(true);
+    expect(chip.getAttribute('style') ?? '').toContain('action-primary-bg');
+    expect(before).not.toContain('action-primary-bg');
+    // The remove button is its own target: it removes without toggling.
+    click(container.querySelector('[aria-label="Remove"]')!);
+    expect(onRemove).toHaveBeenCalledTimes(1);
+    expect(onSelectedChange).toHaveBeenCalledTimes(1);
+    expect(toggle.contains(container.querySelector('[aria-label="Remove"]'))).toBe(false);
+  });
+
+  it('follows a controlled selected, and stays a plain tag without one', () => {
+    render(
+      <>
+        <Chip selected>On</Chip>
+        <Chip>Plain</Chip>
+      </>,
+    );
+    const pressed = container.querySelectorAll('button[aria-pressed]');
+    expect(pressed.length).toBe(1);
+    expect(pressed[0]!.getAttribute('aria-pressed')).toBe('true');
+    click(pressed[0]!);
+    expect(pressed[0]!.getAttribute('aria-pressed')).toBe('true');
+  });
 });
 
 describe('Banner - full-width announcement (pure primitive)', () => {
