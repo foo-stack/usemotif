@@ -10,3 +10,9 @@ export const PACKAGE_NAME = '@usemotif/migrate';
 
 export { applyRenameV2, needsRenameV2 } from './transforms/rename-v2.js';
 export { applyRenameV3, needsRenameV3 } from './transforms/rename-v3.js';
+export {
+  applyFromStyledComponents,
+  cssToStyle,
+  needsFromStyledComponents,
+} from './transforms/from-styled-components.js';
+export { applyFromTamagui, needsFromTamagui } from './transforms/from-tamagui.js';

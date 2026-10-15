@@ -94,3 +94,28 @@ describe('usemotif-migrate --dry-run', () => {
     );
   });
 });
+
+describe('usemotif-migrate from-*', () => {
+  let dir: string;
+  beforeEach(() => {
+    dir = mkdtempSync(join(tmpdir(), 'usemotif-migrate-'));
+    writeFileSync(
+      join(dir, 'a.tsx'),
+      `import styled from 'styled-components';\nconst A = styled.a\`color: red;\`;\nconst B = styled.b\`color: \${(p) => p.c};\`;\n`,
+    );
+    writeFileSync(join(dir, 'package.json'), `{ "dependencies": { "styled-components": "6" } }\n`);
+  });
+  afterEach(() => rmSync(dir, { recursive: true, force: true }));
+
+  it('rewrites code files only and reports what it left', async () => {
+    expect(await run('from-styled-components', dir)).toBe(0);
+    expect(io.out).toBe('changed: a.tsx (1 left to finish by hand)\nchanged 1 file.\n');
+    expect(readFileSync(join(dir, 'a.tsx'), 'utf8')).toContain(`motifStyled('a'`);
+  });
+
+  it('reports a file it cannot parse and exits 1', async () => {
+    writeFileSync(join(dir, 'c.ts'), `import { Stack } from 'tamagui';\nconst = ;\n`);
+    expect(await run('from-tamagui', dir)).toBe(1);
+    expect(io.err).toContain('failed: c.ts');
+  });
+});

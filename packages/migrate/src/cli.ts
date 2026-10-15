@@ -5,6 +5,8 @@
  * Usage:
  *   usemotif-migrate rename-v3 [path] [--dry-run]
  *   usemotif-migrate rename-v2 [path] [--dry-run]
+ *   usemotif-migrate from-styled-components [path] [--dry-run]
+ *   usemotif-migrate from-tamagui [path] [--dry-run]
  *   usemotif-migrate --help
  *
  * Default path is the current working directory. The transform walks
@@ -16,7 +18,13 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { isAbsolute, relative, resolve } from 'node:path';
 import { exit, stderr, stdout } from 'node:process';
 import fg from 'fast-glob';
+import { MARKER } from './_ast.js';
 import { applyWithinMarkdownCode, isMarkdownPath } from './markdown.js';
+import {
+  applyFromStyledComponents,
+  needsFromStyledComponents,
+} from './transforms/from-styled-components.js';
+import { applyFromTamagui, needsFromTamagui } from './transforms/from-tamagui.js';
 import { applyRenameV2, needsRenameV2 } from './transforms/rename-v2.js';
 import { applyRenameV3, needsRenameV3 } from './transforms/rename-v3.js';
 
@@ -54,10 +62,23 @@ Usage:
                                       rename-v3 if you're still on v1
                                       cross-platform code (see below).
 
+  usemotif-migrate from-styled-components [path]
+                                      Rewrite styled-components templates to
+                                      motif's styled() where they map directly.
+
+  usemotif-migrate from-tamagui [path]
+                                      Rewrite Tamagui imports, state props and
+                                      styled() configs to motif.
+
   usemotif-migrate --help             Show this message.
 
 Flags:
   --dry-run     Print the files that would change without writing them.
+
+The from-* commands read .js, .jsx, .ts and .tsx files only. What they
+can't convert stays as it was, under a line starting
+"// usemotif-migrate:" that says why; each changed file reports how many
+it left. Search for that comment to finish the migration.
 
 rename-v3 rename map:
   @motif-js/react-web      →  @usemotif/react
@@ -116,7 +137,13 @@ function parseArgs(argv: readonly string[]): ParsedArgs {
 interface Transform {
   readonly apply: (source: string) => string;
   readonly needs: (source: string) => boolean;
+  /** Paths the transform reads, when not every matched file. */
+  readonly only?: RegExp;
 }
+
+const CODE_FILES = /\.(m|c)?(j|t)sx?$/;
+
+const countMarkers = (text: string): number => text.split(`// ${MARKER}`).length - 1;
 
 async function runTransform(
   rootArg: string,
@@ -147,6 +174,7 @@ async function runTransform(
     // EISDIR, a transform throw) must not abort the run and strand the files
     // already rewritten with a raw stack trace. Collect failures and report.
     try {
+      if (transform.only !== undefined && !transform.only.test(absPath)) continue;
       const src = await readFile(absPath, 'utf8');
       if (!transform.needs(src)) continue;
       // In Markdown/MDX, only rewrite code regions (fenced blocks + inline
@@ -156,11 +184,13 @@ async function runTransform(
         ? applyWithinMarkdownCode(src, transform.apply)
         : transform.apply(src);
       if (out === src) continue;
+      const marked = countMarkers(out) - countMarkers(src);
+      const note = marked > 0 ? ` (${marked} left to finish by hand)` : '';
       if (dryRun) {
-        stdout.write(`would change: ${rel}\n`);
+        stdout.write(`would change: ${rel}${note}\n`);
       } else {
         await writeFile(absPath, out, 'utf8');
-        stdout.write(`changed: ${rel}\n`);
+        stdout.write(`changed: ${rel}${note}\n`);
       }
       changed++;
     } catch (err) {
@@ -193,6 +223,20 @@ export async function main(argv: readonly string[]): Promise<number> {
     return runTransform(args.path, args.dryRun, {
       apply: applyRenameV2,
       needs: needsRenameV2,
+    });
+  }
+  if (args.command === 'from-styled-components') {
+    return runTransform(args.path, args.dryRun, {
+      apply: applyFromStyledComponents,
+      needs: needsFromStyledComponents,
+      only: CODE_FILES,
+    });
+  }
+  if (args.command === 'from-tamagui') {
+    return runTransform(args.path, args.dryRun, {
+      apply: applyFromTamagui,
+      needs: needsFromTamagui,
+      only: CODE_FILES,
     });
   }
   stderr.write(`unknown command: ${args.command}\n`);
