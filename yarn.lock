@@ -8298,6 +8298,7 @@ __metadata:
     "@types/react-dom": "npm:^19.2.3"
     "@usemotif/react": "workspace:*"
     "@usemotif/react-native": "workspace:*"
+    "@usemotif/test-utils": "workspace:*"
     react: "npm:^19.2.0"
     react-dom: "npm:^19.2.0"
     react-native: "npm:^0.83.0"
