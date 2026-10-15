@@ -306,7 +306,7 @@ function ComboboxList<T>({
   const emptyMessage = ownEmptyMessage ?? messages.noOptions;
   const loadingMessage = ownLoadingMessage ?? messages.loadingOptions;
   const ctx = useComboboxContext<T>('Combobox.List');
-  const { position, floatingRef } = useFloatingPosition(
+  const { style: floating, floatingRef } = useFloatingPosition(
     ctx.inputRef as unknown as React.RefObject<HTMLElement | null>,
     ctx.open,
     placement,
@@ -331,9 +331,7 @@ function ComboboxList<T>({
         role="listbox"
         aria-busy={ctx.loading || undefined}
         style={{
-          position: 'absolute',
-          top: position.top,
-          left: position.left,
+          ...floating,
           zIndex: 1000,
           ...style,
         }}
@@ -855,7 +853,7 @@ function MultiSelectList<T>({
   const messages = useMessages();
   const emptyMessage = ownMultiEmptyMessage ?? messages.noOptions;
   const ctx = useMultiSelectContext<T>('MultiSelect.List');
-  const { position, floatingRef } = useFloatingPosition(
+  const { style: floating, floatingRef } = useFloatingPosition(
     ctx.inputRef as unknown as React.RefObject<HTMLElement | null>,
     ctx.open,
     placement,
@@ -880,9 +878,7 @@ function MultiSelectList<T>({
         role="listbox"
         aria-multiselectable="true"
         style={{
-          position: 'absolute',
-          top: position.top,
-          left: position.left,
+          ...floating,
           zIndex: 1000,
           ...style,
         }}

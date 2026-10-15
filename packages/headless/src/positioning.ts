@@ -1,6 +1,14 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  type CSSProperties,
+  useCallback,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
 export type Placement = 'top' | 'bottom' | 'left' | 'right';
 
@@ -109,11 +117,66 @@ export function computePosition(
   return { top: top + window.scrollY, left: left + window.scrollX, placement: side, arrow };
 }
 
+let anchoring: boolean | undefined;
+
+/**
+ * Whether the browser can put a floating element in the top layer and place it against its
+ * reference in CSS: the Popover API, `position-area`, and `position-try-fallbacks` for the flip.
+ */
+export function supportsAnchorPositioning(): boolean {
+  anchoring ??=
+    typeof HTMLElement !== 'undefined' &&
+    'showPopover' in HTMLElement.prototype &&
+    typeof CSS !== 'undefined' &&
+    typeof CSS.supports === 'function' &&
+    CSS.supports('position-area: bottom') &&
+    CSS.supports('position-try-fallbacks: flip-block');
+  return anchoring;
+}
+
+/** Test hook: forget the cached feature check. */
+export function _resetAnchorSupportForTesting(): void {
+  anchoring = undefined;
+}
+
+const FACING_MARGIN: Record<Placement, string> = {
+  top: 'marginBottom',
+  bottom: 'marginTop',
+  left: 'marginRight',
+  right: 'marginLeft',
+};
+
+/** The side a placed element actually sits on, and where along it the reference's centre is. */
+function measurePlacement(
+  reference: DOMRect,
+  floating: DOMRect,
+): Omit<PlacedPosition, 'top' | 'left'> {
+  const placement: Placement =
+    floating.top >= reference.bottom - 1
+      ? 'bottom'
+      : floating.bottom <= reference.top + 1
+        ? 'top'
+        : floating.left >= reference.right - 1
+          ? 'right'
+          : 'left';
+  const vertical = placement === 'top' || placement === 'bottom';
+  const arrow = vertical
+    ? Math.min(Math.max(reference.left + reference.width / 2 - floating.left, 0), floating.width)
+    : Math.min(Math.max(reference.top + reference.height / 2 - floating.top, 0), floating.height);
+  return { placement, arrow };
+}
+
 /**
  * Hook: track the position of a floating element anchored to a
  * reference. Recomputes on resize + scroll + open-state change.
- * Returns `{ position, floatingRef, placement }` - attach the ref to your
- * floating element; `placement` is the side it landed on after any flip.
+ * Returns `{ style, position, floatingRef, placement }` - attach the ref to your
+ * floating element and spread `style` onto it; `placement` is the side it landed on after any
+ * flip.
+ *
+ * Where the browser supports it, the element is shown as a manual popover, so it sits in the
+ * top layer above any `overflow` or stacking context, and CSS anchor positioning places and
+ * flips it; `style` carries that. Elsewhere `style` is absolute document coordinates from
+ * {@link computePosition}. Either way the side and arrow offset are reported.
  */
 export function useFloatingPosition(
   referenceRef: React.RefObject<HTMLElement | null>,
@@ -121,6 +184,7 @@ export function useFloatingPosition(
   placement: Placement,
   offset = 8,
 ): {
+  style: CSSProperties;
   position: Position;
   placement: Placement;
   arrow: number;
@@ -128,12 +192,24 @@ export function useFloatingPosition(
 } {
   const floatingRef = useRef<HTMLDivElement | null>(null);
   const [placed, setPlaced] = useState<PlacedPosition>({ top: 0, left: 0, placement, arrow: 0 });
+  const anchorName = `--motif-anchor-${useId().replace(/[^\w-]/g, '')}`;
+  // Read once per mount, so the server render and the first client render agree on `style`.
+  const [native] = useState(() => typeof window !== 'undefined' && supportsAnchorPositioning());
 
   const update = useCallback(() => {
     const ref = referenceRef.current;
     const float = floatingRef.current;
     if (ref === null || float === null) return;
     const rect = ref.getBoundingClientRect();
+    if (native) {
+      const next = measurePlacement(rect, float.getBoundingClientRect());
+      setPlaced((prev) =>
+        prev.placement === next.placement && prev.arrow === next.arrow
+          ? prev
+          : { top: 0, left: 0, ...next },
+      );
+      return;
+    }
     setPlaced(
       computePosition(
         rect,
@@ -142,24 +218,54 @@ export function useFloatingPosition(
         offset,
       ),
     );
-  }, [referenceRef, placement, offset]);
+  }, [referenceRef, placement, offset, native]);
 
   useEffect(() => {
     if (!open) return;
+    const ref = referenceRef.current;
+    const float = floatingRef.current;
+    if (native && ref !== null && float !== null) {
+      ref.style.setProperty('anchor-name', anchorName);
+      float.setAttribute('popover', 'manual');
+      if (!float.matches(':popover-open')) float.showPopover();
+    }
     update();
     window.addEventListener('resize', update);
     window.addEventListener('scroll', update, true);
     return () => {
       window.removeEventListener('resize', update);
       window.removeEventListener('scroll', update, true);
+      if (native && ref?.style.getPropertyValue('anchor-name') === anchorName) {
+        ref.style.removeProperty('anchor-name');
+      }
     };
-  }, [open, update]);
+  }, [open, update, native, referenceRef, anchorName]);
 
   const position = useMemo<Position>(
     () => ({ top: placed.top, left: placed.left }),
     [placed.top, placed.left],
   );
-  return { position, placement: placed.placement, arrow: placed.arrow, floatingRef };
+  const style = useMemo<CSSProperties>(() => {
+    if (!native) return { position: 'absolute', top: placed.top, left: placed.left };
+    const vertical = placement === 'top' || placement === 'bottom';
+    // A popover's UA styles centre it in the viewport with a border and padding; undo them.
+    return {
+      position: 'fixed',
+      inset: 'auto',
+      margin: 0,
+      padding: 0,
+      border: 0,
+      background: 'transparent',
+      color: 'inherit',
+      overflow: 'visible',
+      [FACING_MARGIN[placement]]: offset,
+      positionAnchor: anchorName,
+      positionArea: placement,
+      positionTryFallbacks: vertical ? 'flip-block' : 'flip-inline',
+      [vertical ? 'justifySelf' : 'alignSelf']: 'anchor-center',
+    } as CSSProperties;
+  }, [native, placed.top, placed.left, placement, offset, anchorName]);
+  return { style, position, placement: placed.placement, arrow: placed.arrow, floatingRef };
 }
 
 /** An element whose subtree is not "outside", or a test for one. */

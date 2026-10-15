@@ -191,7 +191,7 @@ function Content({
 }: HoverCardContentProps): ReactElement | null {
   const ctx = useHoverCardContext('HoverCard.Content');
   const {
-    position,
+    style: floating,
     placement: side,
     arrow,
     floatingRef,
@@ -217,9 +217,7 @@ function Content({
         onFocus={ctx.handlers.onContentEnter}
         onBlur={ctx.handlers.onContentLeave}
         style={{
-          position: 'absolute',
-          top: position.top,
-          left: position.left,
+          ...floating,
           zIndex: 1000,
           ...style,
         }}

@@ -189,6 +189,20 @@ flips, and stays on the trigger when the surface shifts along the viewport edge.
 `aria-hidden` and `data-side` (`top`, `bottom`, `left`, or `right`), for styling by side. On React
 Native it renders nothing, since native overlays open as modals with no anchored edge.
 
+## Positioning
+
+Where the browser supports the Popover API and CSS anchor positioning (`position-area` and
+`position-try-fallbacks`), `Popover.Content` opens as a manual popover in the top layer and the
+browser places it against the trigger. It then sits above any `overflow: hidden` ancestor or
+stacking context, follows the trigger through scrolling with no script, and flips to the other
+side when it doesn't fit. Elsewhere it is positioned in script, as before. The same applies to
+HoverCard, Menu and its submenus, Select, Combobox, and NavigationMenu submenus. Tooltip still
+positions in script.
+
+Either way `Popover.Arrow` and `data-side` follow the side the panel actually landed on. The
+popover is `manual`, so Escape and outside clicks are still handled by Popover itself, with the
+same props.
+
 ## Accessibility
 
 The trigger carries `aria-expanded` and `aria-controls`, so assistive technology announces that

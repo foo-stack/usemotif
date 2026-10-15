@@ -155,7 +155,7 @@ function Content({
   const ctx = usePopoverContext('Popover.Content');
   const dismiss = useCallback(() => ctx.setOpen(false), [ctx]);
   const {
-    position,
+    style: floating,
     placement: side,
     arrow,
     floatingRef,
@@ -205,9 +205,7 @@ function Content({
         role="dialog"
         data-motif-state={phase === 'exiting' ? 'exiting' : undefined}
         style={{
-          position: 'absolute',
-          top: position.top,
-          left: position.left,
+          ...floating,
           zIndex: 1000,
           ...style,
         }}

@@ -149,7 +149,12 @@ export interface MenuSubContentProps {
 
 function SubContent({ offset = 0, style, children }: MenuSubContentProps): ReactElement | null {
   const sub = useSubContext('Menu.SubContent');
-  const { position, floatingRef } = useFloatingPosition(sub.triggerRef, sub.open, 'right', offset);
+  const { style: floating, floatingRef } = useFloatingPosition(
+    sub.triggerRef,
+    sub.open,
+    'right',
+    offset,
+  );
   const itemsRef = useRef<HTMLElement[]>([]);
   const [activeIndex, setActiveIndex] = useState(-1);
   const [openSub, setOpenSub] = useState<string | null>(null);
@@ -211,9 +216,7 @@ function SubContent({ offset = 0, style, children }: MenuSubContentProps): React
           tabIndex={-1}
           onKeyDown={onKeyDown}
           style={{
-            position: 'absolute',
-            top: position.top,
-            left: position.left,
+            ...floating,
             zIndex: 1000,
             ...style,
           }}
