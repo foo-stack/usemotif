@@ -1,0 +1,13 @@
+{
+  "expo": {
+    "name": "motif universal app",
+    "slug": "motif-universal",
+    "scheme": "motif-universal",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "platforms": ["ios", "android"],
+    "plugins": ["expo-router"]
+  }
+}
