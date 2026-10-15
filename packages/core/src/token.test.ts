@@ -186,3 +186,15 @@ describe('resolveToken - fallback chains', () => {
     expect(resolveToken('$components.button.bg ?? $colors.nope', theme)).toBeUndefined();
   });
 });
+
+describe('resolveToken - memo', () => {
+  it('answers a repeated ref from the theme memo, per default scale and per theme', () => {
+    const t1: Theme = { name: 'a', tokens: { colors: { brand: '#111' }, space: { brand: 4 } } };
+    const t2: Theme = { name: 'b', tokens: { colors: { brand: '#222' } } };
+    expect(resolveToken('$colors.brand', t1)).toBe('#111');
+    expect(resolveToken('$colors.brand', t1)).toBe('#111');
+    expect(resolveToken('$brand', t1, { defaultScale: 'colors' })).toBe('#111');
+    expect(resolveToken('$brand', t1, { defaultScale: 'space' })).toBe(4);
+    expect(resolveToken('$colors.brand', t2)).toBe('#222');
+  });
+});

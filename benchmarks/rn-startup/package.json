@@ -5,10 +5,13 @@
   "description": "React Native startup-time bench scaffold for motif-js. Real measurements need a device; see README.md.",
   "type": "module",
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "theme-cost": "node --jitless theme-cost.mjs"
   },
   "dependencies": {
+    "@usemotif/core": "workspace:*",
     "@usemotif/react-native": "workspace:*",
+    "@usemotif/tokens": "workspace:*",
     "react": "^19.2.0",
     "react-native": "0.83.6"
   },
