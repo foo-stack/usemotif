@@ -5,6 +5,7 @@ build/
 .vorge/
 coverage/
 .next/
+.astro/
 .expo/
 *.tsbuildinfo
 

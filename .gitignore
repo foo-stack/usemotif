@@ -107,3 +107,6 @@ apps/docs/__visual__/baseline/comparison/
 # `panda codegen`, which the bench and typecheck scripts run, so it is a build
 # artefact rather than source. 1.5MB across 70 files, too large to track.
 benchmarks/*/styled-system/
+
+# Astro writes its generated types here.
+.astro/

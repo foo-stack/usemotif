@@ -1,0 +1,6 @@
+---
+import Card from './Card';
+// Resolves after the start of the page has streamed, so this island arrives in a later chunk.
+await new Promise((resolve) => setTimeout(resolve, 300));
+---
+<Card client:load id="late" title="Streamed in later" pad="$space.3" />

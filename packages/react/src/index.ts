@@ -257,6 +257,7 @@ export { createStyledContext } from './styled-context.js';
 export type { StyledContext, VariantContext } from './styled-context.js';
 export { TitleBar, type TitleBarProps } from './TitleBar.js';
 export { Prose, type ProseProps } from './Prose.js';
+export { StyleIsland } from './StyleIsland.js';
 export {
   styledSlots,
   type SlotComponents,

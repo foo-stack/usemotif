@@ -1,8 +1,8 @@
 ---
 title: Server-side rendering
-description: Wire SSRStyleCollector into a sync renderer, or stream collected styles from Next.js App Router, React Router 7 or TanStack Start.
+description: Wire SSRStyleCollector into a sync renderer, or stream collected styles from Next.js App Router, React Router 7, TanStack Start or Astro.
 diataxis: howto
-covers: ['SSRStyleCollector', 'CollectorContext', 'motifStyleStream', 'motifStyleTransform']
+covers: ['SSRStyleCollector', 'CollectorContext', 'motifStyleStream', 'motifStyleTransform', 'StyleIsland']
 last_verified: 2026-10-15
 ---
 
@@ -214,6 +214,33 @@ export const motifHandler: HandlerCallback<AnyRouter> = async ({ request, router
 Put `ThemeProvider` inside the root route's `shellComponent`, within `<body>`. `apps/ssr-tanstack-start`
 in the repository is this setup, and CI serves its production build and checks the streamed HTML
 and the hydrated page.
+
+## Astro
+
+Astro renders each React island on its own, with no stream or document for the app to collect
+styles into. Wrap the inside of each island in `StyleIsland`. On the server it gives the island its
+own collector and emits the island's CSS with it, as a React 19 hoistable `<style>` ahead of the
+island's content, so a streamed island arrives with its styles. In the browser it renders its
+children alone and the runtime takes over.
+
+<CodeBlock lang="tsx" code={`// src/components/Card.tsx
+import { Box, StyleIsland, ThemeProvider } from '@usemotif/react';
+import { lightTheme } from '@usemotif/tokens';
+
+export default function Card({ title }: { title: string }) {
+  return (
+    <StyleIsland>
+      <ThemeProvider themes={[lightTheme]} active="light">
+        <Box p="$space.6" bg="$colors.surface.raised">{title}</Box>
+      </ThemeProvider>
+    </StyleIsland>
+  );
+}`} />
+
+Each island needs its own `ThemeProvider` inside `StyleIsland`, since islands don't share a React
+tree. `apps/ssr-astro` in the repository uses `@astrojs/react` with the Node adapter, including an
+island inside an async component that streams in later, and CI serves its build and checks the
+streamed HTML and the hydrated islands.
 
 ## Primitives in Server Components
 

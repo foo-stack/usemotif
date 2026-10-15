@@ -49,6 +49,7 @@
     "**/build/**",
     "**/coverage/**",
     "**/*.tsbuildinfo",
-    "**/routeTree.gen.ts"
+    "**/routeTree.gen.ts",
+    "**/.astro/**"
   ]
 }
