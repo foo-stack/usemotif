@@ -9,7 +9,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, type ReactNode } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { Linking, Text } from 'react-native';
-import { NavigationMenu, Stepper, type NavigationMenuItem } from './navigation.native.js';
+import {
+  NavigationMenu,
+  Pagination,
+  Stepper,
+  type NavigationMenuItem,
+} from './navigation.native.js';
 
 let container: HTMLElement;
 let root: Root;
@@ -140,5 +145,37 @@ describe('native Stepper', () => {
     expect(disabled).toEqual([false, true, true]);
     act(() => (steps[0] as HTMLElement).click());
     expect(onStepChange).toHaveBeenCalledWith('a');
+  });
+});
+
+describe('Pagination (native) - boundaries and page size', () => {
+  it('shows `boundaries` pages and offers page sizes that keep the first item in view', () => {
+    const onPageSizeChange = vi.fn();
+    const sizeChoices: Array<(size: number) => void> = [];
+    render(
+      <Pagination
+        page={2}
+        total={20}
+        boundaries={2}
+        pageSize={50}
+        onPageSizeChange={onPageSizeChange}
+        renderItem={(info) => (
+          <Text>
+            {info.type === 'page' ? String(info.page) : info.type === 'ellipsis' ? '_' : ''}
+          </Text>
+        )}
+        renderPageSize={({ options, onChange }) => {
+          sizeChoices.push(onChange);
+          return <Text>{options.join(',')}</Text>;
+        }}
+      />,
+    );
+    const texts = Array.from(
+      container.querySelectorAll('[data-motif-host="Text"]'),
+      (el) => el.textContent,
+    );
+    expect(texts.filter((t) => t !== '')).toEqual(['1', '2', '3', '_', '19', '20', '50']);
+    act(() => sizeChoices[0]!(10));
+    expect(onPageSizeChange).toHaveBeenCalledWith(10, 6);
   });
 });
