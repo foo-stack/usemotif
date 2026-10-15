@@ -23,11 +23,10 @@
  * `benchmarks/rn-startup/README.md`.
  */
 
-import { execFileSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { resolve, basename } from 'node:path';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { benchHz, runBenchSuite } from './_bench-run.mjs';
 
 const ROOT = resolve(fileURLToPath(import.meta.url), '..', '..');
 const BUDGETS_PATH = `${ROOT}/benchmarks/.bench-budgets.json`;
@@ -35,37 +34,8 @@ const UPDATE_MODE = process.argv.includes('--update');
 
 const budgets = JSON.parse(readFileSync(BUDGETS_PATH, 'utf8'));
 
-// ─── Run the bench suite, capturing per-bench hz as JSON ───────────
-const outPath = `${mkdtempSync(`${tmpdir()}/motif-bench-`)}/results.json`;
-console.log('Running data-table bench suite (this takes ~15s)...\n');
-execFileSync(
-  'yarn',
-  ['workspace', '@usemotif-bench/data-table', 'bench', `--outputJson=${outPath}`],
-  { cwd: ROOT, stdio: ['ignore', 'ignore', 'inherit'] },
-);
-const report = JSON.parse(readFileSync(outPath, 'utf8'));
-
-// ─── Index every bench's hz by (file basename, name) ───────────────
-// The same label ("motif runtime") appears in several bench files, so checks
-// are scoped by file.
-const byFile = new Map();
-for (const file of report.files ?? []) {
-  const key = basename(file.filepath ?? '');
-  const benches = [];
-  for (const group of file.groups ?? []) {
-    for (const b of group.benchmarks ?? []) benches.push(b);
-  }
-  byFile.set(key, benches);
-}
-
-function findHz(fileFragment, nameFragment) {
-  for (const [fileKey, benches] of byFile) {
-    if (!fileKey.includes(fileFragment)) continue;
-    const match = benches.find((b) => b.name.includes(nameFragment));
-    if (match) return match.hz;
-  }
-  return undefined;
-}
+const byFile = runBenchSuite();
+const findHz = (file, name) => benchHz(byFile, file, name);
 
 // ─── Evaluate each check ───────────────────────────────────────────
 const results = [];

@@ -12,6 +12,7 @@ const meta: MetaFile = {
   tailwind: 'Tailwind bridge',
   desktop: 'Desktop',
   performance: 'Performance',
+  benchmarks: 'Benchmarks',
   'server-rendering': 'Server-side rendering',
   testing: 'Testing',
   contributing: 'Contributing',

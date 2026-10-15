@@ -1,5 +1,6 @@
 export { ApiSignature, type ApiParam, type ApiSignatureProps } from './ApiSignature.js';
 export { ArticleMeta } from './ArticleMeta.js';
+export { BenchmarkResults } from './BenchmarkResults.js';
 export { Callout, type CalloutProps } from './Callout.js';
 export { CodeBlock, type CodeBlockProps, type CodeBlockTab } from './CodeBlock.js';
 export { Eyebrow, type EyebrowProps } from './Eyebrow.js';
