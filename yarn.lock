@@ -6922,6 +6922,7 @@ __metadata:
   dependencies:
     "@babel/core": "npm:^7.29.0"
     "@types/babel__core": "npm:^7.20.5"
+    "@types/node": "npm:^25.6.0"
     "@usemotif/compiler-babel": "workspace:*"
     tsup: "npm:^8.5.1"
     typescript: "npm:^6.0.3"

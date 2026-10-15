@@ -30,6 +30,24 @@ Without that import the JSX rewrite still happens, but the resulting CSS has no 
 
 Rollup, Webpack, esbuild, rspack, and farm consume the same `motifExtract` instance - call the matching method (`.rollup()`, `.webpack()`, ...) per the unplugin convention. The `virtual:motif-extract.css` import works in all of them.
 
+### Turbopack
+
+Turbopack (the default for `next dev` and `next build` since Next.js 16) runs loaders, not plugins, so use the loader entry instead:
+
+```ts
+// next.config.ts
+export default {
+  turbopack: {
+    rules: {
+      '*.tsx': { loaders: ['@usemotif/compiler-web/turbopack'] },
+      '*.jsx': { loaders: ['@usemotif/compiler-web/turbopack'] },
+    },
+  },
+};
+```
+
+Each module's extracted CSS is written to a content-hashed file under `node_modules/.cache/usemotif/css` and imported by the module, so there is no virtual stylesheet to import.
+
 ## What it does
 
 Walks every JSX call to a motif-js primitive, resolves literal-arg style props against the active theme at build time, and rewrites the call site so the runtime resolver can short-circuit. The result: atomic CSS classes (web) or hoisted `StyleSheet.create` ids (React Native, via `@usemotif/compiler-metro`) replace the per-render resolver work.
