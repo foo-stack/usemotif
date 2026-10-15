@@ -21,7 +21,7 @@
 import { spawnSync } from 'node:child_process';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, posix } from 'node:path';
 import {
   assertNoWorkspaceRanges,
   buildVersionMap,
@@ -316,6 +316,48 @@ function checkCjsEntriesLoad(pkg, manifest, offenders, useFlag) {
 }
 
 /**
+ * Assert that what a `react-native` export condition serves is native code: it
+ * must not import `react-dom` or the web `@usemotif/react` barrel. A package
+ * whose React Native target reaches the web build bundles fine and fails only
+ * on a device, which is how headless shipped its web components to native.
+ */
+const WEB_ONLY_IMPORTS = /from\s*['"](react-dom(\/[^'"]*)?|@usemotif\/react)['"]/;
+
+function checkNativeTargets(pkg, manifest, destDir, tarball, offenders) {
+  for (const [key, node] of Object.entries(manifest.exports ?? {})) {
+    const targets = [];
+    collectJsTargets(node, key, false, targets);
+    for (const target of targets) {
+      if (!target.underReactNative) continue;
+      // Follow relative imports too: a barrel can stay clean while a chunk it
+      // loads pulls in the web build.
+      const queue = [target.path.replace(/^\.\//, '')];
+      const seen = new Set();
+      while (queue.length > 0) {
+        const file = queue.shift();
+        if (seen.has(file)) continue;
+        seen.add(file);
+        const content = readFromTarball(destDir, tarball, `package/${file}`);
+        if (content === null) {
+          offenders.push(`${pkg.name} \u2192 ${file} (react-native) is missing from the tarball.`);
+          continue;
+        }
+        const hit = WEB_ONLY_IMPORTS.exec(content);
+        if (hit !== null) {
+          offenders.push(
+            `${pkg.name} \u2192 ${target.path} is served to React Native but reaches "${hit[1]}" (in ${file}), which is web only.`,
+          );
+          break;
+        }
+        for (const m of content.matchAll(/(?:from|import)\s*['"](\.\.?\/[^'"]+)['"]/g)) {
+          queue.push(posix.normalize(posix.join(posix.dirname(file), m[1])));
+        }
+      }
+    }
+  }
+}
+
+/**
  * Assert a server-graph barrel holds nothing but `export ... from` lines and bare
  * chunk imports, so no client code can be inlined into it and run on the server.
  */
@@ -450,6 +492,7 @@ function main() {
         assertClientPackageIsClassified(pkg, offenders);
         checkUseClientEntries(pkg, manifest, destDir, tarball, offenders);
         checkReexportOnly(pkg, destDir, tarball, offenders);
+        checkNativeTargets(pkg, manifest, destDir, tarball, offenders);
         checkInternalClientChunks(pkg, destDir, tarball, offenders);
         checkCjsEntriesLoad(pkg, manifest, offenders, requireEsmOptOut);
         const clean = offenders.length === before;
