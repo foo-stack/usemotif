@@ -16,6 +16,10 @@
       ],
       "outputs": ["dist/**"]
     },
+    "@usemotif/ssr-react-router#build": {
+      "dependsOn": ["^build"],
+      "outputs": ["build/**"]
+    },
     "typecheck": {
       "dependsOn": ["^build"],
       "outputs": ["*.tsbuildinfo"]

@@ -237,3 +237,36 @@ jobs:
           name: visual-uikit-renders
           path: apps/uikit/test-results/
           retention-days: 7
+
+  ssr-react-router:
+    name: streaming SSR (React Router)
+    runs-on: ubuntu-latest
+
+    env:
+      ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Enable corepack
+        run: corepack enable
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: yarn
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Build packages and the fixture
+        run: yarn turbo run build --filter=@usemotif/ssr-react-router...
+
+      - name: Install Chromium
+        run: yarn workspace @usemotif/ssr-react-router exec playwright install --with-deps chromium
+
+      # Serves the production build and checks the streamed HTML and the hydrated page.
+      - name: Smoke test
+        run: yarn workspace @usemotif/ssr-react-router smoke

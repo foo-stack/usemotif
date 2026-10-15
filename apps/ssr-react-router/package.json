@@ -1,0 +1,34 @@
+{
+  "name": "@usemotif/ssr-react-router",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Streaming SSR fixture: React Router 7 framework mode with motif's style collector streamed into the HTML.",
+  "type": "module",
+  "scripts": {
+    "dev": "react-router dev --port 4100",
+    "build": "react-router build",
+    "start": "react-router-serve ./build/server/index.js",
+    "smoke": "node smoke.mjs",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf build .react-router .turbo"
+  },
+  "dependencies": {
+    "@react-router/node": "7.18.4",
+    "@react-router/serve": "7.18.4",
+    "@usemotif/react": "workspace:*",
+    "@usemotif/tokens": "workspace:*",
+    "isbot": "^5.1.32",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "react-router": "7.18.4"
+  },
+  "devDependencies": {
+    "@react-router/dev": "7.18.4",
+    "@types/node": "^25.6.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "playwright": "1.59.1",
+    "typescript": "^6.0.3",
+    "vite": "^6.4.2"
+  }
+}
