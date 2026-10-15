@@ -80,6 +80,12 @@ export interface TokenMap {
    * a bare number is emitted without a unit.
    */
   components?: TokenScale<TokenValue>;
+  /**
+   * How far the reader's text-size setting may enlarge text. `max: 1.5` lets a 16px font-size
+   * token grow to 24px and no further: on web through `min(1rem, 24px)`, on native as
+   * `maxFontSizeMultiplier` on `Text` and `Input`. Unset, text follows the setting without a cap.
+   */
+  fontScale?: { readonly max?: number };
   // Allow user-defined scales without breaking type-safety for known ones.
   [scale: string]: TokenScale<TokenValue> | Readonly<Record<string, AnimationToken>> | undefined;
 }
