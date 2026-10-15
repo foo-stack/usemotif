@@ -4,13 +4,17 @@ import type { ReactNode } from 'react';
 import { bannerRecipe } from '@usemotif/recipes';
 import { Box, Text } from 'usemotif';
 import { StatusActions } from './_status-actions.js';
+import { statusIcon } from './_status-icons.js';
 
 export type BannerIntent = 'neutral' | 'info' | 'success' | 'warning' | 'danger';
 
 export interface BannerProps {
   /** Tone - drives the tinted background, border, and text colour. Default `neutral`. */
   readonly intent?: BannerIntent;
-  /** Optional leading icon (inherits the intent colour). */
+  /**
+   * Leading icon, drawn in the intent colour. Defaults to the intent's status
+   * icon (none for `neutral`); pass `null` to show none.
+   */
   readonly icon?: ReactNode;
   /** Bold heading line. */
   readonly title?: ReactNode;
@@ -45,15 +49,16 @@ export function Banner({
   onDismiss,
 }: BannerProps) {
   const fg = `$colors.status.${intent}.fg`;
+  const shown = icon === undefined ? statusIcon(intent) : icon;
   return (
     <Box
       role={intent === 'danger' || intent === 'warning' ? 'alert' : 'status'}
       {...bannerRecipe.base}
       {...bannerRecipe.variants.intent[intent]}
     >
-      {icon !== undefined ? (
-        <Box flexShrink={0} display="inline-flex" alignItems="center">
-          {icon}
+      {shown !== null && shown !== false ? (
+        <Box flexShrink={0} display="inline-flex" alignItems="center" color={fg}>
+          {shown}
         </Box>
       ) : null}
       <Box flexGrow={1} display="flex" flexDirection="column" gap="$space.1">
