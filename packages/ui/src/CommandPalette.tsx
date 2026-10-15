@@ -47,6 +47,50 @@ function themedInput(placeholder: string) {
   );
 }
 
+const CRUMB_SEPARATOR = (
+  <Box as="span" mr="$space.1" color="$colors.text.muted" fontSize="$fontSizes.sm">
+    /
+  </Box>
+);
+const CRUMBS_STYLE = { padding: '8px 16px 0' } as const;
+const CRUMB_HOVER = { color: '$colors.text.default' } as const;
+
+// Module-scoped so it's a stable `renderCrumb` reference. Earlier pages are
+// buttons back to them; the current one is plain text.
+function renderThemedCrumb(
+  label: string,
+  info: { current: boolean; depth: number; onSelect: () => void },
+): ReactNode {
+  if (info.current) {
+    return (
+      <Box
+        as="span"
+        fontSize="$fontSizes.sm"
+        color="$colors.text.default"
+        fontWeight="$fontWeights.semibold"
+      >
+        {label}
+      </Box>
+    );
+  }
+  return (
+    <Box
+      as="button"
+      fontSize="$fontSizes.sm"
+      color="$colors.text.muted"
+      bg="transparent"
+      borderWidth={0}
+      p={0}
+      mr="$space.1"
+      cursor="pointer"
+      _hover={CRUMB_HOVER}
+      {...({ type: 'button', onClick: info.onSelect } as unknown as BoxProps)}
+    >
+      {label}
+    </Box>
+  );
+}
+
 // Module-scoped so it's a stable `renderItem` reference (lint: no-new-fn-as-prop).
 // The headless List owns the role=option wrapper + activation; the kit paints the
 // row (highlight, icon, label, shortcut hint).
@@ -126,6 +170,11 @@ export function CommandPalette({
         enterStyle={PALETTE_ENTER}
         transition={PALETTE_TRANSITION}
       >
+        <HeadlessCommandPalette.Breadcrumb
+          renderCrumb={renderThemedCrumb}
+          separator={CRUMB_SEPARATOR}
+          style={CRUMBS_STYLE}
+        />
         <HeadlessCommandPalette.Input>
           {
             themedInput(placeholder) as NonNullable<

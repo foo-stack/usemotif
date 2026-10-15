@@ -145,6 +145,7 @@ export type {
 } from './combobox.js';
 
 export {
+  CommandPaletteBreadcrumb,
   CommandPaletteInput,
   CommandPaletteList,
   CommandPaletteRoot,
@@ -153,6 +154,7 @@ export {
 } from './CommandPalette.js';
 export type {
   Command,
+  CommandPaletteBreadcrumbProps,
   CommandPaletteListProps,
   CommandPaletteRootProps,
 } from './CommandPalette.js';

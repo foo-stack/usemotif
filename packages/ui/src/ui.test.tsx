@@ -137,6 +137,9 @@ const CAL_RANGE = { start: new Date(2024, 0, 10), end: new Date(2024, 0, 12) };
 
 // Hoisted command list + tree data (inline array/object props would trip lint).
 function cmdNoop(): void {}
+const CMD_NESTED: ReadonlyArray<Command> = [
+  { id: 'theme', label: 'Theme', children: [{ id: 'dark', label: 'Dark', onSelect: () => {} }] },
+];
 const CMD_COMMANDS: ReadonlyArray<Command> = [
   { id: 'new', label: 'New File', shortcut: ['Mod', 'N'], onSelect: cmdNoop },
   { id: 'open', label: 'Open...', onSelect: cmdNoop },
@@ -1292,6 +1295,25 @@ describe('CommandPalette - themed ⌘K overlay over the headless behaviour', () 
   it('renders nothing while closed', () => {
     render(<CommandPalette commands={CMD_COMMANDS} open={false} />);
     expect(document.querySelector('[role="combobox"]')).toBeNull();
+  });
+
+  it('opens a nested page under a themed breadcrumb that goes back', () => {
+    render(<CommandPalette commands={CMD_NESTED} open />);
+    expect(document.querySelector('nav[aria-label="Command pages"]')).toBeNull();
+    const option = Array.from(document.querySelectorAll('[role="option"]')).find((o) =>
+      o.textContent?.includes('Theme'),
+    )!;
+    act(() => {
+      option.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
+    });
+    expect(document.body.textContent).toContain('Dark');
+    const nav = document.querySelector('nav[aria-label="Command pages"]')!;
+    expect(nav.textContent).toBe('Commands/Theme');
+    const back = nav.querySelector('button')!;
+    expect(look(back)).not.toBe('|');
+    act(() => back.click());
+    expect(document.querySelector('nav[aria-label="Command pages"]')).toBeNull();
+    expect(document.body.textContent).toContain('Theme');
   });
 });
 

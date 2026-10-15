@@ -297,3 +297,94 @@ describe('useCommandPaletteShortcut', () => {
     expect(fired).toBe(0);
   });
 });
+
+describe('CommandPalette - nested pages', () => {
+  function nestedCommands(onDark: () => void): Command[] {
+    return [
+      {
+        id: 'theme',
+        label: 'Change theme',
+        children: [
+          { id: 'light', label: 'Light', onSelect: () => {} },
+          { id: 'dark', label: 'Dark', onSelect: onDark },
+        ],
+      },
+      { id: 'save', label: 'Save', onSelect: () => {} },
+    ];
+  }
+
+  function NestedHarness({ onDark }: { onDark: () => void }): React.ReactElement {
+    const [open, setOpen] = useState(true);
+    return (
+      <>
+        <output data-testid="open">{String(open)}</output>
+        <CommandPalette.Root commands={nestedCommands(onDark)} open={open} onOpenChange={setOpen}>
+          <CommandPalette.Breadcrumb rootLabel="Home" />
+          <CommandPalette.Input />
+          <CommandPalette.List
+            renderItem={(cmd) => (
+              <span data-testid="cmd" data-id={cmd.id}>
+                {cmd.label}
+              </span>
+            )}
+          />
+        </CommandPalette.Root>
+      </>
+    );
+  }
+
+  const ids = (): (string | null)[] =>
+    Array.from(document.querySelectorAll('[data-testid="cmd"]'), (el) =>
+      el.getAttribute('data-id'),
+    );
+  const focusInput = (): void => act(() => document.querySelector('input')!.focus());
+  const isOpen = (): string | null | undefined =>
+    document.querySelector('[data-testid="open"]')?.textContent;
+
+  it('opens a page with Enter, scopes search to it, and runs a nested leaf', () => {
+    let ran = 0;
+    render(<NestedHarness onDark={() => (ran += 1)} />);
+    focusInput();
+    expect(document.querySelector('nav[aria-label="Command pages"]')).toBeNull();
+    press('Enter');
+    expect(ids()).toEqual(['light', 'dark']);
+    expect(isOpen()).toBe('true');
+    type('sav');
+    expect(ids()).toEqual([]);
+    type('dar');
+    expect(ids()).toEqual(['dark']);
+    press('Enter');
+    expect(ran).toBe(1);
+    expect(isOpen()).toBe('false');
+  });
+
+  it('goes back with Backspace on an empty input, and with Escape before closing', () => {
+    render(<NestedHarness onDark={() => {}} />);
+    focusInput();
+    press('Enter');
+    type('x');
+    press('Backspace');
+    expect(ids()).toEqual([]);
+    type('');
+    press('Backspace');
+    expect(ids()).toEqual(['theme', 'save']);
+    press('Enter');
+    press('Escape');
+    expect(ids()).toEqual(['theme', 'save']);
+    expect(isOpen()).toBe('true');
+    press('Escape');
+    expect(isOpen()).toBe('false');
+  });
+
+  it('shows the trail of pages, and a crumb goes back to its level', () => {
+    render(<NestedHarness onDark={() => {}} />);
+    focusInput();
+    press('Enter');
+    const nav = document.querySelector('nav[aria-label="Command pages"]')!;
+    expect(nav.textContent).toBe('Home/Change theme');
+    expect(nav.querySelector('[aria-current="page"]')?.textContent).toBe('Change theme');
+    act(() => nav.querySelector('button')!.click());
+    expect(ids()).toEqual(['theme', 'save']);
+    expect(document.querySelector('nav[aria-label="Command pages"]')).toBeNull();
+  });
+});
