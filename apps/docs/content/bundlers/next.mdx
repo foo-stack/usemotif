@@ -1,9 +1,9 @@
 ---
 title: Next.js
-description: Add the motif extractor to a Next.js App Router build through the webpack hook, and pair it with the streaming style registry.
+description: Add the motif extractor to a Next.js App Router build, under Turbopack or webpack, and pair it with the streaming style registry.
 diataxis: howto
-covers: ['motifExtract', 'MotifBundlerOptions']
-last_verified: 2026-05-18
+covers: ['motifExtract', 'MotifBundlerOptions', 'MotifTurbopackOptions']
+last_verified: 2026-10-15
 ---
 
 import { ArticleMeta, Callout, CodeBlock, Eyebrow, Lede } from '../../components/index.js';
@@ -13,9 +13,9 @@ import { ArticleMeta, Callout, CodeBlock, Eyebrow, Lede } from '../../components
 # Next.js
 
 <Lede>
-  Next.js builds with webpack, so the motif extractor wires in through `next.config` - the same
-  `@usemotif/compiler-web` package, called via its webpack entry. Pair it with the streaming style
-  registry so server-rendered pages arrive with their CSS already in place.
+  The motif extractor wires in through `next.config`: as a loader under Turbopack, the default for
+  `next dev` and `next build` since Next.js 16, or as a plugin under webpack. Pair it with the
+  streaming style registry so server-rendered pages arrive with their CSS already in place.
 </Lede>
 
 <ArticleMeta />
@@ -24,10 +24,38 @@ import { ArticleMeta, Callout, CodeBlock, Eyebrow, Lede } from '../../components
 
 <CodeBlock lang="bash" code={`yarn add -D @usemotif/compiler-web`} />
 
-## Add the plugin
+## Add the extractor under Turbopack
 
-`next.config` accepts a `webpack` function that receives the config before each compile. Push the
-plugin's webpack instance onto `config.plugins`.
+Turbopack runs webpack loaders, not webpack plugins, so the extractor ships a loader for it. Add a
+rule for your component files:
+
+<CodeBlock lang="ts" filename="next.config.ts" code={`import type { NextConfig } from 'next';
+
+const nextConfig: NextConfig = {
+  transpilePackages: ['@usemotif/react', '@usemotif/tokens'],
+  turbopack: {
+    rules: {
+      '*.tsx': { loaders: ['@usemotif/compiler-web/turbopack'] },
+      '*.jsx': { loaders: ['@usemotif/compiler-web/turbopack'] },
+    },
+  },
+};
+
+export default nextConfig;`} />
+
+The loader runs the same Babel extraction as the plugin, in `next dev` and `next build` alike. A
+loader sees one module at a time, so instead of one aggregated stylesheet each module's extracted
+CSS goes to a file named by a hash of its content, under `node_modules/.cache/usemotif/css`, and
+the module imports it. Modules with identical styles share one file, and there's nothing to import
+by hand. Pass loader options as `{ loader: '@usemotif/compiler-web/turbopack', options: { ... } }`;
+Turbopack sends them as JSON, so callbacks like `onCss` don't apply, and `cacheDir` moves the
+sheets.
+
+## Add the extractor under webpack
+
+For `next build --webpack`, or Next.js 15 and earlier, `next.config` accepts a `webpack` function
+that receives the config before each compile. Push the plugin's webpack instance onto
+`config.plugins`.
 
 <CodeBlock lang="ts" filename="next.config.ts" code={`import type { NextConfig } from 'next';
 import motif from '@usemotif/compiler-web';
@@ -66,7 +94,8 @@ them. (Native packages such as `@usemotif/react-native` never reach a Next build
 
 ## Ship the extracted CSS
 
-Import the virtual stylesheet once from the root layout. Next treats it like any other CSS import
+Under Turbopack there's nothing to do: each module already imports its own sheet. Under webpack,
+import the virtual stylesheet once from the root layout. Next treats it like any other CSS import
 and includes it in every route's `<head>`.
 
 <CodeBlock lang="tsx" filename="app/layout.tsx" code={`import 'virtual:motif-extract.css';
@@ -95,13 +124,6 @@ the same whether or not the compiler is wired in:
   Wire the registry first, confirm server-rendered pages are styled, then add the compiler as the
   optimisation pass on top. [Server-side rendering](/guides/server-rendering) is the full setup.
 </Callout>
-
-## Turbopack
-
-`next dev --turbo` does not run webpack, so the extractor does not fire under Turbopack dev. This
-is not a fault - pages still render correctly through the runtime path. The production
-`next build` uses webpack, so extraction lands in the deployed output. Develop on Turbopack if
-you prefer; ship with extraction either way.
 
 <Callout variant="info" title="Related">
   [Server-side rendering](/guides/server-rendering) sets up the streaming registry.

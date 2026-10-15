@@ -157,6 +157,9 @@ const CLIENT_ENTRY_POLICY = {
     reexportOnly: ['./dist/index.js'],
   },
   '@usemotif/react-native': { must: [], mustNot: ['.', './flash-list', './reanimated'] },
+  // A build tool: neither entry runs in a React tree. Its source mentions the directive only
+  // because the Turbopack loader's tests feed it client modules.
+  '@usemotif/compiler-web': { must: [], mustNot: ['.', './turbopack'] },
 };
 
 /**
