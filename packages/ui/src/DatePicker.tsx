@@ -2,63 +2,14 @@
 
 import {
   DatePicker as HeadlessDatePicker,
-  type CalendarDayInfo,
   type DatePickerProps as HeadlessDatePickerProps,
   type RangeDatePickerProps as HeadlessRangeDatePickerProps,
 } from '@usemotif/headless';
-import { type CSSProperties, type ReactNode } from 'react';
-import { Box } from 'usemotif';
+import type { CSSProperties } from 'react';
+import { renderThemedDay } from './_themed-day.js';
 
 export type DatePickerProps = HeadlessDatePickerProps;
 export type RangeDatePickerProps = HeadlessRangeDatePickerProps;
-
-const DAY_HOVER = { bg: '$colors.surface.interactive' } as const;
-
-/**
- * Stable `renderDay` reference (lint: no-new-fn-as-prop). Duplicated from
- * `Calendar` rather than imported so each kit entry stays an independent
- * code-split chunk. The headless DatePicker forwards it into its inner Calendar.
- */
-function renderThemedDay(info: CalendarDayInfo): ReactNode {
-  const { date, isToday, isOutsideMonth, isDisabled } = info;
-  // Days between a range's ends take a soft tint; the ends paint as selected.
-  const isBetween = info.isInRange && !info.isRangeStart && !info.isRangeEnd;
-  const isSelected = info.isSelected && !isBetween;
-  return (
-    <Box
-      display="flex"
-      alignItems="center"
-      justifyContent="center"
-      height={36}
-      m={2}
-      borderRadius="$radii.md"
-      fontSize="$fontSizes.sm"
-      borderWidth="$borderWidths.thin"
-      borderColor={isToday && !isSelected ? '$colors.action.primary.bg' : 'transparent'}
-      bg={
-        isSelected
-          ? '$colors.action.primary.bg'
-          : isBetween
-            ? '$colors.status.info.tint'
-            : 'transparent'
-      }
-      color={
-        isSelected
-          ? '$colors.text.inverse'
-          : isBetween
-            ? '$colors.status.info.fg'
-            : isDisabled || isOutsideMonth
-              ? '$colors.text.muted'
-              : '$colors.text.default'
-      }
-      opacity={isDisabled ? 0.5 : 1}
-      cursor={isDisabled ? 'not-allowed' : 'pointer'}
-      {...(isSelected || isBetween || isDisabled ? {} : { _hover: DAY_HOVER })}
-    >
-      {date.getDate()}
-    </Box>
-  );
-}
 
 // The inner grid lives inside the themed popover, so it carries no chrome of its
 // own (no border/bg) - just layout. The popover provides the raised surface.

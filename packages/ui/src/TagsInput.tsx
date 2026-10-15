@@ -6,6 +6,7 @@ import {
   type TagsInputProps as HeadlessTagsInputProps,
 } from '@usemotif/headless';
 import { useMemo, type CSSProperties, type ReactNode } from 'react';
+import { usePlatformStyle } from './_platform-style.js';
 import { Chip } from './Chip.js';
 import { LIST_STYLE, renderThemedOption } from './_list-surface.js';
 
@@ -55,6 +56,7 @@ function renderSuggestion(suggestion: string, info: { highlighted: boolean }): R
  * ```
  */
 export function TagsInput({ width = 320, disabled, ...rest }: TagsInputProps) {
+  const platformStyle = usePlatformStyle();
   const fieldStyle = useMemo<CSSProperties>(
     () => ({
       width,
@@ -72,9 +74,9 @@ export function TagsInput({ width = 320, disabled, ...rest }: TagsInputProps) {
     <HeadlessTagsInput
       {...rest}
       {...(disabled !== undefined ? { disabled } : {})}
-      style={fieldStyle}
-      inputStyle={INPUT_STYLE}
-      listStyle={LIST_STYLE}
+      style={platformStyle(fieldStyle)}
+      inputStyle={platformStyle(INPUT_STYLE)}
+      listStyle={platformStyle(LIST_STYLE)}
       renderTag={renderChip}
       renderSuggestion={renderSuggestion}
     />

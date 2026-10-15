@@ -6,6 +6,7 @@ import {
 } from '@usemotif/headless';
 import type { CSSProperties, ReactElement } from 'react';
 import { Box } from 'usemotif';
+import { platformText } from './_platform-text.js';
 
 export type RatingInputProps = Omit<HeadlessRatingInputProps, 'renderItem' | 'style'>;
 
@@ -23,7 +24,10 @@ function renderThemedStar(info: { index: number; filled: boolean; half: boolean 
       lineHeight={1}
       color={on ? '$colors.status.warning.fg' : '$colors.border.strong'}
     >
-      {on ? '★' : '☆'}
+      {platformText(on ? '★' : '☆', {
+        fontSize: 22,
+        color: on ? '$colors.status.warning.fg' : '$colors.border.strong',
+      })}
     </Box>
   );
 }

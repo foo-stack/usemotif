@@ -2,8 +2,11 @@
 
 import { MultiSelect as HeadlessMultiSelect, type ComboboxOption } from '@usemotif/headless';
 import type { ReactNode } from 'react';
-import { Box, type BoxProps } from 'usemotif';
+import { Box, Pressable } from 'usemotif';
+import { platformText } from './_platform-text.js';
+import { ThemedInput } from './_themed-input.js';
 import { LIST_STYLE, renderThemedGroupLabel } from './_list-surface.js';
+import { usePlatformStyle } from './_platform-style.js';
 
 export interface MultiSelectProps {
   readonly options: ReadonlyArray<ComboboxOption>;
@@ -35,24 +38,23 @@ function renderThemedChip(
       color="$colors.text.default"
       fontSize="$fontSizes.sm"
     >
-      {opt.label}
-      <Box
-        as="button"
+      {platformText(opt.label, CHIP_TEXT)}
+      <Pressable
         display="inline-flex"
         alignItems="center"
         justifyContent="center"
         width={16}
         height={16}
+        p={0}
         borderWidth={0}
         borderRadius="$radii.full"
         bg="transparent"
         color="$colors.text.muted"
-        cursor="pointer"
         aria-label="Remove"
-        {...({ type: 'button', onClick: info.remove } as unknown as BoxProps)}
+        onPress={info.remove}
       >
-        ×
-      </Box>
+        {platformText('×', MUTED_TEXT)}
+      </Pressable>
     </Box>
   );
 }
@@ -75,26 +77,35 @@ function renderThemedMultiOption(
       cursor={opt.disabled === true ? 'not-allowed' : 'pointer'}
     >
       <Box as="span" width={14} color="$colors.action.primary.bg">
-        {info.selected ? '✓' : ''}
+        {platformText(info.selected ? '✓' : '', MARK_TEXT)}
       </Box>
-      {opt.label}
+      {platformText(opt.label, {
+        fontSize: '$fontSizes.sm',
+        color: opt.disabled === true ? '$colors.text.muted' : '$colors.text.default',
+      })}
     </Box>
   );
 }
 
 // A borderless input that grows to fill the field (the field Box carries the
 // border); the headless clones the combobox handlers onto it.
+const CHIP_TEXT = { color: '$colors.text.default', fontSize: '$fontSizes.sm' } as const;
+const MUTED_TEXT = { color: '$colors.text.muted' } as const;
+const MARK_TEXT = { color: '$colors.action.primary.bg' } as const;
+const BARE_INPUT = { outline: 'none' } as const;
+
 function bareInput(placeholder: string) {
   return (
-    <Box
-      as="input"
+    <ThemedInput
       flexGrow={1}
       minWidth={80}
       borderWidth={0}
       bg="transparent"
       color="$colors.text.default"
       fontSize="$fontSizes.md"
-      {...({ type: 'text', placeholder, style: { outline: 'none' } } as unknown as BoxProps)}
+      type="text"
+      placeholder={placeholder}
+      style={BARE_INPUT}
     />
   );
 }
@@ -117,6 +128,7 @@ export function MultiSelect({
   maxSelections,
   width = 280,
 }: MultiSelectProps) {
+  const platformStyle = usePlatformStyle();
   return (
     <HeadlessMultiSelect.Root
       options={options}
@@ -149,7 +161,7 @@ export function MultiSelect({
         </HeadlessMultiSelect.Input>
       </Box>
       <HeadlessMultiSelect.List
-        style={LIST_STYLE}
+        style={platformStyle(LIST_STYLE)}
         renderOption={renderThemedMultiOption}
         renderGroupLabel={renderThemedGroupLabel}
       />

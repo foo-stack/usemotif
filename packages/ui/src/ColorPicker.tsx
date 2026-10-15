@@ -5,6 +5,7 @@ import {
   type ColorPickerProps as HeadlessColorPickerProps,
 } from '@usemotif/headless';
 import type { CSSProperties } from 'react';
+import { usePlatformStyle } from './_platform-style.js';
 
 export type ColorPickerProps = Omit<
   HeadlessColorPickerProps,
@@ -64,16 +65,17 @@ const EYEDROPPER_STYLE: CSSProperties = {
  * ```
  */
 export function ColorPicker(props: ColorPickerProps) {
+  const platformStyle = usePlatformStyle();
   return (
     <HeadlessColorPicker
       {...props}
-      style={ROOT_STYLE}
-      saturationValueStyle={SV_STYLE}
-      saturationValueThumbStyle={SV_THUMB_STYLE}
-      hueSliderStyle={SLIDER_STYLE}
-      alphaSliderStyle={SLIDER_STYLE}
-      swatchStyle={SWATCH_STYLE}
-      eyeDropperStyle={EYEDROPPER_STYLE}
+      style={platformStyle(ROOT_STYLE)}
+      saturationValueStyle={platformStyle(SV_STYLE)}
+      saturationValueThumbStyle={platformStyle(SV_THUMB_STYLE)}
+      hueSliderStyle={platformStyle(SLIDER_STYLE)}
+      alphaSliderStyle={platformStyle(SLIDER_STYLE)}
+      swatchStyle={platformStyle(SWATCH_STYLE)}
+      eyeDropperStyle={platformStyle(EYEDROPPER_STYLE)}
     />
   );
 }

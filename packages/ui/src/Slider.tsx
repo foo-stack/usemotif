@@ -5,6 +5,7 @@ import {
   type SliderProps as HeadlessSliderProps,
 } from '@usemotif/headless';
 import { useMemo, type CSSProperties } from 'react';
+import { usePlatformStyle } from './_platform-style.js';
 import { labelRoom, MARK_LABEL_STYLE, MARK_STYLE } from './_slider-marks.js';
 
 export interface SliderProps extends Omit<
@@ -48,6 +49,7 @@ const THUMB_STYLE: CSSProperties = {
  * ```
  */
 export function Slider({ width = 200, ...rest }: SliderProps) {
+  const platformStyle = usePlatformStyle();
   const disabled = rest.disabled ?? false;
   const trackStyle = useMemo<CSSProperties>(
     () => ({
@@ -64,11 +66,11 @@ export function Slider({ width = 200, ...rest }: SliderProps) {
   return (
     <HeadlessSlider
       {...rest}
-      style={trackStyle}
-      fillStyle={FILL_STYLE}
-      thumbStyle={THUMB_STYLE}
-      markStyle={MARK_STYLE.horizontal}
-      markLabelStyle={MARK_LABEL_STYLE.horizontal}
+      style={platformStyle(trackStyle)}
+      fillStyle={platformStyle(FILL_STYLE)}
+      thumbStyle={platformStyle(THUMB_STYLE)}
+      markStyle={platformStyle(MARK_STYLE.horizontal)}
+      markLabelStyle={platformStyle(MARK_LABEL_STYLE.horizontal)}
     />
   );
 }
