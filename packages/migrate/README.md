@@ -2,10 +2,14 @@
 
 > Codemod toolkit for motif-js.
 
-Rewrites motif-js import specifiers between major versions. Ships two transforms:
+Rewrites motif-js import specifiers between major versions, and moves code over from other styling libraries. Ships four transforms:
 
 - **`rename-v3`** (primary) - Rewrites v1 or v2 specifiers to their v3 (`@usemotif/*`) names in one pass.
 - **`rename-v2`** (back-compat) - Rewrites v1 specifiers to their v2 names. Use this before `rename-v3` if your project is still on v1 and contains cross-platform code (see [the gotcha](#the-motif-jsreact-ambiguity-for-v1-consumers) below).
+- **`from-styled-components`** - Converts styled-components templates with no interpolations to `styled()` configs.
+- **`from-tamagui`** - Moves Tamagui imports, state props and `styled()` configs to motif.
+
+The `from-*` transforms leave what they can't convert under a `// usemotif-migrate:` comment that says why. See [Migrate](https://usemotif.dev/reference/migrate#migrating-from-another-library) for what each converts.
 
 ## Use
 

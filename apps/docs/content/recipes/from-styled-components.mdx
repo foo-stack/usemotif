@@ -61,6 +61,13 @@ A few things do not have a direct equivalent. They each have a workaround.
   the same problem with different APIs. See [Server-side rendering](/guides/server-rendering) for
   the motif side.
 
+## Run the codemod
+
+<CodeBlock lang="bash" code={`npx @usemotif/migrate from-styled-components src/`} />
+
+It converts what maps directly and marks the rest with a `// usemotif-migrate:` comment saying why.
+See [Migrate](/reference/migrate#migrating-from-another-library) for what it covers.
+
 ## Migrate a component
 
 A typical styled-components button:

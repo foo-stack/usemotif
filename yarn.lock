@@ -7090,6 +7090,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@usemotif/migrate@workspace:packages/migrate"
   dependencies:
+    "@babel/parser": "npm:^7.29.0"
     "@types/node": "npm:^25.6.0"
     fast-glob: "npm:^3.3.2"
     tsup: "npm:^8.5.1"
