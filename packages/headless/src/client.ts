@@ -202,6 +202,8 @@ export type {
   TreeViewProps,
 } from './specialized.js';
 
+export { DataTable } from './data-table.js';
+export type { DataTableColumn, DataTableProps, SortDirection, SortState } from './data-table.js';
 export { PinInput } from './pin-input.js';
 export { Listbox } from './listbox.js';
 export type { ListboxBaseProps, ListboxProps, MultiListboxProps } from './listbox.js';

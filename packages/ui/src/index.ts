@@ -8,6 +8,12 @@
 
 export { Card } from './Card.namespace.js';
 export { Badge, type BadgeProps } from './Badge.js';
+export {
+  DataTable,
+  type DataTableColumn,
+  type DataTableProps,
+  type SortDirection,
+} from './DataTable.js';
 export { Button, type ButtonProps } from './Button.js';
 export { TextField, type TextFieldProps } from './TextField.js';
 export { Spinner, type SpinnerProps } from './Spinner.js';

@@ -17,6 +17,7 @@ const meta: MetaFile = {
   separator: 'Separator',
   progress: 'Progress',
   'progress-circle': 'ProgressCircle',
+  'data-table': 'DataTable',
 };
 
 export default meta;
