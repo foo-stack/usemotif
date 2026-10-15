@@ -3,7 +3,7 @@ title: ColorPicker
 description: A headless HSV colour picker - a saturation-value plane, hue and alpha sliders, and a hex/rgb/hsl format toggle.
 diataxis: reference
 covers: ['ColorPicker', 'ColorPickerProps', 'ColorFormat', 'parseColor', 'formatColor']
-last_verified: 2026-05-15
+last_verified: 2026-10-15
 ---
 
 import {
@@ -75,6 +75,17 @@ yourself.
       type: 'readonly ColorFormat[]',
       default: "['hex', 'rgb', 'hsl']",
       description: 'Which formats the toggle offers. Pass `[]` to hide the toggle.',
+    },
+    {
+      name: 'swatches',
+      type: 'readonly string[]',
+      description: 'Preset colours under the picker, as a radio group: one tab stop, the arrow keys move and select, Home and End jump to the ends, and the swatch matching the current colour is checked. A pick keeps the current alpha.',
+    },
+    {
+      name: 'eyeDropper',
+      type: 'boolean',
+      default: 'false',
+      description: 'Adds a button that picks a colour from anywhere on screen through the browser EyeDropper API. It only appears where the browser has the API, checked after mount so server and client render the same; a dismissed pick keeps the colour. React Native has no eyedropper.',
     },
     {
       name: 'disabled',
