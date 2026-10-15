@@ -134,6 +134,11 @@ export interface ExtractWebOptions {
    * every emitted rule is wrapped in `@layer <name>`.
    */
   readonly cssLayer?: string | undefined;
+  /**
+   * Emit one shared class per declaration instead of inline styles and a class per element.
+   * Declarations that override another on the same element keep the per-element output.
+   */
+  readonly atomic?: boolean | undefined;
 }
 
 export interface WebExtractionResult {

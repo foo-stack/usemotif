@@ -4,6 +4,7 @@ import {
   buildPseudoCss,
   hashAtRules,
   hashPseudoRules,
+  hashString,
   isMotionProp,
   liftPseudoOverriddenBaseProps,
   resolveResponsiveStylesToVars,
@@ -12,7 +13,9 @@ import {
   resolveStylesToVars,
   resolveTransitionToVars,
   styleProps,
+  type AtRule,
   type PseudoRule,
+  type ResolvedStyle,
   type StylePropDefinition,
   type TransitionValue,
 } from '@usemotif/core';
@@ -76,6 +79,77 @@ function bagConflictsWithDynamic(
     if (conflictsWith(key, dynamicFamilies)) return true;
   }
   return false;
+}
+
+interface Atomized {
+  readonly base: ResolvedStyle;
+  readonly atRules: readonly AtRule[];
+  readonly pseudoRules: readonly PseudoRule[];
+  readonly classNames: readonly string[];
+  readonly css: readonly string[];
+}
+
+/**
+ * Atomic output: one shared `a-<hash>` class per declaration, so a declaration repeated across
+ * elements ships once. A declaration becomes an atom only when no other declaration on the
+ * element touches its property family. Two rules that override each other on the same element
+ * (`p` and `pt`, a base value and its breakpoint, a base value and its `:hover`) would be ordered
+ * by wherever their shared atoms first landed in the sheet, so those keep the per-element path.
+ */
+function atomize(
+  base: ResolvedStyle,
+  atRules: readonly AtRule[],
+  pseudoRules: readonly PseudoRule[],
+  layer: string | undefined,
+): Atomized {
+  const uses = new Map<string, number>();
+  const styles = [base, ...atRules.map((r) => r.style), ...pseudoRules.map((r) => r.style)];
+  for (const style of styles) {
+    for (const key in style) {
+      const family = familyOfCssProperty(key);
+      uses.set(family, (uses.get(family) ?? 0) + 1);
+    }
+  }
+  const classNames: string[] = [];
+  const css: string[] = [];
+  // Splits one style into the declarations kept on the element and atoms for the rest.
+  const split = (
+    style: ResolvedStyle,
+    where: readonly string[],
+    build: (cn: string, style: ResolvedStyle) => string,
+  ): ResolvedStyle => {
+    const kept: Record<string, string | number> = {};
+    for (const [key, value] of Object.entries(style)) {
+      if (uses.get(familyOfCssProperty(key)) !== 1) {
+        kept[key] = value;
+        continue;
+      }
+      const cn = `a-${hashString(JSON.stringify([...where, key, value, layer ?? '']))}`;
+      classNames.push(cn);
+      css.push(build(cn, { [key]: value }));
+    }
+    return kept;
+  };
+  const keptBase = split(base, [''], (cn, style) =>
+    buildAtRulesCss(cn, [{ atRule: '', style }], layer),
+  );
+  const keptAt = atRules
+    .map((r) => ({
+      ...r,
+      style: split(r.style, [r.atRule], (cn, style) =>
+        buildAtRulesCss(cn, [{ atRule: r.atRule, style }], layer),
+      ),
+    }))
+    .filter((r) => Object.keys(r.style).length > 0);
+  const keptPseudo = pseudoRules
+    .map((r) => ({
+      ...r,
+      style: split(r.style, [r.pseudo, r.at ?? ''], (cn, style) =>
+        buildPseudoCss(cn, [{ ...r, style }], layer),
+      ),
+    }))
+    .filter((r) => Object.keys(r.style).length > 0);
+  return { base: keptBase, atRules: keptAt, pseudoRules: keptPseudo, classNames, css };
 }
 
 /**
@@ -252,7 +326,9 @@ export function extractWeb(
 
   // Materialise the pseudo rules in the runtime's canonical order. Array
   // sort is stable, so any equal-rank entries keep their source order.
-  const pseudoRules: PseudoRule[] = rankedPseudo.sort((a, b) => a.rank - b.rank).map((r) => r.rule);
+  let pseudoRules: readonly PseudoRule[] = rankedPseudo
+    .sort((a, b) => a.rank - b.rank)
+    .map((r) => r.rule);
 
   // Lift any base prop that a state-pseudo bag also overrides out of the
   // inline style and into the base class block - the same step the runtime
@@ -263,20 +339,28 @@ export function extractWeb(
   // (which includes the lifted prop), breaking compiled/runtime dedupe.
   // Guard on pseudoRules to mirror the runtime's `selectorRules !== undefined`.
   let effectiveBase = baseStyle;
-  let effectiveAtRules = atRules;
+  let effectiveAtRules: readonly AtRule[] = atRules;
   if (pseudoRules.length > 0) {
     const lifted = liftPseudoOverriddenBaseProps(baseStyle, pseudoRules, atRules);
     effectiveBase = lifted.inlineBase;
     effectiveAtRules = lifted.atRules;
   }
 
-  const inlineStyle =
+  let inlineStyle: ResolvedStyle =
     transitionValue === undefined
       ? effectiveBase
       : { ...effectiveBase, transition: transitionValue };
 
   const classNames: string[] = [];
   const cssChunks: string[] = [];
+  if (options.atomic === true) {
+    const atoms = atomize(inlineStyle, effectiveAtRules, pseudoRules, layer);
+    inlineStyle = atoms.base;
+    effectiveAtRules = atoms.atRules;
+    pseudoRules = atoms.pseudoRules;
+    classNames.push(...atoms.classNames);
+    cssChunks.push(...atoms.css);
+  }
   if (effectiveAtRules.length > 0) {
     const cn = hashAtRules(effectiveAtRules, layer);
     classNames.push(cn);

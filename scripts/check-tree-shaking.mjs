@@ -167,7 +167,8 @@ const targets = [
     // Bumped when styled() variants took responsive values.
     // Bumped when responsive values resolve the @contrast-style preference keys (the store on native).
     // Bumped for fallback chains in token refs and the recipes' component token paths.
-    budget: 7100,
+    // Bumped for atomic output (the per-declaration split in extractWeb).
+    budget: 7400,
   },
   {
     name: '@usemotif/ui - Card only',
