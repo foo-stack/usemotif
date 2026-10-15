@@ -28,6 +28,11 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
+    },
+    "./visual": {
+      "types": "./dist/visual.d.ts",
+      "import": "./dist/visual.js",
+      "require": "./dist/visual.cjs"
     }
   },
   "publishConfig": {
@@ -42,8 +47,17 @@
     "@usemotif/core": "workspace:*"
   },
   "devDependencies": {
+    "@playwright/test": "^1.59.1",
     "tsup": "^8.5.1",
     "typescript": "^6.0.3",
     "vitest": "^4.1.5"
+  },
+  "peerDependencies": {
+    "@playwright/test": ">=1.40.0"
+  },
+  "peerDependenciesMeta": {
+    "@playwright/test": {
+      "optional": true
+    }
   }
 }
