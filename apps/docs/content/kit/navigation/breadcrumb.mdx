@@ -67,6 +67,20 @@ With a custom separator and label:
   <Breadcrumb.Item>Install</Breadcrumb.Item>
 </Breadcrumb>`} />
 
+A long trail, folded. Past `maxItems` the first crumb and the last `maxItems - 1` stay, and the
+middle ones fold into a `...` button that opens a menu of them. Pass `onNavigate` so a folded
+crumb goes through your router:
+
+<CodeBlock lang="tsx" code={`<Breadcrumb maxItems={3} onNavigate={(href) => router.push(href)}>
+  <Breadcrumb.Item href="/">Home</Breadcrumb.Item>
+  <Breadcrumb.Item href="/teams">Teams</Breadcrumb.Item>
+  <Breadcrumb.Item href="/teams/design">Design</Breadcrumb.Item>
+  <Breadcrumb.Item href="/teams/design/projects">Projects</Breadcrumb.Item>
+  <Breadcrumb.Item>Q4 launch</Breadcrumb.Item>
+</Breadcrumb>`} />
+
+That shows Home, `...`, Projects, and Q4 launch; the menu holds Teams and Design.
+
 ## API
 
 ### Breadcrumb
@@ -86,6 +100,17 @@ With a custom separator and label:
       name: 'separator',
       type: 'ReactNode',
       description: 'Rendered between items. Defaults to a muted chevron.',
+    },
+    {
+      name: 'maxItems',
+      type: 'number',
+      description: 'The most crumbs shown. Past it, the middle crumbs fold into a `...` menu button labelled "Show hidden breadcrumbs". At least 2.',
+    },
+    {
+      name: 'onNavigate',
+      type: '(href: string) => void',
+      default: 'location.assign',
+      description: 'Follows a folded crumb picked from the menu. Pass your router\'s navigate for client-side routing.',
     },
     {
       name: 'children',
