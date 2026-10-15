@@ -161,6 +161,19 @@ surfaces what was inlined, erased, and bailed per file. The default stays `safe`
 compiler never changes output; aggression is a separate, explicit choice. See [Compiler
 optimization levels](/adr/0010-optimization-levels).
 
+## Persistent cache
+
+`cache: true` keeps each module's compiled result on disk, in
+`node_modules/.cache/usemotif/compile`, and replays it, extracted CSS included, while the module's
+source, the compiler options and the compiler itself are unchanged. Pass a path instead of `true`
+to put the cache elsewhere, such as a directory a CI cache step restores.
+
+<CodeBlock lang="ts" code={`motif.vite({ cache: true })`} />
+
+Transforming 300 generated components took 282 ms cold and 22 ms from the cache on an Apple
+silicon laptop. A module is compiled afresh, and not cached, while `onBail` or
+`onAggressiveReport` is set, since those report on a transform as it runs.
+
 ## Atomic output
 
 `atomic: true` compiles each static declaration to its own shared class instead of an inline

@@ -1,3 +1,7 @@
+import { createHash } from 'node:crypto';
+import { mkdir, readFile, rename, stat, writeFile } from 'node:fs/promises';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { transformAsync } from '@babel/core';
 import motifBabelPlugin, { type MotifBabelOptions } from '@usemotif/compiler-babel';
 import type { NormalizedOutputOptions, OutputBundle } from 'rollup';
@@ -26,6 +30,37 @@ export interface MotifBundlerOptions extends MotifBabelOptions {
    * pass the relevant override here.
    */
   readonly exclude?: ReadonlyArray<string | RegExp>;
+  /**
+   * Keep each module's result on disk and replay it, CSS included, while the module's source,
+   * the options, and the compiler are unchanged. `true` uses
+   * `node_modules/.cache/usemotif/compile`; a string names another directory. Skipped for a
+   * module while `onBail` or `onAggressiveReport` is set, since those need the transform to run.
+   */
+  readonly cache?: boolean | string;
+}
+
+interface CachedModule {
+  readonly code: string;
+  readonly map: unknown;
+  readonly css: readonly string[];
+}
+
+/** What the compiler itself is: a cached result from another build of it is stale. */
+async function compilerStamp(): Promise<string> {
+  const self = fileURLToPath(import.meta.url);
+  const pkg = JSON.parse(await readFile(join(dirname(self), '..', 'package.json'), 'utf8')) as {
+    version: string;
+  };
+  return `${pkg.version}:${(await stat(self)).mtimeMs}`;
+}
+
+/** The options that change the output; callbacks and file filters do not. */
+function cacheableOptions(options: MotifBundlerOptions): string {
+  return JSON.stringify(options, (key, value: unknown) =>
+    typeof value === 'function' || key === 'include' || key === 'exclude' || key === 'cache'
+      ? undefined
+      : value,
+  );
 }
 
 const DEFAULT_INCLUDE: readonly RegExp[] = [/\.[mc]?[jt]sx?$/];
@@ -116,6 +151,28 @@ export const motifExtract: UnpluginInstance<MotifBundlerOptions | undefined, fal
     // duplicates. Keying by id means a re-transform overwrites that
     // module's entry, and a module edited to emit no CSS clears it.
     const cssByModule = new Map<string, string[]>();
+    const cacheDir =
+      options.cache === true
+        ? join(process.cwd(), 'node_modules', '.cache', 'usemotif', 'compile')
+        : typeof options.cache === 'string'
+          ? options.cache
+          : null;
+    const optionsKey = cacheableOptions(options);
+    let stamp: Promise<string> | undefined;
+    const cacheFile = async (id: string, code: string): Promise<string | null> => {
+      if (
+        cacheDir === null ||
+        options.onBail !== undefined ||
+        options.onAggressiveReport !== undefined
+      ) {
+        return null;
+      }
+      stamp ??= compilerStamp();
+      const key = createHash('sha256')
+        .update(`${await stamp}\0${id}\0${optionsKey}\0${code}`)
+        .digest('hex');
+      return join(cacheDir, `${key}.json`);
+    };
 
     // Set once a Vite dev server is attached (serve mode). In dev there is no
     // `generateBundle` pass, so the virtual module must serve the aggregated
@@ -215,6 +272,21 @@ export const motifExtract: UnpluginInstance<MotifBundlerOptions | undefined, fal
         // longer extracts any CSS ends up with an empty entry.
         const moduleCss: string[] = [];
         cssByModule.set(id, moduleCss);
+        const cached = await cacheFile(id, code);
+        if (cached !== null) {
+          const hit = await readFile(cached, 'utf8').then(
+            (text) => JSON.parse(text) as CachedModule,
+            () => null,
+          );
+          if (hit !== null) {
+            for (const css of hit.css) {
+              moduleCss.push(css);
+              options.onCss?.(css, id);
+            }
+            invalidateVirtualCss();
+            return { code: hit.code, map: hit.map as never };
+          }
+        }
         let babelResult: Awaited<ReturnType<typeof transformAsync>>;
         try {
           babelResult = await transformAsync(code, {
@@ -251,6 +323,20 @@ export const motifExtract: UnpluginInstance<MotifBundlerOptions | undefined, fal
         // Dev: this module's CSS contribution may have changed - refresh the
         // virtual stylesheet on the client.
         invalidateVirtualCss();
+        if (cached !== null) {
+          const entry: CachedModule = {
+            code: babelResult.code,
+            map: babelResult.map ?? null,
+            css: moduleCss,
+          };
+          // Written beside its final name and renamed into place, so a concurrent build never
+          // reads half a file. A failed write only costs the next build a cache miss.
+          const temp = `${cached}.${process.pid}.tmp`;
+          await mkdir(dirname(cached), { recursive: true })
+            .then(() => writeFile(temp, JSON.stringify(entry)))
+            .then(() => rename(temp, cached))
+            .catch(() => {});
+        }
         return {
           code: babelResult.code,
           map: babelResult.map ?? null,

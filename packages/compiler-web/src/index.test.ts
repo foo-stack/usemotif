@@ -236,3 +236,47 @@ describe('@usemotif/compiler-web', () => {
     expect(forward).toBe(reverse);
   });
 });
+
+describe('persistent cache', () => {
+  const source = `import { Box } from '@usemotif/react';\nexport const X = () => <Box _hover={{ opacity: 0.5 }} />;\n`;
+
+  async function run(options: Parameters<typeof motifExtract.vite>[0], code = source) {
+    const css: string[] = [];
+    const plugin = motifExtract.vite({ ...options, onCss: (c) => css.push(c) });
+    const inst = Array.isArray(plugin) ? plugin[0]! : plugin;
+    const transform =
+      typeof inst.transform === 'function'
+        ? inst.transform
+        : (inst.transform as { handler: (code: string, id: string) => unknown }).handler;
+    const result = await transform.call(
+      { warn() {}, error() {} } as unknown as ThisParameterType<typeof transform>,
+      code,
+      '/abs/path/cached.tsx',
+    );
+    return { code: (result as { code: string }).code, css };
+  }
+
+  it('replays a stored result, CSS included, and misses when the source or options change', async () => {
+    const { mkdtempSync, readdirSync, readFileSync, writeFileSync } = await import('node:fs');
+    const { tmpdir } = await import('node:os');
+    const { join } = await import('node:path');
+    const dir = mkdtempSync(join(tmpdir(), 'motif-cache-'));
+
+    const first = await run({ cache: dir });
+    const [file] = readdirSync(dir);
+    expect(file).toMatch(/^[0-9a-f]{64}\.json$/);
+    expect(JSON.parse(readFileSync(join(dir, file!), 'utf8')).css).toEqual(first.css);
+
+    // Mark the stored entry, so a second build shows it came from disk rather than from Babel.
+    const entry = JSON.parse(readFileSync(join(dir, file!), 'utf8'));
+    writeFileSync(join(dir, file!), JSON.stringify({ ...entry, code: '/* from cache */' }));
+    const second = await run({ cache: dir });
+    expect(second.code).toBe('/* from cache */');
+    expect(second.css).toEqual(first.css);
+
+    expect((await run({ cache: dir }, `${source}// edited\n`)).code).not.toBe('/* from cache */');
+    expect((await run({ cache: dir, atomic: true })).code).not.toBe('/* from cache */');
+    expect((await run({ cache: dir, onBail: () => {} })).code).not.toBe('/* from cache */');
+    expect(readdirSync(dir)).toHaveLength(3);
+  });
+});
