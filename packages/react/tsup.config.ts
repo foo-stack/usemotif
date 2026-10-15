@@ -29,6 +29,8 @@ async function prependUseClient(): Promise<void> {
     'dist/svg.cjs',
     'dist/virtualizers/tanstack.js',
     'dist/virtualizers/tanstack.cjs',
+    'dist/devtools.js',
+    'dist/devtools.cjs',
   ]) {
     const content = await readFile(file, 'utf8');
     if (!content.startsWith(DIRECTIVE)) {
@@ -56,6 +58,8 @@ export default defineConfig({
     // Server Component primitives. No directive: they render on the server, and reach the
     // client primitives only through the rewritten `_client-entry` below.
     rsc: 'src/rsc.tsx',
+    // The dev-only inspector. A client component, so it carries the directive.
+    devtools: 'src/devtools.tsx',
     'virtualizers/tanstack': 'src/virtualizers/tanstack.tsx',
   },
   format: ['esm', 'cjs'],

@@ -128,7 +128,7 @@ const DIRECTIVE = "'use client'";
 const CLIENT_ENTRY_POLICY = {
   usemotif: { must: ['.'], mustNot: [] },
   '@usemotif/react': {
-    must: ['.', './svg', './tanstack-virtual'],
+    must: ['.', './svg', './tanstack-virtual', './devtools'],
     mustNot: ['./server', './testing', './rsc'],
   },
   '@usemotif/headless': {
