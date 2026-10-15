@@ -1,0 +1,43 @@
+---
+title: Theme builder
+description: Pick your brand colours, see the kit in light and dark with contrast checks, and take the theme away as a createTheme module or W3C Design Tokens.
+diataxis: howto
+covers: []
+last_verified: 2026-10-15
+---
+
+import { ArticleMeta, Eyebrow, Lede, ThemeBuilder } from '../../components/index.js';
+
+<Eyebrow>Guides</Eyebrow>
+
+# Theme builder
+
+<Lede>
+  Set the handful of colours a brand usually changes, watch the `@usemotif/ui` kit take them in
+  light and dark, and copy the result as a theme module or as W3C Design Tokens.
+</Lede>
+
+<ArticleMeta />
+
+<ThemeBuilder />
+
+## What it changes
+
+The builder starts from the default `lightTheme` and `darkTheme` presets and overrides a few
+semantic tokens in each: `surface.base`, `text.default`, `text.muted`, and the primary action's
+background, text and hover (a shade of the background). `radii.md` sets the corner radius. Every
+other token keeps the preset's value, so status colours, spacing and type stay as they ship.
+
+## Contrast
+
+Each scheme checks three pairs against WCAG AA for body text, 4.5:1: text on the surface, muted
+text on the surface, and the primary button's text on its background. A pair below that is flagged
+under its preview.
+
+## Taking it away
+
+`theme.ts` rebuilds both themes with `extendTheme` over the presets, so it stays small and picks up
+preset fixes on upgrade. `tokens.json` is the full theme of each scheme as W3C Design Tokens, with
+the preset's references kept as aliases. Shadows and animation presets have no W3C type and are
+left out. To turn that file back into a theme, run
+[`import-tokens`](/guides/import-design-tokens) on one scheme's tokens.
