@@ -1,3 +1,4 @@
+import { accessibleFacts } from './a11y.js';
 import type { RendererOutput } from './conformance.js';
 
 /**
@@ -175,6 +176,58 @@ export const motifMatchers = {
             }\nFull ${bucketName}["${scope}"]: ${fmt(decls)}`,
     };
   },
+
+  /**
+   * Assert the role assistive technology reports, in ARIA terms, for a web DOM element or a
+   * React Native test instance: `<button>` and `accessibilityRole="button"` are both `button`,
+   * `<h2>` and `accessibilityRole="header"` both `heading`.
+   */
+  toHaveRole(this: MatcherContext, received: unknown, role: string): MatcherResult {
+    const actual = accessibleFacts(received).role;
+    return {
+      pass: actual === role,
+      message: () =>
+        this.isNot
+          ? `Expected the role not to be ${fmt(role)}.`
+          : `Expected role ${fmt(role)}, received ${fmt(actual)}.`,
+    };
+  },
+
+  /** Assert the accessible name, exactly or by pattern, on either platform. */
+  toHaveAccessibleName(
+    this: MatcherContext,
+    received: unknown,
+    name: string | RegExp,
+  ): MatcherResult {
+    const actual = accessibleFacts(received).name;
+    const pass = typeof name === 'string' ? actual === name : name.test(actual);
+    return {
+      pass,
+      message: () =>
+        this.isNot
+          ? `Expected the accessible name not to match ${String(name)}, received ${fmt(actual)}.`
+          : `Expected accessible name ${typeof name === 'string' ? fmt(name) : String(name)}, received ${fmt(actual)}.`,
+    };
+  },
+
+  /**
+   * Assert the element reports itself expanded: `aria-expanded="true"` on web,
+   * `accessibilityState.expanded` or `aria-expanded` on native. An element that reports no
+   * expanded state at all fails both this and its negation, since it is neither.
+   */
+  toBeExpanded(this: MatcherContext, received: unknown): MatcherResult {
+    const { expanded } = accessibleFacts(received);
+    if (expanded === undefined) {
+      throw new Error('toBeExpanded: the element reports no expanded state at all.');
+    }
+    return {
+      pass: expanded,
+      message: () =>
+        this.isNot
+          ? 'Expected the element to be collapsed.'
+          : 'Expected the element to be expanded.',
+    };
+  },
 };
 
 /**
@@ -186,9 +239,15 @@ declare module 'vitest' {
   interface Assertion<T> {
     toHaveStyle(expected: Record<string, string | number>): T;
     toHaveStyleAt(scope: string, expected: Record<string, string | number>): T;
+    toHaveRole(role: string): T;
+    toHaveAccessibleName(name: string | RegExp): T;
+    toBeExpanded(): T;
   }
   interface AsymmetricMatchersContaining {
     toHaveStyle(expected: Record<string, string | number>): unknown;
     toHaveStyleAt(scope: string, expected: Record<string, string | number>): unknown;
+    toHaveRole(role: string): unknown;
+    toHaveAccessibleName(name: string | RegExp): unknown;
+    toBeExpanded(): unknown;
   }
 }

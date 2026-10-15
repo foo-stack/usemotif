@@ -3,6 +3,7 @@ import {
   resolveStyles,
   type ResolvedStyle,
   type StyleProps,
+  type Theme,
 } from '@usemotif/core';
 import { type ReactElement, createElement, type ReactNode } from 'react';
 import {
@@ -84,6 +85,12 @@ function withResolvedLineHeight(style: ResolvedStyle): ResolvedStyle {
  * </Text>
  * ```
  */
+/** The theme's `fontScale.max` as React Native's `maxFontSizeMultiplier`, which a prop overrides. */
+export function fontScaleCap(theme: Theme | undefined): { maxFontSizeMultiplier?: number } {
+  const max = theme?.tokens.fontScale?.max;
+  return typeof max === 'number' && max >= 1 ? { maxFontSizeMultiplier: max } : {};
+}
+
 export const Text: MotifComponent<TextProps, ReactElement | null> = function (props: TextProps) {
   const { children, style: userStyle, lines, ...rest } = props;
   const theme = useTheme();
@@ -119,6 +126,7 @@ export const Text: MotifComponent<TextProps, ReactElement | null> = function (pr
   return createElement(
     RNText,
     {
+      ...fontScaleCap(theme),
       ...(passThrough as RNTextProps),
       style: finalStyle,
       ...(lines !== undefined ? { numberOfLines: lines } : {}),

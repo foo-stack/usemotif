@@ -26,6 +26,8 @@ export interface ListboxBaseProps<T = string> {
   /** Row height in px for long lists, which render only the rows in view.
    * Omitted, it is measured from the first row; rows must share one height. */
   itemHeight?: number;
+  /** Renders a group's heading, for options with a `group`. Defaults to the name. */
+  renderGroupLabel?: (group: string) => ReactNode;
   'aria-label'?: string;
   'aria-labelledby'?: string;
   style?: CSSProperties;
@@ -127,6 +129,7 @@ function ListboxBody<T>({
   select,
   initial,
   itemHeight,
+  renderGroupLabel,
   ...aria
 }: ListboxBodyProps<T>): ReactElement {
   const id = useId();
@@ -227,6 +230,7 @@ function ListboxBody<T>({
         renderOption={renderOption}
         scrollRef={listRef}
         itemHeight={itemHeight}
+        renderGroupLabel={renderGroupLabel}
       />
     </div>
   );

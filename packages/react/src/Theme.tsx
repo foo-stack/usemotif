@@ -14,6 +14,9 @@ import { syncBrowserChrome } from './_browser-chrome.js';
 import { warnIfCssLayerNeverOrdered } from './_dev-warnings.js';
 import { CssLayerContext } from './css-layer-context.js';
 import { ThemeContext, type ThemeContextValue } from './theme-context.js';
+import { useViewTransitionValue } from './_view-transition.js';
+import { useIsomorphicLayoutEffect } from './_use-isomorphic-layout-effect.js';
+import { registerStyleTarget } from './style-cache.js';
 
 export interface ThemeProviderProps {
   /**
@@ -73,6 +76,18 @@ export interface ThemeProviderProps {
    * deduplicating - the same constraint as `breakpoints`.
    */
   cssLayer?: string | undefined;
+  /**
+   * Animate a change of `active` with the browser's View Transitions API: the page crossfades
+   * from the old theme to the new one. Where the API is missing, or the reader prefers reduced
+   * motion, the switch is instant as usual.
+   */
+  viewTransition?: boolean;
+  /**
+   * A shadow root or another document, such as an iframe's, that this tree renders into. The
+   * theme CSS and every rule motif emits at runtime are adopted there as a constructable
+   * stylesheet, since styles in the main document's `<head>` don't reach it.
+   */
+  styleTarget?: Document | ShadowRoot | null | undefined;
   children?: ReactNode;
 }
 
@@ -98,11 +113,14 @@ function sameWidths(
 
 export function ThemeProvider({
   themes,
-  active,
+  active: requested,
   breakpoints,
   cssLayer,
+  viewTransition = false,
+  styleTarget,
   children,
 }: ThemeProviderProps) {
+  const { value: active } = useViewTransitionValue(requested, viewTransition);
   const widths = useMemo(() => resolveBreakpoints(breakpoints), [breakpoints]);
   // Keep the process-global in sync for the `@media` CSS widths (a shared
   // stylesheet's at-rule preludes can't be `var()`-driven), but only when it
@@ -117,6 +135,13 @@ export function ThemeProvider({
   // no theme registers any of the three fields, in which case we skip
   // the second `<style>` element entirely.
   const runtimeBlock = useMemo(() => themesRuntimeCss(themes, cssLayer), [themes, cssLayer]);
+  useIsomorphicLayoutEffect(
+    () =>
+      styleTarget === null || styleTarget === undefined
+        ? undefined
+        : registerStyleTarget(styleTarget, `${cssBlock}\n${runtimeBlock}`),
+    [styleTarget, cssBlock, runtimeBlock],
+  );
   const value: ThemeContextValue = useMemo(
     () => ({ themes, active, chain: [active], breakpoints: widths }),
     [themes, active, widths],

@@ -30,6 +30,17 @@ export interface StackProps extends Omit<BoxProps, 'display' | 'flexDirection'> 
    * ```
    */
   stagger?: number;
+  /**
+   * Where the stagger wave starts: the `'first'` child (the default), the
+   * `'last'`, the `'center'`, or a child index. Each child waits `stagger`
+   * times its distance from that point.
+   *
+   * @example
+   * ```tsx
+   * <Stack stagger={0.05} staggerFrom="center">{cards}</Stack>
+   * ```
+   */
+  staggerFrom?: 'first' | 'last' | 'center' | number;
 }
 
 /**
@@ -54,10 +65,11 @@ export interface StackProps extends Omit<BoxProps, 'display' | 'flexDirection'> 
 export const Stack: MotifComponent<StackProps, ReactElement | null> = function ({
   direction = 'column',
   stagger,
+  staggerFrom,
   children,
   ...rest
 }: StackProps) {
-  const wrapped = wrapForStagger(children, stagger);
+  const wrapped = wrapForStagger(children, stagger, staggerFrom);
   return (
     <Box display="flex" flexDirection={direction} {...rest}>
       {wrapped}
@@ -65,7 +77,22 @@ export const Stack: MotifComponent<StackProps, ReactElement | null> = function (
   );
 };
 
-function wrapForStagger(children: ReactNode, stagger: number | undefined): ReactNode {
+/** How many stagger steps child `index` of `count` waits, counted from `from`. */
+export function staggerSteps(
+  index: number,
+  count: number,
+  from: StackProps['staggerFrom'] = 'first',
+): number {
+  const origin =
+    from === 'first' ? 0 : from === 'last' ? count - 1 : from === 'center' ? (count - 1) / 2 : from;
+  return Math.abs(index - origin);
+}
+
+function wrapForStagger(
+  children: ReactNode,
+  stagger: number | undefined,
+  from: StackProps['staggerFrom'],
+): ReactNode {
   if (stagger === undefined || stagger === 0) return children;
   // Do NOT branch on a synchronous reduced-motion read here: it returns
   // `false` on the server and the live value on the client, so a
@@ -76,8 +103,11 @@ function wrapForStagger(children: ReactNode, stagger: number | undefined): React
   //
   // `React.Children.map` flattens fragments / iterables and yields a stable
   // index per direct child - exactly what stagger expects.
+  const count = Children.count(children);
   return Children.map(children, (child, i) => (
-    <StaggerContext.Provider value={i * stagger}>{child}</StaggerContext.Provider>
+    <StaggerContext.Provider value={staggerSteps(i, count, from) * stagger}>
+      {child}
+    </StaggerContext.Provider>
   ));
 }
 

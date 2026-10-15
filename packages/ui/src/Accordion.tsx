@@ -6,7 +6,8 @@ import {
   type AccordionRootProps,
 } from '@usemotif/headless';
 import type { ReactNode } from 'react';
-import { Box } from 'usemotif';
+import { Pressable, Box } from 'usemotif';
+import { platformText } from './_platform-text.js';
 
 // A chevron drawn as a right-aligned background image (theme-neutral grey), so
 // it costs no extra DOM. The open state swaps the down chevron for an up one
@@ -18,11 +19,19 @@ const CHEVRON_UP =
   "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 10l4-4 4 4'/%3E%3C/svg%3E\")";
 
 // Hoisted so the bag props are stable references (lint: no-new-object).
+const TRIGGER_TEXT = {
+  color: '$colors.text.default',
+  fontSize: '$fontSizes.md',
+  fontWeight: 500,
+} as const;
+const CONTENT_TEXT = { color: '$colors.text.muted', fontSize: '$fontSizes.sm' } as const;
 const TRIGGER_HOVER = { bg: '$colors.surface.interactive' } as const;
 const TRIGGER_EXPANDED = {
   color: '$colors.action.primary.bg',
   backgroundImage: CHEVRON_UP,
 } as const;
+// The open item of a non-collapsible accordion: its trigger can't close it.
+const TRIGGER_LOCKED = { cursor: 'default' } as const;
 
 export type AccordionRootPropsThemed = AccordionRootProps;
 export type AccordionItemPropsThemed = HeadlessAccordionItemProps;
@@ -75,8 +84,7 @@ function AccordionTrigger({ children }: AccordionTriggerProps) {
   // is for a generic HTMLElement, so present the child as the element type the
   // headless Trigger expects.
   const trigger = (
-    <Box
-      as="button"
+    <Pressable
       width="100%"
       textAlign="left"
       px="$space.4"
@@ -94,9 +102,10 @@ function AccordionTrigger({ children }: AccordionTriggerProps) {
       transition="color 120ms ease, background-color 120ms ease"
       _hover={TRIGGER_HOVER}
       _expanded={TRIGGER_EXPANDED}
+      _disabled={TRIGGER_LOCKED}
     >
-      {children}
-    </Box>
+      {platformText(children, TRIGGER_TEXT)}
+    </Pressable>
   );
   return (
     <HeadlessAccordion.Trigger>
@@ -110,7 +119,7 @@ function AccordionContent({ children, forceMount }: AccordionContentProps) {
   return (
     <HeadlessAccordion.Content {...(forceMount !== undefined ? { forceMount } : {})}>
       <Box px="$space.4" py="$space.3" color="$colors.text.muted" fontSize="$fontSizes.sm">
-        {children}
+        {platformText(children, CONTENT_TEXT)}
       </Box>
     </HeadlessAccordion.Content>
   );

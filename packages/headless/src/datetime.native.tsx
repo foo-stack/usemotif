@@ -1,3 +1,4 @@
+import { useMessages } from '@usemotif/react-native';
 import { cloneElement, isValidElement, useMemo, type ReactElement, type ReactNode } from 'react';
 import { Modal, Pressable, TextInput, View, type ViewStyle } from 'react-native';
 import { addMonths, isSameDay, nextRange, rangeFlags, type DateRange } from './_date-math.js';
@@ -65,6 +66,8 @@ export interface CalendarBaseProps {
   renderDay?: (info: CalendarDayInfo) => ReactNode;
   accessibilityLabel?: string;
   style?: ViewStyle;
+  /** Consecutive months shown side by side, from `viewMonth`. Defaults to 1. */
+  numberOfMonths?: number;
 }
 
 export interface CalendarProps extends CalendarBaseProps {
@@ -160,17 +163,19 @@ function CalendarGrid({
   renderDay,
   accessibilityLabel,
   style,
+  numberOfMonths = 1,
   initialMonth,
   select,
   dayState,
 }: CalendarGridProps): ReactElement {
+  const messages = useMessages();
+  const months = Math.max(1, Math.floor(numberOfMonths));
   const [viewMonth, setViewMonth] = useControllableState({
     value: controlledViewMonth,
     defaultValue: defaultViewMonth ?? initialMonth ?? new Date(),
     onChange: onViewMonthChange,
   });
 
-  const days = useMemo(() => buildMonthGrid(viewMonth, weekStartsOn), [viewMonth, weekStartsOn]);
   const today = useMemo(() => startOfDay(new Date()), []);
 
   function dayDisabled(d: Date): boolean {
@@ -184,44 +189,55 @@ function CalendarGrid({
   return (
     <View
       accessibilityLabel={
-        accessibilityLabel ?? `${viewMonth.getFullYear()}-${viewMonth.getMonth() + 1} calendar`
+        accessibilityLabel ?? messages.calendarOf(viewMonth.getFullYear(), viewMonth.getMonth() + 1)
       }
       style={style}
     >
       <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Previous month"
+          accessibilityLabel={messages.previousMonth}
           onPress={() => setViewMonth(addMonths(viewMonth, -1))}
         />
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Next month"
+          accessibilityLabel={messages.nextMonth}
           onPress={() => setViewMonth(addMonths(viewMonth, 1))}
         />
       </View>
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
-        {days.map((d, i) => {
-          const state = dayState(d);
-          const isOutside = d.getMonth() !== viewMonth.getMonth();
-          const isToday = isSameDay(d, today);
-          const isDisabled = dayDisabled(d);
-          const child =
-            renderDay !== undefined
-              ? renderDay({ date: d, ...state, isOutside, isDisabled, isToday })
-              : null;
+      <View style={{ flexDirection: 'row', gap: 16 }}>
+        {Array.from({ length: months }, (_, m) => {
+          const month = addMonths(viewMonth, m);
           return (
-            <Pressable
-              key={i}
-              accessibilityRole="button"
-              accessibilityState={{ selected: state.isSelected, disabled: isDisabled }}
-              accessibilityLabel={d.toDateString()}
-              disabled={isDisabled}
-              onPress={() => select(startOfDay(d))}
-              style={{ width: `${100 / 7}%` }}
-            >
-              {child}
-            </Pressable>
+            <View key={m} style={{ flex: 1, flexDirection: 'row', flexWrap: 'wrap' }}>
+              {buildMonthGrid(month, weekStartsOn).map((d, i) => {
+                const isOutside = d.getMonth() !== month.getMonth();
+                // Beside another month the day belongs to that one; leave a gap.
+                if (isOutside && months > 1) {
+                  return <View key={i} style={{ width: `${100 / 7}%` }} />;
+                }
+                const state = dayState(d);
+                const isToday = isSameDay(d, today);
+                const isDisabled = dayDisabled(d);
+                const child =
+                  renderDay !== undefined
+                    ? renderDay({ date: d, ...state, isOutside, isDisabled, isToday })
+                    : null;
+                return (
+                  <Pressable
+                    key={i}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: state.isSelected, disabled: isDisabled }}
+                    accessibilityLabel={d.toDateString()}
+                    disabled={isDisabled}
+                    onPress={() => select(startOfDay(d))}
+                    style={{ width: `${100 / 7}%` }}
+                  >
+                    {child}
+                  </Pressable>
+                );
+              })}
+            </View>
           );
         })}
       </View>
@@ -266,9 +282,11 @@ export function DatePicker(props: DatePickerProps | RangeDatePickerProps): React
 
 function SingleDatePicker({
   renderTrigger,
-  placeholder = 'Pick a date',
+  placeholder: ownPlaceholder,
   ...props
 }: DatePickerProps): ReactElement {
+  const messages = useMessages();
+  const placeholder = ownPlaceholder ?? messages.pickDate;
   // Track the committed selection locally so the trigger label reflects an
   // *uncontrolled* Calendar's internal pick (the Calendar owns that state and
   // DatePicker can't otherwise read it). Controlled mode keeps `value`
@@ -306,9 +324,11 @@ function SingleDatePicker({
 
 function RangeDatePicker({
   renderTrigger,
-  placeholder = 'Pick dates',
+  placeholder: ownPlaceholder,
   ...props
 }: RangeDatePickerProps): ReactElement {
+  const messages = useMessages();
+  const placeholder = ownPlaceholder ?? messages.pickDates;
   const [current, commit] = useControllableState({
     value: props.value,
     defaultValue: props.defaultValue,
@@ -434,10 +454,12 @@ export function TimeInput({
   value: controlled,
   defaultValue = '',
   onValueChange,
-  accessibilityLabel = 'Time',
+  accessibilityLabel: ownAccessibilityLabel,
   placeholder = 'HH:MM',
   children,
 }: TimeInputProps): ReactElement {
+  const messages = useMessages();
+  const accessibilityLabel = ownAccessibilityLabel ?? messages.time;
   const [value, setValue] = useControllableState({
     value: controlled,
     defaultValue,

@@ -48,14 +48,19 @@ export interface PrimitiveInfo {
  * Motion props that block wrapper-stripping when present. `enterStyle` is
  * a first-paint overlay the runtime flips off via React state - the
  * lowercase HTML element has no equivalent lifecycle, so the wrapper has
- * to stay. `layout` and `layoutTransition` drive a FLIP hook the runtime
+ * to stay. `layout`, `layoutId` and `layoutTransition` drive a FLIP hook the runtime
  * runs; stripped, they would land on the element as attributes and do
  * nothing. `transition`, `animation`, `animateOnly`, and `exitStyle` are
  * fine after extraction (they reduce to plain inline `transition` / a
  * pseudo CSS rule keyed on `[data-motif-state="exiting"]`, both of
  * which work on any element).
  */
-const MOTION_NON_STRIPPABLE: readonly string[] = ['enterStyle', 'layout', 'layoutTransition'];
+const MOTION_NON_STRIPPABLE: readonly string[] = [
+  'enterStyle',
+  'layout',
+  'layoutId',
+  'layoutTransition',
+];
 
 /**
  * `group` renders the marker attribute the `_group*` states key on. The
@@ -73,11 +78,15 @@ const BASE_NON_STRIPPABLE: ReadonlySet<string> = new Set([
   ...MOTION_NON_STRIPPABLE,
   ...GROUP_NON_STRIPPABLE,
 ]);
-/** Text adds `lines`; the Stack family adds `stagger`. Each is a single
+/** Text adds `lines`; the Stack family adds `stagger` and `staggerFrom`. Each is a single
  * shared instance (read-only - only `.has()` is called) so the three Stack
  * variants don't allocate three identical sets. */
 const TEXT_NON_STRIPPABLE: ReadonlySet<string> = new Set([...BASE_NON_STRIPPABLE, 'lines']);
-const STACK_NON_STRIPPABLE: ReadonlySet<string> = new Set([...BASE_NON_STRIPPABLE, 'stagger']);
+const STACK_NON_STRIPPABLE: ReadonlySet<string> = new Set([
+  ...BASE_NON_STRIPPABLE,
+  'stagger',
+  'staggerFrom',
+]);
 
 export const PRIMITIVE_INFO: Readonly<Record<string, PrimitiveInfo>> = {
   Box: {

@@ -35,6 +35,20 @@ A fourth app - `apps/playground-native` - runs an Expo variant of the bare RN se
 native starters exist because Metro configuration differs subtly between bare and Expo; pick
 the one that matches your project shape.
 
+## One screen tree, two routers
+
+`examples/universal-*` is the template for an app that ships on the web and on phones from one set
+of screens:
+
+- **`examples/universal-shared`** holds the screens. They use `usemotif`, `@usemotif/headless` and
+  the `@usemotif/ui` kit, and never import a router: a screen links with `ScreenLink`, and each app
+  hands in its own router's `Link` through `NavProvider`.
+- **`examples/universal-next`** is a Next.js App Router app whose routes each render a shared screen.
+- **`examples/universal-expo`** is an Expo Router app whose routes render the same screens.
+
+Run them with `yarn workspace @usemotif/example-universal-next dev` and
+`yarn workspace @usemotif/example-universal-expo start`.
+
 ## Run one locally
 
 Clone the monorepo and run any starter directly.

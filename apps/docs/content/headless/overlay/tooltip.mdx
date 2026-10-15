@@ -2,8 +2,8 @@
 title: Tooltip
 description: A text affordance shown on hover or keyboard focus. Bound to the trigger through aria-describedby; never holds interactive content.
 diataxis: reference
-covers: ['Tooltip', 'TooltipRootProps', 'TooltipTriggerProps', 'TooltipContentProps']
-last_verified: 2026-10-14
+covers: ['Tooltip', 'TooltipProviderProps', 'TooltipRootProps', 'TooltipTriggerProps', 'TooltipContentProps', 'FloatingArrowProps']
+last_verified: 2026-10-15
 ---
 
 import {
@@ -56,6 +56,28 @@ is wrong - a hover affordance cannot be operated by keyboard or touch users. Rea
 </Tooltip.Root>`} />
 
 ## API
+
+### Tooltip.Provider
+
+<ApiSignature
+  name="Tooltip.Provider"
+  status="stable"
+  signature={`function Tooltip.Provider(props: TooltipProviderProps): JSX.Element`}
+  params={[
+    {
+      name: 'skipDelayDuration',
+      type: 'number',
+      default: '300',
+      description: 'How long after the last tooltip in the group closes the next one still opens at once, in ms.',
+    },
+  ]}
+/>
+
+Wrap a set of tooltips, such as a toolbar's, in one Provider. The first tooltip waits its
+`openDelay`; once it is showing, moving to a neighbour opens that one at once and hides the first,
+so the user can scan the row without waiting at each button. When no tooltip in the group has been
+open for `skipDelayDuration`, the delay applies again. On React Native the Provider renders its
+children unchanged, since native tooltips open on press.
 
 ### Tooltip.Root
 
@@ -131,6 +153,27 @@ is wrong - a hover affordance cannot be operated by keyboard or touch users. Rea
     },
   ]}
 />
+
+### Tooltip.Arrow
+
+<ApiSignature
+  name="Tooltip.Arrow"
+  status="stable"
+  signature={`function Tooltip.Arrow(props: FloatingArrowProps): JSX.Element | null`}
+  params={[
+    { name: 'size', type: 'number', default: '8', description: 'Width of the square the arrow is cut from, in px.' },
+    { name: 'borderColor', type: 'string', description: 'Draws the arrow\'s two outer edges in this colour, to continue a bordered surface.' },
+    { name: 'borderWidth', type: 'number', default: '1', description: 'Border width with `borderColor`, in px.' },
+    { name: 'style', type: 'CSSProperties', description: 'Style for the arrow, usually its `background`.' },
+  ]}
+/>
+
+An arrow on the edge facing the trigger, pointing at the trigger's centre. It is a square turned 45
+degrees and straddling the edge, so render it first inside `Tooltip.Content` with the surface's
+background, and the surface covers its inner half. It moves to the other edge when the surface
+flips, and stays on the trigger when the surface shifts along the viewport edge. It carries
+`aria-hidden` and `data-side` (`top`, `bottom`, `left`, or `right`), for styling by side. On React
+Native it renders nothing, since native overlays open as modals with no anchored edge.
 
 ## Accessibility
 

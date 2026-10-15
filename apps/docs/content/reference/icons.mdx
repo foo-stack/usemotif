@@ -2,8 +2,8 @@
 title: Icons
 description: The motif icon set - 1,932 glyphs shipped as React components, plus the Icon primitive they render through.
 diataxis: reference
-covers: ['Icon', 'IconProps', 'SvgPrimitives']
-last_verified: 2026-05-18
+covers: ['Icon', 'IconProps', 'SvgPrimitives', '@usemotif/icons:*']
+last_verified: 2026-10-15
 ---
 
 import { ApiSignature, ArticleMeta, CodeBlock, Eyebrow } from '../../components/index.js';
@@ -102,6 +102,29 @@ named export from the package root. The canonical list of available names is the
 
 Imports are cheap: each glyph reaches `Icon` through `@usemotif/react/svg`, so importing one
 icon pulls in only the icon primitives - roughly 0.6 KB gzip - not the styling engine.
+
+## Your own icons
+
+`usemotif-icons` turns a folder of SVG files into icon components drawn the same way as the bundled
+set, so they render on web and React Native:
+
+<CodeBlock lang="bash" code={`npx usemotif-icons build ./assets/icons --out ./src/icons`} />
+
+Each `bell-ring.svg` becomes `BellRing.tsx`, and `index.ts` re-exports them by name, so an app
+bundles only the icons it imports. The `viewBox` is kept, and presentation attributes on the root
+`<svg>` (`fill`, `stroke`, `stroke-width` and the like) carry over to the shapes.
+
+Paths, circles, rectangles, lines, polygons, polylines, ellipses and groups convert. Anything the
+cross-platform SVG primitives cannot draw is skipped with the reason, and the command exits with
+code 1 so a build notices:
+
+<CodeBlock lang="text" code={`usemotif-icons: wrote 53 icons to ./src/icons
+usemotif-icons: skipped logo.svg: <defs>: definitions (gradients, clip paths, masks, shared shapes) have no cross-platform SVG primitive
+usemotif-icons: skipped badge.svg: <text>: text has no cross-platform SVG primitive; convert it to paths`} />
+
+Text, embedded images, `<use>`, gradients, masks, clip paths, filters, CSS `class` and `style`, and
+`url(#...)` references are all rejected. Flatten them in your design tool (convert text to
+outlines, expand strokes, replace gradients with solid fills) and run it again.
 
 ## Cross-platform
 

@@ -1,5 +1,6 @@
 'use client';
 
+import { useMessages } from '@usemotif/react';
 import { DialogContent, DialogRoot } from './Dialog.js';
 import {
   cloneElement,
@@ -12,12 +13,14 @@ import {
   useMemo,
   useRef,
   useState,
+  type CSSProperties,
   type KeyboardEvent,
   type ReactElement,
   type ReactNode,
 } from 'react';
 import { fuzzyScore } from './_fuzzy.js';
 import { useControllableState } from './use-controllable-state.js';
+import { useShortcut } from './use-shortcut.js';
 
 /**
  * CommandPalette - a fuzzy-searchable command launcher (think ⌘K). The
@@ -57,7 +60,14 @@ export interface Command {
   /** Optional icon node - passed through to the renderItem callback. */
   readonly icon?: ReactNode;
   readonly disabled?: boolean;
-  readonly onSelect: () => void;
+  /** Runs when the command is chosen. Not called for a command with `children`. */
+  readonly onSelect?: () => void;
+  /**
+   * Choosing this command opens these as a page of their own, with its own
+   * search, instead of closing the palette. Backspace on an empty input or
+   * Escape goes back.
+   */
+  readonly children?: ReadonlyArray<Command>;
 }
 
 const DEFAULT_SECTION = 'Commands';
@@ -80,6 +90,10 @@ interface CommandPaletteContextValue {
   readonly inputRef: React.RefObject<HTMLInputElement | null>;
   readonly listboxId: string;
   readonly activate: (command: Command) => void;
+  /** The commands whose pages are open, outermost first. */
+  readonly pages: ReadonlyArray<Command>;
+  /** Close pages down to `depth` open ones. */
+  readonly goBack: (depth: number) => void;
 }
 
 const CommandPaletteContext = createContext<CommandPaletteContextValue | null>(null);
@@ -152,6 +166,7 @@ function Root({
 
   const [inputValue, setInputValue] = useState('');
   const [rawHighlightedIndex, setHighlightedIndex] = useState(0);
+  const [pages, setPages] = useState<ReadonlyArray<Command>>([]);
   const reactId = useId();
   const inputRef = useRef<HTMLInputElement | null>(null);
 
@@ -162,10 +177,12 @@ function Root({
       setHighlightedIndex(0);
     } else {
       setInputValue('');
+      setPages([]);
     }
   }, [open]);
 
   const fn = matcher ?? defaultFuzzyMatch;
+  const pageCommands = pages.at(-1)?.children ?? commands;
 
   // Filter + sort. With empty input we preserve the caller's command
   // order (with recents lifted to the top, in recents-order).
@@ -173,20 +190,20 @@ function Root({
     if (inputValue.length === 0) {
       const recentSet = new Set(recents);
       const recentItems = recents
-        .map((id) => commands.find((c) => c.id === id))
+        .map((id) => pageCommands.find((c) => c.id === id))
         .filter((c): c is Command => c !== undefined);
-      const rest = commands.filter((c) => !recentSet.has(c.id));
+      const rest = pageCommands.filter((c) => !recentSet.has(c.id));
       return [...recentItems, ...rest];
     }
     const scored: { command: Command; score: number }[] = [];
-    for (const c of commands) {
+    for (const c of pageCommands) {
       const score = fn(inputValue, c);
       if (score === null) continue;
       scored.push({ command: c, score });
     }
     scored.sort((a, b) => b.score - a.score);
     return scored.map((s) => s.command);
-  }, [commands, inputValue, recents, fn]);
+  }, [pageCommands, inputValue, recents, fn]);
 
   // Group by section, preserving the flat order so keyboard navigation
   // can use a single global index. With empty input + recents, the
@@ -209,13 +226,25 @@ function Root({
   const activate = useCallback(
     (command: Command) => {
       if (command.disabled === true) return;
-      command.onSelect();
+      if (command.children !== undefined) {
+        setPages((open) => [...open, command]);
+        setInputValue('');
+        setHighlightedIndex(0);
+        return;
+      }
+      command.onSelect?.();
       const next = [command.id, ...recents.filter((id) => id !== command.id)].slice(0, maxRecents);
       commitRecents(next);
       setOpen(false);
     },
     [recents, commitRecents, maxRecents, setOpen],
   );
+
+  const goBack = useCallback((depth: number) => {
+    setPages((open) => open.slice(0, depth));
+    setInputValue('');
+    setHighlightedIndex(0);
+  }, []);
 
   // Clamp the highlight during render so it never points past the end of
   // the current results - `highlightedIndex` is only reset on open and on
@@ -242,6 +271,8 @@ function Root({
         inputRef,
         listboxId: `${reactId}-cmd-palette`,
         activate,
+        pages,
+        goBack,
       }}
     >
       <DialogRoot open={open} onOpenChange={setOpen}>
@@ -249,7 +280,11 @@ function Root({
             DialogRoot, which is only a context provider - so it actually
             gets the focus trap, scrim, Portal, Escape, and aria-modal the
             docstring promises. */}
-        <DialogContent dismissOnEscape={dismissOnEscape} dismissOnScrimClick={dismissOnScrimClick}>
+        {/* On a nested page Escape goes back a level instead, in Input. */}
+        <DialogContent
+          dismissOnEscape={dismissOnEscape && pages.length === 0}
+          dismissOnScrimClick={dismissOnScrimClick}
+        >
           {children}
         </DialogContent>
       </DialogRoot>
@@ -294,6 +329,16 @@ function Input({
       case 'End':
         e.preventDefault();
         ctx.setHighlightedIndex(max);
+        break;
+      case 'Escape':
+        if (ctx.pages.length === 0) return;
+        e.preventDefault();
+        ctx.goBack(ctx.pages.length - 1);
+        break;
+      case 'Backspace':
+        if (ctx.pages.length === 0 || ctx.inputValue !== '') return;
+        e.preventDefault();
+        ctx.goBack(ctx.pages.length - 1);
         break;
       case 'Enter': {
         if (ctx.highlightedIndex < 0 || ctx.highlightedIndex > max) return;
@@ -344,8 +389,10 @@ export interface CommandPaletteListProps {
 function List({
   renderItem,
   renderSection,
-  emptyMessage = 'No matches',
+  emptyMessage: ownEmptyMessage,
 }: CommandPaletteListProps): ReactElement {
+  const messages = useMessages();
+  const emptyMessage = ownEmptyMessage ?? messages.noMatches;
   const ctx = useCommandPaletteContext('CommandPalette.List');
   if (ctx.flatFiltered.length === 0) {
     return (
@@ -388,55 +435,80 @@ function List({
   );
 }
 
+export interface CommandPaletteBreadcrumbProps {
+  /** Label for the top level. Defaults to `'Commands'`. */
+  rootLabel?: string;
+  /** Shown between crumbs. Defaults to `'/'`. */
+  separator?: ReactNode;
+  /** Renders one crumb. Defaults to a button, or plain text for the current page. */
+  renderCrumb?: (
+    label: string,
+    info: { current: boolean; depth: number; onSelect: () => void },
+  ) => ReactNode;
+  style?: CSSProperties;
+}
+
+/**
+ * The trail of open pages, each one a way back to it. Renders nothing on the
+ * top level, where there is nowhere to go back to.
+ */
+function Breadcrumb({
+  rootLabel: ownRootLabel,
+  separator = '/',
+  renderCrumb,
+  style,
+}: CommandPaletteBreadcrumbProps): ReactElement | null {
+  const messages = useMessages();
+  const rootLabel = ownRootLabel ?? messages.commands;
+  const ctx = useCommandPaletteContext('CommandPalette.Breadcrumb');
+  if (ctx.pages.length === 0) return null;
+  const labels = [rootLabel, ...ctx.pages.map((p) => p.label)];
+  return (
+    <nav aria-label={messages.commandPages} style={style}>
+      <ol style={{ display: 'flex', listStyle: 'none', margin: 0, padding: 0 }}>
+        {labels.map((label, depth) => {
+          const current = depth === labels.length - 1;
+          const onSelect = (): void => {
+            ctx.goBack(depth);
+            ctx.inputRef.current?.focus();
+          };
+          return (
+            <li key={depth} aria-current={current ? 'page' : undefined}>
+              {renderCrumb !== undefined ? (
+                renderCrumb(label, { current, depth, onSelect })
+              ) : current ? (
+                label
+              ) : (
+                <button type="button" onClick={onSelect}>
+                  {label}
+                </button>
+              )}
+              {current ? null : <span aria-hidden="true">{separator}</span>}
+            </li>
+          );
+        })}
+      </ol>
+    </nav>
+  );
+}
+
 /**
  * Parts exported flat so `src/index.ts` can assemble the namespace in the
  * server graph, where each one is already a client reference. Internal: the
  * barrel re-exports by name and does not list these.
  */
-export { Root as CommandPaletteRoot, Input as CommandPaletteInput, List as CommandPaletteList };
+export {
+  Root as CommandPaletteRoot,
+  Input as CommandPaletteInput,
+  List as CommandPaletteList,
+  Breadcrumb as CommandPaletteBreadcrumb,
+};
 
 /**
- * Register a global keyboard shortcut (e.g. `'mod+k'`) for opening the
- * palette. `mod` resolves to ⌘ on macOS and Ctrl elsewhere. The handler
- * is invoked on the matching keydown after `preventDefault()`.
- *
- * Bind a stable handler (memoized via `useCallback`) so the listener
- * isn't churning every render. Returns nothing; cleanup on unmount.
+ * Opens the palette on a shortcut such as `'mod+k'`. An alias of `useShortcut`
+ * that also fires while the user is typing, so the palette can be toggled from
+ * its own search box. Returns the shortcut's display label.
  */
-export function useCommandPaletteShortcut(combo: string, handler: () => void): void {
-  useEffect(() => {
-    const matches = parseShortcut(combo);
-    function onKeyDown(e: KeyboardEvent | globalThis.KeyboardEvent): void {
-      if (matches(e)) {
-        e.preventDefault();
-        handler();
-      }
-    }
-    if (typeof window === 'undefined') return undefined;
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [combo, handler]);
-}
-
-function parseShortcut(combo: string): (e: KeyboardEvent | globalThis.KeyboardEvent) => boolean {
-  const parts = combo
-    .toLowerCase()
-    .split('+')
-    .map((s) => s.trim());
-  const key = parts[parts.length - 1] ?? '';
-  const mods = new Set(parts.slice(0, -1));
-  return (e) => {
-    if (e.key.toLowerCase() !== key) return false;
-    if (mods.has('mod')) {
-      const isMac =
-        typeof navigator !== 'undefined' && /Mac|iPhone|iPad|iPod/.test(navigator.platform);
-      if (isMac && !e.metaKey) return false;
-      if (!isMac && !e.ctrlKey) return false;
-    }
-    if (mods.has('ctrl') && !e.ctrlKey) return false;
-    if (mods.has('cmd') && !e.metaKey) return false;
-    if (mods.has('shift') && !e.shiftKey) return false;
-    if (mods.has('alt') && !e.altKey) return false;
-    return true;
-  };
+export function useCommandPaletteShortcut(combo: string, handler: () => void): string {
+  return useShortcut(combo, handler, { allowInInputs: true });
 }

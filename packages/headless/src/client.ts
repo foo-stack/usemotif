@@ -39,9 +39,16 @@ export type {
 
 export { AlertDialogContent, AlertDialogRoot } from './AlertDialog.js';
 
-export { TooltipContent, TooltipRoot, TooltipTrigger } from './Tooltip.js';
-export type { TooltipContentProps, TooltipRootProps, TooltipTriggerProps } from './Tooltip.js';
+export { TooltipContent, TooltipProvider, TooltipRoot, TooltipTrigger } from './Tooltip.js';
+export type {
+  TooltipContentProps,
+  TooltipProviderProps,
+  TooltipRootProps,
+  TooltipTriggerProps,
+} from './Tooltip.js';
 
+export { FloatingArrow } from './_arrow.js';
+export type { FloatingArrowProps } from './_arrow.js';
 export { PopoverClose, PopoverContent, PopoverRoot, PopoverTrigger } from './Popover.js';
 export type {
   PopoverCloseProps,
@@ -138,6 +145,7 @@ export type {
 } from './combobox.js';
 
 export {
+  CommandPaletteBreadcrumb,
   CommandPaletteInput,
   CommandPaletteList,
   CommandPaletteRoot,
@@ -146,6 +154,7 @@ export {
 } from './CommandPalette.js';
 export type {
   Command,
+  CommandPaletteBreadcrumbProps,
   CommandPaletteListProps,
   CommandPaletteRootProps,
 } from './CommandPalette.js';
@@ -179,9 +188,12 @@ export type {
   TimeInputProps,
 } from './datetime.js';
 
-export { ColorPicker, FileUpload, TreeView } from './specialized.js';
+export { ColorPicker, FileUpload, TreeView, formatColor, parseColor } from './specialized.js';
 export type {
+  ColorFormat,
   ColorPickerProps,
+  FileRejection,
+  FileRejectionReason,
   FileUploadProps,
   MultiTreeViewProps,
   TreeNode,
@@ -190,6 +202,8 @@ export type {
   TreeViewProps,
 } from './specialized.js';
 
+export { DataTable } from './data-table.js';
+export type { DataTableColumn, DataTableProps, SortDirection, SortState } from './data-table.js';
 export { PinInput } from './pin-input.js';
 export { Listbox } from './listbox.js';
 export type { ListboxBaseProps, ListboxProps, MultiListboxProps } from './listbox.js';
@@ -210,5 +224,7 @@ export type {
 } from './navigation.js';
 
 export { useReducedMotion } from './_use-reduced-motion.js';
+export { useShortcut } from './use-shortcut.js';
+export type { UseShortcutOptions } from './use-shortcut.js';
 export { useControllableState } from './use-controllable-state.js';
 export type { UseControllableStateOptions } from './use-controllable-state.js';

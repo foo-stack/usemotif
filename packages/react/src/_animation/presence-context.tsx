@@ -174,9 +174,15 @@ export function useExitPresence(open: boolean, fallbackDurationMs = 400): UseExi
     return undefined;
   }, [fallbackDurationMs, open, settle]);
 
+  // The phase state follows `open` in an effect, a render behind. Report
+  // `'open'` the moment `open` turns true, so the content mounts in the same
+  // render: anything that measures it after mount, such as positioning a
+  // floating surface, would otherwise measure nothing and never try again.
+  const current: MotionPhase = open && phase === 'closed' ? 'open' : phase;
+
   const value = useMemo<PresenceContextValue>(
-    () => ({ phase, registerExit }),
-    [phase, registerExit],
+    () => ({ phase: current, registerExit }),
+    [current, registerExit],
   );
 
   // The boundary reads the latest value through a ref so its own identity can
@@ -195,8 +201,8 @@ export function useExitPresence(open: boolean, fallbackDurationMs = 400): UseExi
   );
 
   return {
-    shouldRender: phase === 'open' || phase === 'exiting' || phase === 'entering',
-    phase,
+    shouldRender: current === 'open' || current === 'exiting' || current === 'entering',
+    phase: current,
     settle,
     ExitBoundary,
   };

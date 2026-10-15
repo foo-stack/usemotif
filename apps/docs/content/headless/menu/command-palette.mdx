@@ -2,7 +2,7 @@
 title: CommandPalette
 description: A fuzzy-searchable command launcher - the ⌘K pattern. Composes Dialog, adds filtering, sections, and recent-item tracking.
 diataxis: reference
-covers: ['CommandPalette', 'CommandPaletteRootProps', 'CommandPaletteListProps', 'Command', 'useCommandPaletteShortcut', 'defaultFuzzyMatch']
+covers: ['CommandPalette', 'CommandPaletteRootProps', 'CommandPaletteListProps', 'Command', 'CommandPaletteBreadcrumbProps', 'useCommandPaletteShortcut', 'defaultFuzzyMatch']
 last_verified: 2026-05-15
 ---
 
@@ -38,7 +38,9 @@ renders the search box; `CommandPalette.List` renders the grouped results. The R
 scrim-backed, Escape-dismissible.
 
 `useCommandPaletteShortcut` is a separate hook for the global activation key. It is not part of
-the compound API - call it wherever you own the open state.
+the compound API - call it wherever you own the open state. It is
+[`useShortcut`](/reference/use-shortcut) with typing in inputs allowed, and returns the shortcut's
+label for a `Kbd`.
 
 ## Install
 
@@ -55,6 +57,7 @@ the compound API - call it wherever you own the open state.
 useCommandPaletteShortcut('mod+k', () => setOpen(true));
 
 <CommandPalette.Root open={open} onOpenChange={setOpen} commands={commands}>
+  <CommandPalette.Breadcrumb />
   <CommandPalette.Input placeholder="Type a command..." />
   <CommandPalette.List
     renderItem={(cmd, { highlighted }) => <Row cmd={cmd} active={highlighted} />}
@@ -148,8 +151,57 @@ input - CommandPalette clones it with the combobox ARIA wiring and the keyboard 
   shortcut?: readonly string[]; // hint badges, e.g. ['Mod', 'K']
   icon?: ReactNode;
   disabled?: boolean;
-  onSelect: () => void;
+  onSelect?: () => void;        // not called for a command with children
+  children?: readonly Command[]; // opens these as a page of their own
 }`} />
+
+### Nested pages
+
+A command with `children` opens them as a page instead of closing the palette. Search is scoped to
+the open page, and the highlight starts at its first row. Backspace on an empty input or Escape
+goes back one level; Escape closes the palette only from the top level. On native, the Android
+back button goes back the same way.
+
+<CodeBlock lang="tsx" code={`const commands = [
+  {
+    id: 'theme',
+    label: 'Change theme',
+    children: [
+      { id: 'light', label: 'Light', onSelect: () => setTheme('light') },
+      { id: 'dark', label: 'Dark', onSelect: () => setTheme('dark') },
+    ],
+  },
+];`} />
+
+### CommandPalette.Breadcrumb
+
+<ApiSignature
+  name="CommandPalette.Breadcrumb"
+  status="stable"
+  signature={`function CommandPalette.Breadcrumb(props: CommandPaletteBreadcrumbProps): JSX.Element | null`}
+  params={[
+    {
+      name: 'rootLabel',
+      type: 'string',
+      default: '"Commands"',
+      description: 'Label for the top level.',
+    },
+    {
+      name: 'separator',
+      type: 'ReactNode',
+      default: '"/"',
+      description: 'Shown between crumbs.',
+    },
+    {
+      name: 'renderCrumb',
+      type: '(label, info) => ReactNode',
+      description: 'Renders one crumb. `info` carries `current`, `depth`, and `onSelect`, which goes back to that level. Defaults to a button, or plain text for the current page.',
+    },
+  ]}
+/>
+
+The trail of open pages, in a `nav` labelled "Command pages", with `aria-current="page"` on the
+current one. It renders nothing on the top level.
 
 ### useCommandPaletteShortcut
 

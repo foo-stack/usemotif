@@ -310,13 +310,13 @@
         "kind": "artifact",
         "path": "packages/core/package.json",
         "field": "version",
-        "value": "1.7.0",
+        "value": "1.8.0",
         "note": "Every published package versions in lockstep as one fixed group, so any one manifest is authoritative for the number the README quotes."
       },
       "disposition": {
         "action": "rewritten",
         "was": "at `1.0.0`",
-        "now": "which began at `1.0.0` ... and is now at `1.7.0`",
+        "now": "which began at `1.0.0` ... and is now at `1.8.0`",
         "note": "The number is corrected on each release. It went stale between 1.4.0 and 1.5.0 with the gate green, because an answered claim stops being verified. The evidence below is artifact-backed precisely so a check can compare it against the manifests; making the check reach it is tracked separately."
       }
     },
@@ -1711,6 +1711,171 @@
       "evidence": {
         "kind": "manual",
         "note": "Not verified against NativeWind's documentation. Rendered as ? on the page rather than guessed, which is the whole point of the state existing. Settling it needs a cited statement about pseudo-state variants on native as opposed to web only."
+      }
+    },
+    {
+      "id": "bench-data-table-runtime-tamagui",
+      "surface": "docs",
+      "file": "benchmarks/results.json",
+      "line": 34,
+      "text": "\"Tamagui\": 4.6",
+      "verdict": "holds",
+      "evidence": {
+        "kind": "artifact",
+        "path": "benchmarks/results.json",
+        "field": "ratios.data-table.runtime.Tamagui",
+        "value": 4.6,
+        "note": "Rendered on /guides/benchmarks as motif runtime against Tamagui on the data-table workload. Recorded by `yarn bench:report` from one Vitest bench run in jsdom; motif's ops/sec over Tamagui's. Re-recording changes the value, and this entry must be updated with it."
+      }
+    },
+    {
+      "id": "bench-data-table-runtime-emotion",
+      "surface": "docs",
+      "file": "benchmarks/results.json",
+      "line": 35,
+      "text": "\"Emotion\": 0.38",
+      "verdict": "holds",
+      "evidence": {
+        "kind": "artifact",
+        "path": "benchmarks/results.json",
+        "field": "ratios.data-table.runtime.Emotion",
+        "value": 0.38,
+        "note": "Rendered on /guides/benchmarks as motif runtime against Emotion on the data-table workload. Recorded by `yarn bench:report` from one Vitest bench run in jsdom; motif's ops/sec over Emotion's. Re-recording changes the value, and this entry must be updated with it."
+      }
+    },
+    {
+      "id": "bench-data-table-runtime-stylex",
+      "surface": "docs",
+      "file": "benchmarks/results.json",
+      "line": 36,
+      "text": "\"StyleX\": 0.26",
+      "verdict": "holds",
+      "evidence": {
+        "kind": "artifact",
+        "path": "benchmarks/results.json",
+        "field": "ratios.data-table.runtime.StyleX",
+        "value": 0.26,
+        "note": "Rendered on /guides/benchmarks as motif runtime against StyleX on the data-table workload. Recorded by `yarn bench:report` from one Vitest bench run in jsdom; motif's ops/sec over StyleX's. Re-recording changes the value, and this entry must be updated with it."
+      }
+    },
+    {
+      "id": "bench-data-table-runtime-panda",
+      "surface": "docs",
+      "file": "benchmarks/results.json",
+      "line": 37,
+      "text": "\"Panda\": 0.35",
+      "verdict": "holds",
+      "evidence": {
+        "kind": "artifact",
+        "path": "benchmarks/results.json",
+        "field": "ratios.data-table.runtime.Panda",
+        "value": 0.35,
+        "note": "Rendered on /guides/benchmarks as motif runtime against Panda on the data-table workload. Recorded by `yarn bench:report` from one Vitest bench run in jsdom; motif's ops/sec over Panda's. Re-recording changes the value, and this entry must be updated with it."
+      }
+    },
+    {
+      "id": "bench-data-table-compiled-tamagui",
+      "surface": "docs",
+      "file": "benchmarks/results.json",
+      "line": 40,
+      "text": "\"Tamagui\": 14.48",
+      "verdict": "holds",
+      "evidence": {
+        "kind": "artifact",
+        "path": "benchmarks/results.json",
+        "field": "ratios.data-table.compiled.Tamagui",
+        "value": 14.48,
+        "note": "Rendered on /guides/benchmarks as motif compiled against Tamagui on the data-table workload. Recorded by `yarn bench:report` from one Vitest bench run in jsdom; motif's ops/sec over Tamagui's. Re-recording changes the value, and this entry must be updated with it."
+      }
+    },
+    {
+      "id": "bench-data-table-compiled-emotion",
+      "surface": "docs",
+      "file": "benchmarks/results.json",
+      "line": 41,
+      "text": "\"Emotion\": 1.19",
+      "verdict": "holds",
+      "evidence": {
+        "kind": "artifact",
+        "path": "benchmarks/results.json",
+        "field": "ratios.data-table.compiled.Emotion",
+        "value": 1.19,
+        "note": "Rendered on /guides/benchmarks as motif compiled against Emotion on the data-table workload. Recorded by `yarn bench:report` from one Vitest bench run in jsdom; motif's ops/sec over Emotion's. Re-recording changes the value, and this entry must be updated with it."
+      }
+    },
+    {
+      "id": "bench-data-table-compiled-stylex",
+      "surface": "docs",
+      "file": "benchmarks/results.json",
+      "line": 42,
+      "text": "\"StyleX\": 0.82",
+      "verdict": "holds",
+      "evidence": {
+        "kind": "artifact",
+        "path": "benchmarks/results.json",
+        "field": "ratios.data-table.compiled.StyleX",
+        "value": 0.82,
+        "note": "Rendered on /guides/benchmarks as motif compiled against StyleX on the data-table workload. Recorded by `yarn bench:report` from one Vitest bench run in jsdom; motif's ops/sec over StyleX's. Re-recording changes the value, and this entry must be updated with it."
+      }
+    },
+    {
+      "id": "bench-data-table-compiled-panda",
+      "surface": "docs",
+      "file": "benchmarks/results.json",
+      "line": 43,
+      "text": "\"Panda\": 1.1",
+      "verdict": "holds",
+      "evidence": {
+        "kind": "artifact",
+        "path": "benchmarks/results.json",
+        "field": "ratios.data-table.compiled.Panda",
+        "value": 1.1,
+        "note": "Rendered on /guides/benchmarks as motif compiled against Panda on the data-table workload. Recorded by `yarn bench:report` from one Vitest bench run in jsdom; motif's ops/sec over Panda's. Re-recording changes the value, and this entry must be updated with it."
+      }
+    },
+    {
+      "id": "bench-deep-tree-runtime-tamagui",
+      "surface": "docs",
+      "file": "benchmarks/results.json",
+      "line": 48,
+      "text": "\"Tamagui\": 26.55",
+      "verdict": "holds",
+      "evidence": {
+        "kind": "artifact",
+        "path": "benchmarks/results.json",
+        "field": "ratios.deep-tree.runtime.Tamagui",
+        "value": 26.55,
+        "note": "Rendered on /guides/benchmarks as motif runtime against Tamagui on the deep-tree workload. Recorded by `yarn bench:report` from one Vitest bench run in jsdom; motif's ops/sec over Tamagui's. Re-recording changes the value, and this entry must be updated with it."
+      }
+    },
+    {
+      "id": "bench-deep-tree-compiled-tamagui",
+      "surface": "docs",
+      "file": "benchmarks/results.json",
+      "line": 51,
+      "text": "\"Tamagui\": 104.38",
+      "verdict": "holds",
+      "evidence": {
+        "kind": "artifact",
+        "path": "benchmarks/results.json",
+        "field": "ratios.deep-tree.compiled.Tamagui",
+        "value": 104.38,
+        "note": "Rendered on /guides/benchmarks as motif compiled against Tamagui on the deep-tree workload. Recorded by `yarn bench:report` from one Vitest bench run in jsdom; motif's ops/sec over Tamagui's. Re-recording changes the value, and this entry must be updated with it."
+      }
+    },
+    {
+      "id": "bench-theme-switch-runtime-tamagui",
+      "surface": "docs",
+      "file": "benchmarks/results.json",
+      "line": 56,
+      "text": "\"Tamagui\": 13.3",
+      "verdict": "holds",
+      "evidence": {
+        "kind": "artifact",
+        "path": "benchmarks/results.json",
+        "field": "ratios.theme-switch.runtime.Tamagui",
+        "value": 13.3,
+        "note": "Rendered on /guides/benchmarks as motif runtime against Tamagui on the theme-switch workload. Recorded by `yarn bench:report` from one Vitest bench run in jsdom; motif's ops/sec over Tamagui's. Re-recording changes the value, and this entry must be updated with it."
       }
     }
   ],

@@ -3,7 +3,7 @@ title: Compiler
 description: Motif's compiler is progressive - it statically extracts what it can and falls back to the runtime for everything else. The runtime works without a compiler at all; the compiler is purely an optimisation.
 diataxis: explanation
 covers: ['extractWeb', 'extractNative', 'analyzeStripSafety', 'evaluateStyledConfig']
-last_verified: 2026-10-14
+last_verified: 2026-10-15
 ---
 
 import { ArticleMeta, Callout, CodeBlock, Eyebrow, Lede } from '../../components/index.js';
@@ -160,6 +160,55 @@ would conflict on the cascade) bails exactly as before, and an `onAggressiveRepo
 surfaces what was inlined, erased, and bailed per file. The default stays `safe` so adopting the
 compiler never changes output; aggression is a separate, explicit choice. See [Compiler
 optimization levels](/adr/0010-optimization-levels).
+
+## Persistent cache
+
+`cache: true` keeps each module's compiled result on disk, in
+`node_modules/.cache/usemotif/compile`, and replays it, extracted CSS included, while the module's
+source, the compiler options and the compiler itself are unchanged. Pass a path instead of `true`
+to put the cache elsewhere, such as a directory a CI cache step restores.
+
+<CodeBlock lang="ts" code={`motif.vite({ cache: true })`} />
+
+Transforming 300 generated components took 282 ms cold and 22 ms from the cache on an Apple
+silicon laptop. A module is compiled afresh, and not cached, while `onBail` or
+`onAggressiveReport` is set, since those report on a transform as it runs.
+
+## Atomic output
+
+`atomic: true` compiles each static declaration to its own shared class instead of an inline
+style, so a declaration repeated across the app ships once:
+
+<CodeBlock lang="ts" code={`// vite.config.ts
+motif.vite({ atomic: true })`} />
+
+<CodeBlock lang="tsx" code={`<Box p="16px" bg="#3b82f6" />
+// → <div className="a-dwf4oy68dw a-1om2idl6nzx" />
+// .a-dwf4oy68dw { padding: 16px; }
+// .a-1om2idl6nzx { background-color: #3b82f6; }`} />
+
+A declaration becomes an atom only when nothing else on the element touches the same property.
+`p` with `pt`, a base value with its breakpoint value, or a base value with its `:hover` value
+keep the default output for that element. Shared atoms land in the sheet in whatever order the
+first module using them was built, so two atoms that override each other could resolve either
+way; leaving those out is what keeps the cascade the same as the default output.
+
+**It is not the smaller choice today.** `yarn workspace @usemotif-bench/render css-size` compiles
+300 generated components (727 rendered elements, with one in three carrying a hover state) in
+each library and gzips the stylesheet and the server-rendered markup:
+
+| Output | CSS | Markup | Total |
+| --- | --- | --- | --- |
+| motif, default | 169 | 4247 | 4416 |
+| motif, atomic | 814 | 4110 | 4924 |
+| StyleX | 620 | 3639 | 4259 |
+| Panda | 877 | 3731 | 4608 |
+
+Gzip collapses repeated inline styles almost as well as repeated class names, and motif's atom
+names are longer than StyleX's. Use atomic output when inline styles are the problem, such as a
+`style-src` Content Security Policy without `'unsafe-inline'`, or a stylesheet that must be
+cached across pages, rather than for size. `cssLayer` also turns base props into classes, one per
+element.
 
 <Callout variant="info" title="Where to next">
   [Bundlers](/bundlers/vite) covers the integration recipes per bundler.

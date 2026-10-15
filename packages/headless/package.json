@@ -23,9 +23,13 @@
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "react-native": "./src/index.ts",
+  "react-native": "./dist/index.native.js",
   "exports": {
     ".": {
+      "react-native": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.native.js"
+      },
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
@@ -46,6 +50,7 @@
     "@types/react-dom": "^19.2.3",
     "@usemotif/react": "workspace:*",
     "@usemotif/react-native": "workspace:*",
+    "@usemotif/test-utils": "workspace:*",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-native": "^0.83.0",

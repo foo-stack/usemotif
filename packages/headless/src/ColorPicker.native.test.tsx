@@ -176,3 +176,28 @@ describe('parseColor / formatColor - exported from native module', () => {
     expect(out.startsWith('rgba(')).toBe(true);
   });
 });
+
+describe('native ColorPicker swatches', () => {
+  it('checks the matching swatch and commits the one pressed', () => {
+    const onValueChange = vi.fn();
+    render(
+      <ColorPicker
+        defaultValue="#22c55e"
+        swatches={['#ef4444', '#22c55e']}
+        onValueChange={onValueChange}
+      />,
+    );
+    // The format toggle is a radio group too; find the swatches by their colours.
+    const radios = ['#ef4444', '#22c55e'].map(
+      (c) => container.querySelector(`[accessibilityRole="radio"][accessibilityLabel="${c}"]`)!,
+    );
+    const checked = radios.map((el) => {
+      const key = Object.keys(el).find((k) => k.startsWith('__reactProps'))!;
+      return (el as unknown as Record<string, { accessibilityState: { checked: boolean } }>)[key]!
+        .accessibilityState.checked;
+    });
+    expect(checked).toEqual([false, true]);
+    act(() => (radios[0] as HTMLElement).click());
+    expect(onValueChange).toHaveBeenLastCalledWith('#ef4444');
+  });
+});

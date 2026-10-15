@@ -209,3 +209,40 @@ describe('themeToCssBlock - colorScheme', () => {
     expect(themeToCssBlock({ name: 'n', tokens: {} })).not.toContain('color-scheme');
   });
 });
+
+describe('tokenRefToCssVar - fallback chains', () => {
+  it('nests each alternative as the fallback of the one before', () => {
+    expect(tokenRefToCssVar('$components.button.bg ?? $colors.action.primary.bg')).toBe(
+      'var(--components-button-bg, var(--colors-action-primary-bg))',
+    );
+    expect(tokenRefToCssVar('$components.card.radius ?? $md ?? 8px', 'radii')).toBe(
+      'var(--components-card-radius, var(--radii-md, 8px))',
+    );
+  });
+
+  it('emits a component token that is itself a chain', () => {
+    const vars = themeToCssVars({
+      name: 't',
+      tokens: { components: { button: { bg: '$colors.brand ?? red' } } },
+    });
+    expect(vars.get('--components-button-bg')).toBe('var(--colors-brand, red)');
+  });
+});
+
+describe('themeToCssVars - font scaling', () => {
+  it('emits font sizes in rem, so the browser text size applies', () => {
+    const vars = themeToCssVars({ name: 't', tokens: { fontSizes: { sm: 14, md: 16, x: '2vw' } } });
+    expect(vars.get('--fontSizes-sm')).toBe('0.875rem');
+    expect(vars.get('--fontSizes-md')).toBe('1rem');
+    expect(vars.get('--fontSizes-x')).toBe('2vw');
+  });
+
+  it('caps the growth at fontScale.max times the authored size', () => {
+    const vars = themeToCssVars({
+      name: 't',
+      tokens: { fontSizes: { md: 16 }, fontScale: { max: 1.5 }, space: { 4: 16 } },
+    });
+    expect(vars.get('--fontSizes-md')).toBe('min(1rem, 24px)');
+    expect(vars.get('--space-4')).toBe('16px');
+  });
+});

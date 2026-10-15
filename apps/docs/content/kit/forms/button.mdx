@@ -1,0 +1,82 @@
+---
+title: Button
+description: A themed button - five intents and three sizes from the button recipe, with hover and press feedback.
+diataxis: reference
+covers: ['Button', 'ButtonProps']
+last_verified: 2026-10-15
+---
+
+import {
+  ApiSignature,
+  ArticleMeta,
+  Callout,
+  CodeBlock,
+  Eyebrow,
+  Lede,
+} from '../../../components/index.js';
+
+<Eyebrow>UI kit / Forms</Eyebrow>
+
+# Button
+
+<Lede>
+  Button is the kit's action control. Choose an `intent` and a `size`; the colours come from the
+  theme's `action` and `surface` tokens, and hover and press dim it slightly.
+</Lede>
+
+<ArticleMeta />
+
+## What it is
+
+`Button` is `styled(Pressable, buttonRecipe)`: the `buttonRecipe` from `@usemotif/recipes` applied
+to a `Pressable`. It renders a `<button type="button">`, mirrors `disabled` to `aria-disabled`, and
+calls `onPress` on click.
+
+Because it is a styled `Pressable`, it takes every `Pressable` prop alongside its variants,
+including the style props for one-off adjustments.
+
+## Install
+
+<CodeBlock lang="bash" code={`yarn add @usemotif/ui`} />
+
+<CodeBlock lang="tsx" code={`import { Button } from '@usemotif/ui';`} />
+
+## Usage
+
+<CodeBlock lang="tsx" code={`import { Button } from '@usemotif/ui';
+
+<Button onPress={save}>Save</Button>
+<Button intent="neutral" size="sm" onPress={cancel}>Cancel</Button>
+<Button intent="danger" disabled={busy} onPress={remove}>Delete</Button>`} />
+
+## API
+
+<ApiSignature
+  name="Button"
+  status="stable"
+  signature={`const Button = styled(Pressable, buttonRecipe)`}
+  params={[
+    {
+      name: 'intent',
+      type: "'primary' | 'danger' | 'success' | 'neutral' | 'ghost'",
+      default: "'primary'",
+      description: 'Tone. Sets the background, text and border colour.',
+    },
+    {
+      name: 'size',
+      type: "'sm' | 'md' | 'lg'",
+      default: "'md'",
+      description: 'Height (32, 40 or 48px), inline padding and font size.',
+    },
+    {
+      name: '...PressableProps',
+      type: 'PressableProps',
+      description: 'Every `Pressable` prop: `onPress`, `disabled`, `type`, and the style props.',
+    },
+  ]}
+/>
+
+<Callout variant="info" title="Related">
+  [Component recipes](/recipes/component-recipes) - `buttonRecipe`, for a button over a different
+  base. [Button](/components/interactive/button) is the primitive with its own `variant` styling.
+</Callout>

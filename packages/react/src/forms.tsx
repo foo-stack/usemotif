@@ -1,5 +1,6 @@
 'use client';
 
+import { useMessages } from './messages.js';
 import type { MotifComponent } from '@usemotif/core';
 
 import {
@@ -7,11 +8,14 @@ import {
   createContext,
   forwardRef,
   isValidElement,
+  useCallback,
   useContext,
   useId,
+  useMemo,
   useRef,
   useState,
   type CSSProperties,
+  type FormEvent,
   type InputHTMLAttributes,
   type ReactElement,
   type ReactNode,
@@ -41,8 +45,17 @@ interface FieldContextValue {
    * ARIA smell that trips automated a11y checks). The error id is gated on
    * `invalid` instead, since FieldError is shown for the invalid state. */
   readonly hasHelp: boolean;
+  /** The message a surrounding `Form` holds for this field, shown by an empty `FieldError`. */
+  readonly error: string | undefined;
 }
 const FieldContext = createContext<FieldContextValue | null>(null);
+
+/** What a `Form` shares with its fields: current errors by control id, and field registration. */
+interface FormContextValue {
+  readonly errors: Readonly<Record<string, string>>;
+  register(fieldId: string): () => void;
+}
+const FormContext = createContext<FormContextValue | null>(null);
 function useFieldContext(): FieldContextValue | null {
   return useContext(FieldContext);
 }
@@ -65,6 +78,10 @@ export const Field: MotifComponent<FieldProps, ReactElement | null> = function (
 }: FieldProps): ReactElement {
   const reactId = useId();
   const fieldId = id ?? reactId;
+  const form = useContext(FormContext);
+  const error = form?.errors[fieldId];
+  const register = form?.register;
+  useIsomorphicLayoutEffect(() => register?.(fieldId), [register, fieldId]);
 
   // Detect a FieldHelp among the children at render time (SSR-safe - no
   // effect needed) so aria-describedby only references the help id when a
@@ -80,10 +97,11 @@ export const Field: MotifComponent<FieldProps, ReactElement | null> = function (
         fieldId,
         helpId: `${fieldId}-help`,
         errorId: `${fieldId}-error`,
-        invalid,
+        invalid: invalid || error !== undefined,
         disabled,
         required,
         hasHelp,
+        error,
       }}
     >
       <Box display="flex" flexDirection="column" gap="$1.5" {...rest}>
@@ -141,11 +159,17 @@ export const FieldHelp: MotifComponent<FieldHelpProps, ReactElement | null> = fu
 };
 
 export interface FieldErrorProps extends TextProps {}
+/**
+ * The field's error message, announced as an alert. Given children it shows them; left empty
+ * inside a `Form`, it shows the message the form holds for its field, and renders nothing while
+ * the field is valid.
+ */
 export const FieldError: MotifComponent<FieldErrorProps, ReactElement | null> = function ({
   children,
   ...rest
-}: FieldErrorProps): ReactElement {
+}: FieldErrorProps): ReactElement | null {
   const ctx = useFieldContext();
+  if (children === undefined && ctx?.error === undefined && ctx !== null) return null;
   return (
     <Text
       role="alert"
@@ -154,8 +178,179 @@ export const FieldError: MotifComponent<FieldErrorProps, ReactElement | null> = 
       {...(ctx !== null ? ({ id: ctx.errorId } as Record<string, string>) : {})}
       {...rest}
     >
-      {children}
+      {children ?? ctx?.error}
     </Text>
+  );
+};
+
+/** What a `Form` action may return: messages keyed by control `name`. */
+export interface FormActionResult {
+  readonly errors?: Readonly<Record<string, string>>;
+}
+
+export interface FormProps extends Omit<BoxProps, 'as' | 'action' | 'onSubmit'> {
+  /**
+   * Runs with the form's data once every control passes its constraints, as a React 19 form
+   * action, so `useFormStatus` reports it pending. Return `{ errors }` keyed by control `name`
+   * to show server-side messages on those fields.
+   */
+  action?: (formData: FormData) => FormActionResult | void | Promise<FormActionResult | void>;
+  /** Called on a submit that passed validation. */
+  onSubmit?: (event: FormEvent<HTMLFormElement>) => void;
+  /** Messages keyed by control `name` from elsewhere, such as `useActionState`. */
+  errors?: Readonly<Record<string, string>>;
+  children?: ReactNode;
+}
+
+/** Errors keyed by control `name`, rekeyed by the id each field's control carries. */
+function byControlId(
+  form: HTMLFormElement | null,
+  errors: Readonly<Record<string, string>> | undefined,
+): Record<string, string> {
+  const out: Record<string, string> = {};
+  if (form === null || errors === undefined) return out;
+  for (const [name, message] of Object.entries(errors)) {
+    const item = form.elements.namedItem(name);
+    const control = item instanceof RadioNodeList ? item[0] : item;
+    if (control instanceof HTMLElement && control.id !== '') out[control.id] = message;
+  }
+  return out;
+}
+
+type Control = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
+const isControl = (el: Element | EventTarget | null): el is Control =>
+  el instanceof HTMLInputElement ||
+  el instanceof HTMLSelectElement ||
+  el instanceof HTMLTextAreaElement;
+
+/**
+ * A form that checks the browser's native constraints (`required`, `type="email"`, `pattern`,
+ * `min`, `setCustomValidity` and the rest) before it submits, and shows each failure through
+ * the field's `FieldError` instead of the browser's bubble. A submit that fails focuses the first
+ * invalid control; after that, a field rechecks as it's edited. A valid submit runs `action` as
+ * a React 19 form action, and the errors it returns land on their fields too.
+ *
+ * A control outside any `Field` has no `FieldError` to show its message, so the browser reports
+ * it instead.
+ *
+ * @example
+ * ```tsx
+ * <Form action={async (data) => (await signUp(data)) ?? undefined}>
+ *   <Field>
+ *     <Label>Email</Label>
+ *     <Input name="email" type="email" required />
+ *     <FieldError />
+ *   </Field>
+ *   <Button type="submit">Sign up</Button>
+ * </Form>
+ * ```
+ */
+export const Form: MotifComponent<FormProps, ReactElement | null> = function ({
+  action,
+  onSubmit,
+  errors: externalErrors,
+  children,
+  ...rest
+}: FormProps): ReactElement {
+  const formRef = useRef<HTMLFormElement | null>(null);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [actionErrors, setActionErrors] = useState<Readonly<Record<string, string>>>();
+  const fields = useRef(new Set<string>());
+
+  const register = useCallback((fieldId: string) => {
+    fields.current.add(fieldId);
+    return () => {
+      fields.current.delete(fieldId);
+    };
+  }, []);
+
+  // Name-keyed errors need the form's controls to find their ids, so the first render (before
+  // the ref attaches) can't place them; one more render once mounted does.
+  const [mounted, setMounted] = useState(false);
+  useIsomorphicLayoutEffect(() => setMounted(true), []);
+  const form = mounted ? formRef.current : null;
+  const merged = useMemo(
+    () => ({
+      ...byControlId(form, externalErrors),
+      ...byControlId(form, actionErrors),
+      ...errors,
+    }),
+    [form, externalErrors, actionErrors, errors],
+  );
+  const context = useMemo(() => ({ errors: merged, register }), [merged, register]);
+  const userRef = (rest as { ref?: Ref<HTMLElement | null> }).ref;
+  const setRef = useCallback(
+    (node: HTMLFormElement | null) => {
+      formRef.current = node;
+      if (typeof userRef === 'function') userRef(node);
+      else if (userRef !== null && userRef !== undefined) {
+        (userRef as { current: HTMLElement | null }).current = node;
+      }
+    },
+    [userRef],
+  );
+
+  const handleSubmit = (event: FormEvent<HTMLFormElement>): void => {
+    const next: Record<string, string> = {};
+    let first: Control | null = null;
+    let unshown: Control | null = null;
+    for (const el of event.currentTarget.elements) {
+      if (!isControl(el) || el.validity.valid) continue;
+      first ??= el;
+      if (fields.current.has(el.id)) next[el.id] = el.validationMessage;
+      else unshown ??= el;
+    }
+    setErrors(next);
+    setActionErrors(undefined);
+    if (first !== null) {
+      event.preventDefault();
+      if (unshown !== null) unshown.reportValidity();
+      else first.focus();
+      return;
+    }
+    onSubmit?.(event);
+  };
+
+  // After a failed check, a field's message follows its control as it's edited. Any message the
+  // action or `errors` gave it is the user's to correct, so it clears on the first edit.
+  const handleInput = (event: FormEvent<HTMLFormElement>): void => {
+    const el = event.target;
+    if (!isControl(el) || merged[el.id] === undefined) return;
+    setErrors((prev) => {
+      const { [el.id]: _gone, ...others } = prev;
+      return el.validity.valid ? others : { ...others, [el.id]: el.validationMessage };
+    });
+    setActionErrors((prev) => {
+      if (prev === undefined || !(el.name in prev)) return prev;
+      const { [el.name]: _gone, ...others } = prev;
+      return others;
+    });
+  };
+
+  const formAction =
+    action === undefined
+      ? undefined
+      : async (formData: FormData): Promise<void> => {
+          const result = await action(formData);
+          setActionErrors(result?.errors);
+        };
+
+  return (
+    <FormContext.Provider value={context}>
+      <Box
+        as="form"
+        {...rest}
+        {...({
+          noValidate: true,
+          ...(formAction !== undefined ? { action: formAction } : {}),
+          onSubmit: handleSubmit,
+          onInput: handleInput,
+        } as Record<string, unknown>)}
+        ref={setRef as Ref<HTMLElement | null>}
+      >
+        {children}
+      </Box>
+    </FormContext.Provider>
   );
 };
 
@@ -402,6 +597,7 @@ export const PasswordInput = /* @__PURE__ */ forwardRef(function PasswordInput(
   { togglable = true, ...rest }: PasswordInputProps,
   ref: Ref<HTMLInputElement>,
 ): ReactElement {
+  const messages = useMessages();
   const [visible, setVisible] = useState(false);
   if (!togglable) {
     return <Input ref={ref} type="password" {...rest} />;
@@ -416,7 +612,7 @@ export const PasswordInput = /* @__PURE__ */ forwardRef(function PasswordInput(
       />
       <Pressable
         onPress={() => setVisible((v) => !v)}
-        aria-label={visible ? 'Hide password' : 'Show password'}
+        aria-label={visible ? messages.hidePassword : messages.showPassword}
         position="absolute"
         right={0}
         top={0}

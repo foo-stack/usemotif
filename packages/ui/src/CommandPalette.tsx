@@ -8,7 +8,10 @@ import {
   type CommandPaletteRootProps,
 } from '@usemotif/headless';
 import type { ReactNode } from 'react';
-import { Box, type BoxProps } from 'usemotif';
+import { Box, Pressable, useMessages } from 'usemotif';
+import { ThemedInput } from './_themed-input.js';
+import { platformText } from './_platform-text.js';
+import { usePlatformStyle } from './_platform-style.js';
 
 export type { Command };
 export { useCommandPaletteShortcut };
@@ -31,8 +34,7 @@ const PALETTE_TRANSITION = { duration: '$durations.2' } as const;
 // it's the panel's top row, with a hairline beneath it.
 function themedInput(placeholder: string) {
   return (
-    <Box
-      as="input"
+    <ThemedInput
       width="100%"
       px="$space.4"
       py="$space.3"
@@ -42,8 +44,57 @@ function themedInput(placeholder: string) {
       bg="transparent"
       color="$colors.text.default"
       fontSize="$fontSizes.md"
-      {...({ type: 'text', placeholder } as unknown as BoxProps)}
+      type="text"
+      placeholder={placeholder}
     />
+  );
+}
+
+const CRUMB_TEXT = { color: '$colors.text.muted', fontSize: '$fontSizes.sm' } as const;
+const CURRENT_CRUMB_TEXT = {
+  color: '$colors.text.default',
+  fontSize: '$fontSizes.sm',
+  fontWeight: '$fontWeights.semibold',
+} as const;
+const CRUMB_SEPARATOR = (
+  <Box as="span" mr="$space.1" color="$colors.text.muted" fontSize="$fontSizes.sm">
+    {platformText('/', CRUMB_TEXT)}
+  </Box>
+);
+const CRUMBS_STYLE = { padding: '8px 16px 0' } as const;
+const CRUMB_HOVER = { color: '$colors.text.default' } as const;
+
+// Module-scoped so it's a stable `renderCrumb` reference. Earlier pages are
+// buttons back to them; the current one is plain text.
+function renderThemedCrumb(
+  label: string,
+  info: { current: boolean; depth: number; onSelect: () => void },
+): ReactNode {
+  if (info.current) {
+    return (
+      <Box
+        as="span"
+        fontSize="$fontSizes.sm"
+        color="$colors.text.default"
+        fontWeight="$fontWeights.semibold"
+      >
+        {platformText(label, CURRENT_CRUMB_TEXT)}
+      </Box>
+    );
+  }
+  return (
+    <Pressable
+      fontSize="$fontSizes.sm"
+      color="$colors.text.muted"
+      bg="transparent"
+      borderWidth={0}
+      p={0}
+      mr="$space.1"
+      _hover={CRUMB_HOVER}
+      onPress={info.onSelect}
+    >
+      {platformText(label, CRUMB_TEXT)}
+    </Pressable>
   );
 }
 
@@ -75,11 +126,14 @@ function renderThemedCommand(
         </Box>
       ) : null}
       <Box as="span" flexGrow={1}>
-        {command.label}
+        {platformText(command.label, {
+          fontSize: '$fontSizes.sm',
+          color: disabled ? '$colors.text.muted' : '$colors.text.default',
+        })}
       </Box>
       {command.shortcut !== undefined ? (
         <Box as="span" color="$colors.text.muted" fontSize="$fontSizes.sm">
-          {command.shortcut.join(' ')}
+          {platformText(command.shortcut.join(' '), CRUMB_TEXT)}
         </Box>
       ) : null}
     </Box>
@@ -103,11 +157,15 @@ function renderThemedCommand(
  * ```
  */
 export function CommandPalette({
-  placeholder = 'Type a command...',
-  emptyMessage = 'No matching commands',
+  placeholder: ownPlaceholder,
+  emptyMessage: ownEmptyMessage,
   renderItem,
   ...rootProps
 }: CommandPaletteProps) {
+  const messages = useMessages();
+  const emptyMessage = ownEmptyMessage ?? messages.noMatchingCommands;
+  const placeholder = ownPlaceholder ?? messages.commandPlaceholder;
+  const platformStyle = usePlatformStyle();
   return (
     <HeadlessCommandPalette.Root {...rootProps}>
       <Box
@@ -126,6 +184,11 @@ export function CommandPalette({
         enterStyle={PALETTE_ENTER}
         transition={PALETTE_TRANSITION}
       >
+        <HeadlessCommandPalette.Breadcrumb
+          renderCrumb={renderThemedCrumb}
+          separator={CRUMB_SEPARATOR}
+          style={platformStyle(CRUMBS_STYLE)}
+        />
         <HeadlessCommandPalette.Input>
           {
             themedInput(placeholder) as NonNullable<

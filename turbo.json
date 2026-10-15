@@ -7,6 +7,19 @@
       "dependsOn": ["^build"],
       "outputs": ["dist/**", "!dist/**/*.test.*"]
     },
+    "@usemotif/mcp#build": {
+      "dependsOn": ["^build"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "../../apps/docs/content/**",
+        "../../apps/docs/plugins/mdx-to-markdown.ts"
+      ],
+      "outputs": ["dist/**"]
+    },
+    "@usemotif/ssr-react-router#build": {
+      "dependsOn": ["^build"],
+      "outputs": ["build/**"]
+    },
     "typecheck": {
       "dependsOn": ["^build"],
       "outputs": ["*.tsbuildinfo"]

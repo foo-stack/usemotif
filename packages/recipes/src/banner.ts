@@ -24,29 +24,34 @@ export const bannerRecipe = {
   variants: {
     intent: {
       neutral: {
-        bg: '$colors.status.neutral.tint',
-        color: '$colors.status.neutral.fg',
-        borderBottomColor: '$colors.status.neutral.border',
+        bg: '$components.banner.neutral.bg ?? $colors.status.neutral.tint',
+        color: '$components.banner.neutral.color ?? $colors.status.neutral.fg',
+        borderBottomColor:
+          '$components.banner.neutral.borderBottomColor ?? $colors.status.neutral.border',
       },
       info: {
-        bg: '$colors.status.info.tint',
-        color: '$colors.status.info.fg',
-        borderBottomColor: '$colors.status.info.border',
+        bg: '$components.banner.info.bg ?? $colors.status.info.tint',
+        color: '$components.banner.info.color ?? $colors.status.info.fg',
+        borderBottomColor:
+          '$components.banner.info.borderBottomColor ?? $colors.status.info.border',
       },
       success: {
-        bg: '$colors.status.success.tint',
-        color: '$colors.status.success.fg',
-        borderBottomColor: '$colors.status.success.border',
+        bg: '$components.banner.success.bg ?? $colors.status.success.tint',
+        color: '$components.banner.success.color ?? $colors.status.success.fg',
+        borderBottomColor:
+          '$components.banner.success.borderBottomColor ?? $colors.status.success.border',
       },
       warning: {
-        bg: '$colors.status.warning.tint',
-        color: '$colors.status.warning.fg',
-        borderBottomColor: '$colors.status.warning.border',
+        bg: '$components.banner.warning.bg ?? $colors.status.warning.tint',
+        color: '$components.banner.warning.color ?? $colors.status.warning.fg',
+        borderBottomColor:
+          '$components.banner.warning.borderBottomColor ?? $colors.status.warning.border',
       },
       danger: {
-        bg: '$colors.status.danger.tint',
-        color: '$colors.status.danger.fg',
-        borderBottomColor: '$colors.status.danger.border',
+        bg: '$components.banner.danger.bg ?? $colors.status.danger.tint',
+        color: '$components.banner.danger.color ?? $colors.status.danger.fg',
+        borderBottomColor:
+          '$components.banner.danger.borderBottomColor ?? $colors.status.danger.border',
       },
     },
   },

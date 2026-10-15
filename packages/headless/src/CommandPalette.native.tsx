@@ -1,3 +1,4 @@
+import { useMessages } from '@usemotif/react-native';
 import {
   cloneElement,
   createContext,
@@ -15,6 +16,7 @@ import { Modal, Pressable, ScrollView, Text, TextInput, View, type ViewStyle } f
 import { nativeText } from './_native-text.js';
 import { fuzzyScore } from './_fuzzy.js';
 import { useControllableState } from './use-controllable-state.js';
+import { useShortcut } from './use-shortcut.js';
 
 /**
  * Native CommandPalette - Dialog-presented searchable command list.
@@ -32,7 +34,13 @@ export interface Command {
   readonly shortcut?: ReadonlyArray<string>;
   readonly icon?: ReactNode;
   readonly disabled?: boolean;
-  readonly onSelect: () => void;
+  /** Runs when the command is chosen. Not called for a command with `children`. */
+  readonly onSelect?: () => void;
+  /**
+   * Choosing this command opens these as a page of their own, with its own
+   * search. Backspace on an empty input or the Android back button goes back.
+   */
+  readonly children?: ReadonlyArray<Command>;
 }
 
 const DEFAULT_SECTION = 'Commands';
@@ -54,6 +62,8 @@ interface CommandPaletteContextValue {
   readonly recents: ReadonlyArray<string>;
   readonly listboxId: string;
   readonly activate: (command: Command) => void;
+  readonly pages: ReadonlyArray<Command>;
+  readonly goBack: (depth: number) => void;
 }
 const CommandPaletteContext = createContext<CommandPaletteContextValue | null>(null);
 function useCommandPaletteContext(component: string): CommandPaletteContextValue {
@@ -109,33 +119,38 @@ function Root({
   });
   const [inputValue, setInputValue] = useState('');
   const [highlightedIndex, setHighlightedIndex] = useState(0);
+  const [pages, setPages] = useState<ReadonlyArray<Command>>([]);
   const reactId = useRef(`cmd-${Math.random().toString(36).slice(2, 8)}`).current;
 
   useEffect(() => {
     if (open) setHighlightedIndex(0);
-    else setInputValue('');
+    else {
+      setInputValue('');
+      setPages([]);
+    }
   }, [open]);
 
   const fn = matcher ?? defaultFuzzyMatch;
+  const pageCommands = pages.at(-1)?.children ?? commands;
 
   const flatFiltered = useMemo<ReadonlyArray<Command>>(() => {
     if (inputValue.length === 0) {
       const recentSet = new Set(recents);
       const recentItems = recents
-        .map((id) => commands.find((c) => c.id === id))
+        .map((id) => pageCommands.find((c) => c.id === id))
         .filter((c): c is Command => c !== undefined);
-      const rest = commands.filter((c) => !recentSet.has(c.id));
+      const rest = pageCommands.filter((c) => !recentSet.has(c.id));
       return [...recentItems, ...rest];
     }
     const scored: { command: Command; score: number }[] = [];
-    for (const c of commands) {
+    for (const c of pageCommands) {
       const score = fn(inputValue, c);
       if (score === null) continue;
       scored.push({ command: c, score });
     }
     scored.sort((a, b) => b.score - a.score);
     return scored.map((s) => s.command);
-  }, [commands, inputValue, recents, fn]);
+  }, [pageCommands, inputValue, recents, fn]);
 
   const grouped = useMemo<CommandPaletteContextValue['grouped']>(() => {
     const recentSet = inputValue.length === 0 ? new Set(recents) : new Set<string>();
@@ -155,13 +170,25 @@ function Root({
   const activate = useCallback(
     (command: Command) => {
       if (command.disabled === true) return;
-      command.onSelect();
+      if (command.children !== undefined) {
+        setPages((open) => [...open, command]);
+        setInputValue('');
+        setHighlightedIndex(0);
+        return;
+      }
+      command.onSelect?.();
       const next = [command.id, ...recents.filter((id) => id !== command.id)].slice(0, maxRecents);
       commitRecents(next);
       setOpen(false);
     },
     [recents, commitRecents, maxRecents, setOpen],
   );
+
+  const goBack = useCallback((depth: number) => {
+    setPages((open) => open.slice(0, depth));
+    setInputValue('');
+    setHighlightedIndex(0);
+  }, []);
 
   return (
     <CommandPaletteContext.Provider
@@ -178,9 +205,16 @@ function Root({
         recents,
         listboxId: reactId,
         activate,
+        pages,
+        goBack,
       }}
     >
-      <Modal transparent visible={open} animationType="fade" onRequestClose={() => setOpen(false)}>
+      <Modal
+        transparent
+        visible={open}
+        animationType="fade"
+        onRequestClose={() => (pages.length > 0 ? goBack(pages.length - 1) : setOpen(false))}
+      >
         <Pressable
           onPress={() => setOpen(false)}
           style={{
@@ -202,6 +236,7 @@ function Root({
 interface InputChildProps {
   value?: string;
   onChangeText?: (next: string) => void;
+  onKeyPress?: (e: { nativeEvent: { key: string } }) => void;
   ref?: React.Ref<TextInput>;
   accessibilityRole?: 'search';
 }
@@ -219,6 +254,11 @@ function Input({
     onChangeText: (text: string) => {
       ctx.setInputValue(text);
       ctx.setHighlightedIndex(0);
+    },
+    onKeyPress: (e) => {
+      if (e.nativeEvent.key === 'Backspace' && ctx.inputValue === '' && ctx.pages.length > 0) {
+        ctx.goBack(ctx.pages.length - 1);
+      }
     },
   };
   if (children !== undefined && isValidElement(children)) {
@@ -239,9 +279,11 @@ export interface CommandPaletteListProps {
 function List({
   renderItem,
   renderSection,
-  emptyMessage = 'No matches',
+  emptyMessage: ownEmptyMessage,
   style,
 }: CommandPaletteListProps): ReactElement {
+  const messages = useMessages();
+  const emptyMessage = ownEmptyMessage ?? messages.noMatches;
   const ctx = useCommandPaletteContext('CommandPalette.List');
   if (ctx.flatFiltered.length === 0) {
     return (
@@ -290,18 +332,74 @@ function List({
   );
 }
 
+export interface CommandPaletteBreadcrumbProps {
+  /** Label for the top level. Defaults to `'Commands'`. */
+  rootLabel?: string;
+  /** Shown between crumbs. Defaults to `'/'`. */
+  separator?: ReactNode;
+  /** Renders one crumb. Defaults to the label, pressable unless current. */
+  renderCrumb?: (
+    label: string,
+    info: { current: boolean; depth: number; onSelect: () => void },
+  ) => ReactNode;
+  style?: ViewStyle;
+}
+
+/** The trail of open pages, each one a way back to it. Nothing on the top level. */
+function Breadcrumb({
+  rootLabel: ownRootLabel,
+  separator = '/',
+  renderCrumb,
+  style,
+}: CommandPaletteBreadcrumbProps): ReactElement | null {
+  const messages = useMessages();
+  const rootLabel = ownRootLabel ?? messages.commands;
+  const ctx = useCommandPaletteContext('CommandPalette.Breadcrumb');
+  if (ctx.pages.length === 0) return null;
+  const labels = [rootLabel, ...ctx.pages.map((p) => p.label)];
+  return (
+    <View
+      accessibilityLabel={messages.commandPages}
+      style={[{ flexDirection: 'row', alignItems: 'center' }, style as ViewStyle]}
+    >
+      {labels.map((label, depth) => {
+        const current = depth === labels.length - 1;
+        const onSelect = (): void => ctx.goBack(depth);
+        return (
+          <View key={depth} style={{ flexDirection: 'row', alignItems: 'center' }}>
+            {renderCrumb !== undefined ? (
+              renderCrumb(label, { current, depth, onSelect })
+            ) : current ? (
+              <Text accessibilityRole="header">{label}</Text>
+            ) : (
+              <Pressable accessibilityRole="button" onPress={onSelect}>
+                <Text>{label}</Text>
+              </Pressable>
+            )}
+            {current ? null : nativeText(separator)}
+          </View>
+        );
+      })}
+    </View>
+  );
+}
+
 /**
  * Parts exported flat so `src/index.ts` can assemble the namespace in the
  * server graph, where each one is already a client reference. Internal: the
  * barrel re-exports by name and does not list these.
  */
-export { Root as CommandPaletteRoot, Input as CommandPaletteInput, List as CommandPaletteList };
+export {
+  Root as CommandPaletteRoot,
+  Input as CommandPaletteInput,
+  List as CommandPaletteList,
+  Breadcrumb as CommandPaletteBreadcrumb,
+};
 
 /**
- * No-op on native - there's no global hardware keyboard on touch
- * devices. Apps should wire up a button or gesture to toggle the
- * palette open instead.
+ * An alias of `useShortcut`: on native it never fires, since touch devices
+ * have no global hardware keyboard, and returns the shortcut's label.
  */
-export function useCommandPaletteShortcut(_combo: string, _handler: () => void): void {
-  // intentionally empty - see jsdoc.
+export function useCommandPaletteShortcut(combo: string, handler: () => void): string {
+  return useShortcut(combo, handler, { allowInInputs: true });
 }

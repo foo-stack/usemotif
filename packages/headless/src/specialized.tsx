@@ -1,5 +1,6 @@
 'use client';
 
+import { useMessages } from '@usemotif/react';
 import {
   useCallback,
   useEffect,
@@ -24,6 +25,9 @@ import {
   type HSVColor,
 } from './_color.js';
 import { useControllableState } from './use-controllable-state.js';
+import { sortFiles, type FileFacts, type FileRejection } from './_file-rules.js';
+
+export type { FileRejection, FileRejectionReason } from './_file-rules.js';
 export { formatColor, parseColor } from './_color.js';
 export type { ColorFormat } from './_color.js';
 
@@ -65,6 +69,17 @@ export interface ColorPickerProps {
   hueSliderStyle?: CSSProperties;
   /** Inline style for the alpha slider track. */
   alphaSliderStyle?: CSSProperties;
+  /** Preset colours offered as a radio group under the picker. */
+  swatches?: ReadonlyArray<string>;
+  /** Inline style for each swatch; its `background` is the colour. */
+  swatchStyle?: CSSProperties;
+  /** Adds a button that picks a colour from anywhere on screen, where the
+   * browser has the EyeDropper API. */
+  eyeDropper?: boolean;
+  /** Content of the eyedropper button. Defaults to "Pick". */
+  eyeDropperLabel?: ReactNode;
+  /** Inline style for the eyedropper button. */
+  eyeDropperStyle?: CSSProperties;
 }
 
 /**
@@ -99,7 +114,13 @@ export function ColorPicker({
   saturationValueThumbStyle,
   hueSliderStyle,
   alphaSliderStyle,
+  swatches,
+  swatchStyle,
+  eyeDropper = false,
+  eyeDropperLabel: ownEyeDropperLabel,
+  eyeDropperStyle,
 }: ColorPickerProps): ReactElement {
+  const messages = useMessages();
   const [format, commitFormat] = useControllableState<ColorFormat>({
     value: controlledFormat,
     defaultValue: 'hex',
@@ -154,8 +175,26 @@ export function ColorPicker({
 
   const showAlpha = allowAlpha && format !== 'hex';
 
+  // Detected after mount, so the server render and the first client render agree.
+  const [canPickFromScreen, setCanPickFromScreen] = useState(false);
+  useEffect(() => setCanPickFromScreen('EyeDropper' in window), []);
+  const pickFromScreen = useCallback(async () => {
+    const Dropper = (window as { EyeDropper?: new () => { open(): Promise<{ sRGBHex: string }> } })
+      .EyeDropper;
+    if (Dropper === undefined) return;
+    try {
+      commit({ ...parseColor((await new Dropper().open()).sRGBHex), a: hsv.a });
+    } catch {
+      // The user dismissed the eyedropper (Escape): keep the colour.
+    }
+  }, [commit, hsv.a]);
+
   return (
-    <div role="group" aria-label="Colour picker" style={{ display: 'inline-block', ...style }}>
+    <div
+      role="group"
+      aria-label={messages.colourPicker}
+      style={{ display: 'inline-block', ...style }}
+    >
       <SaturationValuePlane
         hsv={hsv}
         disabled={disabled}
@@ -170,6 +209,102 @@ export function ColorPicker({
       {formats.length > 0 ? (
         <FormatToggle format={format} options={formats} onChange={setFormat} />
       ) : null}
+      {swatches !== undefined && swatches.length > 0 ? (
+        <Swatches
+          colors={swatches}
+          current={formatColor(hsv, 'hex')}
+          disabled={disabled}
+          onPick={(c) => commit({ ...parseColor(c), a: hsv.a })}
+          swatchStyle={swatchStyle}
+        />
+      ) : null}
+      {eyeDropper && canPickFromScreen ? (
+        <button
+          type="button"
+          disabled={disabled}
+          aria-label={messages.pickColourFromScreen}
+          onClick={() => void pickFromScreen()}
+          style={eyeDropperStyle}
+        >
+          {ownEyeDropperLabel ?? messages.pickColour}
+        </button>
+      ) : null}
+    </div>
+  );
+}
+
+const SWATCH: CSSProperties = { width: 20, height: 20, cursor: 'pointer' };
+
+/**
+ * The preset colours as a radio group: one tab stop, the arrow keys move and
+ * select, Home and End jump to the ends, and the swatch matching the current
+ * colour is checked.
+ */
+function Swatches({
+  colors,
+  current,
+  disabled,
+  onPick,
+  swatchStyle,
+}: {
+  colors: ReadonlyArray<string>;
+  current: string;
+  disabled: boolean;
+  onPick: (color: string) => void;
+  swatchStyle: CSSProperties | undefined;
+}): ReactElement {
+  const messages = useMessages();
+  const refs = useRef<Array<HTMLDivElement | null>>([]);
+  const checked = colors.findIndex((c) => formatColor(parseColor(c), 'hex') === current);
+  const tabStop = checked === -1 ? 0 : checked;
+  function go(i: number): void {
+    const n = (i + colors.length) % colors.length;
+    refs.current[n]?.focus();
+    onPick(colors[n]!);
+  }
+  return (
+    <div
+      role="radiogroup"
+      aria-label={messages.swatches}
+      style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}
+    >
+      {colors.map((c, i) => (
+        <div
+          key={`${c}-${i}`}
+          ref={(el) => {
+            refs.current[i] = el;
+          }}
+          role="radio"
+          aria-checked={i === checked}
+          aria-label={c}
+          aria-disabled={disabled || undefined}
+          tabIndex={disabled ? -1 : i === tabStop ? 0 : -1}
+          onClick={() => {
+            if (!disabled) onPick(c);
+          }}
+          onKeyDown={(e: KeyboardEvent<HTMLDivElement>) => {
+            if (disabled) return;
+            const to =
+              e.key === 'ArrowRight' || e.key === 'ArrowDown'
+                ? i + 1
+                : e.key === 'ArrowLeft' || e.key === 'ArrowUp'
+                  ? i - 1
+                  : e.key === 'Home'
+                    ? 0
+                    : e.key === 'End'
+                      ? colors.length - 1
+                      : undefined;
+            if (to !== undefined) {
+              e.preventDefault();
+              go(to);
+            } else if (e.key === ' ' || e.key === 'Enter') {
+              e.preventDefault();
+              onPick(c);
+            }
+          }}
+          style={{ ...SWATCH, background: c, ...swatchStyle }}
+        />
+      ))}
     </div>
   );
 }
@@ -187,6 +322,7 @@ function SaturationValuePlane({
   style?: CSSProperties | undefined;
   thumbStyle?: CSSProperties | undefined;
 }): ReactElement {
+  const messages = useMessages();
   const planeRef = useRef<HTMLDivElement | null>(null);
   // Tear down an in-flight drag on unmount so a closing ColorPicker doesn't
   // leak the pointermove/pointerup listeners or fire onChange after unmount.
@@ -260,11 +396,14 @@ function SaturationValuePlane({
       // `aria-valuetext` describing both axes is the safer model - it announces
       // the current position without trapping the reader in application mode.
       role="slider"
-      aria-label="Saturation and value selector"
+      aria-label={messages.saturationAndValue}
       aria-valuemin={0}
       aria-valuemax={100}
       aria-valuenow={Math.round(hsv.s * 100)}
-      aria-valuetext={`Saturation ${Math.round(hsv.s * 100)}%, value ${Math.round(hsv.v * 100)}%`}
+      aria-valuetext={messages.saturationAndValueText(
+        Math.round(hsv.s * 100),
+        Math.round(hsv.v * 100),
+      )}
       aria-disabled={disabled || undefined}
       tabIndex={disabled ? -1 : 0}
       onPointerDown={onPointerDown}
@@ -300,9 +439,10 @@ function HueSlider({
   onChange: (next: number) => void;
   style?: CSSProperties | undefined;
 }): ReactElement {
+  const messages = useMessages();
   return (
     <ScalarSlider
-      ariaLabel="Hue"
+      ariaLabel={messages.hue}
       min={0}
       // 359, not 360: hue is cyclic so 360 ≡ 0, and `clampHue(360)` maps to 0
       // - with max=360 pressing End teleported the thumb from 100% to 0% and
@@ -329,9 +469,10 @@ function AlphaSlider({
   onChange: (next: number) => void;
   style?: CSSProperties | undefined;
 }): ReactElement {
+  const messages = useMessages();
   return (
     <ScalarSlider
-      ariaLabel="Alpha"
+      ariaLabel={messages.alpha}
       min={0}
       max={1}
       step={0.01}
@@ -464,6 +605,7 @@ function FormatToggle({
   options: ReadonlyArray<ColorFormat>;
   onChange: (next: ColorFormat) => void;
 }): ReactElement {
+  const messages = useMessages();
   const groupId = useId();
   // APG radiogroup: a single tab stop (roving tabindex) plus arrow-key
   // movement, not every radio tabbable with no keyboard navigation.
@@ -488,7 +630,7 @@ function FormatToggle({
   };
 
   return (
-    <div role="radiogroup" aria-label="Colour format" id={groupId}>
+    <div role="radiogroup" aria-label={messages.colourFormat} id={groupId}>
       {options.map((opt, idx) => (
         <button
           key={opt}
@@ -508,33 +650,23 @@ function FormatToggle({
 
 // ─────────── FileUpload ───────────────────────────────────────────
 
-/**
- * Whether `file` satisfies an HTML `accept` string - the same grammar the
- * native file picker uses: a comma-separated list of MIME types
- * (`image/png`), MIME wildcards (`image/*`), or filename extensions
- * (`.pdf`). Matching any one token accepts the file.
- */
-function fileMatchesAccept(file: File, accept: string): boolean {
-  const tokens = accept
-    .split(',')
-    .map((t) => t.trim().toLowerCase())
-    .filter(Boolean);
-  if (tokens.length === 0) return true;
-  const type = file.type.toLowerCase();
-  const name = file.name.toLowerCase();
-  return tokens.some((token) => {
-    if (token === '*/*' || token === '*') return true;
-    if (token.startsWith('.')) return name.endsWith(token);
-    if (token.endsWith('/*')) return type.startsWith(token.slice(0, -1)); // `image/` prefix
-    return type === token;
-  });
+function fileFacts(file: File): FileFacts {
+  return { name: file.name, type: file.type, size: file.size };
 }
 
 export interface FileUploadProps {
   accept?: string;
   multiple?: boolean;
   disabled?: boolean;
+  /** Largest file accepted, in bytes. */
+  maxSize?: number;
+  /** Most files taken from one pick or drop, with `multiple`. Without it, one. */
+  maxFiles?: number;
+  /** Called with the files that pass every rule. */
   onFiles?: (files: File[]) => void;
+  /** Called with every refused file from a pick or drop, and why: `type`,
+   * `size`, or `count`. */
+  onReject?: (rejections: FileRejection<File>[]) => void;
   /** Render fn for the drop zone. Receives `{ isDragging,
    * openPicker }`. */
   children: (info: { isDragging: boolean; openPicker: () => void }) => ReactNode;
@@ -544,7 +676,10 @@ export function FileUpload({
   accept,
   multiple = false,
   disabled = false,
+  maxSize,
+  maxFiles,
   onFiles,
+  onReject,
   children,
   style,
 }: FileUploadProps): ReactElement {
@@ -560,19 +695,17 @@ export function FileUpload({
   const handleFiles = useCallback(
     (list: FileList | null): void => {
       if (list === null || list.length === 0) return;
-      // Enforce `accept` + `multiple` here so the drop path is gated the same
-      // way the picker's hidden <input> already gates the click path -
-      // otherwise a dropped `.exe` reaches `onFiles` despite accept="image/*",
-      // and `multiple={false}` delivers every dropped file.
-      let files = Array.from(list);
-      if (accept !== undefined && accept.trim() !== '') {
-        files = files.filter((f) => fileMatchesAccept(f, accept));
-      }
-      if (!multiple) files = files.slice(0, 1);
-      if (files.length === 0) return;
-      onFiles?.(files);
+      // The same rules for a drop as for a pick: the picker's hidden <input>
+      // only filters what the dialog offers, never what is dropped.
+      const { accepted, rejected } = sortFiles(Array.from(list), fileFacts, {
+        accept,
+        maxSize,
+        maxFiles: multiple ? maxFiles : 1,
+      });
+      if (rejected.length > 0) onReject?.(rejected);
+      if (accepted.length > 0) onFiles?.(accepted);
     },
-    [onFiles, accept, multiple],
+    [onFiles, onReject, accept, multiple, maxSize, maxFiles],
   );
 
   function onDragEnter(e: DragEvent<HTMLDivElement>): void {

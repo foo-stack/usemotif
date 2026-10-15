@@ -21,7 +21,7 @@
 import { spawnSync } from 'node:child_process';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, posix } from 'node:path';
 import {
   assertNoWorkspaceRanges,
   buildVersionMap,
@@ -127,7 +127,10 @@ const DIRECTIVE = "'use client'";
  */
 const CLIENT_ENTRY_POLICY = {
   usemotif: { must: ['.'], mustNot: [] },
-  '@usemotif/react': { must: ['.', './svg', './tanstack-virtual'], mustNot: ['./server'] },
+  '@usemotif/react': {
+    must: ['.', './svg', './tanstack-virtual', './devtools'],
+    mustNot: ['./server', './testing', './rsc'],
+  },
   '@usemotif/headless': {
     must: [],
     mustNot: ['.'],
@@ -140,9 +143,26 @@ const CLIENT_ENTRY_POLICY = {
     // go stale on the first content change, so the rule is stated as the
     // inverse. The exemptions are the server graph: the barrel, and the
     // namespace assembly it re-exports.
-    mustInternalAllExcept: ['./dist/index.js', './dist/index.cjs', './dist/*.namespace.*'],
+    // `index.native.js` is React Native's entry, where the directive means nothing.
+    mustInternalAllExcept: [
+      './dist/index.js',
+      './dist/index.cjs',
+      './dist/index.native.*',
+      './dist/*.namespace.*',
+    ],
+    // The directive-free barrel may only re-export. A component that is not
+    // its own tsup entry gets inlined here instead, and its module-level
+    // `styled()` call then runs in the server graph, where `styled` is a client
+    // reference, so importing the kit from a Server Component throws.
+    reexportOnly: ['./dist/index.js'],
   },
-  '@usemotif/react-native': { must: [], mustNot: ['.', './flash-list', './reanimated'] },
+  '@usemotif/react-native': {
+    must: [],
+    mustNot: ['.', './flash-list', './reanimated', './testing'],
+  },
+  // A build tool: neither entry runs in a React tree. Its source mentions the directive only
+  // because the Turbopack loader's tests feed it client modules.
+  '@usemotif/compiler-web': { must: [], mustNot: ['.', './turbopack'] },
 };
 
 /**
@@ -232,6 +252,9 @@ const CJS_LOAD_SKIP = {
     'Metro only. Requires react-native, which ships untranspiled source that ' +
     'plain Node cannot parse. Nothing consumes this through require().',
   '@usemotif/react-native#./flash-list': 'Metro only, for the same reason as the main entry.',
+  '@usemotif/react-native#./testing':
+    'Loaded by Jest with the react-native preset, which transforms react-native before ' +
+    'requiring it. Plain Node cannot parse react-native, as for the main entry.',
 };
 
 /** Does this Node accept the flag that turns require(esm) back off? */
@@ -302,6 +325,79 @@ function checkCjsEntriesLoad(pkg, manifest, offenders, useFlag) {
       offenders.push(
         `${pkg.name} \u2192 exports "${target.key}" advertises require() but ${target.path} ` +
           `does not load: ${reason.trim()}`,
+      );
+    }
+  }
+}
+
+/**
+ * Assert that what a `react-native` export condition serves is native code: it
+ * must not import `react-dom` or the web `@usemotif/react` barrel. A package
+ * whose React Native target reaches the web build bundles fine and fails only
+ * on a device, which is how headless shipped its web components to native.
+ */
+const WEB_ONLY_IMPORTS = /from\s*['"](react-dom(\/[^'"]*)?|@usemotif\/react)['"]/;
+
+function checkNativeTargets(pkg, manifest, destDir, tarball, offenders) {
+  for (const [key, node] of Object.entries(manifest.exports ?? {})) {
+    const targets = [];
+    collectJsTargets(node, key, false, targets);
+    for (const target of targets) {
+      if (!target.underReactNative) continue;
+      // Follow relative imports too: a barrel can stay clean while a chunk it
+      // loads pulls in the web build.
+      const queue = [target.path.replace(/^\.\//, '')];
+      const seen = new Set();
+      while (queue.length > 0) {
+        const file = queue.shift();
+        if (seen.has(file)) continue;
+        seen.add(file);
+        const content = readFromTarball(destDir, tarball, `package/${file}`);
+        if (content === null) {
+          offenders.push(`${pkg.name} \u2192 ${file} (react-native) is missing from the tarball.`);
+          continue;
+        }
+        const hit = WEB_ONLY_IMPORTS.exec(content);
+        if (hit !== null) {
+          offenders.push(
+            `${pkg.name} \u2192 ${target.path} is served to React Native but reaches "${hit[1]}" (in ${file}), which is web only.`,
+          );
+          break;
+        }
+        for (const m of content.matchAll(/(?:from|import)\s*['"](\.\.?\/[^'"]+)['"]/g)) {
+          queue.push(posix.normalize(posix.join(posix.dirname(file), m[1])));
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Assert a server-graph barrel holds nothing but `export ... from` lines and bare
+ * chunk imports, so no client code can be inlined into it and run on the server.
+ */
+function checkReexportOnly(pkg, destDir, tarball, offenders) {
+  for (const path of CLIENT_ENTRY_POLICY[pkg.name]?.reexportOnly ?? []) {
+    const content = readFromTarball(destDir, tarball, `package/${path.replace(/^\.\//, '')}`);
+    if (content === null) {
+      offenders.push(`${pkg.name} \u2192 ${path} is missing from the tarball.`);
+      continue;
+    }
+    const stray = content
+      .split('\n')
+      .map((line) => line.trim())
+      .find(
+        (line) =>
+          line !== '' &&
+          !line.startsWith('//# sourceMappingURL=') &&
+          // Code splitting adds bare imports of the (client) chunks it shares.
+          !/^import '[^']+';$/.test(line) &&
+          !/^export (\{[^}]*\}|\*) from '[^']+';$/.test(line),
+      );
+    if (stray !== undefined) {
+      offenders.push(
+        `${pkg.name} \u2192 ${path} must only re-export, but has: ${stray.slice(0, 80)}. ` +
+          `Give the component its own tsup entry so it lands in a client chunk.`,
       );
     }
   }
@@ -410,6 +506,8 @@ function main() {
         }
         assertClientPackageIsClassified(pkg, offenders);
         checkUseClientEntries(pkg, manifest, destDir, tarball, offenders);
+        checkReexportOnly(pkg, destDir, tarball, offenders);
+        checkNativeTargets(pkg, manifest, destDir, tarball, offenders);
         checkInternalClientChunks(pkg, destDir, tarball, offenders);
         checkCjsEntriesLoad(pkg, manifest, offenders, requireEsmOptOut);
         const clean = offenders.length === before;

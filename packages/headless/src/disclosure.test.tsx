@@ -132,6 +132,49 @@ describe('Accordion - single mode (default)', () => {
   });
 });
 
+describe('Accordion - collapsible={false}', () => {
+  function Locked({ type = 'single' }: { type?: 'single' | 'multiple' }): React.ReactElement {
+    return (
+      <Accordion.Root type={type} collapsible={false} defaultValue={['a']}>
+        <Accordion.Item value="a">
+          <Accordion.Trigger>
+            <button data-testid="ta">A</button>
+          </Accordion.Trigger>
+          <Accordion.Content>A body</Accordion.Content>
+        </Accordion.Item>
+        <Accordion.Item value="b">
+          <Accordion.Trigger>
+            <button data-testid="tb">B</button>
+          </Accordion.Trigger>
+          <Accordion.Content>B body</Accordion.Content>
+        </Accordion.Item>
+      </Accordion.Root>
+    );
+  }
+  const attr = (id: string, name: string): string | null =>
+    container.querySelector(`[data-testid="${id}"]`)!.getAttribute(name);
+
+  it('keeps the open item open and marks its trigger disabled', () => {
+    render(<Locked />);
+    expect(attr('ta', 'aria-disabled')).toBe('true');
+    expect(attr('tb', 'aria-disabled')).toBeNull();
+    click(container.querySelector('[data-testid="ta"]')!);
+    expect(attr('ta', 'aria-expanded')).toBe('true');
+    click(container.querySelector('[data-testid="tb"]')!);
+    expect(attr('ta', 'aria-expanded')).toBe('false');
+    expect(attr('tb', 'aria-expanded')).toBe('true');
+    expect(attr('ta', 'aria-disabled')).toBeNull();
+    expect(attr('tb', 'aria-disabled')).toBe('true');
+  });
+
+  it('has no effect in multiple mode', () => {
+    render(<Locked type="multiple" />);
+    expect(attr('ta', 'aria-disabled')).toBeNull();
+    click(container.querySelector('[data-testid="ta"]')!);
+    expect(attr('ta', 'aria-expanded')).toBe('false');
+  });
+});
+
 describe('Accordion - multiple mode', () => {
   it('multiple items can be open simultaneously', () => {
     render(
@@ -163,7 +206,11 @@ describe('Accordion - multiple mode', () => {
 
 describe('Tabs', () => {
   function renderTabs(
-    opts: { defaultValue?: string; orientation?: 'horizontal' | 'vertical' } = {},
+    opts: {
+      defaultValue?: string;
+      orientation?: 'horizontal' | 'vertical';
+      activationMode?: 'automatic' | 'manual';
+    } = {},
   ) {
     render(
       <Tabs.Root {...opts}>
@@ -239,6 +286,42 @@ describe('Tabs', () => {
         new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true, cancelable: true }),
       );
     });
+    expect(tabs[2]!.getAttribute('aria-selected')).toBe('true');
+  });
+
+  it('manual activation moves focus without selecting, and a press selects', () => {
+    renderTabs({ defaultValue: 'a', activationMode: 'manual' });
+    const tabs = container.querySelectorAll<HTMLElement>('[role="tab"]');
+    tabs[0]!.focus();
+    const key = (k: string): void =>
+      act(() => {
+        document.activeElement!.dispatchEvent(
+          new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true }),
+        );
+      });
+    key('ArrowRight');
+    expect(document.activeElement).toBe(tabs[1]);
+    expect(tabs[0]!.getAttribute('aria-selected')).toBe('true');
+    key('End');
+    expect(document.activeElement).toBe(tabs[2]);
+    key('Home');
+    expect(document.activeElement).toBe(tabs[0]);
+    key('ArrowLeft');
+    expect(document.activeElement).toBe(tabs[2]);
+    expect(tabs[2]!.getAttribute('aria-selected')).toBe('false');
+    // Enter and Space on a focused <button> fire its click, which selects.
+    click(tabs[2]!);
+    expect(tabs[2]!.getAttribute('aria-selected')).toBe('true');
+  });
+
+  it('automatic activation stays the default, selecting as focus moves', () => {
+    renderTabs({ defaultValue: 'a' });
+    const tabs = container.querySelectorAll<HTMLElement>('[role="tab"]');
+    tabs[0]!.focus();
+    act(() => {
+      tabs[0]!.dispatchEvent(new KeyboardEvent('keydown', { key: 'End', bubbles: true }));
+    });
+    expect(document.activeElement).toBe(tabs[2]);
     expect(tabs[2]!.getAttribute('aria-selected')).toBe('true');
   });
 

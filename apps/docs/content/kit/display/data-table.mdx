@@ -1,0 +1,52 @@
+---
+title: DataTable
+description: A themed data grid - sortable, selectable, resizable, windowed - over the headless DataTable.
+diataxis: reference
+covers: ['DataTable', 'DataTableProps']
+last_verified: 2026-10-15
+---
+
+import { ApiSignature, ArticleMeta, Callout, CodeBlock, Eyebrow, Lede } from '../../../components/index.js';
+
+<Eyebrow>UI kit / Display</Eyebrow>
+
+# DataTable
+
+<Lede>
+  The kit's DataTable is the headless grid, themed: a bordered surface, a muted header row with an
+  arrow on the sorted column, padded cells, and a tint on selected rows.
+</Lede>
+
+<ArticleMeta />
+
+## Usage
+
+<CodeBlock lang="tsx" code={`import { DataTable } from '@usemotif/ui';
+
+<DataTable
+  data={invoices}
+  getRowId={(i) => i.id}
+  columns={[
+    { id: 'number', header: 'Invoice', value: (i) => i.number, sortable: true },
+    { id: 'customer', header: 'Customer', value: (i) => i.customer, sortable: true },
+    { id: 'total', header: 'Total', value: (i) => i.total, sortable: true, width: 120 },
+  ]}
+  selectionMode="multiple"
+  aria-label="Invoices"
+/>`} />
+
+## API
+
+<ApiSignature
+  name="DataTable"
+  status="stable"
+  signature={`function DataTable<T>(props: DataTableProps<T>): JSX.Element`}
+/>
+
+It takes every [headless DataTable](/headless/specialized/data-table) prop except the style props
+and `renderHeader`, which the kit supplies. Sorting, selection, resizing, row windowing and the
+keyboard model are the headless component's. Web only for now.
+
+<Callout variant="info" title="Related">
+  [Headless DataTable](/headless/specialized/data-table) for the full API and keyboard reference.
+</Callout>

@@ -66,8 +66,8 @@ export type { LinkProps } from './Link.js';
 export { Avatar } from './Avatar.js';
 export type { AvatarProps, AvatarSize } from './Avatar.js';
 
-export { Icon } from './Icon.js';
-export type { IconProps } from './Icon.js';
+export { Icon, IconProvider } from './Icon.js';
+export type { IconProps, IconProviderProps } from './Icon.js';
 
 export { NATIVE_SVG_COMPONENT, SVG_PRIMITIVES, Svg } from './Svg.js';
 export type { SvgPrimitives, SvgProps } from './Svg.js';
@@ -171,6 +171,16 @@ export type {
   AnimationScope,
 } from './use-animate.js';
 export { useDrag } from './use-drag.js';
+export { useGesture } from './use-gesture.js';
+export { Prose, type ProseProps } from './Prose.js';
+export type {
+  GestureHandlers,
+  GestureOptions,
+  PinchInfo,
+  SwipeDirection,
+  SwipeInfo,
+  UseGestureResult,
+} from './use-gesture.js';
 export type {
   DragAxis,
   DragConstraints,
@@ -222,6 +232,7 @@ export type {
   PresenceContextValue,
   UseExitTransitionNativeResult,
 } from './_animation/presence-context.js';
+export { Presence, type PresenceProps } from './Presence.js';
 export type {
   MotionDriver,
   MotionDriverEntryOptions,
@@ -233,3 +244,14 @@ export { styled } from './styled.js';
 export type { CompoundVariant, StyledComponent, StyledConfig, VariantProps } from './styled.js';
 export { createStyledContext } from './styled-context.js';
 export type { StyledContext, VariantContext } from './styled-context.js';
+export { TitleBar, type TitleBarProps } from './TitleBar.js';
+export {
+  styledSlots,
+  type SlotComponents,
+  type SlotRecipeConfig,
+  type SlotStyles,
+  type SlotVariants,
+  type SlotVariantsOf,
+} from './styled-slots.js';
+export { MessagesProvider, useMessages, type MessagesProviderProps } from './messages.js';
+export type { MotifMessages } from '@usemotif/core';

@@ -5,6 +5,7 @@ import {
   type RangeSliderProps as HeadlessRangeSliderProps,
 } from '@usemotif/headless';
 import { useMemo, type CSSProperties } from 'react';
+import { usePlatformStyle } from './_platform-style.js';
 import { labelRoom, MARK_LABEL_STYLE, MARK_STYLE } from './_slider-marks.js';
 
 export interface RangeSliderProps extends Omit<
@@ -55,6 +56,7 @@ const THUMB_STYLE: Record<'horizontal' | 'vertical', CSSProperties> = {
  * ```
  */
 export function RangeSlider({ width = 200, ...rest }: RangeSliderProps) {
+  const platformStyle = usePlatformStyle();
   const disabled = rest.disabled ?? false;
   const orientation = rest.orientation ?? 'horizontal';
   const trackStyle = useMemo<CSSProperties>(
@@ -70,11 +72,11 @@ export function RangeSlider({ width = 200, ...rest }: RangeSliderProps) {
   return (
     <HeadlessRangeSlider
       {...rest}
-      style={trackStyle}
-      fillStyle={FILL_STYLE[orientation]}
-      thumbStyle={THUMB_STYLE[orientation]}
-      markStyle={MARK_STYLE[orientation]}
-      markLabelStyle={MARK_LABEL_STYLE[orientation]}
+      style={platformStyle(trackStyle)}
+      fillStyle={platformStyle(FILL_STYLE[orientation])}
+      thumbStyle={platformStyle(THUMB_STYLE[orientation])}
+      markStyle={platformStyle(MARK_STYLE[orientation])}
+      markLabelStyle={platformStyle(MARK_LABEL_STYLE[orientation])}
     />
   );
 }

@@ -1,0 +1,35 @@
+{
+  "name": "@usemotif/ssr-astro",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Streaming SSR fixture: Astro with motif inside React islands.",
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev --port 4300",
+    "build:fixture": "astro build",
+    "start": "node ./dist/server/entry.mjs",
+    "smoke": "node smoke.mjs",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist .astro .turbo"
+  },
+  "dependencies": {
+    "@astrojs/node": "11.1.8",
+    "@astrojs/react": "7.1.0",
+    "@usemotif/react": "workspace:*",
+    "@usemotif/tokens": "workspace:*",
+    "astro": "7.4.0",
+    "cookie": "^2.0.1",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "playwright": "1.59.1",
+    "typescript": "^6.0.3"
+  },
+  "engines": {
+    "node": ">=22.22.0"
+  }
+}

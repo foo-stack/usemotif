@@ -2,8 +2,8 @@
 title: Testing
 description: Test motif components with Testing Library, assert resolved styles, and run the cross-renderer conformance suite from @usemotif/test-utils.
 diataxis: howto
-covers: ['assertConformance', 'standardCases', 'motifMatchers', 'defaultTestTheme']
-last_verified: 2026-05-15
+covers: ['assertConformance', 'standardCases', 'motifMatchers', 'defaultTestTheme', 'accessibleFacts', 'AccessibleFacts', 'NativeTestInstance']
+last_verified: 2026-10-15
 ---
 
 import { ArticleMeta, Callout, CodeBlock, Eyebrow, Lede } from '../../components/index.js';
@@ -70,18 +70,72 @@ import { motifMatchers } from '@usemotif/test-utils';
 
 expect.extend(motifMatchers);`} />
 
-The matchers operate on a `RendererOutput` - the normalised, theme-resolved shape a renderer
-adapter produces. `toHaveStyle` checks the unconditional style; `toHaveStyleAt` checks a scoped
-rule, keyed by an `@media`, `@container`, or pseudo-selector prefix.
+The matchers operate on a `RendererOutput`: the normalised, theme-resolved styles of one rendered
+element. On the web, `renderStyles` from `@usemotif/react/testing` renders any element, your own
+`styled()` components included, and returns one. Pass the theme you render with, so token values
+read back as the theme resolves them. `toHaveStyle` checks the unconditional style; `toHaveStyleAt`
+checks a scoped rule, keyed by an `@media`, `@container`, or pseudo-selector prefix.
 
-<CodeBlock lang="ts" code={`const out = adapter.render({ primitive: 'Box', props: { p: '$4', _hover: { opacity: 0.9 } } });
+<CodeBlock lang="tsx" filename="Tag.test.tsx" code={`import { renderStyles } from '@usemotif/react/testing';
+import { theme } from './theme';
+import { Tag } from './Tag';
 
-expect(out).toHaveStyle({ padding: 16 });
-expect(out).toHaveStyleAt(':hover', { opacity: 0.9 });
-expect(out).toHaveStyleAt('@media (min-width: 768px)', { padding: 32 });`} />
+const out = renderStyles(<Tag tone="loud" p={{ base: '$space.1', md: '$space.3' }} />, theme);
+
+expect(out).toHaveStyle({ fontWeight: 700, padding: 4 });
+expect(out).toHaveStyleAt(':hover', { opacity: 0.8 });
+expect(out).toHaveStyleAt('@media (min-width: 768px)', { padding: 12 });`} />
+
+`renderStyles` is web only. On React Native, assert on the rendered output with your usual testing
+library.
 
 Both are subset matches - extra keys are tolerated, so a renderer adding delivery-specific styles
 does not break the assertion.
+
+## Assert styles on React Native
+
+`@usemotif/react-native/testing` has a `renderStyles` that returns the same shape as the web one,
+so the same `toHaveStyle` and `toHaveStyleAt` assertions hold on both platforms. It renders with
+`test-renderer`, the renderer React Native Testing Library is built on; add it as a dev dependency.
+
+<CodeBlock lang="tsx" code={`import { renderStyles } from '@usemotif/react-native/testing';
+import { motifMatchers } from '@usemotif/test-utils';
+expect.extend(motifMatchers);
+
+const out = renderStyles(<Card padding={{ base: '$space.3', md: '$space.6' }} />, theme);
+expect(out).toHaveStyle({ padding: 12 });
+expect(out).toHaveStyleAt('@media (min-width: 768px)', { padding: 24 });
+expect(out).toHaveStyleAt(':active', { opacity: 0.8 });`} />
+
+Native has no media queries or `:active` rules, so they are simulated. The element renders at
+width 0 for `style`, and at each breakpoint's width for that breakpoint's rule, which holds what
+changes from the breakpoint below. It also renders pressed, through React Native's
+`testOnly_pressed`, for `:active`.
+
+## Assert what assistive technology hears
+
+`motifMatchers` includes three accessibility matchers that read the same on both platforms. Pass
+a DOM element on web, or a React Native test instance from `@testing-library/react-native`:
+
+<CodeBlock lang="tsx" code={`expect.extend(motifMatchers);
+
+// web
+const trigger = screen.getByText('Shipping details').closest('button');
+// native
+const trigger = screen.getByText('Shipping details').parent;
+
+expect(trigger).toHaveRole('button');
+expect(trigger).toHaveAccessibleName('Shipping details');
+expect(trigger).toBeExpanded();`} />
+
+Roles are ARIA's names on both sides: `<h2>` and `accessibilityRole="header"` are both
+`heading`, `<img alt="">` is `presentation`, and an `<input type="email">` is a `textbox`. The
+name comes from `aria-labelledby`, `aria-label`, `alt` or a form control's `<label>` on web, from
+`accessibilityLabel` or `aria-label` on native, and from text content otherwise. `toBeExpanded`
+reads `aria-expanded`, or `accessibilityState.expanded` on native, and throws on an element that
+reports no expanded state at all, so a negated assertion can't pass by accident.
+
+`accessibleFacts(target)` returns all three at once.
 
 ## Run the conformance suite
 

@@ -2,8 +2,18 @@
 title: styled
 description: Wrap a component or HTML element with base styles, named variants, and a typed prop API.
 diataxis: reference
-covers: ['styled', 'createStyledContext']
-last_verified: 2026-10-14
+covers:
+  [
+    'styled',
+    'createStyledContext',
+    'styledSlots',
+    'SlotRecipeConfig',
+    'SlotComponents',
+    'SlotStyles',
+    'SlotVariants',
+    'SlotVariantsOf',
+  ]
+last_verified: 2026-10-15
 ---
 
 import { ApiSignature, ArticleMeta, Callout, CodeBlock, Eyebrow } from '../../components/index.js';
@@ -182,6 +192,48 @@ const Label = styled('span', {
 <Frame size="lg">
   <Label>Save</Label>
 </Frame>;`} />
+
+## styledSlots
+
+`styledSlots(config)` styles several named parts of one component from a single config, and
+returns a `styled` component per slot. Every bag in the config is keyed by slot, and the slots
+share their variants:
+
+<CodeBlock lang="tsx" code={`import { styledSlots } from 'usemotif';
+
+const Card = styledSlots({
+  slots: { root: 'article', title: 'h3', body: 'div' },
+  base: {
+    root: { borderRadius: '$lg', p: '$4', bg: '$colors.surface.raised' },
+    title: { fontWeight: '$semibold' },
+  },
+  variants: {
+    size: {
+      sm: { root: { p: '$3' }, title: { fontSize: '$md' } },
+      lg: { root: { p: '$6' }, title: { fontSize: '$xl' } },
+    },
+  },
+  compoundVariants: [{ size: 'lg', css: { body: { lineHeight: '$relaxed' } } }],
+  defaultVariants: { size: 'sm' },
+});
+
+<Card.root size="lg">
+  <Card.title>Plans</Card.title>
+  <Card.body>Pick one.</Card.body>
+</Card.root>`} />
+
+| Field | Shape |
+| --- | --- |
+| `slots` | The element or component each slot renders: `{ root: 'article', title: Text }`. |
+| `base` | A style bag per slot. |
+| `variants` | `{ name: { value: { slot: bag } } }`. A value may style any of the slots. |
+| `compoundVariants` | Matchers plus `css`, a bag per slot. |
+| `defaultVariants` | One default per variant, shared by every slot. |
+
+A variant set on one slot reaches every slot rendered inside it, through a styled context the
+recipe creates, so `size` on the root sizes the title and body with no prop threading. A slot can
+still take its own value, which then flows to the slots inside it. Each slot is an ordinary
+`styled` component, typed the same way, and the recipe works the same on web and React Native.
 
 ## Example
 

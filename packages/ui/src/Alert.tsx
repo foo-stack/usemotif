@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react';
 import { alertRecipe } from '@usemotif/recipes';
 import { Box, Text } from 'usemotif';
+import { StatusActions } from './_status-actions.js';
+import { statusIcon } from './_status-icons.js';
 
 export type AlertIntent = 'neutral' | 'info' | 'success' | 'warning' | 'danger';
 
@@ -9,10 +11,18 @@ export interface AlertProps {
   readonly intent?: AlertIntent;
   /** Bold heading line. */
   readonly title?: ReactNode;
-  /** Optional leading icon (inherits the intent colour via `currentColor`). */
+  /**
+   * Leading icon, drawn in the intent colour. Defaults to the intent's status
+   * icon (none for `neutral`); pass `null` to show none.
+   */
   readonly icon?: ReactNode;
   /** Body content. */
   readonly children?: ReactNode;
+  /** Trailing action area, such as a `<Button>`. */
+  readonly action?: ReactNode;
+  /** When provided, renders a `×` dismiss button calling this. The consumer
+   * owns visibility: the Alert does not unmount itself. */
+  readonly onDismiss?: () => void;
 }
 
 /**
@@ -22,16 +32,28 @@ export interface AlertProps {
  * `role="alert"`.
  *
  * ```tsx
- * <Alert intent="danger" title="Payment failed">
+ * <Alert intent="danger" title="Payment failed" onDismiss={hide}>
  *   Update your card and try again.
  * </Alert>
  * ```
  */
-export function Alert({ intent = 'neutral', title, icon, children }: AlertProps) {
+export function Alert({
+  intent = 'neutral',
+  title,
+  icon,
+  children,
+  action,
+  onDismiss,
+}: AlertProps) {
   const fg = `$colors.status.${intent}.fg`;
+  const shown = icon === undefined ? statusIcon(intent) : icon;
   return (
     <Box role="alert" {...alertRecipe.base} {...alertRecipe.variants.intent[intent]}>
-      {icon ? <Box flexShrink={0}>{icon}</Box> : null}
+      {shown !== null && shown !== false ? (
+        <Box flexShrink={0} display="inline-flex" color={fg}>
+          {shown}
+        </Box>
+      ) : null}
       <Box display="flex" flexDirection="column" gap="$space.1" flex={1}>
         {title ? (
           <Text fontWeight="$fontWeights.semibold" color={fg}>
@@ -44,6 +66,7 @@ export function Alert({ intent = 'neutral', title, icon, children }: AlertProps)
           </Text>
         ) : null}
       </Box>
+      <StatusActions action={action} onDismiss={onDismiss} color={fg} />
     </Box>
   );
 }

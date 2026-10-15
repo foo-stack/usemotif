@@ -6,6 +6,9 @@ import {
   mediaQueryForBreakpoint,
   parseResponsiveDSL,
   parseResponsiveKey,
+  PREFERENCE_ORDER,
+  PREFERENCE_QUERIES,
+  type PreferenceKey,
   responsiveArrayToObject,
   type BreakpointName,
 } from './breakpoints.js';
@@ -334,6 +337,7 @@ const BREAKPOINT_ORDER = Object.keys(defaultBreakpoints) as readonly BreakpointN
  * - `@<bp>` (e.g. `@md`) → `@container (min-width: ...)` against the nearest
  *   container ancestor.
  * - `@<name>.<bp>` (e.g. `@card.md`) → `@container <name> (min-width: ...)`.
+ * - `@contrast` and the other preference keys → their media query, after every width rule.
  *
  * Renderer-agnostic: produces the data the renderer needs but does not inject
  * anything into the DOM.
@@ -355,6 +359,7 @@ export function resolveResponsiveStylesToVars(
   const mediaPerBp: StylePerBp = {};
   const anonContainerPerBp: StylePerBp = {};
   const namedContainerPerBp: Record<string, StylePerBp> = {};
+  const preferenceStyles: Partial<Record<PreferenceKey, ResolvedStyle>> = {};
   const rest: Record<string, unknown> = {};
 
   // Per-slot transform-axis bookkeeping. `slotAxes` accumulates the
@@ -438,6 +443,8 @@ export function resolveResponsiveStylesToVars(
         } else if (parsed.kind === 'media') {
           mediaPerBp[parsed.bp] ??= {};
           writeToSlot(mediaPerBp[parsed.bp]!, def, resolved);
+        } else if (parsed.kind === 'preference') {
+          writeToSlot((preferenceStyles[parsed.preference] ??= {}), def, resolved);
         } else if (parsed.name === undefined) {
           anonContainerPerBp[parsed.bp] ??= {};
           writeToSlot(anonContainerPerBp[parsed.bp]!, def, resolved);
@@ -500,6 +507,14 @@ export function resolveResponsiveStylesToVars(
       if (style !== undefined && Object.keys(style).length > 0) {
         atRules.push({ atRule: containerQueryForBreakpoint(bp, name), style });
       }
+    }
+  }
+
+  // 4. Preference conditions - last, so a user preference overrides any width rule.
+  for (const preference of PREFERENCE_ORDER) {
+    const style = preferenceStyles[preference];
+    if (style !== undefined && Object.keys(style).length > 0) {
+      atRules.push({ atRule: PREFERENCE_QUERIES[preference], style });
     }
   }
 

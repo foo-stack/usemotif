@@ -130,3 +130,16 @@ describe('DatePicker range mode (native)', () => {
     expect(trigger()).toBe('6/10 - 6/14');
   });
 });
+
+describe('native Calendar numberOfMonths', () => {
+  it('renders consecutive months side by side, each day once', () => {
+    render(<Calendar defaultValue={new Date(2024, 5, 15)} numberOfMonths={2} />);
+    const labels = Array.from(container.querySelectorAll('[accessibilityLabel]')).map((el) =>
+      el.getAttribute('accessibilityLabel'),
+    );
+    expect(labels.filter((l) => l === new Date(2024, 6, 1).toDateString())).toHaveLength(1);
+    expect(labels.filter((l) => l === new Date(2024, 5, 30).toDateString())).toHaveLength(1);
+    expect(labels.filter((l) => l?.includes('Jun') && l.includes('2024'))).toHaveLength(30);
+    expect(labels.filter((l) => l?.includes('Jul') && l.includes('2024'))).toHaveLength(31);
+  });
+});

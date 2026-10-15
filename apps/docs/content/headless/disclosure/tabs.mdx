@@ -3,7 +3,7 @@ title: Tabs
 description: Sibling panels with one always visible. A tab list, arrow-key navigation, the standard tablist / tab / tabpanel roles.
 diataxis: reference
 covers: ['Tabs', 'TabsRootProps', 'TabsTabProps', 'TabsPanelProps']
-last_verified: 2026-05-15
+last_verified: 2026-10-15
 ---
 
 import {
@@ -77,6 +77,12 @@ A compound component with four parts. `Tabs.Root` owns the active value. `Tabs.L
       description: 'Called when the active tab changes.',
     },
     {
+      name: 'activationMode',
+      type: '"automatic" | "manual"',
+      default: '"automatic"',
+      description: 'Whether an arrow key selects the tab it reaches (`automatic`), or only focuses it, leaving Enter or Space to select (`manual`). Use manual when a panel is slow to render. React Native accepts it and selects on press either way.',
+    },
+    {
       name: 'orientation',
       type: '"horizontal" | "vertical"',
       default: '"horizontal"',
@@ -147,6 +153,11 @@ Root's `orientation`.
       description: 'Keep the panel mounted when inactive - hidden via the `hidden` attribute. Use it to preserve panel state across tab switches.',
     },
     {
+      name: 'keepMounted',
+      type: "'activity'",
+      description: 'Keep the panel mounted when inactive, hidden through React `<Activity>`: its state survives, its effects pause, and its updates run at low priority. React 19.2 or later, on web and native; otherwise the panel unmounts.',
+    },
+    {
       name: 'children',
       type: 'ReactNode',
       description: 'The panel content.',
@@ -166,8 +177,11 @@ Root's `orientation`.
 | Arrow Left / Right (horizontal) | Move to the previous / next tab, wrapping |
 | Arrow Up / Down (vertical) | Move to the previous / next tab, wrapping |
 | Home / End | Move to the first / last tab |
+| Enter / Space | Select the focused tab (`activationMode="manual"`) |
 
-Moving to a tab both focuses and activates it - the matching panel shows immediately.
+By default moving to a tab both focuses and activates it, and the matching panel shows
+immediately. With `activationMode="manual"` the keys only move focus, and Enter or Space selects,
+so a panel that is slow to render does not load for every tab passed on the way.
 
 ## Accessibility
 
@@ -179,6 +193,10 @@ list once, then uses the arrow keys, and tabs straight out to the panel.
 By default an inactive panel is unmounted. `forceMount` keeps it mounted with the `hidden`
 attribute, which preserves its internal state - a half-filled form, a scroll position - across
 tab switches.
+
+`keepMounted="activity"` does the same through React's `<Activity>`, which also pauses the hidden
+panel's effects and renders its updates at low priority, so a heavy panel kept around costs less
+while another tab is open.
 
 ## Examples
 

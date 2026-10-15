@@ -9,7 +9,7 @@ const PADDINGS = ['none', 'sm', 'md', 'lg'] as const;
  * Card - a surface container, `styled(Box)` over `cardRecipe`, with
  * `elevation` and `padding` variants.
  */
-const meta = {
+const meta: Meta<typeof Card> = {
   title: 'Kit/Card',
   component: Card,
   tags: ['autodocs'],
@@ -18,7 +18,7 @@ const meta = {
     padding: { control: 'inline-radio', options: PADDINGS },
   },
   args: { elevation: 'raised', padding: 'md' },
-} satisfies Meta<typeof Card>;
+};
 
 export default meta;
 type Story = StoryObj<typeof meta>;

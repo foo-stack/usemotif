@@ -31,6 +31,7 @@ import {
   ComboboxInput,
   ComboboxList,
   ComboboxRoot,
+  CommandPaletteBreadcrumb,
   CommandPaletteInput,
   CommandPaletteList,
   CommandPaletteRoot,
@@ -79,7 +80,9 @@ import {
   TabsPanel,
   TabsRoot,
   TabsTab,
+  FloatingArrow,
   TooltipContent,
+  TooltipProvider,
   TooltipRoot,
   TooltipTrigger,
 } from './client.js';
@@ -134,9 +137,11 @@ export const Sheet = {
 };
 
 export const Tooltip = {
+  Provider: TooltipProvider,
   Root: TooltipRoot,
   Trigger: TooltipTrigger,
   Content: TooltipContent,
+  Arrow: FloatingArrow,
 };
 
 export const Popover = {
@@ -144,12 +149,14 @@ export const Popover = {
   Trigger: PopoverTrigger,
   Content: PopoverContent,
   Close: PopoverClose,
+  Arrow: FloatingArrow,
 };
 
 export const HoverCard = {
   Root: HoverCardRoot,
   Trigger: HoverCardTrigger,
   Content: HoverCardContent,
+  Arrow: FloatingArrow,
 };
 
 export const Menu = {
@@ -232,6 +239,7 @@ export const CommandPalette = {
   Root: CommandPaletteRoot,
   Input: CommandPaletteInput,
   List: CommandPaletteList,
+  Breadcrumb: CommandPaletteBreadcrumb,
 };
 
 export {
@@ -266,10 +274,14 @@ export {
   ToggleGroupItem,
   Toolbar,
   TreeView,
+  DataTable,
+  formatColor,
+  parseColor,
   useCommandPaletteShortcut,
   useControllableState,
   useDialogState,
   useReducedMotion,
+  useShortcut,
   useToast,
 } from './client.js';
 
@@ -283,10 +295,16 @@ export type {
   CalendarProps,
   CheckboxProps,
   CollapsibleRootProps,
+  ColorFormat,
   ColorPickerProps,
+  DataTableColumn,
+  DataTableProps,
+  SortDirection,
+  SortState,
   ComboboxOption,
   ComboboxRootProps,
   Command,
+  CommandPaletteBreadcrumbProps,
   CommandPaletteListProps,
   CommandPaletteRootProps,
   ContextMenuContentProps,
@@ -302,6 +320,8 @@ export type {
   DialogTitleProps,
   DialogTriggerProps,
   DrawerContentProps,
+  FileRejection,
+  FileRejectionReason,
   FileUploadProps,
   HoverCardContentProps,
   HoverCardRootProps,
@@ -361,7 +381,9 @@ export type {
   ToggleGroupProps,
   ToggleProps,
   ToolbarProps,
+  FloatingArrowProps,
   TooltipContentProps,
+  TooltipProviderProps,
   TooltipRootProps,
   TooltipTriggerProps,
   TreeNode,
@@ -369,4 +391,5 @@ export type {
   TreeViewBaseProps,
   TreeViewProps,
   UseControllableStateOptions,
+  UseShortcutOptions,
 } from './client.js';

@@ -1,3 +1,4 @@
+import { useMessages } from '@usemotif/react-native';
 import {
   cloneElement,
   createContext,
@@ -48,6 +49,8 @@ export interface ComboboxOption<T = string> {
   readonly value: T;
   readonly label: string;
   readonly disabled?: boolean;
+  /** A heading the option is listed under, shown above the first of a run. */
+  readonly group?: string;
 }
 
 interface ComboboxContextValue<T = string> {
@@ -181,11 +184,19 @@ function ComboboxInput<T>({
   return <TextInput placeholder={placeholder} {...sharedProps} />;
 }
 
+/** A heading row where a group starts: the native sheets' version of the web
+ * listbox's labelled groups. */
+function groupHeader<T>(options: ReadonlyArray<ComboboxOption<T>>, i: number): ReactNode {
+  const group = options[i]?.group;
+  if (group === undefined || options[i - 1]?.group === group) return null;
+  return <View accessibilityRole="header">{nativeText(group)}</View>;
+}
+
 function ComboboxList<T>({
   style,
   renderOption,
-  emptyMessage = 'No options',
-  loadingMessage = 'Loading...',
+  emptyMessage: ownEmptyMessage,
+  loadingMessage: ownLoadingMessage,
 }: {
   style?: ViewStyle;
   renderOption?: (
@@ -196,6 +207,9 @@ function ComboboxList<T>({
   /** Shown in place of `emptyMessage` while the root is `loading`. */
   loadingMessage?: ReactNode;
 }): ReactElement | null {
+  const messages = useMessages();
+  const emptyMessage = ownEmptyMessage ?? messages.noOptions;
+  const loadingMessage = ownLoadingMessage ?? messages.loadingOptions;
   const ctx = useComboboxContext<T>('Combobox.List');
   if (!ctx.open) return null;
   return (
@@ -223,22 +237,25 @@ function ComboboxList<T>({
                 const optionId = `${ctx.listboxId}-option-${i}`;
                 const selected = ctx.value === opt.value;
                 return (
-                  <Pressable
-                    nativeID={optionId}
-                    accessibilityRole="button"
-                    accessibilityState={{ selected, disabled: opt.disabled === true }}
-                    disabled={opt.disabled}
-                    onPress={() => {
-                      if (opt.disabled === true) return;
-                      ctx.setValue(opt.value);
-                      ctx.setInputValue(opt.label);
-                      ctx.setOpen(false);
-                    }}
-                  >
-                    {renderOption !== undefined
-                      ? renderOption(opt, { selected, index: i })
-                      : nativeText(opt.label)}
-                  </Pressable>
+                  <>
+                    {groupHeader(ctx.options, i)}
+                    <Pressable
+                      nativeID={optionId}
+                      accessibilityRole="button"
+                      accessibilityState={{ selected, disabled: opt.disabled === true }}
+                      disabled={opt.disabled}
+                      onPress={() => {
+                        if (opt.disabled === true) return;
+                        ctx.setValue(opt.value);
+                        ctx.setInputValue(opt.label);
+                        ctx.setOpen(false);
+                      }}
+                    >
+                      {renderOption !== undefined
+                        ? renderOption(opt, { selected, index: i })
+                        : nativeText(opt.label)}
+                    </Pressable>
+                  </>
                 );
               }}
             />
@@ -505,7 +522,7 @@ function MultiSelectChips<T>({
 function MultiSelectList<T>({
   style,
   renderOption,
-  emptyMessage = 'No options',
+  emptyMessage: ownEmptyMessage,
 }: {
   style?: ViewStyle;
   renderOption?: (
@@ -514,6 +531,8 @@ function MultiSelectList<T>({
   ) => ReactNode;
   emptyMessage?: ReactNode;
 }): ReactElement | null {
+  const messages = useMessages();
+  const emptyMessage = ownEmptyMessage ?? messages.noOptions;
   const ctx = useMultiSelectContext<T>('MultiSelect.List');
   if (!ctx.open) return null;
   return (
@@ -538,20 +557,23 @@ function MultiSelectList<T>({
                 const optionId = `${ctx.listboxId}-option-${i}`;
                 const selected = ctx.isSelected(opt.value);
                 return (
-                  <Pressable
-                    nativeID={optionId}
-                    accessibilityRole="checkbox"
-                    accessibilityState={{ checked: selected, disabled: opt.disabled === true }}
-                    disabled={opt.disabled}
-                    onPress={() => {
-                      if (opt.disabled === true) return;
-                      ctx.toggleValue(opt.value);
-                    }}
-                  >
-                    {renderOption !== undefined
-                      ? renderOption(opt, { selected, index: i })
-                      : nativeText(opt.label)}
-                  </Pressable>
+                  <>
+                    {groupHeader(ctx.filteredOptions, i)}
+                    <Pressable
+                      nativeID={optionId}
+                      accessibilityRole="checkbox"
+                      accessibilityState={{ checked: selected, disabled: opt.disabled === true }}
+                      disabled={opt.disabled}
+                      onPress={() => {
+                        if (opt.disabled === true) return;
+                        ctx.toggleValue(opt.value);
+                      }}
+                    >
+                      {renderOption !== undefined
+                        ? renderOption(opt, { selected, index: i })
+                        : nativeText(opt.label)}
+                    </Pressable>
+                  </>
                 );
               }}
             />

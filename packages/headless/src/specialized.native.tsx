@@ -1,3 +1,4 @@
+import { useMessages } from '@usemotif/react-native';
 import {
   useCallback,
   useEffect,
@@ -28,6 +29,9 @@ import {
   type HSVColor,
 } from './_color.js';
 import { useControllableState } from './use-controllable-state.js';
+import { sortFiles, type FileFacts, type FileRejection } from './_file-rules.js';
+
+export type { FileRejection, FileRejectionReason } from './_file-rules.js';
 export { formatColor, parseColor } from './_color.js';
 export type { ColorFormat } from './_color.js';
 
@@ -143,6 +147,13 @@ export interface ColorPickerProps {
   hueSliderStyle?: ViewStyle;
   /** Style applied to the alpha slider track. */
   alphaSliderStyle?: ViewStyle;
+  /** Preset colours offered as pressable swatches under the picker. */
+  swatches?: ReadonlyArray<string>;
+  /** Style for each swatch; its `backgroundColor` is the colour. */
+  swatchStyle?: ViewStyle;
+  /** Web only: native has no screen eyedropper, so this renders nothing. */
+  eyeDropper?: boolean;
+  eyeDropperLabel?: ReactNode;
 }
 
 /**
@@ -181,7 +192,10 @@ export function ColorPicker({
   saturationValueThumbStyle,
   hueSliderStyle,
   alphaSliderStyle,
+  swatches,
+  swatchStyle,
 }: ColorPickerProps): ReactElement {
+  const messages = useMessages();
   const [format, commitFormat] = useControllableState<ColorFormat>({
     value: controlledFormat,
     defaultValue: 'hex',
@@ -233,7 +247,7 @@ export function ColorPicker({
   return (
     <View
       accessibilityRole="adjustable"
-      accessibilityLabel="Colour picker"
+      accessibilityLabel={messages.colourPicker}
       accessibilityState={{ disabled }}
       style={style}
     >
@@ -264,6 +278,27 @@ export function ColorPicker({
       {formats.length > 0 ? (
         <FormatToggle format={format} options={formats} disabled={disabled} onChange={setFormat} />
       ) : null}
+      {swatches !== undefined && swatches.length > 0 ? (
+        <View
+          accessibilityRole="radiogroup"
+          style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}
+        >
+          {swatches.map((c, i) => {
+            const checked = formatColor(parseColor(c), 'hex') === formatColor(hsv, 'hex');
+            return (
+              <Pressable
+                key={`${c}-${i}`}
+                accessibilityRole="radio"
+                accessibilityLabel={c}
+                accessibilityState={{ checked, disabled }}
+                disabled={disabled}
+                onPress={() => commit({ ...parseColor(c), a: hsv.a })}
+                style={[{ width: 24, height: 24, backgroundColor: c }, swatchStyle]}
+              />
+            );
+          })}
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -285,6 +320,7 @@ function SaturationValuePlane({
   style?: ViewStyle | undefined;
   thumbStyle?: ViewStyle | undefined;
 }): ReactElement {
+  const messages = useMessages();
   const layoutRef = useRef<{ width: number; height: number }>({ width: size, height: size });
 
   const update = useCallback(
@@ -316,7 +352,7 @@ function SaturationValuePlane({
   return (
     <View
       accessibilityRole="adjustable"
-      accessibilityLabel="Saturation and value selector"
+      accessibilityLabel={messages.saturationAndValue}
       accessibilityState={{ disabled }}
       onLayout={(e) => {
         layoutRef.current = {
@@ -404,9 +440,10 @@ function HueSlider({
   onChange: (h: number) => void;
   style?: ViewStyle | undefined;
 }): ReactElement {
+  const messages = useMessages();
   return (
     <ScalarSlider
-      ariaLabel="Hue"
+      ariaLabel={messages.hue}
       min={0}
       // 359, not 360: hue is cyclic (360 ≡ 0) and clampHue(360) → 0, so a
       // full-right drag would snap the thumb back to the left. Mirrors web.
@@ -434,9 +471,10 @@ function AlphaSlider({
   onChange: (a: number) => void;
   style?: ViewStyle | undefined;
 }): ReactElement {
+  const messages = useMessages();
   return (
     <ScalarSlider
-      ariaLabel="Alpha"
+      ariaLabel={messages.alpha}
       min={0}
       max={1}
       width={width}
@@ -608,10 +646,11 @@ function FormatToggle({
   disabled: boolean;
   onChange: (next: ColorFormat) => void;
 }): ReactElement {
+  const messages = useMessages();
   return (
     <View
       accessibilityRole="radiogroup"
-      accessibilityLabel="Colour format"
+      accessibilityLabel={messages.colourFormat}
       style={{ flexDirection: 'row', marginTop: 12 }}
     >
       {options.map((opt) => (
@@ -666,6 +705,10 @@ interface DocumentPickerModule {
 const DOCUMENT_PICKER: DocumentPickerModule | null =
   tryRequire<DocumentPickerModule>('expo-document-picker');
 
+function assetFacts(asset: DocumentPickerAsset): FileFacts {
+  return { name: asset.name ?? '', type: asset.mimeType ?? '', size: asset.size };
+}
+
 /** True when `expo-document-picker` is present - exposed for tests / docs. */
 export const NATIVE_FILE_UPLOAD_HAS_PICKER: boolean = DOCUMENT_PICKER !== null;
 
@@ -683,6 +726,12 @@ export interface FileUploadProps {
    * support should branch on Platform.OS or accept `unknown[]`.
    */
   onFiles?: (files: ReadonlyArray<DocumentPickerAsset>) => void;
+  /** Largest file accepted, in bytes. A picker that reports no size passes. */
+  maxSize?: number;
+  /** Most files taken from one pick, with `multiple`. Without it, one. */
+  maxFiles?: number;
+  /** Called with every refused file from a pick, and why: `type`, `size`, or `count`. */
+  onReject?: (rejections: FileRejection<DocumentPickerAsset>[]) => void;
   /** Render-prop. Same shape as web - `{ isDragging, openPicker }`.
    * `isDragging` is always `false` on native (no drag-drop on
    * mobile); the prop stays for cross-platform parity. */
@@ -712,9 +761,13 @@ export function FileUpload({
   multiple = false,
   disabled = false,
   onFiles,
+  maxSize,
+  maxFiles,
+  onReject,
   children,
   style,
 }: FileUploadProps): ReactElement {
+  const messages = useMessages();
   const openPicker = useCallback(() => {
     if (disabled) return;
     if (DOCUMENT_PICKER === null) {
@@ -728,19 +781,23 @@ export function FileUpload({
     })
       .then((result) => {
         if (result.canceled) return;
-        const assets = result.assets ?? [];
-        if (assets.length === 0) return;
-        onFiles?.(assets);
+        const { accepted, rejected } = sortFiles(result.assets ?? [], assetFacts, {
+          accept,
+          maxSize,
+          maxFiles: multiple ? maxFiles : 1,
+        });
+        if (rejected.length > 0) onReject?.(rejected);
+        if (accepted.length > 0) onFiles?.(accepted);
       })
       .catch((err: unknown) => {
         // A picker failure (denied permission, picker already open on
         // Android, ...) would otherwise surface as an unhandled rejection.
         nativeStubWarn(`FileUpload picker failed: ${String(err)}`);
       });
-  }, [accept, disabled, multiple, onFiles]);
+  }, [accept, disabled, multiple, onFiles, maxSize, maxFiles, onReject]);
 
   return (
-    <View style={style} accessibilityLabel="File upload">
+    <View style={style} accessibilityLabel={messages.fileUpload}>
       {children({ isDragging: false, openPicker })}
     </View>
   );

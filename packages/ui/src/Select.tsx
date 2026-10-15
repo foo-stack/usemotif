@@ -5,8 +5,10 @@ import {
   useControllableState,
   type ComboboxOption,
 } from '@usemotif/headless';
-import { Box } from 'usemotif';
-import { LIST_STYLE, renderThemedOption } from './_list-surface.js';
+import { Pressable, useMessages } from 'usemotif';
+import { platformText } from './_platform-text.js';
+import { LIST_STYLE, renderThemedOption, renderThemedGroupLabel } from './_list-surface.js';
+import { usePlatformStyle } from './_platform-style.js';
 
 export type SelectOption = ComboboxOption;
 
@@ -54,9 +56,12 @@ export function Select({
   value: controlledValue,
   defaultValue,
   onValueChange,
-  placeholder = 'Select...',
+  placeholder: ownPlaceholder,
   width = 240,
 }: SelectProps) {
+  const messages = useMessages();
+  const placeholder = ownPlaceholder ?? messages.selectPlaceholder;
+  const platformStyle = usePlatformStyle();
   const [value, handleChange] = useControllableState({
     value: controlledValue,
     defaultValue,
@@ -72,8 +77,7 @@ export function Select({
       {...(defaultValue !== undefined ? { defaultValue } : {})}
     >
       <HeadlessSelect.Trigger>
-        <Box
-          as="button"
+        <Pressable
           width={width}
           display="flex"
           alignItems="center"
@@ -95,10 +99,17 @@ export function Select({
           transition="border-color 120ms ease"
           _expanded={TRIGGER_EXPANDED}
         >
-          {selected !== undefined ? selected.label : placeholder}
-        </Box>
+          {platformText(selected !== undefined ? selected.label : placeholder, {
+            color: selected !== undefined ? '$colors.text.default' : '$colors.text.muted',
+            fontSize: '$fontSizes.md',
+          })}
+        </Pressable>
       </HeadlessSelect.Trigger>
-      <HeadlessSelect.List style={LIST_STYLE} renderOption={renderThemedOption} />
+      <HeadlessSelect.List
+        style={platformStyle(LIST_STYLE)}
+        renderOption={renderThemedOption}
+        renderGroupLabel={renderThemedGroupLabel}
+      />
     </HeadlessSelect.Root>
   );
 }

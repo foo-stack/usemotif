@@ -124,3 +124,56 @@ describe('syncCollectorStorage - module-level pointer', () => {
     expect(collector.getCss()).toContain('@media (min-width: 768px)');
   });
 });
+
+describe('motifStyleStream', () => {
+  it('puts collected CSS into <head> with the shell, then ahead of later chunks', async () => {
+    const { motifStyleStream, SSRStyleCollector: Collector } = await import('./server.js');
+    const collector = new Collector();
+    const stream = motifStyleStream(collector);
+    const out: string[] = [];
+    stream.on('data', (chunk: Buffer | string) => out.push(String(chunk)));
+    const write = (html: string): Promise<void> =>
+      new Promise((resolve) => stream.write(html, () => resolve()));
+
+    collector._append('m-a', '.m-a { color: red; }');
+    await write('<!DOCTYPE html><html><head><title>t</title>');
+    await write('</head><body><div class="m-a">shell</div>');
+    collector._append('m-b', '.m-b { color: blue; }');
+    await write('<div hidden id="S:0"><p class="m-b">late</p></div>');
+    await write('<script>done</script>');
+    stream.end();
+
+    expect(out).toEqual([
+      '<!DOCTYPE html><html><head><title>t</title>',
+      '<style data-motif-ssr>.m-a { color: red; }</style></head><body><div class="m-a">shell</div>',
+      '<style data-motif-ssr>.m-b { color: blue; }</style><div hidden id="S:0"><p class="m-b">late</p></div>',
+      '<script>done</script>',
+    ]);
+  });
+});
+
+describe('motifStyleTransform', () => {
+  it('does the same for web streams', async () => {
+    const { motifStyleTransform, SSRStyleCollector: Collector } = await import('./server.js');
+    const collector = new Collector();
+    const chunks = ['<html><head>', '</head><body>shell', '<div hidden id="S:0">late</div>'];
+    collector._append('m-a', '.m-a { color: red; }');
+    const source = new ReadableStream<string>({
+      start(controller) {
+        controller.enqueue(chunks[0]!);
+        controller.enqueue(chunks[1]!);
+        collector._append('m-b', '.m-b { color: blue; }');
+        controller.enqueue(chunks[2]!);
+        controller.close();
+      },
+    });
+    const out: string[] = [];
+    const reader = source.pipeThrough(motifStyleTransform(collector)).getReader();
+    const decoder = new TextDecoder();
+    for (let r = await reader.read(); !r.done; r = await reader.read())
+      out.push(decoder.decode(r.value));
+    expect(out.join('')).toBe(
+      '<html><head><style data-motif-ssr>.m-a { color: red; }\n.m-b { color: blue; }</style></head><body>shell<div hidden id="S:0">late</div>',
+    );
+  });
+});

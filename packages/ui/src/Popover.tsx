@@ -1,7 +1,12 @@
 'use client';
 
-import { Popover as HeadlessPopover, type PopoverContentProps } from '@usemotif/headless';
+import {
+  Popover as HeadlessPopover,
+  type FloatingArrowProps,
+  type PopoverContentProps,
+} from '@usemotif/headless';
 import { Box } from 'usemotif';
+import { platformText } from './_platform-text.js';
 
 /**
  * Themed popover - the accessible headless `Popover` (trigger `aria-expanded`
@@ -21,6 +26,8 @@ import { Box } from 'usemotif';
  * </Popover.Root>
  * ```
  */
+const SURFACE_TEXT = { color: '$colors.text.default' } as const;
+
 function PopoverContent({ children, ...rest }: PopoverContentProps) {
   return (
     <HeadlessPopover.Content {...rest}>
@@ -35,7 +42,7 @@ function PopoverContent({ children, ...rest }: PopoverContentProps) {
         maxWidth={320}
         boxShadow="0 8px 24px rgba(0, 0, 0, 0.18)"
       >
-        {children}
+        {platformText(children, SURFACE_TEXT)}
       </Box>
     </HeadlessPopover.Content>
   );
@@ -45,4 +52,16 @@ function PopoverContent({ children, ...rest }: PopoverContentProps) {
  * Parts exported flat so `src/index.ts` can assemble the namespace in the
  * server graph. Internal: the barrel does not re-export these by name.
  */
-export { PopoverContent };
+/** The themed arrow: the surface's colour, with its border. Put it first inside `Popover.Content`. */
+function PopoverArrow({ style, ...rest }: FloatingArrowProps) {
+  return (
+    <HeadlessPopover.Arrow
+      size={10}
+      borderColor="var(--colors-border-default, #d1d5db)"
+      {...rest}
+      style={{ background: 'var(--colors-surface-raised, #fff)', ...style }}
+    />
+  );
+}
+
+export { PopoverArrow, PopoverContent };

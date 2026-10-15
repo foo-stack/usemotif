@@ -1,6 +1,13 @@
 'use client';
 
-import type { ReactElement, ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useMemo,
+  type Context,
+  type ReactElement,
+  type ReactNode,
+} from 'react';
 import { SVG_PRIMITIVES, Svg, type SvgPrimitives, type SvgProps } from './Svg.js';
 
 /**
@@ -30,7 +37,10 @@ import { SVG_PRIMITIVES, Svg, type SvgPrimitives, type SvgProps } from './Svg.js
  * work on both platforms.
  */
 export interface IconProps extends Omit<SvgProps, 'size' | 'children'> {
-  /** Size token. Maps to a pixel value. Defaults to `'md'` (20px). */
+  /**
+   * Size token. Maps to a pixel value. Defaults to the nearest
+   * `IconProvider`'s `size`, then `'md'` (20px).
+   */
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | number;
   /** Decorative icons are hidden from a11y. Set `aria-label` to opt in. */
   'aria-label'?: string;
@@ -47,8 +57,58 @@ const SIZE_PX: Record<'xs' | 'sm' | 'md' | 'lg' | 'xl', number> = {
   xl: 32,
 };
 
-export function Icon({ size = 'md', render, children, ...rest }: IconProps): ReactElement {
-  const px = typeof size === 'number' ? size : SIZE_PX[size];
+/** Props for {@link IconProvider}. Each one unset inherits from an outer provider. */
+export interface IconProviderProps {
+  /** Default `size` for every `Icon` below. */
+  size?: IconProps['size'];
+  /** Default stroke width for every `Icon` below. */
+  strokeWidth?: number | string;
+  children?: ReactNode;
+}
+
+type IconDefaults = Omit<IconProviderProps, 'children'>;
+
+// Kept on a global symbol so the ESM and CJS builds, and the barrel and the
+// `/svg` entry, all read one context: a glyph and a provider imported through
+// different copies of this module would otherwise never meet.
+const ICON_DEFAULTS_KEY = Symbol.for('usemotif.iconDefaults');
+
+function iconDefaultsContext(): Context<IconDefaults> {
+  const registry = globalThis as unknown as Record<symbol, Context<IconDefaults> | undefined>;
+  return (registry[ICON_DEFAULTS_KEY] ??= createContext<IconDefaults>({}));
+}
+
+/**
+ * Sets the default `size` and `strokeWidth` of every `Icon` in its subtree,
+ * including every `@usemotif/icons` glyph. A prop on the icon itself wins,
+ * and a nested provider overrides only what it sets.
+ *
+ * @example
+ * ```tsx
+ * <IconProvider size="sm" strokeWidth={1.5}>
+ *   <Toolbar />
+ * </IconProvider>
+ * ```
+ */
+export function IconProvider({ size, strokeWidth, children }: IconProviderProps): ReactElement {
+  const IconDefaultsContext = iconDefaultsContext();
+  const outer = useContext(IconDefaultsContext);
+  const resolvedSize = size ?? outer.size;
+  const resolvedStroke = strokeWidth ?? outer.strokeWidth;
+  const value = useMemo<IconDefaults>(
+    () => ({
+      ...(resolvedSize !== undefined && { size: resolvedSize }),
+      ...(resolvedStroke !== undefined && { strokeWidth: resolvedStroke }),
+    }),
+    [resolvedSize, resolvedStroke],
+  );
+  return <IconDefaultsContext.Provider value={value}>{children}</IconDefaultsContext.Provider>;
+}
+
+export function Icon({ size, render, children, ...rest }: IconProps): ReactElement {
+  const defaults = useContext(iconDefaultsContext());
+  const resolved = size ?? defaults.size ?? 'md';
+  const px = typeof resolved === 'number' ? resolved : SIZE_PX[resolved];
   const label = rest['aria-label'];
   const labelled = typeof label === 'string' && label.length > 0;
   const content = render !== undefined ? render(SVG_PRIMITIVES) : children;
@@ -57,6 +117,7 @@ export function Icon({ size = 'md', render, children, ...rest }: IconProps): Rea
       size={px}
       role={labelled ? 'img' : undefined}
       aria-hidden={labelled ? undefined : true}
+      {...(defaults.strokeWidth !== undefined && { strokeWidth: defaults.strokeWidth })}
       {...rest}
     >
       {content}

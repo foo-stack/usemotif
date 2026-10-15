@@ -64,6 +64,46 @@ import { Box, Image, Text } from 'usemotif';
   </Box>
 </Card>`} />
 
+### Parts
+
+`Card.Header`, `Card.Body`, `Card.Footer` and `Card.Media` lay out the usual card. Each part pads
+itself, so compose them in a `padding="none"` card; Media runs edge to edge.
+
+<CodeBlock lang="tsx" code={`import { Button, Card } from '@usemotif/ui';
+import { Image } from 'usemotif';
+
+<Card padding="none" overflow="hidden">
+  <Card.Media>
+    <Image src="/cover.jpg" alt="" width="100%" height={160} />
+  </Card.Media>
+  <Card.Header>Pro plan</Card.Header>
+  <Card.Body>Everything in Team, plus audit logs.</Card.Body>
+  <Card.Footer>
+    <Button size="sm">Choose Pro</Button>
+  </Card.Footer>
+</Card>`} />
+
+| Part | Layout |
+| --- | --- |
+| `Card.Header` | A row with a gap, semibold, padded at the top and sides |
+| `Card.Body` | A column that grows to fill the card, padded on every side |
+| `Card.Footer` | A row aligned to the end, for actions, padded at the bottom and sides |
+| `Card.Media` | Unpadded, for an image or video at the card's edge |
+
+Every part takes the `Box` props, so a one-off change is a style prop away.
+
+### A clickable card
+
+When the whole card is a link or a button, render it as one and set `interactive`. It gains a
+pointer cursor, a stronger border and shadow on hover, and a focus ring for keyboard users.
+
+<CodeBlock lang="tsx" code={`<Card as="a" href="/plans/pro" interactive>
+  <Text fontWeight="$fontWeights.semibold">Pro plan</Text>
+</Card>`} />
+
+Keep other links and buttons out of an interactive card: a control nested inside another is not
+reachable on its own.
+
 ## API
 
 <ApiSignature
@@ -82,6 +122,11 @@ import { Box, Image, Text } from 'usemotif';
       type: "'none' | 'sm' | 'md' | 'lg'",
       default: "'md'",
       description: 'Inner padding from the space scale: `none` is 0, then `3`, `4`, and `6`.',
+    },
+    {
+      name: 'interactive',
+      type: 'boolean',
+      description: 'Hover and keyboard-focus states for a card rendered `as="a"` or `as="button"`.',
     },
     {
       name: 'children',

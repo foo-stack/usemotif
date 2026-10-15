@@ -20,6 +20,7 @@ import { mergeRefs } from './_compose-refs.js';
 import { useClickOutside, useFloatingPosition, type Placement } from './positioning.js';
 import { useExitTransition } from './_use-exit-transition.js';
 import { useControllableState } from './use-controllable-state.js';
+import { ArrowContext } from './_arrow.js';
 
 /**
  * Popover - non-modal floating panel anchored to a trigger.
@@ -153,12 +154,13 @@ function Content({
 }: PopoverContentProps): ReactElement | null {
   const ctx = usePopoverContext('Popover.Content');
   const dismiss = useCallback(() => ctx.setOpen(false), [ctx]);
-  const { position, floatingRef } = useFloatingPosition(
-    ctx.triggerRef,
-    ctx.open,
-    placement,
-    offset,
-  );
+  const {
+    style: floating,
+    placement: side,
+    arrow,
+    floatingRef,
+  } = useFloatingPosition(ctx.triggerRef, ctx.open, placement, offset);
+  const anchor = useMemo(() => ({ placement: side, offset: arrow }), [side, arrow]);
   const { shouldRender, phase, elementRef, ExitBoundary } = useExitTransition(
     ctx.open,
     exitDurationMs,
@@ -203,9 +205,7 @@ function Content({
         role="dialog"
         data-motif-state={phase === 'exiting' ? 'exiting' : undefined}
         style={{
-          position: 'absolute',
-          top: position.top,
-          left: position.left,
+          ...floating,
           zIndex: 1000,
           ...style,
         }}
@@ -213,7 +213,9 @@ function Content({
         {/* Publish the presence phase so a WAAPI-driven descendant surface
             registers + plays its exit off-thread; the CSS path rides
             `data-motif-state` + `transitionend` on this element. */}
-        <ExitBoundary>{children}</ExitBoundary>
+        <ArrowContext.Provider value={anchor}>
+          <ExitBoundary>{children}</ExitBoundary>
+        </ArrowContext.Provider>
       </div>
     </Portal>
   );

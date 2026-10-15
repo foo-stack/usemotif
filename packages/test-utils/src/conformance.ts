@@ -13,7 +13,8 @@ export type PrimitiveName =
   | 'Text'
   | 'Container'
   | 'Pressable'
-  | 'Image';
+  | 'Image'
+  | 'TitleBar';
 
 /**
  * One row of the conformance suite - describes an input (primitive + props)

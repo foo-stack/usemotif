@@ -140,3 +140,52 @@ describe('native Box layoutTransition', () => {
     expect(configs.every((c) => c.duration === 300)).toBe(true);
   });
 });
+
+describe('native Box layoutId', () => {
+  // Window boxes by testID, read through a stubbed `measureInWindow` on the mock's host.
+  const boxes: Record<string, [number, number, number, number]> = {
+    a: [0, 100, 50, 2],
+    b: [120, 100, 100, 2],
+  };
+  beforeEach(() => {
+    (HTMLElement.prototype as unknown as Record<string, unknown>).measureInWindow = function (
+      this: HTMLElement,
+      cb: (...box: number[]) => void,
+    ) {
+      cb(...boxes[this.getAttribute('testID')!]!);
+    };
+  });
+  afterEach(() => {
+    delete (HTMLElement.prototype as unknown as Record<string, unknown>).measureInWindow;
+    vi.restoreAllMocks();
+  });
+
+  function layOut(id: string): void {
+    const el = container.querySelector(`[testID="${id}"]`) as unknown as Record<string, unknown>;
+    const fiber = el[Object.keys(el).find((k) => k.startsWith('__reactFiber'))!] as {
+      return: { memoizedProps: { onLayout: (e: unknown) => void } };
+    };
+    act(() =>
+      fiber.return.memoizedProps.onLayout({
+        nativeEvent: { layout: { x: 0, y: 0, width: 10, height: 2 } },
+      }),
+    );
+  }
+
+  it('animates the arriving Box from the window box the leaving one had', () => {
+    render(<Box key="a" testID="a" layoutId="pill" />);
+    layOut('a');
+    const set = vi.spyOn(Animated.Value.prototype, 'setValue');
+    render(<Box key="b" testID="b" layoutId="pill" />);
+    layOut('b');
+    // Centre to centre: a's centre x is 25, b's is 170; widths 50 against 100.
+    expect(set.mock.calls.map((c) => c[0])).toEqual([-145, 0, 0.5, 1]);
+  });
+
+  it('does not animate a Box whose id nothing left behind', () => {
+    render(<Box testID="a" layoutId="other" />);
+    const set = vi.spyOn(Animated.Value.prototype, 'setValue');
+    layOut('a');
+    expect(set).not.toHaveBeenCalled();
+  });
+});

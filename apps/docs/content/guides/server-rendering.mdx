@@ -1,9 +1,9 @@
 ---
 title: Server-side rendering
-description: Wire SSRStyleCollector into a sync renderer or stream collected styles from Next.js App Router with the registry pattern.
+description: Wire SSRStyleCollector into a sync renderer, or stream collected styles from Next.js App Router, React Router 7, TanStack Start or Astro.
 diataxis: howto
-covers: ['SSRStyleCollector', 'CollectorContext']
-last_verified: 2026-05-05
+covers: ['SSRStyleCollector', 'CollectorContext', 'motifStyleStream', 'motifStyleTransform', 'StyleIsland']
+last_verified: 2026-10-15
 ---
 
 import { ArticleMeta, Callout, CodeBlock, Eyebrow, Lede } from '../../components/index.js';
@@ -116,6 +116,159 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 `useServerInsertedHTML` fires on every flush; `_drain()` clears the collector's emitted rules so
 each flush only includes what is new. The dedup set stays populated, so two flushes never emit the
 same class twice.
+
+## React Router 7
+
+React Router's framework mode streams through a Node `entry.server`. Give each request its own
+collector, provide it with `CollectorContext`, and pipe React's stream through
+`motifStyleStream`, which writes the collected CSS into the HTML as it goes: into `<head>` with
+the shell, then ahead of each later chunk, so a Suspense boundary's styles arrive before its
+content.
+
+<CodeBlock lang="tsx" code={`// app/entry.server.tsx
+import { PassThrough } from 'node:stream';
+import { createReadableStreamFromReadable } from '@react-router/node';
+import { CollectorContext } from '@usemotif/react';
+import { motifStyleStream, SSRStyleCollector } from '@usemotif/react/server';
+import { isbot } from 'isbot';
+import { renderToPipeableStream } from 'react-dom/server';
+import { ServerRouter, type EntryContext } from 'react-router';
+
+export const streamTimeout = 5000;
+
+export default function handleRequest(
+  request: Request,
+  status: number,
+  headers: Headers,
+  context: EntryContext,
+) {
+  return new Promise<Response>((resolve, reject) => {
+    const collector = new SSRStyleCollector();
+    const ready = isbot(request.headers.get('user-agent') ?? '') ? 'onAllReady' : 'onShellReady';
+    const { pipe, abort } = renderToPipeableStream(
+      <CollectorContext.Provider value={collector}>
+        <ServerRouter context={context} url={request.url} />
+      </CollectorContext.Provider>,
+      {
+        [ready]() {
+          const body = new PassThrough();
+          headers.set('Content-Type', 'text/html');
+          resolve(new Response(createReadableStreamFromReadable(body), { headers, status }));
+          pipe(motifStyleStream(collector)).pipe(body);
+        },
+        onShellError: reject,
+      },
+    );
+    setTimeout(abort, streamTimeout + 1000);
+  });
+}`} />
+
+Put `ThemeProvider` in the root route's `Layout`, inside `<body>`. `apps/ssr-react-router` in
+the repository is this setup with a deferred loader, and CI serves its production build and checks
+the streamed HTML and the hydrated page on every change.
+
+## TanStack Start
+
+TanStack Start renders with web streams. Replace its stream handler with one that provides a
+collector and pipes React's stream through `motifStyleTransform`, the web-streams form of
+`motifStyleStream`, before the router's own transform:
+
+<CodeBlock lang="tsx" code={`// src/server.ts
+import { createServerEntry } from '@tanstack/react-start/server-entry';
+import { createStartHandler, defineHandlerCallback } from '@tanstack/react-start/server';
+import { motifHandler } from './motif-handler';
+
+export default createServerEntry({ fetch: createStartHandler(defineHandlerCallback(motifHandler)) });
+
+// src/motif-handler.tsx
+import {
+  createSsrStreamResponse,
+  getSsrStatus,
+  transformReadableStreamWithRouter,
+  type HandlerCallback,
+} from '@tanstack/react-router/ssr/server';
+import type { AnyRouter } from '@tanstack/react-router';
+import { StartServer } from '@tanstack/react-start/server';
+import { CollectorContext } from '@usemotif/react';
+import { motifStyleTransform, SSRStyleCollector } from '@usemotif/react/server';
+import { renderToReadableStream } from 'react-dom/server';
+
+export const motifHandler: HandlerCallback<AnyRouter> = async ({ request, router, responseHeaders }) => {
+  const collector = new SSRStyleCollector();
+  const stream = await renderToReadableStream(
+    <CollectorContext.Provider value={collector}>
+      <StartServer router={router} />
+    </CollectorContext.Provider>,
+    { signal: request.signal },
+  );
+  const body = transformReadableStreamWithRouter(router, stream.pipeThrough(motifStyleTransform(collector)), {
+    rendererSafePoint: 'script-close',
+    signal: request.signal,
+  });
+  return createSsrStreamResponse(
+    router,
+    new Response(body, { status: getSsrStatus(router), headers: responseHeaders }),
+  );
+};`} />
+
+Put `ThemeProvider` inside the root route's `shellComponent`, within `<body>`. `apps/ssr-tanstack-start`
+in the repository is this setup, and CI serves its production build and checks the streamed HTML
+and the hydrated page.
+
+## Astro
+
+Astro renders each React island on its own, with no stream or document for the app to collect
+styles into. Wrap the inside of each island in `StyleIsland`. On the server it gives the island its
+own collector and emits the island's CSS with it, as a React 19 hoistable `<style>` ahead of the
+island's content, so a streamed island arrives with its styles. In the browser it renders its
+children alone and the runtime takes over.
+
+<CodeBlock lang="tsx" code={`// src/components/Card.tsx
+import { Box, StyleIsland, ThemeProvider } from '@usemotif/react';
+import { lightTheme } from '@usemotif/tokens';
+
+export default function Card({ title }: { title: string }) {
+  return (
+    <StyleIsland>
+      <ThemeProvider themes={[lightTheme]} active="light">
+        <Box p="$space.6" bg="$colors.surface.raised">{title}</Box>
+      </ThemeProvider>
+    </StyleIsland>
+  );
+}`} />
+
+Each island needs its own `ThemeProvider` inside `StyleIsland`, since islands don't share a React
+tree. `apps/ssr-astro` in the repository uses `@astrojs/react` with the Node adapter, including an
+island inside an async component that streams in later, and CI serves its build and checks the
+streamed HTML and the hydrated islands.
+
+## Primitives in Server Components
+
+Everything from `@usemotif/react` is a client component, so it renders on the server but ships its
+code to the browser too. For layout that never needs the client, import the primitives from
+`@usemotif/react/rsc` in a Server Component instead:
+
+<CodeBlock lang="tsx" filename="app/page.tsx" code={`import { Box, HStack, Text } from '@usemotif/react/rsc';
+
+export default function Page() {
+  return (
+    <Box p={{ base: '$4', md: '$8' }}>
+      <HStack gap="$3" _hover={{ opacity: 0.9 }}>
+        <Text lines={1}>Rendered on the server</Text>
+      </HStack>
+    </Box>
+  );
+}`} />
+
+`Box`, `Stack`, `HStack`, `VStack` and `Text` from there resolve their styles to class names on the
+server. Their CSS ships as React's hoisted `<style precedence>`, which React deduplicates and moves
+into the document head as the page streams, so they need neither the style registry nor a client
+boundary. Tokens become CSS variables, so the theme reaches them through the cascade from the
+`ThemeProvider` above.
+
+A prop that needs the client hands that element to the client primitive: event handlers, `ref`,
+`enterStyle`, `exitStyle`, `layout`, `drag`, motion values and `Stack`'s `stagger`. A
+`ThemeProvider` `cssLayer` is client context, so it doesn't reach the server primitives.
 
 ## Hydration without a flash
 

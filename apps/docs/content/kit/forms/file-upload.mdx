@@ -3,7 +3,7 @@ title: FileUpload
 description: A themed drag-and-drop file zone over the headless FileUpload - highlights while dragging, opens the file picker on click, and filters by accept and multiple.
 diataxis: reference
 covers: ['FileUpload', 'FileUploadProps']
-last_verified: 2026-10-14
+last_verified: 2026-10-15
 ---
 
 import {
@@ -73,6 +73,21 @@ With a custom prompt:
       type: 'boolean',
       default: 'false',
       description: 'Accepts more than one file per pick or drop.',
+    },
+    {
+      name: 'maxSize',
+      type: 'number',
+      description: 'Largest file accepted, in bytes. On native, a picker that reports no size passes.',
+    },
+    {
+      name: 'maxFiles',
+      type: 'number',
+      description: 'Most files taken from one pick or drop when `multiple` is set; without `multiple` it is one. The component keeps no list of its own, so this counts per selection.',
+    },
+    {
+      name: 'onReject',
+      type: "(rejections: { file, reasons: ('type' | 'size' | 'count')[] }[]) => void",
+      description: 'Called with every refused file from a pick or drop, and every rule it broke. A file is counted against `maxFiles` only once it passes the type and size rules, so a bad file never takes a good one\'s place.',
     },
     {
       name: 'disabled',

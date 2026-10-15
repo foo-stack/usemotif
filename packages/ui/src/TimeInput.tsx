@@ -5,6 +5,7 @@ import {
   type TimeInputProps as HeadlessTimeInputProps,
 } from '@usemotif/headless';
 import { useMemo, type CSSProperties } from 'react';
+import { usePlatformStyle } from './_platform-style.js';
 
 export type TimeInputProps = HeadlessTimeInputProps;
 
@@ -29,9 +30,10 @@ const TIME_STYLE: CSSProperties = {
  * ```
  */
 export function TimeInput({ style, ...rest }: TimeInputProps) {
+  const platformStyle = usePlatformStyle();
   const merged = useMemo<CSSProperties>(
     () => (style !== undefined ? { ...TIME_STYLE, ...style } : TIME_STYLE),
     [style],
   );
-  return <HeadlessTimeInput {...rest} style={merged} />;
+  return <HeadlessTimeInput {...rest} style={platformStyle(merged)} />;
 }

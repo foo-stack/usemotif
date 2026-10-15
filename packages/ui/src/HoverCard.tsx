@@ -1,7 +1,12 @@
 'use client';
 
-import { HoverCard as HeadlessHoverCard, type HoverCardContentProps } from '@usemotif/headless';
+import {
+  HoverCard as HeadlessHoverCard,
+  type FloatingArrowProps,
+  type HoverCardContentProps,
+} from '@usemotif/headless';
 import { Box } from 'usemotif';
+import { platformText } from './_platform-text.js';
 
 /**
  * Themed hover card - the accessible headless `HoverCard` (opens on hover or
@@ -23,6 +28,8 @@ import { Box } from 'usemotif';
  * </HoverCard.Root>
  * ```
  */
+const SURFACE_TEXT = { color: '$colors.text.default' } as const;
+
 function HoverCardContent({ children, ...rest }: HoverCardContentProps) {
   return (
     <HeadlessHoverCard.Content {...rest}>
@@ -37,7 +44,7 @@ function HoverCardContent({ children, ...rest }: HoverCardContentProps) {
         maxWidth={360}
         boxShadow="0 8px 24px rgba(0, 0, 0, 0.18)"
       >
-        {children}
+        {platformText(children, SURFACE_TEXT)}
       </Box>
     </HeadlessHoverCard.Content>
   );
@@ -47,4 +54,16 @@ function HoverCardContent({ children, ...rest }: HoverCardContentProps) {
  * Parts exported flat so `src/index.ts` can assemble the namespace in the
  * server graph. Internal: the barrel does not re-export these by name.
  */
-export { HoverCardContent };
+/** The themed arrow: the surface's colour, with its border. Put it first inside `HoverCard.Content`. */
+function HoverCardArrow({ style, ...rest }: FloatingArrowProps) {
+  return (
+    <HeadlessHoverCard.Arrow
+      size={10}
+      borderColor="var(--colors-border-default, #d1d5db)"
+      {...rest}
+      style={{ background: 'var(--colors-surface-raised, #fff)', ...style }}
+    />
+  );
+}
+
+export { HoverCardArrow, HoverCardContent };

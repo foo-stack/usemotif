@@ -84,6 +84,7 @@ export const SafeAreaView = makeHost('SafeAreaView', 'div', true);
 export const Text = makeHost('Text', 'span');
 export const Image = makeHost('Image', 'img');
 export const TextInput = makeHost('TextInput', 'input');
+export const Switch = makeHost('Switch', 'input');
 export const Modal = makeHost('Modal', 'div', true);
 export const RefreshControl = makeHost('RefreshControl', 'div');
 
@@ -170,6 +171,12 @@ export const FlatList: ComponentType<HostProps> = (props: HostProps) => {
           ),
         ),
   );
+};
+
+/** `AccessibilityInfo` shim: reduced motion is off, and the listener is a no-op. */
+export const AccessibilityInfo = {
+  isReduceMotionEnabled: (): Promise<boolean> => Promise.resolve(false),
+  addEventListener: (): { remove: () => void } => ({ remove: () => {} }),
 };
 
 export const Linking = {

@@ -1,6 +1,6 @@
 'use client';
 
-import { Portal } from '@usemotif/react';
+import { Portal, useMessages } from '@usemotif/react';
 import {
   Children,
   cloneElement,
@@ -42,7 +42,8 @@ function SubmenuLevelProvider({ children }: { children: ReactNode }): ReactEleme
   return <SubmenuLevelContext.Provider value={registry}>{children}</SubmenuLevelContext.Provider>;
 }
 import { useFloatingPosition } from './positioning.js';
-import { pageWindow } from './_page-window.js';
+import { pageForSize, pageWindow } from './_page-window.js';
+import { activeStepIndex, canSelectStep } from './_steps.js';
 
 /**
  * Navigation family - Pagination, Breadcrumb, Stepper,
@@ -63,6 +64,23 @@ export interface PaginationProps {
   onPageChange?: (next: number) => void;
   /** Number of sibling pages to show on each side of the current page. */
   siblings?: number;
+  /** Pages always shown at each end of the range. Defaults to 1. */
+  boundaries?: number;
+  /** Items per page. The page-size part renders only when this is set. */
+  pageSize?: number;
+  /** The sizes the page-size part offers. */
+  pageSizeOptions?: readonly number[];
+  /**
+   * Called with the chosen size and the page that keeps the first item of the
+   * current page in view. Update both, and recompute `total`, from here.
+   */
+  onPageSizeChange?: (size: number, page: number) => void;
+  /** Renders the page-size part, after the next button. */
+  renderPageSize?: (info: {
+    pageSize: number;
+    options: readonly number[];
+    onChange: (size: number) => void;
+  }) => ReactElement;
   /** Render fn for each page button. */
   renderItem: (info: {
     type: 'page' | 'previous' | 'next' | 'ellipsis';
@@ -80,17 +98,31 @@ export function Pagination({
   total,
   onPageChange,
   siblings = 1,
+  boundaries = 1,
+  pageSize,
+  pageSizeOptions,
+  onPageSizeChange,
+  renderPageSize,
   renderItem,
   style,
   ...aria
 }: PaginationProps): ReactElement {
+  const messages = useMessages();
   const goto = useCallback(
     (n: number) => onPageChange?.(Math.max(1, Math.min(total, n))),
     [onPageChange, total],
   );
-  const window = pageWindow(page, total, siblings);
+  const window = pageWindow(page, total, siblings, boundaries);
+  const sizePart =
+    pageSize !== undefined && renderPageSize !== undefined
+      ? renderPageSize({
+          pageSize,
+          options: pageSizeOptions ?? [pageSize],
+          onChange: (size) => onPageSizeChange?.(size, pageForSize(page, pageSize, size)),
+        })
+      : null;
   return (
-    <nav aria-label={aria['aria-label'] ?? 'Pagination'} style={style}>
+    <nav aria-label={aria['aria-label'] ?? messages.pagination} style={style}>
       {renderItem({
         type: 'previous',
         disabled: page <= 1,
@@ -120,6 +152,7 @@ export function Pagination({
         selected: false,
         onClick: () => goto(page + 1),
       })}
+      {sizePart}
     </nav>
   );
 }
@@ -127,7 +160,7 @@ export function Pagination({
 // ─────────── Breadcrumb ───────────────────────────────────────────
 
 export interface BreadcrumbProps {
-  /** A11y label for the nav landmark. Defaults to `'Breadcrumb'`. */
+  /** A11y label for the nav landmark. Defaults to the `breadcrumb` message. */
   'aria-label'?: string;
   /** Visual separator between items. */
   separator?: ReactNode;
@@ -135,11 +168,13 @@ export interface BreadcrumbProps {
   style?: CSSProperties;
 }
 export function Breadcrumb({
-  'aria-label': label = 'Breadcrumb',
+  'aria-label': ownLabel,
   separator = '/',
   children,
   style,
 }: BreadcrumbProps): ReactElement {
+  const messages = useMessages();
+  const label = ownLabel ?? messages.breadcrumb;
   const items = Children.toArray(children).filter(isValidElement);
   return (
     <nav aria-label={label} style={style}>
@@ -175,17 +210,40 @@ export interface StepperProps {
     index: number;
     status: 'pending' | 'active' | 'complete' | 'error';
     isLast: boolean;
+    /** Whether the step can be clicked to, with `onStepChange`. */
+    selectable: boolean;
   }) => ReactElement;
   orientation?: 'horizontal' | 'vertical';
+  /** Makes the steps buttons that report the id clicked. */
+  onStepChange?: (id: string) => void;
+  /** With `onStepChange`, allow going back to earlier steps but not skipping
+   * ahead: only steps before the active one can be clicked. */
+  linear?: boolean;
   style?: CSSProperties;
 }
+
+/** Strips a button's own chrome, keeping its focus ring, so a step looks as
+ * `renderStep` draws it. */
+const STEP_BUTTON: CSSProperties = {
+  background: 'none',
+  border: 0,
+  padding: 0,
+  margin: 0,
+  font: 'inherit',
+  color: 'inherit',
+  textAlign: 'inherit',
+};
+
 export function Stepper({
   steps,
   current,
   renderStep,
   orientation = 'horizontal',
+  onStepChange,
+  linear = false,
   style,
 }: StepperProps): ReactElement {
+  const active = activeStepIndex(steps, current);
   return (
     <ol
       style={{
@@ -200,14 +258,28 @@ export function Stepper({
       {steps.map((step, i) => {
         const status: StepperStep['status'] =
           current === step.id ? 'active' : (step.status ?? 'pending');
+        const selectable = onStepChange !== undefined && canSelectStep(i, active, linear);
+        const content = renderStep({
+          step,
+          index: i,
+          status: status ?? 'pending',
+          isLast: i === steps.length - 1,
+          selectable,
+        });
         return (
           <li key={step.id} aria-current={status === 'active' ? 'step' : undefined}>
-            {renderStep({
-              step,
-              index: i,
-              status: status ?? 'pending',
-              isLast: i === steps.length - 1,
-            })}
+            {onStepChange === undefined ? (
+              content
+            ) : (
+              <button
+                type="button"
+                disabled={!selectable}
+                onClick={() => onStepChange(step.id)}
+                style={{ ...STEP_BUTTON, cursor: selectable ? 'pointer' : 'default' }}
+              >
+                {content}
+              </button>
+            )}
           </li>
         );
       })}
@@ -262,12 +334,14 @@ export interface NavigationMenuProps {
   style?: CSSProperties;
 }
 export function NavigationMenu({
-  'aria-label': label = 'Primary',
+  'aria-label': ownLabel,
   current,
   items,
   children,
   style,
 }: NavigationMenuProps): ReactElement {
+  const messages = useMessages();
+  const label = ownLabel ?? messages.primaryNavigation;
   if (items !== undefined) {
     return (
       <nav aria-label={label} style={style}>
@@ -634,7 +708,7 @@ function NavigationMenuSubmenu({
   contentRef?: React.MutableRefObject<HTMLElement | null>;
   onClose: () => void;
 }): ReactElement {
-  const { position, floatingRef } = useFloatingPosition(
+  const { style: floating, floatingRef } = useFloatingPosition(
     anchorRef,
     true,
     level === 1 ? 'bottom' : 'right',
@@ -692,9 +766,7 @@ function NavigationMenuSubmenu({
       <div
         ref={setFloating}
         style={{
-          position: 'absolute',
-          top: position.top,
-          left: position.left,
+          ...floating,
           zIndex: 1000,
         }}
       >

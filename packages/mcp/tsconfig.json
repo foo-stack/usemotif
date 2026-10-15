@@ -1,0 +1,9 @@
+{
+  "extends": "@usemotif/tsconfig/library.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "src",
+    "types": ["node", "vitest"]
+  },
+  "include": ["src/**/*"]
+}

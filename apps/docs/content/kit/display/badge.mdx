@@ -2,7 +2,7 @@
 title: Badge
 description: A themed status pill - four intents and two sizes, with every Box style prop available at the call site.
 diataxis: reference
-covers: ['Badge']
+covers: ['Badge', 'BadgeProps']
 last_verified: 2026-10-14
 ---
 
@@ -28,8 +28,7 @@ import {
 
 ## What it is
 
-`Badge` is `styled(Box, badgeRecipe)`: the `badgeRecipe` from `@usemotif/recipes` applied to a
-`Box`. It renders an inline flex row, so an icon and a label sit side by side, and it never
+`Badge` is the `badgeRecipe` from `@usemotif/recipes` applied to a `Box`. It renders an inline flex row, so an icon and a label sit side by side, and it never
 wraps its text.
 
 Because it is a styled `Box`, it accepts every `Box` style prop alongside its variants. Use them
@@ -58,12 +57,21 @@ import { HStack, Text } from 'usemotif';
   <Badge intent="primary">New</Badge>
 </HStack>`} />
 
+A count. Past `max` (99 unless you set it) it reads as `99+`. A `label` gives screen readers the
+meaning the number alone does not carry:
+
+<CodeBlock lang="tsx" code={`<Badge intent="danger" count={120} label="120 unread messages" />`} />
+
+A status dot. It has no text, so it always needs a `label`:
+
+<CodeBlock lang="tsx" code={`<Badge intent="success" dot label="Online" />`} />
+
 ## API
 
 <ApiSignature
   name="Badge"
   status="stable"
-  signature={`const Badge = styled(Box, badgeRecipe)`}
+  signature={`function Badge(props: BadgeProps): JSX.Element`}
   params={[
     {
       name: 'intent',
@@ -78,9 +86,30 @@ import { HStack, Text } from 'usemotif';
       description: 'Padding and font size. `sm` uses the `xs` font size, `md` the `sm` one.',
     },
     {
+      name: 'count',
+      type: 'number',
+      description: 'Shows this number in place of `children`, centred with tabular figures.',
+    },
+    {
+      name: 'max',
+      type: 'number',
+      default: '99',
+      description: 'The largest `count` shown in full. Above it the badge reads `max+`.',
+    },
+    {
+      name: 'dot',
+      type: 'boolean',
+      description: 'An 8px status dot with no text. Pair it with `label`.',
+    },
+    {
+      name: 'label',
+      type: 'string',
+      description: 'The accessible name. Sets `role="img"` and `aria-label`, so it is announced in place of the content.',
+    },
+    {
       name: 'children',
       type: 'ReactNode',
-      description: 'The label, and an icon if you want one.',
+      description: 'The label, and an icon if you want one. Ignored with `count` or `dot`.',
     },
     {
       name: '...BoxProps',

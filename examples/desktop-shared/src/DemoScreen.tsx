@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { Box, Button, HStack, Text, ThemeProvider, VStack } from 'usemotif';
+import { Box, Button, HStack, Text, ThemeProvider, TitleBar, VStack } from 'usemotif';
 import { darkTheme, lightTheme } from '@usemotif/tokens';
 
 /**
@@ -32,8 +32,18 @@ export function DemoScreen(): React.ReactElement {
 
   return (
     <ThemeProvider themes={THEMES} active={active}>
-      <Box bg="$colors.surface.base" p="$6">
-        <VStack gap="$5">
+      <Box bg="$colors.surface.base">
+        <TitleBar
+          title="motif desktop demo"
+          px="$3"
+          bg="$colors.surface.muted"
+          trailing={
+            <Text fontSize="$xs" color="$colors.text.muted">
+              {active}
+            </Text>
+          }
+        />
+        <VStack gap="$5" p="$6">
           <VStack gap="$2">
             <Text fontSize="$xl" fontWeight="$bold" color="$colors.text.default">
               motif on the desktop

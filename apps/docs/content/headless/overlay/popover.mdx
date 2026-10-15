@@ -2,8 +2,8 @@
 title: Popover
 description: A non-modal floating panel anchored to a trigger. Focus stays on the page; the panel dismisses on Escape or a click outside.
 diataxis: reference
-covers: ['Popover', 'PopoverRootProps', 'PopoverTriggerProps', 'PopoverContentProps', 'PopoverCloseProps', 'Placement']
-last_verified: 2026-10-14
+covers: ['Popover', 'PopoverRootProps', 'PopoverTriggerProps', 'PopoverContentProps', 'PopoverCloseProps', 'Placement', 'FloatingArrowProps']
+last_verified: 2026-10-15
 ---
 
 import {
@@ -167,6 +167,41 @@ demanding: a filter panel, a settings menu, a small form. Modal interruptions be
     },
   ]}
 />
+
+### Popover.Arrow
+
+<ApiSignature
+  name="Popover.Arrow"
+  status="stable"
+  signature={`function Popover.Arrow(props: FloatingArrowProps): JSX.Element | null`}
+  params={[
+    { name: 'size', type: 'number', default: '8', description: 'Width of the square the arrow is cut from, in px.' },
+    { name: 'borderColor', type: 'string', description: 'Draws the arrow\'s two outer edges in this colour, to continue a bordered surface.' },
+    { name: 'borderWidth', type: 'number', default: '1', description: 'Border width with `borderColor`, in px.' },
+    { name: 'style', type: 'CSSProperties', description: 'Style for the arrow, usually its `background`.' },
+  ]}
+/>
+
+An arrow on the edge facing the trigger, pointing at the trigger's centre. It is a square turned 45
+degrees and straddling the edge, so render it first inside `Popover.Content` with the surface's
+background, and the surface covers its inner half. It moves to the other edge when the surface
+flips, and stays on the trigger when the surface shifts along the viewport edge. It carries
+`aria-hidden` and `data-side` (`top`, `bottom`, `left`, or `right`), for styling by side. On React
+Native it renders nothing, since native overlays open as modals with no anchored edge.
+
+## Positioning
+
+Where the browser supports the Popover API and CSS anchor positioning (`position-area` and
+`position-try-fallbacks`), `Popover.Content` opens as a manual popover in the top layer and the
+browser places it against the trigger. It then sits above any `overflow: hidden` ancestor or
+stacking context, follows the trigger through scrolling with no script, and flips to the other
+side when it doesn't fit. Elsewhere it is positioned in script, as before. The same applies to
+HoverCard, Menu and its submenus, Select, Combobox, and NavigationMenu submenus. Tooltip still
+positions in script.
+
+Either way `Popover.Arrow` and `data-side` follow the side the panel actually landed on. The
+popover is `manual`, so Escape and outside clicks are still handled by Popover itself, with the
+same props.
 
 ## Accessibility
 

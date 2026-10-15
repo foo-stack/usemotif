@@ -150,6 +150,14 @@ export interface MotifBabelOptions {
    */
   readonly cssLayer?: string;
   /**
+   * Web only. Atomic output: each static declaration compiles to one shared class
+   * (`.a-<hash> { padding: var(--space-4); }`) instead of an inline style, so a declaration
+   * repeated across the app ships once in the stylesheet. Declarations that override another
+   * on the same element (`p` with `pt`, a base value with its breakpoint or `:hover` value) keep
+   * the default per-element output, which is what keeps their order correct.
+   */
+  readonly atomic?: boolean;
+  /**
    * Web only. Called once per source file at Program-exit with the
    * concatenated CSS the plugin accumulated for that file. The host build
    * tool is responsible for writing it to a `.css` artifact (Vite virtual
@@ -702,7 +710,8 @@ function rewriteJsxForWeb(
   primitive: PrimitiveInfo | undefined,
   aggressive: boolean,
 ): void {
-  const result = extractWeb(analysis, { cssLayer: (state.opts as MotifBabelOptions).cssLayer });
+  const { cssLayer, atomic } = state.opts as MotifBabelOptions;
+  const result = extractWeb(analysis, { cssLayer, atomic });
 
   // Aggressive: lower `prop={cond ? A : B}` (both branches static) to a
   // conditional entry in the same inline-style object the static props bake

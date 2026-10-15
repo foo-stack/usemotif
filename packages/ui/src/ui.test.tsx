@@ -1,7 +1,7 @@
 /** @vitest-environment jsdom */
 import { act, useCallback } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   Accordion,
   Alert,
@@ -10,12 +10,14 @@ import {
   type AvatarGroupItem,
   Badge,
   Banner,
+  Button,
   Breadcrumb,
   Calendar,
   Chip,
   type Command,
   CommandPalette,
   Card,
+  DataTable,
   Checkbox,
   Collapsible,
   ColorPicker,
@@ -34,6 +36,7 @@ import {
   Pagination,
   Popover,
   Progress,
+  ProgressCircle,
   Radio,
   RadioGroup,
   RangeSlider,
@@ -54,6 +57,7 @@ import {
   Switch,
   TagsInput,
   Tabs,
+  TextField,
   TimeInput,
   Timeline,
   type TimelineItem,
@@ -137,6 +141,9 @@ const CAL_RANGE = { start: new Date(2024, 0, 10), end: new Date(2024, 0, 12) };
 
 // Hoisted command list + tree data (inline array/object props would trip lint).
 function cmdNoop(): void {}
+const CMD_NESTED: ReadonlyArray<Command> = [
+  { id: 'theme', label: 'Theme', children: [{ id: 'dark', label: 'Dark', onSelect: () => {} }] },
+];
 const CMD_COMMANDS: ReadonlyArray<Command> = [
   { id: 'new', label: 'New File', shortcut: ['Mod', 'N'], onSelect: cmdNoop },
   { id: 'open', label: 'Open...', onSelect: cmdNoop },
@@ -202,6 +209,81 @@ afterEach(() => {
 });
 
 describe('display components', () => {
+  it('Card composes Header, Body, Footer and Media parts', () => {
+    render(
+      <Card padding="none" data-testid="card">
+        <Card.Media data-testid="media">
+          <img alt="" src="data:," />
+        </Card.Media>
+        <Card.Header data-testid="header">Pro plan</Card.Header>
+        <Card.Body data-testid="body">Everything in Team.</Card.Body>
+        <Card.Footer data-testid="footer">
+          <button type="button">Choose</button>
+        </Card.Footer>
+      </Card>,
+    );
+    const card = container.querySelector('[data-testid="card"]')!;
+    const order = Array.from(card.children, (el) => el.getAttribute('data-testid'));
+    expect(order).toEqual(['media', 'header', 'body', 'footer']);
+    for (const id of ['header', 'body', 'footer']) {
+      expect(look(container.querySelector(`[data-testid="${id}"]`)!), id).not.toBe('|');
+    }
+    expect(container.querySelector('[data-testid="footer"]')!.getAttribute('style')).toContain(
+      'justify-content: flex-end',
+    );
+  });
+
+  it('an interactive Card is a link with hover and focus-visible states', () => {
+    render(
+      <Card as="a" interactive data-testid="card" {...({ href: '/plans/pro' } as object)}>
+        Pro
+      </Card>,
+    );
+    const card = container.querySelector('[data-testid="card"]')!;
+    expect(card.tagName).toBe('A');
+    expect(card.getAttribute('href')).toBe('/plans/pro');
+    expect(card.getAttribute('style') ?? '').toContain('cursor: pointer');
+    const css = Array.from(document.querySelectorAll('style'), (el) => el.textContent ?? '').join(
+      '\n',
+    );
+    const cls = (card.getAttribute('class') ?? '')
+      .split(' ')
+      .find((c) => css.includes(`.${c}:hover`));
+    expect(cls, 'a hover rule for the card').toBeDefined();
+    expect(css).toContain(`.${cls}:focus-visible`);
+  });
+
+  it('Badge shows a count, capped at max with a plus', () => {
+    render(
+      <>
+        <Badge data-testid="a" count={7} />
+        <Badge data-testid="b" count={120} />
+        <Badge data-testid="c" count={12} max={9} label="12 unread" />
+      </>,
+    );
+    const text = (id: string): string | null =>
+      container.querySelector(`[data-testid="${id}"]`)!.textContent;
+    expect(text('a')).toBe('7');
+    expect(text('b')).toBe('99+');
+    expect(text('c')).toBe('9+');
+    const labelled = container.querySelector('[data-testid="c"]')!;
+    expect(labelled.getAttribute('role')).toBe('img');
+    expect(labelled.getAttribute('aria-label')).toBe('12 unread');
+    expect(container.querySelector('[data-testid="a"]')!.hasAttribute('role')).toBe(false);
+  });
+
+  it('a dot Badge is an empty 8px circle with its label', () => {
+    render(<Badge data-testid="dot" intent="success" size="md" dot label="Online" />);
+    const dot = container.querySelector('[data-testid="dot"]')!;
+    expect(dot.textContent).toBe('');
+    expect(dot.getAttribute('aria-label')).toBe('Online');
+    const style = dot.getAttribute('style') ?? '';
+    expect(style).toContain('width: 8px');
+    expect(style).toContain('height: 8px');
+    // The dot's zero padding wins over the md size's.
+    expect(style).toContain('padding-inline: 0');
+  });
+
   it('Card and Badge render themed (recipe applied)', () => {
     render(
       <>
@@ -211,6 +293,45 @@ describe('display components', () => {
     );
     expect(look(container.querySelector('[data-testid="card"]')!)).not.toBe('|');
     expect(look(container.querySelector('[data-testid="badge"]')!)).not.toBe('|');
+  });
+
+  it('Button applies the button recipe to a real button', () => {
+    let pressed = 0;
+    render(
+      <Button intent="danger" size="sm" onPress={() => (pressed += 1)}>
+        Delete
+      </Button>,
+    );
+    const button = container.querySelector('button')!;
+    expect(button.getAttribute('type')).toBe('button');
+    const style = button.getAttribute('style') ?? '';
+    expect(style).toContain(
+      'background-color: var(--components-button-danger-bg, var(--colors-action-danger-bg))',
+    );
+    expect(style).toContain('height: 32px');
+    click(button);
+    expect(pressed).toBe(1);
+  });
+
+  it('TextField applies the input recipe to an input and marks it invalid', () => {
+    render(
+      <FormField label="Email" error="Required">
+        <TextField size="lg" invalid placeholder="you@example.com" />
+      </FormField>,
+    );
+    const input = container.querySelector('input')!;
+    expect(input.getAttribute('type')).toBe('text');
+    expect(input.getAttribute('placeholder')).toBe('you@example.com');
+    expect(input.getAttribute('aria-invalid')).toBe('true');
+    expect(input.getAttribute('aria-describedby')).not.toBeNull();
+    // The recipe resolves to real styles, not stray attributes on the input.
+    const style = input.getAttribute('style') ?? '';
+    expect(style).toContain('height: 48px');
+    expect(style).toContain(
+      'border-color: var(--components-input-invalid-borderColor, var(--colors-action-danger-bg))',
+    );
+    expect(input.hasAttribute('bg')).toBe(false);
+    expect(container.querySelector('label')!.getAttribute('for')).toBe(input.id);
   });
 
   it('Spinner announces itself and animates', () => {
@@ -235,6 +356,53 @@ describe('display components', () => {
     // The danger intent drives the soft-tint background from the `status`
     // tokens - the surface is the filled tint, not a bare border accent.
     expect(el.getAttribute('style') ?? '').toContain('status-danger-tint');
+  });
+
+  it('Alert renders an action and a dismiss button in the intent colour', () => {
+    const onDismiss = vi.fn();
+    render(
+      <Alert
+        intent="danger"
+        title="Payment failed"
+        action={<a href="#billing">Update card</a>}
+        onDismiss={onDismiss}
+      >
+        Update your card.
+      </Alert>,
+    );
+    const el = container.querySelector('[role="alert"]') as HTMLElement;
+    expect(el.querySelector('a[href="#billing"]')?.textContent).toBe('Update card');
+    const dismiss = el.querySelector('button[aria-label="Dismiss"]') as HTMLElement;
+    expect(dismiss.getAttribute('type')).toBe('button');
+    expect(dismiss.getAttribute('style') ?? '').toContain('status-danger-fg');
+    click(dismiss);
+    expect(onDismiss).toHaveBeenCalledTimes(1);
+  });
+
+  it('Alert and Banner show an intent icon by default, replaceable or removable', () => {
+    render(
+      <>
+        <Alert intent="danger" title="Failed" />
+        <Alert intent="neutral" title="Note" />
+        <Alert intent="success" title="Custom" icon={<i data-testid="custom" />} />
+        <Alert intent="info" title="None" icon={null} />
+        <Banner intent="warning" title="Maintenance" />
+      </>,
+    );
+    const alerts = container.querySelectorAll('[role="alert"], [role="status"]');
+    const svgs = Array.from(alerts, (el) => el.querySelectorAll('svg').length);
+    // danger and the warning Banner get an icon; neutral, the custom one and null do not draw one.
+    expect(svgs).toEqual([1, 0, 0, 0, 1]);
+    expect(alerts[0]!.querySelector('svg')!.getAttribute('aria-hidden')).toBe('true');
+    expect(alerts[0]!.querySelector('svg')!.parentElement!.getAttribute('style') ?? '').toContain(
+      'status-danger-fg',
+    );
+    expect(alerts[2]!.querySelector('[data-testid="custom"]')).not.toBeNull();
+  });
+
+  it('Alert renders no dismiss button without onDismiss', () => {
+    render(<Alert title="Saved" />);
+    expect(container.querySelector('[aria-label="Dismiss"]')).toBeNull();
   });
 
   it('Alert supports the warning intent and tints per intent', () => {
@@ -520,6 +688,21 @@ describe('Popover - themed surface over the headless behaviour', () => {
 });
 
 describe('Accordion - themed via _expanded over the headless disclosure', () => {
+  it('passes collapsible={false} through: the open trigger is disabled and stays open', () => {
+    render(
+      <Accordion.Root collapsible={false} defaultValue={ACCORDION_DEFAULT_OPEN}>
+        <Accordion.Item value="a">
+          <Accordion.Trigger>Shipping</Accordion.Trigger>
+          <Accordion.Content>Ships in 2-3 days.</Accordion.Content>
+        </Accordion.Item>
+      </Accordion.Root>,
+    );
+    const trigger = container.querySelector('button')!;
+    expect(trigger.getAttribute('aria-disabled')).toBe('true');
+    click(trigger);
+    expect(trigger.getAttribute('aria-expanded')).toBe('true');
+  });
+
   it('renders triggers that expose aria-expanded and toggle their panels', () => {
     render(
       <Accordion.Root type="single" defaultValue={ACCORDION_DEFAULT_OPEN}>
@@ -733,6 +916,53 @@ describe('Progress - themed bar over the headless progressbar', () => {
   });
 });
 
+describe('ProgressCircle - themed ring with Progress semantics', () => {
+  const ring = (): SVGCircleElement => container.querySelectorAll('circle')[1] as SVGCircleElement;
+
+  it('fills the arc to the value and reports it', () => {
+    render(<ProgressCircle value={25} size={40} thickness={4} aria-label="Uploading" />);
+    const bar = container.querySelector('[role="progressbar"]')!;
+    expect(bar.getAttribute('aria-valuenow')).toBe('25');
+    expect(bar.getAttribute('aria-valuemax')).toBe('100');
+    expect(bar.getAttribute('aria-label')).toBe('Uploading');
+    const circumference = 2 * Math.PI * 18;
+    expect(Number(ring().getAttribute('stroke-dasharray'))).toBeCloseTo(circumference, 5);
+    expect(Number(ring().getAttribute('stroke-dashoffset'))).toBeCloseTo(circumference * 0.75, 5);
+    expect(
+      container.querySelector('svg')!.parentElement!.getAttribute('style') ?? '',
+    ).not.toContain('animation');
+  });
+
+  it('spins a quarter arc when indeterminate, without a value', () => {
+    render(<ProgressCircle value={null} aria-label="Loading" />);
+    const bar = container.querySelector('[role="progressbar"]')!;
+    expect(bar.getAttribute('aria-valuenow')).toBeNull();
+    const spinner = container.querySelector('svg')!.parentElement!;
+    const css = Array.from(document.querySelectorAll('style'), (el) => el.textContent ?? '').join(
+      '\n',
+    );
+    const animated = `${spinner.getAttribute('style') ?? ''} ${css}`;
+    expect(animated).toMatch(/infinite/);
+    expect(css).toMatch(/@keyframes/);
+  });
+
+  it('holds still under reduced motion', () => {
+    const original = window.matchMedia;
+    window.matchMedia = ((query: string) => ({
+      matches: query.includes('reduce'),
+      addEventListener: () => {},
+      removeEventListener: () => {},
+    })) as unknown as typeof window.matchMedia;
+    try {
+      render(<ProgressCircle value={null} aria-label="Loading" />);
+      const spinner = container.querySelector('svg')!.parentElement!;
+      expect(spinner.getAttribute('style') ?? '').not.toMatch(/animation-name|infinite/);
+    } finally {
+      window.matchMedia = original;
+    }
+  });
+});
+
 describe('Drawer / Sheet - themed sliding panels over the headless Dialog', () => {
   it('opens a themed side drawer from its trigger and closes on Escape', () => {
     render(
@@ -855,6 +1085,27 @@ describe('Separator and Skeleton - display-floor primitives', () => {
     expect(el).not.toBeNull();
     expect(look(el)).not.toBe('|');
   });
+
+  it('Skeleton lines stacks text-height bars with a shorter last line', () => {
+    render(<Skeleton lines={3} width={320} />);
+    const stack = container.querySelector('[aria-hidden="true"]') as HTMLElement;
+    const style = stack.getAttribute('style') ?? '';
+    expect(style).toContain('width: 320px');
+    expect(style).toContain('font-size: var(--fontSizes-md)');
+    const bars = Array.from(stack.children) as HTMLElement[];
+    expect(bars.length).toBe(3);
+    const widths = bars.map(
+      (bar) => /(?:^|; )width: ([^;]+)/.exec(bar.getAttribute('style') ?? '')?.[1],
+    );
+    expect(widths).toEqual(['100%', '100%', '60%']);
+    for (const bar of bars) expect(bar.getAttribute('style') ?? '').toContain('height: 1em');
+  });
+
+  it('a single Skeleton line is full width', () => {
+    render(<Skeleton lines={1} />);
+    const bar = container.querySelector('[aria-hidden="true"]')!.firstElementChild!;
+    expect(bar.getAttribute('style') ?? '').toMatch(/(?:^|; )width: 100%/);
+  });
 });
 
 describe('Pagination - themed page controls over the headless navigation', () => {
@@ -874,6 +1125,34 @@ describe('Pagination - themed page controls over the headless navigation', () =>
     const pageThree = buttons.find((b) => b.textContent === '3')!;
     click(pageThree);
     expect(paginationPage).toBe(3);
+  });
+
+  it('offers themed page sizes and reports the page that keeps the first item in view', () => {
+    const onPageSizeChange = vi.fn();
+    render(
+      <Pagination
+        page={5}
+        total={10}
+        boundaries={2}
+        pageSize={10}
+        onPageSizeChange={onPageSizeChange}
+      />,
+    );
+    const select = container.querySelector('select') as HTMLSelectElement;
+    expect(select.getAttribute('aria-label')).toBe('Items per page');
+    expect(Array.from(select.options, (o) => o.value)).toEqual(['10', '20', '50']);
+    expect(look(select)).not.toBe('|');
+    act(() => {
+      select.value = '50';
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    // Page 5 at 10 per page starts at item 41, which is on page 1 at 50 per page.
+    expect(onPageSizeChange).toHaveBeenCalledWith(50, 1);
+  });
+
+  it('shows no page-size select without onPageSizeChange', () => {
+    render(<Pagination page={1} total={5} pageSize={10} />);
+    expect(container.querySelector('select')).toBeNull();
   });
 });
 
@@ -912,6 +1191,40 @@ describe('Breadcrumb - themed trail over the headless landmark', () => {
     expect(nav.querySelector('[aria-current="page"]')).not.toBeNull();
     expect(nav.textContent).toContain('Home');
     expect(nav.textContent).toContain('Data');
+  });
+
+  it('folds the middle crumbs past maxItems into a menu that navigates', () => {
+    const onNavigate = vi.fn();
+    render(
+      <Breadcrumb maxItems={3} onNavigate={onNavigate}>
+        <Breadcrumb.Item href="/">Home</Breadcrumb.Item>
+        <Breadcrumb.Item href="/a">Alpha</Breadcrumb.Item>
+        <Breadcrumb.Item href="/b">Beta</Breadcrumb.Item>
+        <Breadcrumb.Item href="/c">Gamma</Breadcrumb.Item>
+        <Breadcrumb.Item>Delta</Breadcrumb.Item>
+      </Breadcrumb>,
+    );
+    const nav = container.querySelector('nav') as HTMLElement;
+    const crumbs = Array.from(nav.querySelectorAll('li'), (li) => li.textContent?.replace('›', ''));
+    expect(crumbs).toEqual(['Home', '...', 'Gamma', 'Delta']);
+    expect(nav.querySelector('[aria-current="page"]')?.textContent).toBe('Delta');
+    const more = nav.querySelector('button[aria-label="Show hidden breadcrumbs"]') as HTMLElement;
+    expect(more.getAttribute('aria-haspopup')).toBe('menu');
+    click(more);
+    const items = Array.from(document.querySelectorAll('[role="menuitem"]'));
+    expect(items.map((el) => el.textContent)).toEqual(['Alpha', 'Beta']);
+    click(items[1]!);
+    expect(onNavigate).toHaveBeenCalledWith('/b');
+  });
+
+  it('shows every crumb while they fit in maxItems', () => {
+    render(
+      <Breadcrumb maxItems={3}>
+        <Breadcrumb.Item href="/">Home</Breadcrumb.Item>
+        <Breadcrumb.Item>Data</Breadcrumb.Item>
+      </Breadcrumb>,
+    );
+    expect(container.querySelector('button[aria-label="Show hidden breadcrumbs"]')).toBeNull();
   });
 });
 
@@ -1074,10 +1387,10 @@ describe('MultiSelect - themed chip-select over the headless multiselect', () =>
         onValueChange={onMultiChange}
       />,
     );
-    // The default selection renders as a chip with a remove control.
+    // The default selection renders as a chip with a remove control named for its option.
     const field = container.firstElementChild as HTMLElement;
     expect(field.textContent).toContain('React');
-    expect(field.querySelector('[aria-label="Remove"]')).not.toBeNull();
+    expect(field.querySelector('[aria-label="Remove React"]')).not.toBeNull();
 
     const input = container.querySelector('[role="combobox"]') as HTMLInputElement;
     act(() => input.focus());
@@ -1265,6 +1578,25 @@ describe('CommandPalette - themed ⌘K overlay over the headless behaviour', () 
     render(<CommandPalette commands={CMD_COMMANDS} open={false} />);
     expect(document.querySelector('[role="combobox"]')).toBeNull();
   });
+
+  it('opens a nested page under a themed breadcrumb that goes back', () => {
+    render(<CommandPalette commands={CMD_NESTED} open />);
+    expect(document.querySelector('nav[aria-label="Command pages"]')).toBeNull();
+    const option = Array.from(document.querySelectorAll('[role="option"]')).find((o) =>
+      o.textContent?.includes('Theme'),
+    )!;
+    act(() => {
+      option.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
+    });
+    expect(document.body.textContent).toContain('Dark');
+    const nav = document.querySelector('nav[aria-label="Command pages"]')!;
+    expect(nav.textContent).toBe('Commands/Theme');
+    const back = nav.querySelector('button')!;
+    expect(look(back)).not.toBe('|');
+    act(() => back.click());
+    expect(document.querySelector('nav[aria-label="Command pages"]')).toBeNull();
+    expect(document.body.textContent).toContain('Theme');
+  });
 });
 
 describe('TreeView - themed ARIA tree over the headless behaviour', () => {
@@ -1382,6 +1714,49 @@ describe('Timeline - themed vertical timeline (pure primitive)', () => {
     expect(container.textContent).toContain('14:10');
     expect(look(container.firstElementChild!)).not.toBe('|');
   });
+
+  it('draws an item icon in a ring in place of the dot', () => {
+    const items = [
+      { id: 'a', title: 'Shipped', status: 'success' as const, icon: <i data-testid="truck" /> },
+      { id: 'b', title: 'Delivered' },
+    ];
+    render(<Timeline items={items} />);
+    const ring = container.querySelector('[data-testid="truck"]')!.parentElement!;
+    const style = ring.getAttribute('style') ?? '';
+    expect(style).toContain('width: 24px');
+    expect(style).toContain('status-success-fg');
+  });
+
+  it('alternates sides from md up and stacks in one column below it', () => {
+    render(<Timeline layout="alternate" items={TIMELINE_ITEMS} />);
+    const css = Array.from(document.querySelectorAll('style'), (el) => el.textContent ?? '').join(
+      '\n',
+    );
+    // The base rule and the min-width rule each element's class carries.
+    const rules = (el: Element): { base: string; md: string } => {
+      const cls = (el.getAttribute('class') ?? '')
+        .split(' ')
+        .find((c) => css.includes(`@media (min-width: 768px) { .${c} {`))!;
+      const esc = cls.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      return {
+        base: new RegExp(`(?:^|\\n)\\.${esc} \\{([^}]*)\\}`).exec(css)?.[1] ?? '',
+        md:
+          new RegExp(`@media \\(min-width: 768px\\) \\{ \\.${esc} \\{([^}]*)\\}`).exec(css)?.[1] ??
+          '',
+      };
+    };
+    const rows = Array.from(container.firstElementChild!.children);
+    // Below md: marker then content. From md: content, marker, content.
+    expect(rules(rows[0]!)).toEqual({
+      base: ' grid-template-columns: auto 1fr; ',
+      md: ' grid-template-columns: 1fr auto 1fr; ',
+    });
+    const first = rules(rows[0]!.children[1]!);
+    expect(first.base).toContain('grid-column: 2');
+    expect(first.md).toContain('grid-column: 1');
+    expect(first.md).toContain('align-items: flex-end');
+    expect(rules(rows[1]!.children[1]!).md).toContain('grid-column: 3');
+  });
 });
 
 describe('AvatarGroup - overlapping avatars + overflow (pure primitive)', () => {
@@ -1404,6 +1779,50 @@ describe('Chip - removable tag (pure primitive)', () => {
     expect(btn).not.toBeNull();
     click(btn);
     expect(chipRemoved).toBe(true);
+  });
+
+  it('toggles as a filter with aria-pressed, apart from its remove button', () => {
+    const onSelectedChange = vi.fn();
+    const onRemove = vi.fn();
+    render(
+      <Chip
+        data-testid="chip"
+        defaultSelected={false}
+        onSelectedChange={onSelectedChange}
+        onRemove={onRemove}
+      >
+        Design
+      </Chip>,
+    );
+    const toggle = container.querySelector('button[aria-pressed]') as HTMLElement;
+    expect(toggle.textContent).toBe('Design');
+    expect(toggle.getAttribute('aria-pressed')).toBe('false');
+    const chip = toggle.parentElement!;
+    const before = chip.getAttribute('style') ?? '';
+    click(toggle);
+    expect(toggle.getAttribute('aria-pressed')).toBe('true');
+    expect(onSelectedChange).toHaveBeenLastCalledWith(true);
+    expect(chip.getAttribute('style') ?? '').toContain('action-primary-bg');
+    expect(before).not.toContain('action-primary-bg');
+    // The remove button is its own target: it removes without toggling.
+    click(container.querySelector('[aria-label="Remove"]')!);
+    expect(onRemove).toHaveBeenCalledTimes(1);
+    expect(onSelectedChange).toHaveBeenCalledTimes(1);
+    expect(toggle.contains(container.querySelector('[aria-label="Remove"]'))).toBe(false);
+  });
+
+  it('follows a controlled selected, and stays a plain tag without one', () => {
+    render(
+      <>
+        <Chip selected>On</Chip>
+        <Chip>Plain</Chip>
+      </>,
+    );
+    const pressed = container.querySelectorAll('button[aria-pressed]');
+    expect(pressed.length).toBe(1);
+    expect(pressed[0]!.getAttribute('aria-pressed')).toBe('true');
+    click(pressed[0]!);
+    expect(pressed[0]!.getAttribute('aria-pressed')).toBe('true');
   });
 });
 
@@ -1462,5 +1881,32 @@ describe('SegmentedControl - single-select segments (pure primitive)', () => {
     click(radios[1]!);
     expect(radios[1]!.getAttribute('aria-checked')).toBe('true');
     expect(segValue).toBe('grid');
+  });
+});
+
+describe('DataTable - themed grid over the headless DataTable', () => {
+  it('themes the grid and marks the sorted column with an arrow', () => {
+    const rows = [
+      { id: 'a', n: 'Cara' },
+      { id: 'b', n: 'Abe' },
+    ];
+    render(
+      <DataTable
+        data={rows}
+        getRowId={(r) => r.id}
+        columns={[{ id: 'n', header: 'Name', value: (r) => r.n, sortable: true }]}
+        selectionMode="single"
+        defaultSelected={['a']}
+        aria-label="People"
+      />,
+    );
+    const grid = container.querySelector('[role="grid"]') as HTMLElement;
+    expect(grid.getAttribute('style') ?? '').toContain('var(--colors-surface-raised');
+    const head = container.querySelector('[role="columnheader"]') as HTMLElement;
+    click(head);
+    expect(head.getAttribute('aria-sort')).toBe('ascending');
+    expect(head.textContent).toBe('Name ▲');
+    const selectedRow = container.querySelector('[aria-selected="true"]') as HTMLElement;
+    expect(selectedRow.getAttribute('style') ?? '').toContain('status-info-tint');
   });
 });

@@ -1,0 +1,90 @@
+---
+title: useShortcut
+description: Runs a handler on a keyboard shortcut, globally or within one element, and returns the shortcut's label formatted for the platform.
+diataxis: reference
+covers: ['useShortcut', 'UseShortcutOptions']
+last_verified: 2026-10-15
+---
+
+import { ApiSignature, ArticleMeta, CodeBlock, Eyebrow } from '../../components/index.js';
+
+<Eyebrow>API reference</Eyebrow>
+
+<ApiSignature
+  name="useShortcut"
+  status="stable"
+  signature={`function useShortcut(combo: string, handler: (event: KeyboardEvent) => void, options?: UseShortcutOptions): string`}
+  params={[
+    {
+      name: 'combo',
+      type: 'string',
+      required: true,
+      description: 'Modifiers then one key, joined with `+`: `mod+k`, `shift+/`, `alt+enter`. `mod` is Command on Apple platforms and Ctrl elsewhere; `ctrl`, `cmd`, `shift` and `alt` mean themselves.',
+    },
+    {
+      name: 'handler',
+      type: '(event: KeyboardEvent) => void',
+      required: true,
+      description: 'Runs on a matching keydown. An inline function is fine: the latest one is always called.',
+    },
+    {
+      name: 'options.target',
+      type: 'RefObject<HTMLElement | null>',
+      description: 'Listen inside this element only. Defaults to the whole window.',
+    },
+    {
+      name: 'options.enabled',
+      type: 'boolean',
+      default: 'true',
+      description: 'Turns the shortcut off without unmounting.',
+    },
+    {
+      name: 'options.allowInInputs',
+      type: 'boolean',
+      default: 'false',
+      description: 'Also fire while the user types in an input, textarea, select or editable element. Off by default so a plain-key shortcut such as `/` does not steal keystrokes.',
+    },
+    {
+      name: 'options.preventDefault',
+      type: 'boolean',
+      default: 'true',
+      description: "Call `preventDefault()` on a matching keydown, so `mod+s` does not also open the browser's save dialog.",
+    },
+  ]}
+/>
+
+<ArticleMeta />
+
+## Description
+
+Exported from `@usemotif/headless`. The hook returns the shortcut's label for display: `⌘K` on Apple
+platforms and `Ctrl+K` elsewhere, with modifiers in each platform's usual order. The first render
+returns the non-Apple form and the label settles after mount, so server and client markup agree.
+
+On React Native the shortcut never fires, since touch devices have no global hardware keyboard. The
+label is still returned, in the Apple form on iOS, so shared code can show it.
+
+`useCommandPaletteShortcut` is this hook with `allowInInputs` on, so the palette opens even from its
+own search box.
+
+## Example
+
+<CodeBlock lang="tsx" code={`import { useShortcut } from '@usemotif/headless';
+import { Button, Kbd } from 'usemotif';
+
+function SaveButton({ onSave }: { onSave: () => void }) {
+  const label = useShortcut('mod+s', onSave);
+  return (
+    <Button onPress={onSave}>
+      Save <Kbd>{label}</Kbd>
+    </Button>
+  );
+}`} />
+
+Scoped to one element, here a list that takes `j` and `k` only while it has focus:
+
+<CodeBlock lang="tsx" code={`const list = useRef<HTMLDivElement>(null);
+useShortcut('j', next, { target: list });
+useShortcut('k', previous, { target: list });
+
+<div ref={list} tabIndex={0}>{rows}</div>`} />

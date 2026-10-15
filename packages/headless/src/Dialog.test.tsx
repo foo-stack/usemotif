@@ -485,3 +485,85 @@ describe('Drawer - background isolation', () => {
     expect(document.body.style.overflow).toBe('');
   });
 });
+
+describe('Dialog - modal={false}', () => {
+  let background: HTMLButtonElement;
+
+  beforeEach(() => {
+    background = document.createElement('button');
+    background.textContent = 'page button';
+    document.body.append(background);
+  });
+
+  afterEach(() => {
+    background.remove();
+    document.body.removeAttribute('style');
+  });
+
+  function openNonModal(onOpenChange?: (open: boolean) => void): void {
+    render(
+      <Dialog.Root modal={false} {...(onOpenChange !== undefined ? { onOpenChange } : {})}>
+        <Dialog.Trigger>
+          <button data-testid="trigger">Open</button>
+        </Dialog.Trigger>
+        <Dialog.Content>
+          <Dialog.Title>Title</Dialog.Title>
+          <button data-testid="inside">Inside</button>
+        </Dialog.Content>
+      </Dialog.Root>,
+    );
+    click(container.querySelector('[data-testid="trigger"]')!);
+  }
+
+  it('leaves the page interactive: no inert, no scroll lock, no aria-modal', () => {
+    openNonModal();
+    const dialog = document.querySelector<HTMLElement>('[role="dialog"]')!;
+    expect(dialog.hasAttribute('aria-modal')).toBe(false);
+    expect(background.hasAttribute('inert')).toBe(false);
+    expect(background.hasAttribute('aria-hidden')).toBe(false);
+    expect(document.body.style.overflow).toBe('');
+    // The layer is click-through; only the dialog takes the pointer.
+    expect(
+      (dialog.parentElement!.closest('[style*="position: fixed"]') as HTMLElement).style
+        .pointerEvents,
+    ).toBe('none');
+    expect(dialog.style.pointerEvents).toBe('auto');
+  });
+
+  it('moves focus in, but does not pull it back when it leaves', () => {
+    openNonModal();
+    const dialog = document.querySelector('[role="dialog"]')!;
+    expect(dialog.contains(document.activeElement)).toBe(true);
+    act(() => background.focus());
+    expect(document.activeElement).toBe(background);
+  });
+
+  it('closes on a press outside and on Escape, but not on a press inside', () => {
+    const onOpenChange = vi.fn();
+    openNonModal(onOpenChange);
+    act(() => {
+      document
+        .querySelector('[data-testid="inside"]')!
+        .dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+    });
+    expect(document.querySelector('[role="dialog"]')).not.toBeNull();
+    act(() => {
+      background.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+    });
+    expect(document.querySelector('[role="dialog"]')).toBeNull();
+    click(container.querySelector('[data-testid="trigger"]')!);
+    press('Escape');
+    expect(document.querySelector('[role="dialog"]')).toBeNull();
+  });
+
+  it('keeps the trigger a toggle', () => {
+    openNonModal();
+    const trigger = container.querySelector('[data-testid="trigger"]')!;
+    act(() => {
+      trigger.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+    });
+    expect(document.querySelector('[role="dialog"]')).not.toBeNull();
+    click(trigger);
+    expect(document.querySelector('[role="dialog"]')).toBeNull();
+  });
+});

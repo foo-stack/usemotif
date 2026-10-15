@@ -1,0 +1,116 @@
+---
+title: DataTable
+description: A data grid with sortable columns, row selection, resizable columns, windowed rows, and the WAI-ARIA grid keyboard model. Unstyled.
+diataxis: reference
+covers: ['DataTable', 'DataTableProps', 'DataTableColumn', 'SortState', 'SortDirection']
+last_verified: 2026-10-15
+---
+
+import { ApiSignature, ArticleMeta, Callout, CodeBlock, Eyebrow, Lede } from '../../../components/index.js';
+
+<Eyebrow>Headless / Specialized</Eyebrow>
+
+# DataTable
+
+<Lede>
+  DataTable renders a `role="grid"` from your rows and column definitions. It sorts, selects, resizes
+  columns, and renders only the rows in view, so a list of thousands scrolls like a list of ten.
+</Lede>
+
+<ArticleMeta />
+
+## What it is
+
+Columns are plain objects: an `id`, a `header`, and a `value` the column shows and sorts by, or a
+`cell` for richer content. Sort, selection and column widths are each controlled or uncontrolled.
+The grid is unstyled; pass `style`, `headerStyle`, `rowStyle` and the other style props, or use the
+kit's [DataTable](/kit/display/data-table) for the themed version.
+
+Rows are windowed against a fixed `rowHeight`: the grid renders the rows in view plus `overscan` on
+each side, with spacers keeping the scroll height true. DataTable is web only for now: on React Native it renders nothing and logs a one-time warning.
+
+## Install
+
+<CodeBlock lang="bash" code={`yarn add @usemotif/headless`} />
+
+## Usage
+
+<CodeBlock lang="tsx" code={`import { DataTable } from '@usemotif/headless';
+
+<DataTable
+  data={people}
+  getRowId={(p) => p.id}
+  columns={[
+    { id: 'name', header: 'Name', value: (p) => p.name, sortable: true },
+    { id: 'age', header: 'Age', value: (p) => p.age, sortable: true, width: 80 },
+    { id: 'email', header: 'Email', cell: (p) => <a href={\`mailto:\${p.email}\`}>{p.email}</a> },
+  ]}
+  selectionMode="multiple"
+  onSelectedChange={setPicked}
+  height={480}
+  aria-label="People"
+/>`} />
+
+## API
+
+<ApiSignature
+  name="DataTable"
+  status="stable"
+  signature={`function DataTable<T>(props: DataTableProps<T>): JSX.Element`}
+  params={[
+    { name: 'data', type: 'readonly T[]', required: true, description: 'The rows.' },
+    { name: 'columns', type: 'readonly DataTableColumn<T>[]', required: true, description: 'The columns, in order.' },
+    { name: 'getRowId', type: '(row: T, index: number) => string', required: true, description: 'A stable id per row, for selection and keys.' },
+    { name: 'sort / defaultSort / onSortChange', type: 'SortState | null', description: 'The sorted column and direction. `null` keeps the data\'s order. A sortable header cycles ascending, descending, unsorted.' },
+    { name: 'selectionMode', type: "'none' | 'single' | 'multiple'", default: "'none'", description: 'Whether rows select, and how many.' },
+    { name: 'selected / defaultSelected / onSelectedChange', type: 'readonly string[]', description: 'Selected row ids.' },
+    { name: 'columnWidths / onColumnWidthsChange', type: 'Record<string, number>', description: 'Column widths by id, set by the resize handles.' },
+    { name: 'height', type: 'number', default: '400', description: 'Height of the scrolling grid in px.' },
+    { name: 'rowHeight', type: 'number', default: '40', description: 'Height of every row, header included. Rows are windowed against it.' },
+    { name: 'overscan', type: 'number', default: '6', description: 'Rows rendered beyond the viewport on each side.' },
+    { name: 'renderHeader', type: '(column, { sort }) => ReactNode', description: 'A header cell\'s content, for a sort indicator. Defaults to `column.header`.' },
+    { name: 'style, headerStyle, headerCellStyle, cellStyle, resizeHandleStyle', type: 'CSSProperties', description: 'Inline styles for the grid and its parts.' },
+    { name: 'rowStyle', type: '({ selected, index }) => CSSProperties', description: 'Each body row\'s style.' },
+  ]}
+/>
+
+### DataTableColumn
+
+<CodeBlock lang="ts" code={`interface DataTableColumn<T> {
+  id: string;
+  header: ReactNode;
+  value?: (row: T) => unknown;    // what the column shows and sorts by
+  cell?: (row: T) => ReactNode;   // richer content; defaults to value as text
+  sortable?: boolean;             // needs value
+  width?: number;                 // px, default 160
+  minWidth?: number;              // default 60
+  maxWidth?: number;              // default 800
+  resizable?: boolean;            // default true
+}`} />
+
+Sorting is stable. Numbers compare as numbers, text compares with numeric runs in order (`file2`
+before `file10`), and empty values go last in either direction.
+
+## Accessibility
+
+The grid carries `aria-rowcount` and `aria-colcount` for the whole data set, so a screen reader
+reports the true size while only some rows are rendered; each row and cell has its `aria-rowindex`
+and `aria-colindex`. Sortable headers carry `aria-sort`, selectable rows `aria-selected`, and a
+multiple-selection grid `aria-multiselectable`. Resize handles are `role="separator"` with their
+width as `aria-valuenow`.
+
+| Key | Action |
+| --- | --- |
+| Arrow keys | Move between cells; the header is the first row |
+| Home / End | First or last cell of the row |
+| Ctrl+Home / Ctrl+End | First or last cell of the grid |
+| PageUp / PageDown | Move by a viewport of rows |
+| Enter / Space on a header | Sort by that column |
+| Space on a row | Select it |
+| ArrowLeft / ArrowRight on a resize handle | Narrow or widen the column by 10px |
+
+One cell is in the tab order at a time, so Tab moves past the grid in one step.
+
+<Callout variant="info" title="Related">
+  [VirtualList](/components/scroll/virtual-list) for a windowed list without columns.
+</Callout>

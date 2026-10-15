@@ -155,6 +155,7 @@ describe('analyzeStripSafety - runtime-owned props keep the wrapper', () => {
     expectBail(`<Stack stagger={50} />`, 'Stack', 'blocked-prop:stagger');
     expectBail(`<HStack stagger={50} />`, 'HStack', 'blocked-prop:stagger');
     expectBail(`<VStack stagger={50} />`, 'VStack', 'blocked-prop:stagger');
+    expectBail(`<Stack staggerFrom="center" />`, 'Stack', 'blocked-prop:staggerFrom');
   });
 
   // The blocked props are scoped to the primitives that own them: `lines`

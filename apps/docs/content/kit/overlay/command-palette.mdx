@@ -43,6 +43,10 @@ search input with a hairline beneath it, and command rows that show the command'
 and `shortcut`. The highlighted row takes `surface.interactive`; a disabled one renders in
 `text.muted`.
 
+A command with `children` opens a nested page. A breadcrumb above the input shows the trail, each
+earlier level a button back to it, and Backspace on an empty input or Escape goes back one level.
+Escape closes the palette only from the top level.
+
 ## Install
 
 <CodeBlock lang="bash" code={`yarn add @usemotif/ui`} />
@@ -158,7 +162,8 @@ function Palette() {
   params={[
     { name: 'id', type: 'string', required: true, description: 'Stable id, used for recents.' },
     { name: 'label', type: 'string', required: true, description: 'The row text, and the main fuzzy-match target.' },
-    { name: 'onSelect', type: '() => void', required: true, description: 'Runs when the command is chosen.' },
+    { name: 'onSelect', type: '() => void', description: 'Runs when the command is chosen. Not called for a command with `children`.' },
+    { name: 'children', type: 'ReadonlyArray<Command>', description: 'Opens these as a page of their own, with its own search, instead of closing the palette.' },
     { name: 'section', type: 'string', description: 'Section heading. Defaults to "Commands".' },
     { name: 'keywords', type: 'ReadonlyArray<string>', description: 'Extra terms the filter matches against.' },
     { name: 'shortcut', type: 'ReadonlyArray<string>', description: "Key hints shown at the end of the row, for example `['Mod', 'K']`." },

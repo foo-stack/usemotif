@@ -90,6 +90,12 @@ a second closes the first. `multiple` lets any number stay open at once.
       description: 'Called whenever the set of open items changes.',
     },
     {
+      name: 'collapsible',
+      type: 'boolean',
+      default: 'true',
+      description: 'In `single` mode, `false` keeps one item always open: the open item\'s trigger no longer closes it and carries `aria-disabled`. No effect in `multiple` mode.',
+    },
+    {
       name: 'children',
       type: 'ReactNode',
       description: 'The Item parts.',
@@ -130,7 +136,8 @@ content is a `role="region"` labelled by the trigger. A screen-reader user hears
 header, whether the panel is open and can step through them.
 
 `type="single"` is closer to the WAI-ARIA accordion pattern; `type="multiple"` is a stack of
-independent disclosures. Pick `single` when the sections are alternatives - an FAQ where one
+independent disclosures. With `collapsible={false}` the open item's trigger carries
+`aria-disabled="true"`, as the pattern asks for a panel that cannot be collapsed. Pick `single` when the sections are alternatives - an FAQ where one
 answer at a time is enough - and `multiple` when a user may want to compare panels side by side.
 
 ## Examples
@@ -146,6 +153,13 @@ A single-open FAQ:
     <Accordion.Trigger><Button variant="ghost" fullWidth>Can I change my plan?</Button></Accordion.Trigger>
     <Accordion.Content><Text>Switch plans any time from settings.</Text></Accordion.Content>
   </Accordion.Item>
+</Accordion.Root>`} />
+
+A single-open group that always shows one panel:
+
+<CodeBlock lang="tsx" code={`<Accordion.Root collapsible={false} defaultValue={['shipping']}>
+  <Accordion.Item value="shipping">...</Accordion.Item>
+  <Accordion.Item value="returns">...</Accordion.Item>
 </Accordion.Root>`} />
 
 A multi-open settings group:

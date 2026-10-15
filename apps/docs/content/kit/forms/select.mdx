@@ -3,7 +3,7 @@ title: Select
 description: A themed single-select dropdown over the headless Select - a trigger button and a listbox with full keyboard navigation and click-outside dismissal.
 diataxis: reference
 covers: ['Select', 'SelectProps', 'SelectOption']
-last_verified: 2026-10-14
+last_verified: 2026-10-15
 ---
 
 import {
@@ -67,6 +67,10 @@ const plans: SelectOption[] = [
 ];
 
 <Select options={plans} value={plan} onValueChange={setPlan} placeholder="Choose a plan" width={320} />`} />
+
+
+Options with a `group` are listed under themed headings, in order; see
+[option groups](/headless/selection/combobox#option-groups).
 
 ## API
 

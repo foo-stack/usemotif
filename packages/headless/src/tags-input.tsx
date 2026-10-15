@@ -1,5 +1,6 @@
 'use client';
 
+import { useMessages } from '@usemotif/react';
 import {
   useMemo,
   useRef,
@@ -49,10 +50,11 @@ const COMMA: ReadonlyArray<string> = [','];
 const NO_TAGS: ReadonlyArray<string> = [];
 
 function DefaultTag({ value, remove }: TagInfo): ReactElement {
+  const messages = useMessages();
   return (
     <span>
       {value}
-      <button type="button" aria-label={`Remove ${value}`} onClick={remove}>
+      <button type="button" aria-label={messages.removeItem(value)} onClick={remove}>
         ×
       </button>
     </span>

@@ -1,6 +1,6 @@
 ---
 title: Specialized
-description: The purpose-built behaviours - ColorPicker, FileUpload, PinInput, TreeView. Each solves one specific, involved interaction.
+description: The purpose-built behaviours - ColorPicker, DataTable, FileUpload, PinInput, TreeView. Each solves one specific, involved interaction.
 diataxis: explanation
 covers: ['ColorPicker', 'FileUpload', 'PinInput', 'TreeView']
 last_verified: 2026-05-15
@@ -14,7 +14,7 @@ import { ArticleMeta, Callout, Eyebrow, Lede } from '../../../components/index.j
 
 <Lede>
   The purpose-built behaviours. Each one solves a single, involved interaction that does not
-  generalise - a colour picker, a file drop zone, a tree.
+  generalise - a colour picker, a data grid, a file drop zone, a tree.
 </Lede>
 
 <ArticleMeta />
@@ -24,16 +24,17 @@ import { ArticleMeta, Callout, Eyebrow, Lede } from '../../../components/index.j
 | Component | Use it for |
 | --- | --- |
 | [ColorPicker](/headless/specialized/color-picker) | Picking a colour - HSV plane, hue and alpha sliders, format toggle. |
+| [DataTable](/headless/specialized/data-table) | A sortable, selectable data grid with windowed rows. |
 | [FileUpload](/headless/specialized/file-upload) | A drag-and-drop file region over a native file input. |
 | [PinInput](/headless/specialized/pin-input) | A one-time code, one box per character. |
 | [TreeView](/headless/specialized/tree-view) | A nested, expandable, keyboard-navigable tree. |
 
 ## Why grouped together
 
-These three share no interaction model - they are grouped because each is a self-contained,
+These share no interaction model - they are grouped because each is a self-contained,
 non-trivial widget that does not fit any other family. A colour picker is colour maths plus drag
 surfaces. A file upload is drag-and-drop plus a hidden input. A tree is recursive structure plus
-the WAI-ARIA tree pattern. Each is its own page-sized concern.
+the WAI-ARIA tree pattern. A data grid is sorting and windowing plus the WAI-ARIA grid pattern. Each is its own page-sized concern.
 
 ## Headless, still
 

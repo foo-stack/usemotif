@@ -1,8 +1,8 @@
 'use client';
 
+import { useMessages } from '@usemotif/react';
 import {
   forwardRef,
-  useCallback,
   useEffect,
   useId,
   useRef,
@@ -89,6 +89,12 @@ export interface CalendarBaseProps {
   style?: CSSProperties;
   /** Override how each day cell renders. */
   renderDay?: (info: CalendarDayInfo) => ReactNode;
+  /** Earliest selectable day. Earlier days are disabled, and focus stops here. */
+  minDate?: Date;
+  /** Latest selectable day. Later days are disabled, and focus stops here. */
+  maxDate?: Date;
+  /** Consecutive months shown side by side. Defaults to 1. */
+  numberOfMonths?: number;
 }
 
 export interface CalendarProps extends CalendarBaseProps {
@@ -173,6 +179,22 @@ interface CalendarGridProps extends CalendarBaseProps {
   ) => Pick<CalendarDayInfo, 'isSelected' | 'isRangeStart' | 'isRangeEnd' | 'isInRange'>;
 }
 
+function startOfDay(date: Date): Date {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+/** `day` moved inside `[min, max]`, compared by calendar day. */
+function clampDay(day: Date, min: Date | undefined, max: Date | undefined): Date {
+  if (min !== undefined && startOfDay(day) < startOfDay(min)) return startOfDay(min);
+  if (max !== undefined && startOfDay(day) > startOfDay(max)) return startOfDay(max);
+  return day;
+}
+
+/** Whole months from `a`'s month to `b`'s. */
+function monthsBetween(a: Date, b: Date): number {
+  return (b.getFullYear() - a.getFullYear()) * 12 + b.getMonth() - a.getMonth();
+}
+
 function CalendarGrid(props: CalendarGridProps): ReactElement {
   const {
     locale,
@@ -183,9 +205,21 @@ function CalendarGrid(props: CalendarGridProps): ReactElement {
     initialFocus,
     select,
     dayState,
+    minDate,
+    maxDate,
+    numberOfMonths = 1,
   } = props;
-  const [focusedDay, setFocusedDay] = useState<Date>(initialFocus ?? new Date());
-  const monthStart = startOfMonth(focusedDay);
+  const months = Math.max(1, Math.floor(numberOfMonths));
+  const [focusedDay, setFocusedDay] = useState<Date>(() =>
+    clampDay(initialFocus ?? new Date(), minDate, maxDate),
+  );
+  // The first month on screen. It only moves when focus leaves the visible
+  // window, so moving between months already shown does not shift the view.
+  const [firstMonth, setFirstMonth] = useState<Date>(() => startOfMonth(focusedDay));
+  const offset = monthsBetween(firstMonth, focusedDay);
+  if (offset < 0 || offset >= months) {
+    setFirstMonth(addMonths(startOfMonth(focusedDay), offset < 0 ? 0 : 1 - months));
+  }
 
   // Roving focus: move real DOM focus to the focused cell when it changes,
   // but only while focus is already inside the grid (i.e. the user is
@@ -193,30 +227,18 @@ function CalendarGrid(props: CalendarGridProps): ReactElement {
   // every render. Without this, arrow keys only update `focusedDay` state
   // and the `tabIndex` roving is cosmetic: focus stays on the container and
   // assistive tech never announces the newly focused day.
-  const gridRef = useRef<HTMLDivElement>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
   const focusedCellRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    if (gridRef.current?.contains(document.activeElement)) {
+    if (rootRef.current?.contains(document.activeElement)) {
       focusedCellRef.current?.focus();
     }
   }, [focusedDay]);
-  const today = new Date();
 
-  const dayLabel = useCallback(
-    (d: Date) => new Intl.DateTimeFormat(locale, { dateStyle: 'full' }).format(d),
-    [locale],
-  );
-  const weekdayFmt = new Intl.DateTimeFormat(locale, { weekday: 'short' });
-  const weekdayHeaders = Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(2024, 0, ((weekStartsOn + i) % 7) + 7); // arbitrary week with known weekday alignment
-    return weekdayFmt.format(d);
-  });
-
-  // Build the grid: pad start with previous-month days, fill 6 weeks (42 cells).
-  const firstDayWeekday = monthStart.getDay();
-  const offset = (firstDayWeekday - weekStartsOn + 7) % 7;
-  const gridStart = addDays(monthStart, -offset);
-  const cells: Date[] = Array.from({ length: 42 }, (_, i) => addDays(gridStart, i));
+  const dayDisabled = (d: Date): boolean =>
+    isDisabled?.(d) === true ||
+    (minDate !== undefined && startOfDay(d) < startOfDay(minDate)) ||
+    (maxDate !== undefined && startOfDay(d) > startOfDay(maxDate));
 
   function onKeyDown(e: KeyboardEvent<HTMLDivElement>): void {
     let next: Date | null = null;
@@ -253,14 +275,88 @@ function CalendarGrid(props: CalendarGridProps): ReactElement {
       case 'Enter':
       case ' ':
         e.preventDefault();
-        if (isDisabled?.(focusedDay) !== true) select(focusedDay);
+        if (!dayDisabled(focusedDay)) select(focusedDay);
         return;
       default:
         return;
     }
     e.preventDefault();
-    setFocusedDay(next);
+    setFocusedDay(clampDay(next, minDate, maxDate));
   }
+
+  const month = (i: number, gridRef?: Ref<HTMLDivElement>): ReactElement => (
+    <MonthGrid
+      key={i}
+      gridRef={gridRef}
+      monthStart={addMonths(firstMonth, i)}
+      locale={locale}
+      weekStartsOn={weekStartsOn}
+      style={style}
+      renderDay={renderDay}
+      focusedDay={focusedDay}
+      focusedCellRef={focusedCellRef}
+      hideOutsideDays={months > 1}
+      dayDisabled={dayDisabled}
+      dayState={dayState}
+      onKeyDown={onKeyDown}
+      onPick={(d) => {
+        setFocusedDay(d);
+        select(d);
+      }}
+    />
+  );
+  // One month renders its grid alone, exactly as before multi-month support.
+  if (months === 1) return month(0, rootRef);
+  return (
+    <div ref={rootRef} style={MONTHS_ROW_STYLE}>
+      {Array.from({ length: months }, (_, i) => month(i))}
+    </div>
+  );
+}
+
+const MONTHS_ROW_STYLE: CSSProperties = { display: 'flex', flexWrap: 'wrap', gap: 24 };
+
+function MonthGrid({
+  gridRef,
+  monthStart,
+  locale,
+  weekStartsOn,
+  style,
+  renderDay,
+  focusedDay,
+  focusedCellRef,
+  hideOutsideDays,
+  dayDisabled,
+  dayState,
+  onKeyDown,
+  onPick,
+}: {
+  gridRef: Ref<HTMLDivElement> | undefined;
+  monthStart: Date;
+  locale: string | undefined;
+  weekStartsOn: number;
+  style: CSSProperties | undefined;
+  renderDay: CalendarBaseProps['renderDay'];
+  focusedDay: Date;
+  focusedCellRef: Ref<HTMLDivElement>;
+  hideOutsideDays: boolean;
+  dayDisabled: (d: Date) => boolean;
+  dayState: CalendarGridProps['dayState'];
+  onKeyDown: (e: KeyboardEvent<HTMLDivElement>) => void;
+  onPick: (d: Date) => void;
+}): ReactElement {
+  const today = new Date();
+  const dayLabel = new Intl.DateTimeFormat(locale, { dateStyle: 'full' });
+  const weekdayFmt = new Intl.DateTimeFormat(locale, { weekday: 'short' });
+  const weekdayHeaders = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(2024, 0, ((weekStartsOn + i) % 7) + 7); // arbitrary week with known weekday alignment
+    return weekdayFmt.format(d);
+  });
+
+  // Build the grid: pad start with previous-month days, fill 6 weeks (42 cells).
+  const lead = (monthStart.getDay() - weekStartsOn + 7) % 7;
+  const gridStart = addDays(monthStart, -lead);
+  const cells: Date[] = Array.from({ length: 42 }, (_, i) => addDays(gridStart, i));
 
   return (
     <div
@@ -282,11 +378,14 @@ function CalendarGrid(props: CalendarGridProps): ReactElement {
       {Array.from({ length: 6 }, (_, weekIdx) => (
         <div role="row" key={weekIdx} style={CAL_ROW_STYLE}>
           {cells.slice(weekIdx * 7, weekIdx * 7 + 7).map((d, i) => {
-            const state = dayState(d);
             const isOutsideMonth = d.getMonth() !== monthStart.getMonth();
-            const isToday = isSameDay(d, today);
-            const disabled = isDisabled?.(d) === true;
-            const isFocused = isSameDay(d, focusedDay);
+            // Beside another month the day belongs to that one; leave a gap.
+            if (isOutsideMonth && hideOutsideDays) {
+              return <div key={i} role="gridcell" style={CAL_CELL_STYLE} />;
+            }
+            const state = dayState(d);
+            const disabled = dayDisabled(d);
+            const isFocused = !isOutsideMonth && isSameDay(d, focusedDay);
             return (
               // Keyboard activation lives on the parent grid (Enter / Space
               // on the focused cell triggers the same select). The
@@ -300,19 +399,17 @@ function CalendarGrid(props: CalendarGridProps): ReactElement {
                 aria-selected={state.isSelected}
                 aria-disabled={disabled || undefined}
                 tabIndex={isFocused ? 0 : -1}
-                aria-label={dayLabel(d)}
+                aria-label={dayLabel.format(d)}
                 style={CAL_CELL_STYLE}
                 onClick={() => {
-                  if (disabled) return;
-                  setFocusedDay(d);
-                  select(d);
+                  if (!disabled) onPick(d);
                 }}
               >
                 {renderDay !== undefined
                   ? renderDay({
                       date: d,
                       ...state,
-                      isToday,
+                      isToday: isSameDay(d, today),
                       isOutsideMonth,
                       isDisabled: disabled,
                     })
@@ -352,7 +449,8 @@ export function DatePicker(props: DatePickerProps | RangeDatePickerProps): React
 }
 
 function SingleDatePicker(props: DatePickerProps): ReactElement {
-  const { value, defaultValue, onValueChange, placeholder = 'Pick a date', ...rest } = props;
+  const messages = useMessages();
+  const { value, defaultValue, onValueChange, placeholder = messages.pickDate, ...rest } = props;
   const [open, setOpen] = useState(false);
   // Track the committed selection locally so the trigger label reflects what
   // the (uncontrolled) Calendar holds internally - the Calendar owns its own
@@ -390,7 +488,8 @@ function SingleDatePicker(props: DatePickerProps): ReactElement {
 }
 
 function RangeDatePicker(props: RangeDatePickerProps): ReactElement {
-  const { value, defaultValue, onValueChange, placeholder = 'Pick dates', ...rest } = props;
+  const messages = useMessages();
+  const { value, defaultValue, onValueChange, placeholder = messages.pickDates, ...rest } = props;
   const [open, setOpen] = useState(false);
   const [current, commit] = useControllableState({
     value,

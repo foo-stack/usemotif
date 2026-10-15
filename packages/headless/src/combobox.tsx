@@ -1,6 +1,6 @@
 'use client';
 
-import { Portal } from '@usemotif/react';
+import { Portal, useMessages } from '@usemotif/react';
 import {
   cloneElement,
   createContext,
@@ -52,6 +52,9 @@ export interface ComboboxOption<T = string> {
   readonly value: T;
   readonly label: string;
   readonly disabled?: boolean;
+  /** A heading the option is listed under. Consecutive options with the same
+   * group share one labelled group. */
+  readonly group?: string;
 }
 
 interface ComboboxContextValue<T = string> {
@@ -273,9 +276,10 @@ function ComboboxList<T>({
   offset = 4,
   style,
   renderOption,
-  emptyMessage = 'No options',
-  loadingMessage = 'Loading...',
+  emptyMessage: ownEmptyMessage,
+  loadingMessage: ownLoadingMessage,
   itemHeight,
+  renderGroupLabel,
 }: {
   placement?: Placement;
   offset?: number;
@@ -283,6 +287,8 @@ function ComboboxList<T>({
   /** Row height in px for long lists, which render only the rows in view.
    * Omitted, it is measured from the first row; rows must share one height. */
   itemHeight?: number;
+  /** Renders a group's heading, for options with a `group`. Defaults to the name. */
+  renderGroupLabel?: (group: string) => ReactNode;
   /** Override how each option renders. */
   renderOption?: (
     option: ComboboxOption<T>,
@@ -296,8 +302,11 @@ function ComboboxList<T>({
   /** Shown in place of `emptyMessage` while the root is `loading`. */
   loadingMessage?: ReactNode;
 }): ReactElement | null {
+  const messages = useMessages();
+  const emptyMessage = ownEmptyMessage ?? messages.noOptions;
+  const loadingMessage = ownLoadingMessage ?? messages.loadingOptions;
   const ctx = useComboboxContext<T>('Combobox.List');
-  const { position, floatingRef } = useFloatingPosition(
+  const { style: floating, floatingRef } = useFloatingPosition(
     ctx.inputRef as unknown as React.RefObject<HTMLElement | null>,
     ctx.open,
     placement,
@@ -322,9 +331,7 @@ function ComboboxList<T>({
         role="listbox"
         aria-busy={ctx.loading || undefined}
         style={{
-          position: 'absolute',
-          top: position.top,
-          left: position.left,
+          ...floating,
           zIndex: 1000,
           ...style,
         }}
@@ -348,6 +355,7 @@ function ComboboxList<T>({
             renderOption={renderOption}
             scrollRef={floatingRef}
             itemHeight={itemHeight}
+            renderGroupLabel={renderGroupLabel}
           />
         )}
       </div>
@@ -820,8 +828,9 @@ function MultiSelectList<T>({
   offset = 4,
   style,
   renderOption,
-  emptyMessage = 'No options',
+  emptyMessage: ownMultiEmptyMessage,
   itemHeight,
+  renderGroupLabel,
 }: {
   placement?: Placement;
   offset?: number;
@@ -829,6 +838,8 @@ function MultiSelectList<T>({
   /** Row height in px for long lists, which render only the rows in view.
    * Omitted, it is measured from the first row; rows must share one height. */
   itemHeight?: number;
+  /** Renders a group's heading, for options with a `group`. Defaults to the name. */
+  renderGroupLabel?: (group: string) => ReactNode;
   renderOption?: (
     option: ComboboxOption<T>,
     info: {
@@ -839,8 +850,10 @@ function MultiSelectList<T>({
   ) => ReactNode;
   emptyMessage?: ReactNode;
 }): ReactElement | null {
+  const messages = useMessages();
+  const emptyMessage = ownMultiEmptyMessage ?? messages.noOptions;
   const ctx = useMultiSelectContext<T>('MultiSelect.List');
-  const { position, floatingRef } = useFloatingPosition(
+  const { style: floating, floatingRef } = useFloatingPosition(
     ctx.inputRef as unknown as React.RefObject<HTMLElement | null>,
     ctx.open,
     placement,
@@ -865,9 +878,7 @@ function MultiSelectList<T>({
         role="listbox"
         aria-multiselectable="true"
         style={{
-          position: 'absolute',
-          top: position.top,
-          left: position.left,
+          ...floating,
           zIndex: 1000,
           ...style,
         }}
@@ -887,6 +898,7 @@ function MultiSelectList<T>({
             renderOption={renderOption}
             scrollRef={floatingRef}
             itemHeight={itemHeight}
+            renderGroupLabel={renderGroupLabel}
           />
         )}
       </div>

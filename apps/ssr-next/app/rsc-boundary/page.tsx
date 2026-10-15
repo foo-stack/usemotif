@@ -337,6 +337,12 @@ export default function RscBoundaryPage() {
           <KitBreadcrumb.Item href="/">Kit Breadcrumb</KitBreadcrumb.Item>
         </KitBreadcrumb>
 
+        <Card padding="none">
+          <Card.Header>Kit Card.Header</Card.Header>
+          <Card.Body>Kit Card.Body</Card.Body>
+          <Card.Footer>Kit Card.Footer</Card.Footer>
+        </Card>
+
         <KitNavigationMenu>
           <KitNavigationMenu.Item id="home" href="/">
             Kit NavigationMenu

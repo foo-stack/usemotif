@@ -18,6 +18,7 @@ import {
 } from 'react';
 import { mergeRefs } from './_compose-refs.js';
 import { useControllableState } from './use-controllable-state.js';
+import { KeepMountedBoundary, keepsMounted, type KeepMounted } from './_keep-mounted.js';
 
 // Stable empty selection for a controlled Accordion cleared to
 // `value={undefined}` - keeps a constant identity across renders.
@@ -42,6 +43,10 @@ interface CollapsibleContextValue {
   readonly triggerId: string;
 }
 const CollapsibleContext = createContext<CollapsibleContextValue | null>(null);
+// Set by an Accordion item whose panel cannot be closed, so its trigger can
+// say so (`aria-disabled`, per the WAI-ARIA accordion pattern).
+const CollapsibleLockedContext = createContext(false);
+
 function useCollapsibleContext(component: string): CollapsibleContextValue {
   const ctx = useContext(CollapsibleContext);
   if (ctx === null) throw new Error(`${component} must be inside <Collapsible.Root>.`);
@@ -83,6 +88,7 @@ interface CollapsibleTriggerChildProps {
   onClick?: (e: MouseEvent<HTMLElement>) => void;
   'aria-expanded'?: boolean;
   'aria-controls'?: string;
+  'aria-disabled'?: boolean;
   id?: string;
 }
 function CollapsibleTrigger({
@@ -91,12 +97,14 @@ function CollapsibleTrigger({
   children: ReactElement<CollapsibleTriggerChildProps>;
 }): ReactElement {
   const ctx = useCollapsibleContext('Collapsible.Trigger');
+  const locked = useContext(CollapsibleLockedContext);
   if (!isValidElement(children)) throw new Error('Collapsible.Trigger expects a single element.');
   const childOnClick = children.props.onClick;
   return cloneElement(children, {
     id: ctx.triggerId,
     'aria-expanded': ctx.open,
     'aria-controls': ctx.contentId,
+    ...(locked && { 'aria-disabled': true }),
     onClick: (e: MouseEvent<HTMLElement>) => {
       childOnClick?.(e);
       if (!e.defaultPrevented) ctx.setOpen(!ctx.open);
@@ -153,6 +161,7 @@ interface AccordionContextValue {
   readonly type: 'single' | 'multiple';
   readonly value: readonly string[];
   readonly toggle: (id: string) => void;
+  readonly collapsible: boolean;
 }
 const AccordionContext = createContext<AccordionContextValue | null>(null);
 function useAccordionContext(component: string): AccordionContextValue {
@@ -166,10 +175,22 @@ export interface AccordionRootProps {
   value?: string[];
   defaultValue?: string[];
   onValueChange?: (value: string[]) => void;
+  /**
+   * In `single` mode, `false` keeps one item always open: the open item's
+   * trigger no longer closes it and is marked disabled. Defaults to `true`.
+   */
+  collapsible?: boolean;
   children?: ReactNode;
 }
 function AccordionRoot(props: AccordionRootProps): ReactElement {
-  const { type = 'single', value: controlled, defaultValue = [], onValueChange, children } = props;
+  const {
+    type = 'single',
+    value: controlled,
+    defaultValue = [],
+    onValueChange,
+    collapsible = true,
+    children,
+  } = props;
   // Prop-presence detection so `value={undefined}` stays controlled-and-empty.
   const [rawValue, setValue] = useControllableState({
     value: controlled,
@@ -181,16 +202,17 @@ function AccordionRoot(props: AccordionRootProps): ReactElement {
   const toggle = useCallback(
     (id: string) => {
       const isOpen = value.includes(id);
+      if (isOpen && type === 'single' && !collapsible) return;
       let next: string[];
       if (isOpen) next = value.filter((v) => v !== id);
       else if (type === 'single') next = [id];
       else next = [...value, id];
       setValue(next);
     },
-    [value, type, setValue],
+    [value, type, collapsible, setValue],
   );
   return (
-    <AccordionContext.Provider value={{ type, value, toggle }}>
+    <AccordionContext.Provider value={{ type, value, toggle, collapsible }}>
       {children}
     </AccordionContext.Provider>
   );
@@ -204,9 +226,12 @@ export interface AccordionItemProps {
 function AccordionItem({ value, children }: AccordionItemProps): ReactElement {
   const ctx = useAccordionContext('Accordion.Item');
   const open = ctx.value.includes(value);
+  const locked = open && ctx.type === 'single' && !ctx.collapsible;
   return (
     <CollapsibleRoot open={open} onOpenChange={() => ctx.toggle(value)}>
-      {children}
+      <CollapsibleLockedContext.Provider value={locked}>
+        {children}
+      </CollapsibleLockedContext.Provider>
     </CollapsibleRoot>
   );
 }
@@ -218,6 +243,7 @@ interface TabsContextValue {
   readonly setValue: (v: string) => void;
   readonly idPrefix: string;
   readonly orientation: 'horizontal' | 'vertical';
+  readonly activationMode: 'automatic' | 'manual';
 }
 const TabsContext = createContext<TabsContextValue | null>(null);
 function useTabsContext(component: string): TabsContextValue {
@@ -232,6 +258,12 @@ export interface TabsRootProps {
   defaultValue?: string;
   onValueChange?: (v: string) => void;
   orientation?: 'horizontal' | 'vertical';
+  /**
+   * `'automatic'` (the default) selects a tab as the arrow keys reach it.
+   * `'manual'` only moves focus, and Enter or Space selects, for panels that
+   * are slow to render.
+   */
+  activationMode?: 'automatic' | 'manual';
   children?: ReactNode;
 }
 function TabsRoot(props: TabsRootProps): ReactElement {
@@ -240,6 +272,7 @@ function TabsRoot(props: TabsRootProps): ReactElement {
     defaultValue,
     onValueChange,
     orientation = 'horizontal',
+    activationMode = 'automatic',
     children,
   } = props;
   // Prop-presence detection so `value={undefined}` stays controlled (empty).
@@ -252,7 +285,7 @@ function TabsRoot(props: TabsRootProps): ReactElement {
   const value = rawValue ?? '';
   const idPrefix = useId();
   return (
-    <TabsContext.Provider value={{ value, setValue, idPrefix, orientation }}>
+    <TabsContext.Provider value={{ value, setValue, idPrefix, orientation, activationMode }}>
       {children}
     </TabsContext.Provider>
   );
@@ -307,9 +340,13 @@ function TabsTab({
     );
     if (tabs.length === 0) return;
     const cur = tabs.indexOf(ref.current!);
-    const next = tabs[(cur + direction + tabs.length) % tabs.length]!;
-    next.focus();
-    next.click();
+    reach(tabs[(cur + direction + tabs.length) % tabs.length]);
+  }
+
+  /** Focus a tab, and select it too unless activation is manual. */
+  function reach(tab: HTMLButtonElement | null | undefined): void {
+    tab?.focus();
+    if (ctx.activationMode === 'automatic') tab?.click();
   }
 
   function onKeyDown(e: KeyboardEvent<HTMLButtonElement>): void {
@@ -333,16 +370,12 @@ function TabsTab({
     if (e.key === 'Home') {
       e.preventDefault();
       const list = ref.current?.parentElement;
-      const first = list?.querySelector<HTMLButtonElement>('[role="tab"]:not([disabled])');
-      first?.focus();
-      first?.click();
+      reach(list?.querySelector<HTMLButtonElement>('[role="tab"]:not([disabled])'));
     } else if (e.key === 'End') {
       e.preventDefault();
       const list = ref.current?.parentElement;
       const tabs = list?.querySelectorAll<HTMLButtonElement>('[role="tab"]:not([disabled])');
-      const last = tabs?.[tabs.length - 1];
-      last?.focus();
-      last?.click();
+      reach(tabs?.[tabs.length - 1]);
     }
   }
 
@@ -372,6 +405,12 @@ function TabsTab({
 export interface TabsPanelProps {
   value: string;
   forceMount?: boolean;
+  /**
+   * `'activity'` keeps the panel mounted while another tab is selected, hidden through React's
+   * `<Activity>`, so its state survives and its updates run at low priority. Needs React 19.2;
+   * on older versions the panel unmounts as usual.
+   */
+  keepMounted?: KeepMounted;
   /** Render the panel semantics onto the single child element instead of a
    * `<div>`. */
   asChild?: boolean;
@@ -381,13 +420,15 @@ export interface TabsPanelProps {
 function TabsPanel({
   value,
   forceMount = false,
+  keepMounted,
   asChild = false,
   children,
   style,
 }: TabsPanelProps): ReactElement | null {
   const ctx = useTabsContext('Tabs.Panel');
   const active = ctx.value === value;
-  if (!active && !forceMount) return null;
+  const keep = keepsMounted(keepMounted);
+  if (!active && !forceMount && !keep) return null;
   const panelProps = {
     role: 'tabpanel' as const,
     id: `${ctx.idPrefix}-panel-${value}`,
@@ -396,10 +437,13 @@ function TabsPanel({
     tabIndex: 0,
     style,
   };
-  if (asChild && isValidElement(children)) {
-    return cloneElement(children as ReactElement, panelProps);
-  }
-  return <div {...panelProps}>{children}</div>;
+  const panel =
+    asChild && isValidElement(children) ? (
+      cloneElement(children as ReactElement, panelProps)
+    ) : (
+      <div {...panelProps}>{children}</div>
+    );
+  return keep ? <KeepMountedBoundary visible={active}>{panel}</KeepMountedBoundary> : panel;
 }
 
 // Suppress unused warning - kept for future imperative APIs.

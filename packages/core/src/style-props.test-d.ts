@@ -124,6 +124,12 @@ expectTypeOf<
 // Everything that is not a `$` string passes through untouched. The widened
 // `string` case is the load-bearing one: it is what keeps a value read from a
 // variable or a prop compiling.
+expectTypeOf<
+  ValidateTokenValue<'$components.card.gap ?? $space.4', Tokens, 'space'>
+>().toEqualTypeOf<'$components.card.gap ?? $space.4'>();
+expectTypeOf<
+  ValidateTokenValue<'$components.card.gap ?? $space.999', Tokens, 'space'>
+>().toEqualTypeOf<"Not a path in the 'space' scale: $components.card.gap ?? $space.999">();
 expectTypeOf<ValidateTokenValue<'12px', Tokens, 'space'>>().toEqualTypeOf<'12px'>();
 expectTypeOf<ValidateTokenValue<12, Tokens, 'space'>>().toEqualTypeOf<12>();
 expectTypeOf<ValidateTokenValue<string, Tokens, 'space'>>().toEqualTypeOf<string>();

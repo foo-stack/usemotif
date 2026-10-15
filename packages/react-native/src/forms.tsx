@@ -1,4 +1,5 @@
 import { type MotifComponent, resolveStyles, type StyleProps } from '@usemotif/core';
+import { useMessages } from './messages.js';
 import {
   createContext,
   forwardRef,
@@ -20,7 +21,7 @@ import {
 import { Box, type BoxProps } from './Box.js';
 import { useDirection } from './direction-context.js';
 import { Pressable } from './Pressable.js';
-import { Text, type TextProps } from './Text.js';
+import { fontScaleCap, Text, type TextProps } from './Text.js';
 import { useTheme } from './theme-context.js';
 
 interface FieldContextValue {
@@ -198,7 +199,15 @@ export const Input = /* @__PURE__ */ forwardRef(function Input(
         ? [resolved as TextStyle, ...(userStyle as TextStyle[])]
         : [resolved as TextStyle, userStyle as TextStyle];
   if (startElement === undefined && endElement === undefined) {
-    return <RNTextInput ref={ref} editable={!isDisabled} style={finalStyle} {...rest} />;
+    return (
+      <RNTextInput
+        ref={ref}
+        editable={!isDisabled}
+        style={finalStyle}
+        {...fontScaleCap(theme)}
+        {...rest}
+      />
+    );
   }
   // With an adornment, the field is a row: the wrapper carries the surface,
   // and the borderless input takes the width the adornments leave.
@@ -215,7 +224,13 @@ export const Input = /* @__PURE__ */ forwardRef(function Input(
   return (
     <View style={surface as ViewStyle}>
       {adornment(startElement)}
-      <RNTextInput ref={ref} editable={!isDisabled} style={inputStyle} {...rest} />
+      <RNTextInput
+        ref={ref}
+        editable={!isDisabled}
+        style={inputStyle}
+        {...fontScaleCap(theme)}
+        {...rest}
+      />
       {adornment(endElement)}
     </View>
   );
@@ -284,6 +299,7 @@ export const PasswordInput = /* @__PURE__ */ forwardRef(function PasswordInput(
   { togglable = true, ...rest }: PasswordInputProps,
   ref: Ref<RNTextInput>,
 ): ReactElement {
+  const messages = useMessages();
   const [visible, setVisible] = useState(false);
   if (!togglable) {
     return <Input ref={ref} secureTextEntry {...rest} />;
@@ -294,7 +310,7 @@ export const PasswordInput = /* @__PURE__ */ forwardRef(function PasswordInput(
         <Input ref={ref} secureTextEntry={!visible} {...rest} />
       </Box>
       <Pressable
-        accessibilityLabel={visible ? 'Hide password' : 'Show password'}
+        accessibilityLabel={visible ? messages.hidePassword : messages.showPassword}
         onPress={() => setVisible((v) => !v)}
         px="$3"
       >

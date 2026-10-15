@@ -21,7 +21,8 @@ import {
 } from 'react';
 import { mergeRefs } from './_compose-refs.js';
 import { useExitTransition } from './_use-exit-transition.js';
-import { computePosition } from './positioning.js';
+import { ArrowContext } from './_arrow.js';
+import { computePosition, type PlacedPosition } from './positioning.js';
 
 /**
  * Tooltip - text affordance shown on hover or keyboard focus.
@@ -72,6 +73,67 @@ function useTooltipContext(component: string): TooltipContextValue {
   return ctx;
 }
 
+/**
+ * Tooltips under one Provider share their open delay: once one is showing,
+ * moving to another trigger shows it at once and hides the first, until
+ * none has been open for `skipDelayDuration`.
+ */
+interface TooltipGroup {
+  /** True while a tooltip in the group is open or closed only moments ago. */
+  readonly warm: () => boolean;
+  readonly opened: (close: () => void) => void;
+  readonly closed: (close: () => void) => void;
+}
+const TooltipGroupContext = createContext<TooltipGroup | null>(null);
+
+export interface TooltipProviderProps {
+  /** How long after the last tooltip closes the next one still opens at
+   * once, in ms. Defaults to 300. */
+  skipDelayDuration?: number;
+  children?: ReactNode;
+}
+
+/**
+ * Groups tooltips so that after one opens, its neighbours open without the
+ * delay, as in a toolbar.
+ *
+ * ```tsx
+ * <Tooltip.Provider>
+ *   <Toolbar>{tools}</Toolbar>
+ * </Tooltip.Provider>
+ * ```
+ */
+function Provider({ skipDelayDuration = 300, children }: TooltipProviderProps): ReactElement {
+  const state = useRef({
+    open: null as (() => void) | null,
+    warm: false,
+    cool: undefined as ReturnType<typeof setTimeout> | undefined,
+  });
+  useEffect(() => () => clearTimeout(state.current.cool), []);
+  const group = useMemo<TooltipGroup>(
+    () => ({
+      warm: () => state.current.warm,
+      opened: (close) => {
+        const s = state.current;
+        clearTimeout(s.cool);
+        if (s.open !== null && s.open !== close) s.open();
+        s.open = close;
+        s.warm = true;
+      },
+      closed: (close) => {
+        const s = state.current;
+        if (s.open === close) s.open = null;
+        clearTimeout(s.cool);
+        s.cool = setTimeout(() => {
+          s.warm = false;
+        }, skipDelayDuration);
+      },
+    }),
+    [skipDelayDuration],
+  );
+  return <TooltipGroupContext.Provider value={group}>{children}</TooltipGroupContext.Provider>;
+}
+
 export interface TooltipRootProps {
   /** Delay before showing, in ms. Defaults to 500. */
   openDelay?: number;
@@ -99,10 +161,25 @@ function Root({
     closeTimerRef.current = null;
   }, []);
 
+  const group = useContext(TooltipGroupContext);
   const scheduleOpen = useCallback(() => {
     clearTimers();
-    openTimerRef.current = setTimeout(() => setOpen(true), openDelay);
-  }, [openDelay, clearTimers]);
+    if (group?.warm() === true) setOpen(true);
+    else openTimerRef.current = setTimeout(() => setOpen(true), openDelay);
+  }, [openDelay, clearTimers, group]);
+
+  // Tell the group, so it can warm up and close this one when another opens.
+  const closeNow = useCallback(() => {
+    clearTimers();
+    setOpen(false);
+  }, [clearTimers]);
+  const wasOpen = useRef(false);
+  useEffect(() => {
+    if (group === null || open === wasOpen.current) return;
+    wasOpen.current = open;
+    if (open) group.opened(closeNow);
+    else group.closed(closeNow);
+  }, [open, group, closeNow]);
 
   const scheduleClose = useCallback(() => {
     clearTimers();
@@ -204,7 +281,12 @@ function Content({
   children,
 }: TooltipContentProps): ReactElement | null {
   const ctx = useTooltipContext('Tooltip.Content');
-  const [position, setPosition] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
+  const [placed, setPlaced] = useState<PlacedPosition>({
+    top: 0,
+    left: 0,
+    placement: ctx.placement,
+    arrow: 0,
+  });
   const contentRef = useRef<HTMLDivElement>(null);
   const { shouldRender, phase, elementRef, ExitBoundary } = useExitTransition(
     ctx.open,
@@ -225,15 +307,20 @@ function Content({
     const trigger = ctx.triggerRef.current;
     const content = contentRef.current;
     if (trigger === null || content === null) return;
-    const { top, left } = computePosition(
-      trigger.getBoundingClientRect(),
-      { width: content.offsetWidth, height: content.offsetHeight },
-      ctx.placement,
-      offset,
+    setPlaced(
+      computePosition(
+        trigger.getBoundingClientRect(),
+        { width: content.offsetWidth, height: content.offsetHeight },
+        ctx.placement,
+        offset,
+      ),
     );
-    setPosition({ top, left });
   }, [ctx.open, ctx.placement, ctx.triggerRef, offset]);
 
+  const anchor = useMemo(
+    () => ({ placement: placed.placement, offset: placed.arrow }),
+    [placed.placement, placed.arrow],
+  );
   if (!shouldRender) return null;
   return (
     <Portal>
@@ -250,8 +337,8 @@ function Content({
         // over the tip. (Keepalive-on-hover belongs to HoverCard.)
         style={{
           position: 'absolute',
-          top: position.top,
-          left: position.left,
+          top: placed.top,
+          left: placed.left,
           zIndex: 1100,
           pointerEvents: 'none',
           ...userStyle,
@@ -260,7 +347,9 @@ function Content({
         {/* Publish the presence phase so a WAAPI-driven descendant surface
             registers + plays its exit off-thread; the CSS path rides
             `data-motif-state` + `transitionend` on this element. */}
-        <ExitBoundary>{children}</ExitBoundary>
+        <ArrowContext.Provider value={anchor}>
+          <ExitBoundary>{children}</ExitBoundary>
+        </ArrowContext.Provider>
       </div>
     </Portal>
   );
@@ -271,4 +360,9 @@ function Content({
  * server graph, where each one is already a client reference. Internal: the
  * barrel re-exports by name and does not list these.
  */
-export { Root as TooltipRoot, Trigger as TooltipTrigger, Content as TooltipContent };
+export {
+  Provider as TooltipProvider,
+  Root as TooltipRoot,
+  Trigger as TooltipTrigger,
+  Content as TooltipContent,
+};

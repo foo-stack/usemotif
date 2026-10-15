@@ -6,8 +6,16 @@
  * Everything tree-shakes, so importing one component never pulls the rest.
  */
 
-export { Card } from './Card.js';
-export { Badge } from './Badge.js';
+export { Card } from './Card.namespace.js';
+export { Badge, type BadgeProps } from './Badge.js';
+export {
+  DataTable,
+  type DataTableColumn,
+  type DataTableProps,
+  type SortDirection,
+} from './DataTable.js';
+export { Button, type ButtonProps } from './Button.js';
+export { TextField, type TextFieldProps } from './TextField.js';
 export { Spinner, type SpinnerProps } from './Spinner.js';
 export { Alert, type AlertIntent, type AlertProps } from './Alert.js';
 export { Modal } from './Modal.namespace.js';
@@ -31,6 +39,16 @@ export { type MenuSubTriggerPropsThemed } from './MenuSub.js';
 export { type MenuCheckboxItemPropsThemed, type MenuRadioItemPropsThemed } from './MenuItems.js';
 export { Slider, type SliderProps } from './Slider.js';
 export { Progress, type ProgressProps } from './Progress.js';
+export {
+  AreaChart,
+  BarChart,
+  LineChart,
+  Sparkline,
+  type ChartPoint,
+  type SeriesChartProps,
+  type SparklineProps,
+} from './Charts.js';
+export { ProgressCircle, type ProgressCircleProps } from './ProgressCircle.js';
 export { Drawer, Sheet } from './Drawer.namespace.js';
 export { type DrawerContentProps, type SheetContentProps } from './Drawer.js';
 export { AlertDialog } from './AlertDialog.namespace.js';

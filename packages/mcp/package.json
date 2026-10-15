@@ -1,0 +1,38 @@
+{
+  "name": "@usemotif/mcp",
+  "version": "0.0.0",
+  "private": true,
+  "description": "MCP server that gives coding agents a motif project's theme tokens, token-path checks, and the motif docs.",
+  "license": "MIT",
+  "bin": {
+    "usemotif-mcp": "./dist/cli.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "clean": "rm -rf dist .turbo *.tsbuildinfo"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.30.1",
+    "@usemotif/tokens": "workspace:*",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "@usemotif/core": "workspace:*",
+    "tsup": "^8.5.1",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.5"
+  }
+}

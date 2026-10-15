@@ -67,6 +67,18 @@ jobs:
       - name: Ratio regression gate
         run: yarn bench:check
 
+      # The ratios the docs benchmark page publishes, recorded on this runner. The page renders
+      # the committed benchmarks/results.json; this copy is for comparing against it. The lane is
+      # read-only, so it never commits the file.
+      - name: Record the published ratios
+        run: node scripts/bench-report.mjs --out "$RUNNER_TEMP/bench-results.json"
+
+      - name: Upload the recorded ratios
+        uses: actions/upload-artifact@v4
+        with:
+          name: bench-results
+          path: ${{ runner.temp }}/bench-results.json
+
       # Self-test the on-device startup gate against a labelled fixture (NOT
       # real device data) so the gate logic is exercised on every push. The
       # measurement needs hardware; the regression check does not. The device

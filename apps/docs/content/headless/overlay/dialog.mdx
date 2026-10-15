@@ -3,7 +3,7 @@ title: Dialog
 description: An accessible modal dialog - focus trapping, scrim, Escape and scrim-click dismissal, controlled or uncontrolled open state.
 diataxis: reference
 covers: ['Dialog', 'DialogRootProps', 'DialogTriggerProps', 'DialogContentProps', 'DialogTitleProps', 'DialogDescriptionProps', 'DialogCloseProps', 'useDialogState']
-last_verified: 2026-05-15
+last_verified: 2026-10-15
 ---
 
 import {
@@ -91,6 +91,12 @@ wiring and leaves the styling to the children.
       description: 'The ARIA role. Use `alertdialog` for destructive confirmations - or reach for [AlertDialog](/headless/overlay/alert-dialog), which sets it for you.',
     },
     {
+      name: 'modal',
+      type: 'boolean',
+      default: 'true',
+      description: '`false` leaves the page usable while open: no background `inert` or scroll lock, no `aria-modal`, a click-through layer around the surface, and no focus trap. Focus still moves in on open and back on close, and Escape and a press outside still close it. On React Native the dialog stays in RN\'s `Modal`, which blocks touches behind it; `false` only stops marking it modal to assistive tech.',
+    },
+    {
       name: 'children',
       type: 'ReactNode',
       description: 'The Trigger and Content parts.',
@@ -138,6 +144,11 @@ wiring and leaves the styling to the children.
       type: 'number',
       default: '0',
       description: 'Fallback timeout for an exit transition. Defaults to `0` - instant unmount. Set a positive value to keep the dialog rendered with `data-motif-state="exiting"` until the transition ends; pair with `exitStyle` on a child Box.',
+    },
+    {
+      name: 'keepMounted',
+      type: "'activity'",
+      description: 'Keep the content mounted while closed, hidden through React `<Activity>`, so state such as a half-filled form survives. Effects pause while hidden: focus, scroll lock and the inert background are released, and taken again on reopen. Web only, React 19.2 or later; otherwise the content unmounts. Drawer.Content takes it too.',
     },
     {
       name: 'style',

@@ -9,6 +9,7 @@ const meta: MetaFile = {
   'use-theme-chain': 'useThemeChain',
   'use-theme-setting': 'useThemeSetting',
   'use-reduced-motion': 'useReducedMotion',
+  'use-shortcut': 'useShortcut',
   'use-media': 'useMedia, useBreakpoint',
   'motion-values': 'Motion values',
   'motion-drivers': 'Motion drivers',

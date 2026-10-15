@@ -1,13 +1,15 @@
 'use client';
 
+import { useMessages } from 'usemotif';
 import {
   Combobox as HeadlessCombobox,
   Search as HeadlessSearch,
   type ComboboxOption,
 } from '@usemotif/headless';
 import type { ReactNode } from 'react';
-import { Box, type BoxProps } from 'usemotif';
-import { LIST_STYLE, renderThemedOption } from './_list-surface.js';
+import { ThemedInput } from './_themed-input.js';
+import { LIST_STYLE, renderThemedOption, renderThemedGroupLabel } from './_list-surface.js';
+import { usePlatformStyle } from './_platform-style.js';
 
 export type ComboboxItem = ComboboxOption;
 
@@ -37,8 +39,7 @@ export interface ComboboxProps {
 // combobox role / value / onChange / keyboard handlers onto it).
 function themedInput(width: number | string, placeholder: string) {
   return (
-    <Box
-      as="input"
+    <ThemedInput
       width={width}
       px="$space.3"
       py="$space.2"
@@ -48,7 +49,8 @@ function themedInput(width: number | string, placeholder: string) {
       bg="$colors.surface.raised"
       color="$colors.text.default"
       fontSize="$fontSizes.md"
-      {...({ type: 'text', placeholder } as unknown as BoxProps)}
+      type="text"
+      placeholder={placeholder}
     />
   );
 }
@@ -87,7 +89,10 @@ function listProps(props: ComboboxProps) {
  * <Combobox options={results} filter={false} loading={pending} onInputValueChange={fetch} />
  * ```
  */
-export function Combobox({ placeholder = 'Search...', width = 240, ...rest }: ComboboxProps) {
+export function Combobox({ placeholder: ownPlaceholder, width = 240, ...rest }: ComboboxProps) {
+  const messages = useMessages();
+  const placeholder = ownPlaceholder ?? messages.searchPlaceholder;
+  const platformStyle = usePlatformStyle();
   return (
     <HeadlessCombobox.Root {...rootProps({ ...rest, placeholder, width })}>
       <HeadlessCombobox.Input>
@@ -99,8 +104,9 @@ export function Combobox({ placeholder = 'Search...', width = 240, ...rest }: Co
       </HeadlessCombobox.Input>
       <HeadlessCombobox.List
         {...listProps(rest)}
-        style={LIST_STYLE}
+        style={platformStyle(LIST_STYLE)}
         renderOption={renderThemedOption}
+        renderGroupLabel={renderThemedGroupLabel}
       />
     </HeadlessCombobox.Root>
   );
@@ -114,7 +120,10 @@ export function Combobox({ placeholder = 'Search...', width = 240, ...rest }: Co
  * <Search options={results} onValueChange={openResult} placeholder="Search docs..." />
  * ```
  */
-export function Search({ placeholder = 'Search...', width = 280, ...rest }: ComboboxProps) {
+export function Search({ placeholder: ownPlaceholder, width = 280, ...rest }: ComboboxProps) {
+  const messages = useMessages();
+  const placeholder = ownPlaceholder ?? messages.searchPlaceholder;
+  const platformStyle = usePlatformStyle();
   return (
     <HeadlessSearch.Root {...rootProps({ ...rest, placeholder, width })}>
       <HeadlessSearch.Input>
@@ -126,8 +135,9 @@ export function Search({ placeholder = 'Search...', width = 280, ...rest }: Comb
       </HeadlessSearch.Input>
       <HeadlessSearch.List
         {...listProps(rest)}
-        style={LIST_STYLE}
+        style={platformStyle(LIST_STYLE)}
         renderOption={renderThemedOption}
+        renderGroupLabel={renderThemedGroupLabel}
       />
     </HeadlessSearch.Root>
   );

@@ -115,6 +115,12 @@ Several open at once, controlled:
       description: 'Called with the new list of open item values.',
     },
     {
+      name: 'collapsible',
+      type: 'boolean',
+      default: 'true',
+      description: 'In `single` mode, `false` keeps one item always open. The open trigger is disabled and drops its pointer cursor.',
+    },
+    {
       name: 'children',
       type: 'ReactNode',
       description: 'The Item parts.',

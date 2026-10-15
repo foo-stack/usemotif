@@ -166,3 +166,35 @@ describe('resolveToken - token keys containing dots', () => {
     expect(resolveToken('$space.9.5', theme)).toBeUndefined();
   });
 });
+
+describe('resolveToken - fallback chains', () => {
+  const withComponents: Theme = {
+    ...theme,
+    tokens: { ...theme.tokens, components: { button: { bg: '$colors.blue.500' } } },
+  };
+
+  it('resolves the first alternative the theme defines', () => {
+    expect(resolveToken('$components.button.bg ?? $colors.nope', withComponents)).toBe('#3b82f6');
+    expect(resolveToken('$components.button.bg ?? $colors.action.primary.bg', theme)).toBe(
+      '#3b82f6',
+    );
+    expect(resolveToken('$components.card.bg ?? $colors.nope ?? $space.4', theme)).toBe(16);
+  });
+
+  it('takes a trailing literal as the default, and is undefined when nothing resolves', () => {
+    expect(resolveToken('$components.button.bg ?? 4px', theme)).toBe('4px');
+    expect(resolveToken('$components.button.bg ?? $colors.nope', theme)).toBeUndefined();
+  });
+});
+
+describe('resolveToken - memo', () => {
+  it('answers a repeated ref from the theme memo, per default scale and per theme', () => {
+    const t1: Theme = { name: 'a', tokens: { colors: { brand: '#111' }, space: { brand: 4 } } };
+    const t2: Theme = { name: 'b', tokens: { colors: { brand: '#222' } } };
+    expect(resolveToken('$colors.brand', t1)).toBe('#111');
+    expect(resolveToken('$colors.brand', t1)).toBe('#111');
+    expect(resolveToken('$brand', t1, { defaultScale: 'colors' })).toBe('#111');
+    expect(resolveToken('$brand', t1, { defaultScale: 'space' })).toBe(4);
+    expect(resolveToken('$colors.brand', t2)).toBe('#222');
+  });
+});

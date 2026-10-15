@@ -1,0 +1,63 @@
+---
+title: Gestures
+description: useGesture recognises swipe, long press, double tap and pinch from web pointer events and native touches, with one definition of each gesture.
+diataxis: howto
+covers: ['useGesture', 'GestureHandlers', 'GestureOptions', 'PinchInfo', 'SwipeDirection', 'SwipeInfo', 'UseGestureResult', 'createGestureRecognizer', 'GestureRecognizer']
+last_verified: 2026-10-15
+---
+
+import { ArticleMeta, Callout, CodeBlock, Eyebrow, Lede } from '../../components/index.js';
+
+<Eyebrow>Guides</Eyebrow>
+
+# Gestures
+
+<Lede>
+  `useGesture` turns presses on one element into swipes, long presses, double taps and pinches.
+  The web hook reads pointer events and the native one reads touches, and both feed the same
+  recognizer, so a swipe is the same swipe on every platform.
+</Lede>
+
+<ArticleMeta />
+
+## Recognise a gesture
+
+<CodeBlock lang="tsx" code={`import { Box, useGesture, useMotionValue } from 'usemotif';
+
+function Photo({ onNext, onPrevious, onLike, onMenu }) {
+  const zoom = useMotionValue(1);
+  const { gestureProps } = useGesture({
+    onSwipe: ({ direction }) => (direction === 'left' ? onNext() : direction === 'right' && onPrevious()),
+    onDoubleTap: onLike,
+    onLongPress: onMenu,
+    onPinch: ({ scale, phase }) => phase !== 'end' && zoom.set(scale),
+  });
+  return <Box {...gestureProps} scale={zoom} />;
+}`} />
+
+Spread `gestureProps` onto the element. On web it includes `style={{ touchAction: 'none' }}`, without
+which a touch screen scrolls and zooms the page instead of reporting the swipe or pinch. If you pass
+your own `style`, include `touchAction: 'none'` in it.
+
+## What counts as each gesture
+
+| Gesture | When it fires |
+| --- | --- |
+| `onSwipe` | On release, after at least `swipeDistance` px (40) at an average of `swipeVelocity` px/s (300) or faster. `direction` is the dominant axis. |
+| `onLongPress` | While held, after `longPressMs` (500) without moving more than 10px. Nothing else fires on that release. |
+| `onDoubleTap` | On the second of two taps within `doubleTapMs` (300) and 20px of each other. |
+| `onPinch` | With two touches down: `start` at scale 1, `change` as they spread or close, `end` when one lifts. A pinch never also reads as a tap or swipe. |
+
+Pass the thresholds as the second argument: `useGesture(handlers, { longPressMs: 400 })`.
+Handlers and options are read when each event arrives, so they can change between renders.
+
+<Callout variant="info" title="Dragging the same element">
+  `useDrag` and `useGesture` both listen for the press. To drag an element and also read swipes on
+  it, call both hooks and pass one `onPointerDown` that calls each.
+</Callout>
+
+## Outside React
+
+`createGestureRecognizer(() => handlers, () => options)` from `@usemotif/core` is the recognizer
+the hooks use. Feed it `down(id, x, y, time)`, `move(id, x, y)`, `up(id, x, y, time)` and
+`cancel()` from any input source.

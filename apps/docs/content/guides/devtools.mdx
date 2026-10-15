@@ -1,0 +1,55 @@
+---
+title: Devtools
+description: Inspect any element's theme chain, active breakpoint, tokens and extraction status with the dev-only MotifDevtools overlay.
+diataxis: howto
+covers: ['MotifDevtools', 'MotifDevtoolsProps']
+last_verified: 2026-10-15
+---
+
+import { ArticleMeta, Callout, CodeBlock, Eyebrow, Lede } from '../../components/index.js';
+
+<Eyebrow>Guides</Eyebrow>
+
+# Devtools
+
+<Lede>
+  Drop `MotifDevtools` into your app in development, click any element, and see which themes it
+  sits under, which breakpoint is active, which tokens its styles read and what they resolve to,
+  and whether its styles came from the runtime or the compiler.
+</Lede>
+
+<ArticleMeta />
+
+## Add it
+
+<CodeBlock lang="tsx" code={`import { MotifDevtools } from '@usemotif/react/devtools';
+
+export function Root() {
+  return (
+    <ThemeProvider themes={themes} active="light">
+      <App />
+      <MotifDevtools />
+    </ThemeProvider>
+  );
+}`} />
+
+It renders nothing in a production build, so it can stay in place. Import it from the
+`/devtools` subpath, which nothing else in the package imports, so it's only in your bundle where
+you use it.
+
+## Inspect an element
+
+Press the **motif** button in the corner, or Alt+Shift+M. Elements outline as you hover; click one
+to inspect it. The click goes to the inspector, not the page. Escape stops inspecting.
+
+| Row | What it shows |
+| --- | --- |
+| Themes | Every `data-theme` the element sits under, outermost first. Sub-themes show as the chain. |
+| Breakpoint | The widest configured breakpoint the viewport has reached, or `base`. |
+| Tokens | Each token the element's inline style and motif rules read, as a `$` path with its current value. |
+| Classes | Each motif class on the element, and whether the runtime emitted it or the compiler extracted it. |
+
+<Callout variant="info" title="Web only">
+  The inspector reads the DOM and the page's style sheets, so it runs in the browser. Pass
+  `position="bottom-left"` to move it out of the way of your own corner UI.
+</Callout>

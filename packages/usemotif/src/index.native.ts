@@ -53,11 +53,14 @@ export {
   Grid,
   HStack,
   Image,
+  Presence,
   Pressable,
+  Prose,
   SafeArea,
   Spacer,
   Stack,
   Text,
+  TitleBar,
   Theme,
   ThemeContext,
   ThemeProvider,
@@ -71,6 +74,7 @@ export {
   useBreakpoint,
   useContainerInfo,
   useDrag,
+  useGesture,
   useLayoutAnimation,
   useMedia,
   useMotionValue,
@@ -90,11 +94,18 @@ export type {
   DragAxis,
   DragConstraints,
   DragInfo,
+  GestureHandlers,
+  GestureOptions,
   LayoutAnimationKind,
   MotionValue,
+  PinchInfo,
+  PresenceProps,
   SpringConfig,
+  SwipeDirection,
+  SwipeInfo,
   UseDragOptions,
   UseDragResult,
+  UseGestureResult,
   UseLayoutAnimationOptions,
   UseTransformOptions,
 } from '@usemotif/react-native';
@@ -112,10 +123,12 @@ export type {
   GridProps,
   ImageProps,
   PressableProps,
+  ProseProps,
   SafeAreaProps,
   SpacerProps,
   StackProps,
   TextProps,
+  TitleBarProps,
   ThemeProps,
   ThemeProviderProps,
   WrapProps,
@@ -140,11 +153,12 @@ export type {
   LinkProps,
 } from '@usemotif/react-native';
 
-export { Avatar, Icon, Path, Svg } from '@usemotif/react-native';
+export { Avatar, Icon, IconProvider, Path, Svg } from '@usemotif/react-native';
 export type {
   AvatarProps,
   AvatarSize,
   IconProps,
+  IconProviderProps,
   PathProps,
   SvgProps,
 } from '@usemotif/react-native';
@@ -213,6 +227,14 @@ export type {
 } from '@usemotif/react-native';
 
 export { createStyledContext, styled } from '@usemotif/react-native';
+export {
+  styledSlots,
+  type SlotComponents,
+  type SlotRecipeConfig,
+  type SlotStyles,
+  type SlotVariants,
+  type SlotVariantsOf,
+} from '@usemotif/react-native';
 export type {
   CompoundVariant,
   StyledComponent,
@@ -249,4 +271,10 @@ export type {
   UseThemeSettingOptions,
   UseThemeSettingResult,
   VirtualListImpl,
+} from '@usemotif/react-native';
+export {
+  MessagesProvider,
+  useMessages,
+  type MessagesProviderProps,
+  type MotifMessages,
 } from '@usemotif/react-native';

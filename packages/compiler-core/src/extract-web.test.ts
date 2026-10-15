@@ -500,3 +500,45 @@ describe('extractWeb - pseudo-element parity with the runtime', () => {
     expect(actual.consumedProps).toEqual(['_after', '_before']);
   });
 });
+
+describe('extractWeb - atomic output', () => {
+  it('gives each declaration a shared class, the same on every element', () => {
+    const a = extractWeb(fakeStaticAnalysis({ p: '$4', bg: '$colors.brand.500' }), {
+      atomic: true,
+    });
+    const b = extractWeb(fakeStaticAnalysis({ bg: '$colors.brand.500', m: 2 }), { atomic: true });
+    expect(a.inlineStyle).toEqual({});
+    expect(a.className!.split(' ')).toHaveLength(2);
+    expect(a.css.split('\n')).toEqual([
+      expect.stringMatching(/^\.a-\w+ \{ padding: var\(--space-4\); \}$/),
+      expect.stringMatching(/^\.a-\w+ \{ background-color: var\(--colors-brand-500\); \}$/),
+    ]);
+    const shared = a.className!.split(' ')[1]!;
+    expect(b.className!.split(' ')).toContain(shared);
+    expect(b.css).toContain(`.${shared} {`);
+  });
+
+  it('keeps declarations that override one another on the per-element path', () => {
+    const r = extractWeb(
+      fakeStaticAnalysis({ p: '$4', pt: '$2', bg: { base: 'red', md: 'blue' }, opacity: 1 }),
+      { atomic: true },
+    );
+    expect(r.inlineStyle).toEqual({ padding: 'var(--space-4)', paddingTop: 'var(--space-2)' });
+    const classes = r.className!.split(' ');
+    expect(classes.filter((c) => c.startsWith('a-'))).toHaveLength(1);
+    expect(classes.filter((c) => c.startsWith('m-'))).toHaveLength(1);
+    expect(r.css).toMatch(/\.a-\w+ \{ opacity: 1; \}/);
+    expect(r.css).toContain('@media (min-width: 768px)');
+  });
+
+  it('atomizes a state declaration with its selector, and wraps each atom in the layer', () => {
+    const analysis: CallSiteAnalysis = {
+      ...fakeStaticAnalysis({ p: '$4' }),
+      pseudoStateProps: [{ name: '_hover', pseudo: ':hover', style: { opacity: 0.5 } }],
+    };
+    const r = extractWeb(analysis, { atomic: true, cssLayer: 'motif' });
+    const lines = r.css.split('\n');
+    expect(lines).toHaveLength(2);
+    expect(lines[1]).toMatch(/^@layer motif \{ \.a-\w+:hover \{ opacity: 0\.5; \} \}$/);
+  });
+});

@@ -2,14 +2,19 @@
 
 import type { ReactNode } from 'react';
 import { bannerRecipe } from '@usemotif/recipes';
-import { Box, Text, type BoxProps } from 'usemotif';
+import { Box, Text } from 'usemotif';
+import { StatusActions } from './_status-actions.js';
+import { statusIcon } from './_status-icons.js';
 
 export type BannerIntent = 'neutral' | 'info' | 'success' | 'warning' | 'danger';
 
 export interface BannerProps {
   /** Tone - drives the tinted background, border, and text colour. Default `neutral`. */
   readonly intent?: BannerIntent;
-  /** Optional leading icon (inherits the intent colour). */
+  /**
+   * Leading icon, drawn in the intent colour. Defaults to the intent's status
+   * icon (none for `neutral`); pass `null` to show none.
+   */
   readonly icon?: ReactNode;
   /** Bold heading line. */
   readonly title?: ReactNode;
@@ -21,8 +26,6 @@ export interface BannerProps {
    * owns visibility (a Banner is presentational - it doesn't unmount itself). */
   readonly onDismiss?: () => void;
 }
-
-const DISMISS_HOVER = { opacity: 0.65 } as const;
 
 /**
  * A themed full-width announcement bar - the page-level cousin of `Alert`. Soft
@@ -46,15 +49,16 @@ export function Banner({
   onDismiss,
 }: BannerProps) {
   const fg = `$colors.status.${intent}.fg`;
+  const shown = icon === undefined ? statusIcon(intent) : icon;
   return (
     <Box
       role={intent === 'danger' || intent === 'warning' ? 'alert' : 'status'}
       {...bannerRecipe.base}
       {...bannerRecipe.variants.intent[intent]}
     >
-      {icon !== undefined ? (
-        <Box flexShrink={0} display="inline-flex" alignItems="center">
-          {icon}
+      {shown !== null && shown !== false ? (
+        <Box flexShrink={0} display="inline-flex" alignItems="center" color={fg}>
+          {shown}
         </Box>
       ) : null}
       <Box flexGrow={1} display="flex" flexDirection="column" gap="$space.1">
@@ -69,29 +73,7 @@ export function Banner({
           </Text>
         ) : null}
       </Box>
-      {action !== undefined ? <Box flexShrink={0}>{action}</Box> : null}
-      {onDismiss !== undefined ? (
-        <Box
-          as="button"
-          flexShrink={0}
-          display="inline-flex"
-          alignItems="center"
-          justifyContent="center"
-          w={24}
-          h={24}
-          borderWidth={0}
-          borderRadius="$radii.md"
-          bg="transparent"
-          color={fg}
-          cursor="pointer"
-          _hover={DISMISS_HOVER}
-          onClick={onDismiss}
-          aria-label="Dismiss"
-          {...({ type: 'button' } as unknown as BoxProps)}
-        >
-          ×
-        </Box>
-      ) : null}
+      <StatusActions action={action} onDismiss={onDismiss} color={fg} />
     </Box>
   );
 }

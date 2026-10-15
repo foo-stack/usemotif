@@ -2,8 +2,8 @@
 title: FileUpload
 description: A drag-and-drop file region over a native file input. A render prop hands you the drag state and a picker opener.
 diataxis: reference
-covers: ['FileUpload', 'FileUploadProps']
-last_verified: 2026-05-15
+covers: ['FileUpload', 'FileUploadProps', 'FileRejection', 'FileRejectionReason']
+last_verified: 2026-10-15
 ---
 
 import {
@@ -73,6 +73,21 @@ platform's, not a reimplementation.
       type: 'boolean',
       default: 'false',
       description: 'Allow selecting more than one file.',
+    },
+    {
+      name: 'maxSize',
+      type: 'number',
+      description: 'Largest file accepted, in bytes. On native, a picker that reports no size passes.',
+    },
+    {
+      name: 'maxFiles',
+      type: 'number',
+      description: 'Most files taken from one pick or drop when `multiple` is set; without `multiple` it is one. The component keeps no list of its own, so this counts per selection.',
+    },
+    {
+      name: 'onReject',
+      type: "(rejections: { file, reasons: ('type' | 'size' | 'count')[] }[]) => void",
+      description: 'Called with every refused file from a pick or drop, and every rule it broke. A file is counted against `maxFiles` only once it passes the type and size rules, so a bad file never takes a good one\'s place.',
     },
     {
       name: 'disabled',

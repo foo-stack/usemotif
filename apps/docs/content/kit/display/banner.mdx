@@ -89,7 +89,8 @@ import { Button } from 'usemotif';
     {
       name: 'icon',
       type: 'ReactNode',
-      description: 'Optional leading icon. Inherits the intent colour.',
+      default: 'the intent\'s status icon',
+      description: 'Leading icon, drawn in the intent colour through `currentColor`. Defaults to an icon from `@usemotif/icons` matching the intent: `Info`, `CircleCheck`, `TriangleAlert`, or `CircleAlert`; `neutral` has none. Pass a node to replace it, or `null` for no icon.',
     },
     {
       name: 'title',

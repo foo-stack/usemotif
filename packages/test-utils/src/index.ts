@@ -21,3 +21,4 @@ export {
 export { standardCases } from './standard-cases.js';
 
 export { motifMatchers } from './matchers.js';
+export { accessibleFacts, type AccessibleFacts, type NativeTestInstance } from './a11y.js';

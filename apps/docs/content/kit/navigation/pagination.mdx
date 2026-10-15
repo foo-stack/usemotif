@@ -59,6 +59,19 @@ Two pages either side of the current one:
 
 <CodeBlock lang="tsx" code={`<Pagination page={page} total={50} siblings={2} onPageChange={setPage} aria-label="Search results" />`} />
 
+With a page-size select, which moves to the page holding the reader's first visible row:
+
+<CodeBlock lang="tsx" code={`<Pagination
+  page={page}
+  total={Math.ceil(rows.length / pageSize)}
+  onPageChange={setPage}
+  pageSize={pageSize}
+  onPageSizeChange={(size, nextPage) => {
+    setPageSize(size);
+    setPage(nextPage);
+  }}
+/>`} />
+
 ## API
 
 <ApiSignature
@@ -88,6 +101,28 @@ Two pages either side of the current one:
       type: 'number',
       default: '1',
       description: 'Pages shown on each side of the current page.',
+    },
+    {
+      name: 'boundaries',
+      type: 'number',
+      default: '1',
+      description: 'Pages always shown at each end.',
+    },
+    {
+      name: 'pageSize',
+      type: 'number',
+      description: 'Items per page. With `onPageSizeChange`, a themed page-size select follows the controls.',
+    },
+    {
+      name: 'pageSizeOptions',
+      type: 'readonly number[]',
+      default: '[10, 20, 50]',
+      description: 'Sizes the select offers.',
+    },
+    {
+      name: 'onPageSizeChange',
+      type: '(size: number, page: number) => void',
+      description: 'Called with the chosen size and the page that keeps the first item of the current page in view.',
     },
     {
       name: 'aria-label',

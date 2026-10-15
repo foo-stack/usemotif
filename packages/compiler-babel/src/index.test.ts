@@ -1616,3 +1616,24 @@ export const A = ({ pad }) => <><Box p={pad} /><Box p={8} {...rest} /><Box p={8}
     expect(withBail.css).toBe(without.css);
   });
 });
+
+describe('motif babel plugin - atomic output', () => {
+  it('compiles static props to shared classes instead of an inline style', () => {
+    const { code, css } = transform(
+      `import { Box } from '@usemotif/react';
+export const A = () => <><Box p={8} bg="red" /><Box bg="red" m={4} /></>;`,
+      { atomic: true },
+    );
+    expect(code).not.toContain('style=');
+    const classes = [...code.matchAll(/className="([^"]+)"/g)].map((m) => m[1]!.split(' '));
+    expect(classes).toHaveLength(2);
+    expect(classes[0]![1]).toBe(classes[1]![0]);
+    expect(new Set(css.split('\n')).size).toBe(3);
+  });
+
+  it('leaves the default output unchanged', () => {
+    const source = `import { Box } from '@usemotif/react';
+export const A = () => <Box p={8} bg="red" />;`;
+    expect(transform(source, { atomic: false }).code).toBe(transform(source).code);
+  });
+});

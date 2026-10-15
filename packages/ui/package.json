@@ -23,8 +23,13 @@
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "react-native": "./dist/index.native.js",
   "exports": {
     ".": {
+      "react-native": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.native.js"
+      },
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
@@ -36,10 +41,12 @@
   "scripts": {
     "build": "tsup",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run",
+    "test": "vitest run && vitest run --config vitest.native.config.ts",
     "clean": "rm -rf dist .turbo *.tsbuildinfo"
   },
   "dependencies": {
+    "@usemotif/core": "workspace:*",
+    "@usemotif/icons": "workspace:*",
     "@usemotif/recipes": "workspace:*"
   },
   "devDependencies": {
@@ -58,6 +65,12 @@
   "peerDependencies": {
     "@usemotif/headless": "workspace:^",
     "react": ">=18.0.0",
+    "react-native": ">=0.74.0",
     "usemotif": "workspace:^"
+  },
+  "peerDependenciesMeta": {
+    "react-native": {
+      "optional": true
+    }
   }
 }

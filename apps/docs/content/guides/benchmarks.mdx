@@ -1,0 +1,59 @@
+---
+title: Benchmarks
+description: How fast motif renders styled components compared with Tamagui, Emotion, StyleX and Panda, measured in one run and recorded with the commit it came from.
+diataxis: explanation
+covers: []
+last_verified: 2026-10-15
+---
+
+import { ArticleMeta, BenchmarkResults, Callout, CodeBlock, Eyebrow, Lede } from '../../components/index.js';
+
+<Eyebrow>Guides</Eyebrow>
+
+# Benchmarks
+
+<Lede>
+  The same workloads, rendered by motif and by the libraries people compare it with, in the same
+  run. Each figure is motif's throughput over the other library's, so it reads the same on any
+  machine, and each one is recorded in the project's claims ledger.
+</Lede>
+
+<ArticleMeta />
+
+<BenchmarkResults />
+
+## Reading the numbers
+
+**motif runtime** is a `<Box>` resolving its style props as it renders, with no build step.
+**motif compiled** is what the compiler leaves behind once it has extracted the styles: plain
+elements with class names and inline styles. Emotion resolves at runtime too, while StyleX and
+Panda do their work at build time, so the fair comparison for them is the compiled column.
+
+Where motif is slower, the table says so. The runtime pays for resolving tokens and responsive
+values on every render, which is the cost the compiler exists to remove.
+
+## How they're measured
+
+Every workload renders with React into jsdom under Vitest's benchmark runner, in one process, one
+library after another. A ratio is motif's operations per second divided by the other library's
+from that same run, which is why the figures hold across machines when absolute timings don't.
+jsdom has no layout or paint, so these measure style resolution and React's work, not what a
+browser does with the result.
+
+The comparison against Tamagui is gated in CI: `yarn bench:check` fails if a ratio drops below its
+floor in `benchmarks/.bench-budgets.json`. The Emotion, StyleX and Panda figures are reported but
+not gated.
+
+## Reproduce them
+
+<CodeBlock lang="bash" code={`yarn build
+yarn bench:report   # writes benchmarks/results.json`} />
+
+The page shows the committed `benchmarks/results.json`, with the date, commit and machine it was
+recorded on. The Bench workflow uploads a fresh copy as a build artifact on every run.
+
+<Callout variant="info" title="Held to the ledger">
+  Every figure on this page has an entry in `.claims.json` that names its value in
+  `benchmarks/results.json`, so a new recording fails `yarn claims:check` until the ledger is
+  updated to match. A published number changes only on purpose.
+</Callout>

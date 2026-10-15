@@ -15,7 +15,7 @@ import {
   type Theme,
   type TransitionValue,
 } from '@usemotif/core';
-import { type ReactElement, createElement, useRef, type ReactNode } from 'react';
+import { type ReactElement, type Ref, createElement, useRef, type ReactNode } from 'react';
 import { Animated, StyleSheet, View, type ViewProps, type ViewStyle } from 'react-native';
 import { BoxWithEnterNative } from './_box-enter.js';
 import { BoxWithExitNative } from './_box-exit.js';
@@ -25,7 +25,11 @@ import { splitMotionValueProps } from './_motion-bindings.js';
 import { sanitizeNativeStyle } from './_native-style.js';
 import { useContainerInfo } from './container-context.js';
 import { useDirection } from './direction-context.js';
-import { resolveResponsivePropsAtViewportAndContainer, useViewportWidth } from './responsive.js';
+import {
+  resolveResponsivePropsAtViewportAndContainer,
+  usePreferences,
+  useViewportWidth,
+} from './responsive.js';
 import { useBreakpointWidths, useTheme } from './theme-context.js';
 import { useLayoutAnimation, type LayoutAnimationKind } from './use-layout-animation.js';
 import { useDrag, type DragConstraints, type DragInfo, type DragSpringConfig } from './use-drag.js';
@@ -74,6 +78,12 @@ export type BoxProps = {
      * values.
      */
     layout?: boolean | 'position' | 'size';
+    /**
+     * Shared layout identity. When a Box with this id unmounts and another with the same id
+     * lays out right after, the new one animates from the old one's place and size on screen.
+     * Implies `layout`.
+     */
+    layoutId?: string;
     /**
      * Duration and easing of the `layout` animation, as literals or
      * `$durations` / `$easings` tokens resolved against the active theme.
@@ -141,7 +151,7 @@ export const Box: MotifComponent<BoxProps, ReactElement | null> = function (prop
   // onLayout + the animated transform style the FLIP hook needs to
   // attach. The wrapper re-enters Box with layout stripped, so there's
   // no recursion.
-  if (props.layout !== undefined && props.layout !== false) {
+  if ((props.layout !== undefined && props.layout !== false) || props.layoutId !== undefined) {
     return createElement(BoxWithLayoutNative, props);
   }
 
@@ -180,6 +190,7 @@ export const Box: MotifComponent<BoxProps, ReactElement | null> = function (prop
     animation,
     animateOnly,
     layout: _layout,
+    layoutId: _layoutId,
     layoutTransition: _layoutTransition,
     drag: _drag,
     dragConstraints: _dragConstraints,
@@ -341,6 +352,7 @@ interface ResolvedBoxStyleCache {
   theme: Theme | undefined;
   direction: string;
   width: number;
+  preferences: unknown;
   container: unknown;
   breakpoints: unknown;
   baseStyle: Record<string, unknown>;
@@ -386,6 +398,7 @@ function useResolvedBoxBaseStyle(rest: Record<string, unknown>): {
   const theme = useTheme();
   const direction = useDirection();
   const width = useViewportWidth();
+  const preferences = usePreferences();
   const container = useContainerInfo();
   const breakpoints = useBreakpointWidths();
 
@@ -396,6 +409,7 @@ function useResolvedBoxBaseStyle(rest: Record<string, unknown>): {
     cache.theme === theme &&
     cache.direction === direction &&
     cache.width === width &&
+    cache.preferences === preferences &&
     cache.container === container &&
     cache.breakpoints === breakpoints &&
     shallowEqualProps(cache.rest, rest)
@@ -425,6 +439,7 @@ function useResolvedBoxBaseStyle(rest: Record<string, unknown>): {
     theme,
     direction,
     width,
+    preferences,
     container,
     breakpoints,
     baseStyle,
@@ -649,14 +664,21 @@ export function useResolvedBoxStyle(
  * omits `layout`.
  */
 function BoxWithLayoutNative(props: BoxProps) {
-  const { layout, layoutTransition, style: userStyle, ...rest } = props;
+  const { layout, layoutId, layoutTransition, style: userStyle, ...rest } = props;
   const kind: LayoutAnimationKind =
-    layout === true || layout === undefined ? 'all' : (layout as LayoutAnimationKind);
+    layout === true || layout === undefined || layout === false
+      ? 'all'
+      : (layout as LayoutAnimationKind);
   const theme = useTheme();
   const duration = layoutTransition?.duration;
   const easing = layoutTransition?.easing;
-  const { onLayout, style } = useLayoutAnimation({
+  const {
+    ref: layoutRef,
+    onLayout,
+    style,
+  } = useLayoutAnimation({
     kind,
+    ...(layoutId !== undefined ? { layoutId } : {}),
     ...(duration !== undefined
       ? {
           duration:
@@ -678,7 +700,23 @@ function BoxWithLayoutNative(props: BoxProps) {
         ? ([...(userStyle as ViewStyle[]), style as ViewStyle] as ViewStyle[])
         : ([userStyle as ViewStyle, style as ViewStyle] as ViewStyle[]);
 
-  return <Box {...(rest as BoxProps)} style={composedStyle} onLayout={onLayout} />;
+  // A `layoutId` measures the host in window coordinates. The consumer's ref, if any, is
+  // composed so it still receives the host too.
+  const userRef = (rest as { ref?: Ref<unknown> }).ref;
+  const composedRef = (node: unknown): void => {
+    layoutRef.current = node;
+    if (typeof userRef === 'function') userRef(node);
+    else if (userRef !== null && userRef !== undefined) {
+      (userRef as { current: unknown }).current = node;
+    }
+  };
+  return (
+    <Box
+      {...({ ...rest, ref: composedRef } as BoxProps)}
+      style={composedStyle}
+      onLayout={onLayout}
+    />
+  );
 }
 
 /**

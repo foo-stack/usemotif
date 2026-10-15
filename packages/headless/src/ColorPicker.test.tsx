@@ -253,3 +253,83 @@ describe('ColorPicker - UI', () => {
     expect(Number(m![1])).toBeLessThanOrEqual(230);
   });
 });
+
+describe('ColorPicker - swatches and eyedropper', () => {
+  const SWATCHES = ['#ef4444', '#22c55e', '#3b82f6'];
+
+  function swatches(): HTMLElement[] {
+    return Array.from(container.querySelectorAll<HTMLElement>('[role="radio"]'));
+  }
+
+  function Controlled({ eyeDropper = false }: { eyeDropper?: boolean }) {
+    const [value, setValue] = useState('#22c55e');
+    return (
+      <>
+        <output>{value}</output>
+        <ColorPicker
+          value={value}
+          onValueChange={setValue}
+          swatches={SWATCHES}
+          eyeDropper={eyeDropper}
+          formats={[]}
+        />
+      </>
+    );
+  }
+
+  const value = (): string => container.querySelector('output')!.textContent!;
+
+  it('checks the swatch that matches, with one tab stop', () => {
+    render(<Controlled />);
+    expect(container.querySelector('[role="radiogroup"]')).not.toBeNull();
+    expect(swatches().map((s) => s.getAttribute('aria-checked'))).toEqual([
+      'false',
+      'true',
+      'false',
+    ]);
+    expect(swatches().map((s) => s.tabIndex)).toEqual([-1, 0, -1]);
+  });
+
+  it('picks a swatch by click, and the arrow keys move and select', () => {
+    render(<Controlled />);
+    act(() => swatches()[2]!.click());
+    expect(value()).toBe('#3b82f6');
+    act(() => swatches()[2]!.focus());
+    act(() => {
+      swatches()[2]!.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }),
+      );
+    });
+    expect(value()).toBe('#ef4444');
+    expect(document.activeElement).toBe(swatches()[0]);
+    act(() => {
+      swatches()[0]!.dispatchEvent(new KeyboardEvent('keydown', { key: 'End', bubbles: true }));
+    });
+    expect(value()).toBe('#3b82f6');
+  });
+
+  it('shows the eyedropper only where the browser has one, and commits its pick', async () => {
+    render(<Controlled eyeDropper />);
+    expect(container.querySelector('[aria-label="Pick a colour from the screen"]')).toBeNull();
+    act(() => root.unmount());
+    root = createRoot(container);
+    (window as { EyeDropper?: unknown }).EyeDropper = class {
+      open(): Promise<{ sRGBHex: string }> {
+        return Promise.resolve({ sRGBHex: '#123456' });
+      }
+    };
+    try {
+      render(<Controlled eyeDropper />);
+      const button = container.querySelector<HTMLButtonElement>(
+        '[aria-label="Pick a colour from the screen"]',
+      )!;
+      await act(async () => {
+        button.click();
+        await Promise.resolve();
+      });
+      expect(value()).toBe('#123456');
+    } finally {
+      delete (window as { EyeDropper?: unknown }).EyeDropper;
+    }
+  });
+});

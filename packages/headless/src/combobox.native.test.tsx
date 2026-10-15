@@ -91,3 +91,22 @@ describe('native option lists', () => {
     expect(container.querySelector('[data-motif-host="FlatList"]')?.textContent).toBe('None');
   });
 });
+
+describe('native option groups', () => {
+  it('puts a heading above the first option of each group', () => {
+    render(
+      <ComboboxRoot
+        options={[
+          { value: 'a', label: 'Alpha', group: 'Greek' },
+          { value: 'b', label: 'Beta', group: 'Greek' },
+          { value: 'c', label: 'Cyan', group: 'Colour' },
+        ]}
+        defaultOpen
+      >
+        <ComboboxList />
+      </ComboboxRoot>,
+    );
+    const headers = Array.from(container.querySelectorAll('[accessibilityRole="header"]'));
+    expect(headers.map((h) => h.textContent)).toEqual(['Greek', 'Colour']);
+  });
+});

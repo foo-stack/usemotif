@@ -59,6 +59,13 @@ changes is the import line and the primitive names.
   a `breakpoints` map. There is no single config module - themes are plain objects you pass to the
   provider.
 
+## Run the codemod
+
+<CodeBlock lang="bash" code={`npx @usemotif/migrate from-tamagui src/`} />
+
+It converts what maps directly and marks the rest with a `// usemotif-migrate:` comment saying why.
+See [Migrate](/reference/migrate#migrating-from-another-library) for what it covers.
+
 ## Migrate a component
 
 A typical Tamagui component:

@@ -1,0 +1,12 @@
+{
+  "extends": "@usemotif/tsconfig/app.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "types": ["react", "node"]
+  },
+  "include": ["App.tsx", "**/*.ts", "**/*.tsx"],
+  "exclude": ["node_modules", ".expo"]
+}

@@ -19,14 +19,44 @@ interface StyleCacheState {
   styleEl: HTMLStyleElement | null;
   /** Whether we've already scanned the DOM for SSR-injected styles. */
   hydrated: boolean;
+  /** Every rule emitted in the browser, in order, for style targets registered later. */
+  readonly emitted: string[];
+  /** Shadow roots and documents that receive the emitted CSS, each through its own sheet. */
+  readonly targets: Set<StyleTargetEntry>;
+  targetsQueued: boolean;
 }
 
-const cache: StyleCacheState = {
-  injected: new Set<string>(),
-  pendingCss: [],
-  styleEl: null,
-  hydrated: false,
-};
+interface StyleTargetEntry {
+  readonly sheet: CSSStyleSheet;
+  readonly extra: string;
+}
+
+interface SharedState {
+  readonly cache: StyleCacheState;
+  storage: CollectorStorage;
+}
+
+// One state per JS realm rather than per copy of this module. The CJS build
+// gives each tsup entry (the barrel, `/server`, `/testing`) its own copy, and
+// a collector installed through one would otherwise never see styles injected
+// through another. Read lazily so importing the module has no side effect.
+const SHARED_KEY = Symbol.for('usemotif.styleCache');
+
+function shared(): SharedState {
+  const registry = globalThis as unknown as Record<symbol, SharedState | undefined>;
+  return (registry[SHARED_KEY] ??= {
+    cache: {
+      injected: new Set<string>(),
+      pendingCss: [],
+      styleEl: null,
+      hydrated: false,
+      emitted: [],
+      targets: new Set(),
+      targetsQueued: false,
+    },
+    storage: syncCollectorStorage,
+  });
+}
 
 /**
  * Per-request collector for server-side rendering. The renderer routes
@@ -63,7 +93,7 @@ export class SSRStyleCollector {
    * document. The previous active collector (if any) is restored on exit.
    */
   collect<T>(fn: () => T): T {
-    return storage.run(this, fn);
+    return shared().storage.run(this, fn);
   }
 
   /** Raw CSS captured during this collector's `collect()` call. */
@@ -132,7 +162,10 @@ export const syncCollectorStorage: CollectorStorage = (() => {
   };
 })();
 
-let storage: CollectorStorage = syncCollectorStorage;
+/** Whether the runtime emitted this class, in the browser or into SSR. For the devtools. */
+export function _isRuntimeClass(className: string): boolean {
+  return shared().cache.injected.has(className);
+}
 
 /**
  * Swap the storage backend used to track the active collector. Intended
@@ -140,7 +173,7 @@ let storage: CollectorStorage = syncCollectorStorage;
  * install the `AsyncLocalStorage`-backed backend. Idempotent.
  */
 export function setCollectorStorage(impl: CollectorStorage): void {
-  storage = impl;
+  shared().storage = impl;
 }
 
 /**
@@ -151,8 +184,8 @@ export function setCollectorStorage(impl: CollectorStorage): void {
  * Idempotent - runs at most once per page load. No-op outside the browser.
  */
 function hydrateFromSSR(): void {
-  if (cache.hydrated) return;
-  cache.hydrated = true;
+  if (shared().cache.hydrated) return;
+  shared().cache.hydrated = true;
   if (typeof document === 'undefined') return;
   const ssrEls = document.querySelectorAll('style[data-motif-ssr]');
   const classRe = /\.(m-[a-z0-9]+)/g;
@@ -163,10 +196,10 @@ function hydrateFromSSR(): void {
   for (const el of ssrEls) {
     const css = el.textContent ?? '';
     for (const match of css.matchAll(classRe)) {
-      cache.injected.add(match[1]!);
+      shared().cache.injected.add(match[1]!);
     }
     for (const match of css.matchAll(keyframeRe)) {
-      cache.injected.add(match[1]!);
+      shared().cache.injected.add(match[1]!);
     }
   }
 }
@@ -191,6 +224,9 @@ function assertBrowserOrCollector(): void {
 }
 
 function emitToBrowser(css: string): void {
+  const { cache } = shared();
+  cache.emitted.push(css);
+  syncStyleTargets();
   if (cache.styleEl !== null) {
     cache.styleEl.appendChild(document.createTextNode(`\n${css}`));
     return;
@@ -199,10 +235,52 @@ function emitToBrowser(css: string): void {
     cache.pendingCss.push(css);
     return;
   }
-  cache.styleEl = document.createElement('style');
-  cache.styleEl.setAttribute('data-motif-style-cache', '');
-  cache.styleEl.appendChild(document.createTextNode(css));
-  document.head.appendChild(cache.styleEl);
+  const el = document.createElement('style');
+  el.setAttribute('data-motif-style-cache', '');
+  el.appendChild(document.createTextNode(css));
+  document.head.appendChild(el);
+  cache.styleEl = el;
+}
+
+/** Rewrite every target's sheet from the CSS emitted so far, once per microtask. */
+function syncStyleTargets(): void {
+  const { cache } = shared();
+  if (cache.targets.size === 0 || cache.targetsQueued) return;
+  cache.targetsQueued = true;
+  queueMicrotask(() => {
+    cache.targetsQueued = false;
+    const runtime = cache.emitted.join('\n');
+    for (const target of cache.targets) target.sheet.replaceSync(`${target.extra}\n${runtime}`);
+  });
+}
+
+/**
+ * Send motif's CSS into a shadow root or another document, such as an iframe's, through
+ * `adoptedStyleSheets`: every rule emitted so far, the server-rendered rules in this document,
+ * and each later one, after `extra`. Returns the function that removes it. `ThemeProvider`'s
+ * `styleTarget` calls this with its theme CSS as `extra`.
+ */
+export function registerStyleTarget(target: Document | ShadowRoot, extra = ''): () => void {
+  const { cache } = shared();
+  const doc = target instanceof ShadowRoot ? target.ownerDocument : target;
+  // A sheet can only be adopted by the document that constructed it, so an iframe's comes from
+  // the iframe's own window.
+  const Sheet = (doc.defaultView as (Window & typeof globalThis) | null)?.CSSStyleSheet;
+  if (Sheet === undefined) return () => {};
+  const server = Array.from(
+    document.querySelectorAll('style[data-motif-ssr]'),
+    (el) => el.textContent ?? '',
+  );
+  const entry: StyleTargetEntry = { sheet: new Sheet(), extra: [extra, ...server].join('\n') };
+  entry.sheet.replaceSync(`${entry.extra}\n${cache.emitted.join('\n')}`);
+  // `?? []` for environments that leave the list unset until it is first assigned.
+  const adopted = (): CSSStyleSheet[] => target.adoptedStyleSheets ?? [];
+  target.adoptedStyleSheets = [...adopted(), entry.sheet];
+  cache.targets.add(entry);
+  return () => {
+    cache.targets.delete(entry);
+    target.adoptedStyleSheets = adopted().filter((sheet) => sheet !== entry.sheet);
+  };
 }
 
 /**
@@ -236,7 +314,7 @@ export function injectAtRules(
   // The `override` (typically from `useActiveCollector()`) wins over the
   // module-level storage so React-context-driven setups (App Router) and
   // call-site setups (renderToString) compose cleanly.
-  const collector = override ?? storage.get();
+  const collector = override ?? shared().storage.get();
   if (collector !== null) {
     collector._append(className, css);
     return className;
@@ -245,8 +323,8 @@ export function injectAtRules(
   // Browser path: dedup against the module-level set, emit to <style>.
   assertBrowserOrCollector();
   hydrateFromSSR();
-  if (cache.injected.has(className)) return className;
-  cache.injected.add(className);
+  if (shared().cache.injected.has(className)) return className;
+  shared().cache.injected.add(className);
   emitToBrowser(css);
   return className;
 }
@@ -268,7 +346,7 @@ export function injectPseudoRules(
   const className = hashPseudoRules(rules, layer);
   const css = buildPseudoCss(className, rules, layer);
 
-  const collector = override ?? storage.get();
+  const collector = override ?? shared().storage.get();
   if (collector !== null) {
     collector._append(className, css);
     return className;
@@ -276,8 +354,8 @@ export function injectPseudoRules(
 
   assertBrowserOrCollector();
   hydrateFromSSR();
-  if (cache.injected.has(className)) return className;
-  cache.injected.add(className);
+  if (shared().cache.injected.has(className)) return className;
+  shared().cache.injected.add(className);
   emitToBrowser(css);
   return className;
 }
@@ -305,15 +383,15 @@ export function injectKeyframes(
   // identical names always describe identical animations and whichever layer
   // wins produces the same result. Only the emitted CSS is wrapped.
   const wrapped = wrapInLayer(css, layer);
-  const collector = override ?? storage.get();
+  const collector = override ?? shared().storage.get();
   if (collector !== null) {
     collector._append(name, wrapped);
     return;
   }
   assertBrowserOrCollector();
   hydrateFromSSR();
-  if (cache.injected.has(name)) return;
-  cache.injected.add(name);
+  if (shared().cache.injected.has(name)) return;
+  shared().cache.injected.add(name);
   emitToBrowser(wrapped);
 }
 
@@ -324,16 +402,16 @@ export function injectKeyframes(
  * queue.
  */
 export function flushPendingCss(): string {
-  const out = cache.pendingCss.join('\n');
-  cache.pendingCss.length = 0;
+  const out = shared().cache.pendingCss.join('\n');
+  shared().cache.pendingCss.length = 0;
   return out;
 }
 
 /** Test-only: reset the cache and the storage backend. */
 export function _resetStyleCacheForTesting(): void {
-  cache.injected.clear();
-  cache.pendingCss.length = 0;
-  cache.styleEl = null;
-  cache.hydrated = false;
-  storage = syncCollectorStorage;
+  shared().cache.injected.clear();
+  shared().cache.pendingCss.length = 0;
+  shared().cache.styleEl = null;
+  shared().cache.hydrated = false;
+  shared().storage = syncCollectorStorage;
 }

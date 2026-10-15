@@ -616,3 +616,88 @@ describe('long lists - the highlighted row', () => {
     expect(kids[2]!.style.height).toBe(`${(492 - 2) * 20}px`);
   });
 });
+
+describe('option groups', () => {
+  const grouped = [
+    { value: 'any', label: 'Anything' },
+    { value: 'ts', label: 'TypeScript', group: 'Typed' },
+    { value: 'rs', label: 'Rust', group: 'Typed' },
+    { value: 'js', label: 'JavaScript', group: 'Dynamic' },
+    { value: 'py', label: 'Python', group: 'Dynamic' },
+  ];
+
+  function open(node: React.ReactNode): HTMLInputElement {
+    render(node);
+    const input = container.querySelector<HTMLInputElement>('[role="combobox"]')!;
+    input.focus();
+    press(input, 'ArrowDown');
+    return input;
+  }
+
+  it('wraps each run in a labelled group, leaving ungrouped options outside', () => {
+    open(
+      <Combobox.Root options={grouped}>
+        <Combobox.Input />
+        <Combobox.List renderGroupLabel={(g) => <strong>{g}</strong>} />
+      </Combobox.Root>,
+    );
+    const groups = Array.from(document.body.querySelectorAll('[role="group"]'));
+    const labels = groups.map(
+      (g) => document.getElementById(g.getAttribute('aria-labelledby')!)!.textContent,
+    );
+    expect(labels).toEqual(['Typed', 'Dynamic']);
+    expect(groups[0]!.querySelectorAll('[role="option"]')).toHaveLength(2);
+    const anything = findOptions()[0]!;
+    expect(anything.closest('[role="group"]')).toBeNull();
+    expect(groups[0]!.querySelector('strong')?.textContent).toBe('Typed');
+  });
+
+  it('keeps flat indexes, so the keyboard moves straight across groups', () => {
+    const input = open(
+      <Combobox.Root options={grouped}>
+        <Combobox.Input />
+        <Combobox.List />
+      </Combobox.Root>,
+    );
+    for (let i = 0; i < 3; i++) press(input, 'ArrowDown');
+    const active = document.getElementById(input.getAttribute('aria-activedescendant')!)!;
+    expect(active.textContent).toBe('JavaScript');
+    expect(active.closest('[role="group"]')!.textContent).toContain('Dynamic');
+  });
+
+  it('drops a group whose options are all filtered out', () => {
+    const input = open(
+      <Combobox.Root options={grouped}>
+        <Combobox.Input />
+        <Combobox.List />
+      </Combobox.Root>,
+    );
+    type(input, 'script');
+    const labels = Array.from(document.body.querySelectorAll('[role="group"]')).map(
+      (g) => document.getElementById(g.getAttribute('aria-labelledby')!)!.textContent,
+    );
+    expect(labels).toEqual(['Typed', 'Dynamic']);
+    type(input, 'python');
+    expect(
+      Array.from(document.body.querySelectorAll('[role="group"]')).map(
+        (g) => document.getElementById(g.getAttribute('aria-labelledby')!)!.textContent,
+      ),
+    ).toEqual(['Dynamic']);
+  });
+
+  it('renders every row of a long grouped list, since headings break windowing', () => {
+    const many = Array.from({ length: 80 }, (_, i) => ({
+      value: `v${i}`,
+      label: `Item ${i}`,
+      group: i < 40 ? 'First' : 'Second',
+    }));
+    open(
+      <MultiSelect.Root options={many}>
+        <MultiSelect.Input />
+        <MultiSelect.List itemHeight={20} />
+      </MultiSelect.Root>,
+    );
+    expect(findOptions()).toHaveLength(80);
+    expect(document.body.querySelectorAll('[role="group"]')).toHaveLength(2);
+  });
+});

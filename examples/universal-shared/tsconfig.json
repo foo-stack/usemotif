@@ -1,0 +1,7 @@
+{
+  "extends": "@usemotif/tsconfig/app.json",
+  "compilerOptions": {
+    "types": ["react"]
+  },
+  "include": ["src/**/*"]
+}

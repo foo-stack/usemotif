@@ -118,6 +118,14 @@ jobs:
       - name: Docs ESM consistency
         run: yarn docs-esm:check
 
+      # Every public export has to appear in some docs page's `covers:`
+      # frontmatter, and every `covers:` entry has to still be exported. Read
+      # from the built type declarations, so it runs after Build. The exports
+      # that were undocumented when the check arrived are recorded in
+      # `scripts/docs-coverage-gaps.json`, and that list may only shrink.
+      - name: Docs coverage check
+        run: yarn docs-coverage:check
+
       # The writing rule bans the em dash, the en dash and the ellipsis
       # character. Removing four thousand of them once was a sweep; this is what
       # makes it a rule. A character standing alone inside quotes is allowed,
@@ -229,3 +237,106 @@ jobs:
           name: visual-uikit-renders
           path: apps/uikit/test-results/
           retention-days: 7
+
+  ssr-react-router:
+    name: streaming SSR (React Router)
+    runs-on: ubuntu-latest
+
+    env:
+      ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Enable corepack
+        run: corepack enable
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: yarn
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Build packages and the fixture
+        run: yarn turbo run build --filter=@usemotif/ssr-react-router...
+
+      - name: Install Chromium
+        run: yarn workspace @usemotif/ssr-react-router exec playwright install --with-deps chromium
+
+      # Serves the production build and checks the streamed HTML and the hydrated page.
+      - name: Smoke test
+        run: yarn workspace @usemotif/ssr-react-router smoke
+
+  ssr-tanstack-start:
+    name: streaming SSR (TanStack Start)
+    runs-on: ubuntu-latest
+
+    env:
+      ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Enable corepack
+        run: corepack enable
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: yarn
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Build packages and the fixture
+        run: yarn turbo run build --filter=@usemotif/ssr-tanstack-start...
+
+      - name: Install Chromium
+        run: yarn workspace @usemotif/ssr-tanstack-start exec playwright install --with-deps chromium
+
+      # Serves the production build and checks the streamed HTML and the hydrated page.
+      - name: Smoke test
+        run: yarn workspace @usemotif/ssr-tanstack-start smoke
+
+  ssr-astro:
+    name: streaming SSR (Astro)
+    runs-on: ubuntu-latest
+
+    env:
+      ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Enable corepack
+        run: corepack enable
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: yarn
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      # Astro needs Node 22.22 or later, so the fixture has no `build` script for the root build to
+      # reach on Node 20; it is built here, after the packages it depends on.
+      - name: Build packages and the fixture
+        run: |
+          yarn turbo run build --filter=@usemotif/ssr-astro^...
+          yarn workspace @usemotif/ssr-astro build:fixture
+
+      - name: Install Chromium
+        run: yarn workspace @usemotif/ssr-astro exec playwright install --with-deps chromium
+
+      # Serves the production build and checks the streamed HTML and the hydrated islands.
+      - name: Smoke test
+        run: yarn workspace @usemotif/ssr-astro smoke

@@ -35,6 +35,17 @@ export type {
 } from './types.js';
 
 export { isTokenRef, resolveOutputRangeTokens, resolveToken, resolveValue } from './token.js';
+export { createGestureRecognizer } from './gesture.js';
+export { parseInline, parseMarkdown } from './markdown.js';
+export type { MdAlign, MdBlock, MdInline } from './markdown.js';
+export type {
+  GestureHandlers,
+  GestureOptions,
+  GestureRecognizer,
+  PinchInfo,
+  SwipeDirection,
+  SwipeInfo,
+} from './gesture.js';
 export type { ResolveTokenOptions } from './token.js';
 
 export { createTheme, extendTheme } from './createTheme.js';
@@ -171,6 +182,8 @@ export {
   mediaQueryForBreakpoint,
   parseResponsiveDSL,
   parseResponsiveKey,
+  PREFERENCE_QUERIES,
+  type PreferenceKey,
   resolveBreakpoints,
   responsiveArrayToObject,
   sameMatches,
@@ -205,3 +218,4 @@ export {
   wrapInLayer,
 } from './css-emit.js';
 export type { PseudoRule } from './css-emit.js';
+export { DEFAULT_MESSAGES, mergeMessages, type MotifMessages } from './messages.js';

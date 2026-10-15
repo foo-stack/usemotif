@@ -1,0 +1,50 @@
+---
+title: Export tokens
+description: Write a motif theme as CSS variables, resolved JSON, W3C Design Tokens, or Swift and Kotlin constants with the usemotif-tokens CLI.
+diataxis: howto
+covers: ['exportTheme', 'TokenExportFormat', 'TokenExportOptions']
+last_verified: 2026-10-15
+---
+
+import { ArticleMeta, Callout, CodeBlock, Eyebrow, Lede } from '../../components/index.js';
+
+<Eyebrow>Guides</Eyebrow>
+
+# Export tokens
+
+<Lede>
+  The theme you style with in motif can feed the rest of a product: a marketing site's CSS, a
+  design tool, or an iOS or Android app written outside React Native. `usemotif-tokens` writes it
+  out in their formats.
+</Lede>
+
+<ArticleMeta />
+
+## Run it
+
+<CodeBlock lang="bash" code={`npx usemotif-tokens export ./src/theme.js --format w3c --out tokens.json
+npx usemotif-tokens export light --format swift --name AppTokens --out AppTokens.swift`} />
+
+The theme is a preset name (`light`, `dark`, `high-contrast-light`, `high-contrast-dark`), a
+`.json` theme file, or a JavaScript module whose default export is a theme; name another export
+with `--export`. Without `--out` the result goes to standard output.
+
+## Formats
+
+| `--format` | Writes |
+| --- | --- |
+| `css` | The theme's custom properties under `[data-theme="<name>"]`, as motif emits them |
+| `json` | The token tree with every reference resolved and lengths in px |
+| `w3c` | W3C Design Tokens. References stay aliases, so `text.default` points at `{colors.gray.900}`. Easings become cubic-bezier points and shadows become shadow objects |
+| `swift` | A SwiftUI enum per scale: `Color` values, `CGFloat` lengths, and strings |
+| `kotlin` | A Compose object per scale: `Color` values, `dp` and `sp` lengths, and constants |
+
+W3C names may not contain `.`, so a half-step key such as `space.1.5` is written `space.1_5`
+there. Swift and Kotlin names follow the token path (`text.default` becomes `textDefault` and
+`TextDefault`), with a Swift keyword such as `in` escaped. Animation presets have no portable form
+and are left out of every format.
+
+<Callout variant="info" title="From code">
+  `exportTheme(theme, format)` from `@usemotif/tokens/export` returns the same output as a string.
+  The W3C output reads back in through [Import design tokens](/guides/import-design-tokens).
+</Callout>

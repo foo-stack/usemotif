@@ -54,12 +54,15 @@ export {
   Grid,
   HStack,
   Image,
+  Presence,
   Pressable,
+  Prose,
   SSRStyleCollector,
   SafeArea,
   Spacer,
   Stack,
   Text,
+  TitleBar,
   Theme,
   ThemeContext,
   ThemeProvider,
@@ -74,6 +77,7 @@ export {
   useBreakpoint,
   useContainerInfo,
   useDrag,
+  useGesture,
   useLayoutAnimation,
   useMedia,
   useMotionValue,
@@ -93,11 +97,18 @@ export type {
   DragAxis,
   DragConstraints,
   DragInfo,
+  GestureHandlers,
+  GestureOptions,
   LayoutAnimationKind,
   MotionValue,
+  PinchInfo,
+  PresenceProps,
   SpringConfig,
+  SwipeDirection,
+  SwipeInfo,
   UseDragOptions,
   UseDragResult,
+  UseGestureResult,
   UseLayoutAnimationOptions,
   UseTransformOptions,
 } from '@usemotif/react';
@@ -115,10 +126,12 @@ export type {
   GridProps,
   ImageProps,
   PressableProps,
+  ProseProps,
   SafeAreaProps,
   SpacerProps,
   StackProps,
   TextProps,
+  TitleBarProps,
   ThemeProps,
   ThemeProviderProps,
   WrapProps,
@@ -143,8 +156,15 @@ export type {
   LinkProps,
 } from '@usemotif/react';
 
-export { Avatar, Icon, Path, Svg } from '@usemotif/react';
-export type { AvatarProps, AvatarSize, IconProps, PathProps, SvgProps } from '@usemotif/react';
+export { Avatar, Icon, IconProvider, Path, Svg } from '@usemotif/react';
+export type {
+  AvatarProps,
+  AvatarSize,
+  IconProps,
+  IconProviderProps,
+  PathProps,
+  SvgProps,
+} from '@usemotif/react';
 
 export {
   Field,
@@ -201,6 +221,14 @@ export type {
 } from '@usemotif/react';
 
 export { createStyledContext, styled } from '@usemotif/react';
+export {
+  styledSlots,
+  type SlotComponents,
+  type SlotRecipeConfig,
+  type SlotStyles,
+  type SlotVariants,
+  type SlotVariantsOf,
+} from '@usemotif/react';
 export type {
   CompoundVariant,
   StyledComponent,
@@ -237,4 +265,10 @@ export type {
   UseThemeSettingOptions,
   UseThemeSettingResult,
   VirtualListImpl,
+} from '@usemotif/react';
+export {
+  MessagesProvider,
+  useMessages,
+  type MessagesProviderProps,
+  type MotifMessages,
 } from '@usemotif/react';

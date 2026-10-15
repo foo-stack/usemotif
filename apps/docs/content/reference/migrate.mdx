@@ -1,9 +1,21 @@
 ---
 title: Migrate
-description: Codemod toolkit for motif. CLI for the common rename transforms; Node API for running the same transforms from your own tooling.
+description: Codemod toolkit for motif. CLI for the rename transforms and for migrating from styled-components and Tamagui; Node API for running the same transforms from your own tooling.
 diataxis: reference
-covers: ['applyRenameV2', 'needsRenameV2', 'applyRenameV3', 'needsRenameV3', '@usemotif/migrate']
-last_verified: 2026-05-15
+covers:
+  [
+    'applyRenameV2',
+    'needsRenameV2',
+    'applyRenameV3',
+    'needsRenameV3',
+    'applyFromStyledComponents',
+    'needsFromStyledComponents',
+    'cssToStyle',
+    'applyFromTamagui',
+    'needsFromTamagui',
+    '@usemotif/migrate',
+  ]
+last_verified: 2026-10-15
 ---
 
 import { ApiSignature, ArticleMeta, CodeBlock, Eyebrow } from '../../components/index.js';
@@ -13,8 +25,8 @@ import { ApiSignature, ArticleMeta, CodeBlock, Eyebrow } from '../../components/
 # Migrate
 
 `@usemotif/migrate` ships the codemods that rewrite import specifiers across motif's version
-boundaries. Two transforms ship today - `rename-v2` and `rename-v3` - and the CLI is the
-primary surface for end users. The Node API is exported for anyone wiring the same transforms
+boundaries (`rename-v2` and `rename-v3`), and two that move code over from another library
+(`from-styled-components` and `from-tamagui`). The CLI is the primary surface for end users. The Node API is exported for anyone wiring the same transforms
 into their own codemod pipeline.
 
 <ArticleMeta />
@@ -39,6 +51,39 @@ are idempotent - running them twice produces no further changes.
 intermediate `rename-v2` transform is preserved for anyone who wants to do the two-step
 migration deliberately (v1 → v2 → v3), or for tooling that needs to address the v1 → v2
 rename specifically.
+
+## Importing design tokens
+
+`import-tokens` turns a W3C Design Tokens file into a typed `createTheme` module. See
+[Import design tokens](/guides/import-design-tokens).
+
+## Migrating from another library
+
+<CodeBlock lang="bash" code={`npx @usemotif/migrate from-styled-components src/
+npx @usemotif/migrate from-tamagui src/`} />
+
+Both parse each `.js`, `.jsx`, `.ts` and `.tsx` file and edit it in place, so the rest of the file
+keeps its formatting. What they convert:
+
+| Command | Converts |
+| --- | --- |
+| `from-styled-components` | `styled.div` and `styled(Component)` templates with no interpolations become `styled('div', { base: { ... } })`. `&:hover`, `&:focus`, `&:focus-visible`, `&:active`, `&:disabled`, `&::before` and `&::after` become state props. |
+| `from-tamagui` | Imports with a motif counterpart move to `usemotif` (`XStack` becomes `HStack`, `Stack` becomes `Box`, `AnimatePresence` becomes `Presence`), and their uses follow. `hoverStyle`, `pressStyle`, `focusStyle` and `disabledStyle` become `_hover`, `_active`, `_focus` and `_disabled`. A `styled()` config's style props move into `base`. |
+
+Anything they can't convert stays as it was, under a comment that says why:
+
+<CodeBlock lang="tsx" code={`// usemotif-migrate: interpolations: express them as variants or tokens
+const Button = styled.button\`
+  color: \${(p) => p.color};
+\`;`} />
+
+Each changed file reports how many it left, and a second run adds nothing. Search for
+`usemotif-migrate:` to finish the job. When some styled-components templates are left, the
+converted ones use `motifStyled`, so the two libraries run side by side until the rest are done.
+
+Neither rewrites token paths: Tamagui's `$4` and styled-components' `props.theme` read a different
+theme, which you rebuild with `createTheme`. `from-tamagui` renames references by name rather than
+by scope, so a local variable that shadows an imported component is renamed too.
 
 ## Node API
 

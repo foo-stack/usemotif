@@ -1,6 +1,6 @@
 import { escapeCssValue, escapeCssVarNameSegment, wrapInLayer } from './css-emit.js';
 import { splitTokenPath } from './_token-path.js';
-import { isTokenRef, resolveToken } from './token.js';
+import { isTokenRef, resolveToken, splitFallbacks } from './token.js';
 import type {
   AnimationToken,
   ScaleName,
@@ -56,9 +56,26 @@ export function tokenPathToCssVarName(scale: string, path: readonly string[]): s
  * the lookup belongs to. Explicit references like `$colors.blue.500`
  * already carry the scale and ignore `defaultScale`.
  *
+ * A fallback chain, `'$a ?? $b'`, nests: `var(--a, var(--b))`. A last
+ * alternative that is not a ref is the literal default.
+ *
  * Returns `undefined` if the reference cannot be encoded (no scale info).
  */
 export function tokenRefToCssVar(ref: TokenRef, defaultScale?: string): string | undefined {
+  const alternatives = splitFallbacks(ref);
+  if (alternatives !== null) {
+    let out: string | undefined;
+    for (const alt of [...alternatives].reverse()) {
+      if (!isTokenRef(alt)) {
+        out = alt === '' ? undefined : alt;
+        continue;
+      }
+      const own = tokenRefToCssVar(alt, defaultScale);
+      if (own === undefined) continue;
+      out = out === undefined ? own : `${own.slice(0, -1)}, ${out})`;
+    }
+    return out;
+  }
   // Must segment exactly as `resolveToken` does, or `$space.1.5` would emit
   // `--space-1-5` against a theme block that defines `--space-1_5`.
   const segments = splitTokenPath(ref);
@@ -85,6 +102,7 @@ export function tokenRefToCssVar(ref: TokenRef, defaultScale?: string): string |
     'opacities',
     'durations',
     'easings',
+    'components',
   ]);
 
   let scale: string;
@@ -107,12 +125,18 @@ export function tokenRefToCssVar(ref: TokenRef, defaultScale?: string): string |
  * Format the right-hand side of a CSS custom property declaration.
  *
  * - Token references emit `var(--...)`.
- * - Numbers in length scales emit `Npx`; non-length numbers emit bare numbers.
+ * - Numbers in `fontSizes` emit `rem`, so the reader's browser text size applies, capped at
+ *   `fontCap` times the authored size when the theme sets `fontScale.max`.
+ * - Numbers in other length scales emit `Npx`; non-length numbers emit bare numbers.
  * - Strings pass through unchanged.
  */
-function formatValue(value: TokenNode, scale: string): string | undefined {
+function formatValue(value: TokenNode, scale: string, fontCap?: number): string | undefined {
   if (isTokenRef(value)) return tokenRefToCssVar(value, scale);
   if (typeof value === 'number') {
+    if (scale === 'fontSizes' && value !== 0) {
+      const rem = `${+(value / 16).toFixed(4)}rem`;
+      return fontCap === undefined ? rem : `min(${rem}, ${+(value * fontCap).toFixed(2)}px)`;
+    }
     return LENGTH_SCALES.has(scale) ? `${value}px` : String(value);
   }
   if (typeof value === 'string') return value;
@@ -128,6 +152,7 @@ function walkScale(
   node: TokenScale<TokenValue>,
   path: readonly string[],
   out: Map<string, string>,
+  fontCap?: number,
 ): void {
   for (const key in node) {
     // Own-property only - parity with token.ts's walkPath. A token tree from
@@ -137,9 +162,9 @@ function walkScale(
     if (next === undefined) continue;
     const nextPath = [...path, key];
     if (typeof next === 'object' && !isTokenRef(next as unknown as string)) {
-      walkScale(scale, next as TokenScale<TokenValue>, nextPath, out);
+      walkScale(scale, next as TokenScale<TokenValue>, nextPath, out, fontCap);
     } else {
-      const formatted = formatValue(next, scale);
+      const formatted = formatValue(next, scale, fontCap);
       if (formatted !== undefined) {
         out.set(tokenPathToCssVarName(scale, nextPath), formatted);
       }
@@ -154,6 +179,8 @@ function walkScale(
  */
 export function themeToCssVars(theme: Theme): ReadonlyMap<string, string> {
   const out = new Map<string, string>();
+  const cap = theme.tokens.fontScale?.max;
+  const fontCap = typeof cap === 'number' && cap >= 1 ? cap : undefined;
   for (const scaleName in theme.tokens) {
     const scale = (theme.tokens as TokenMap)[scaleName];
     if (scale === undefined) continue;
@@ -165,7 +192,7 @@ export function themeToCssVars(theme: Theme): ReadonlyMap<string, string> {
       writeAnimationVars(scale as Record<string, AnimationToken>, theme, out);
       continue;
     }
-    walkScale(scaleName, scale as TokenScale, [], out);
+    walkScale(scaleName, scale as TokenScale, [], out, fontCap);
   }
   return out;
 }

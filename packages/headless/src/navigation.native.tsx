@@ -1,3 +1,4 @@
+import { useMessages } from '@usemotif/react-native';
 import {
   Children,
   isValidElement,
@@ -16,7 +17,8 @@ import {
   type ViewStyle,
 } from 'react-native';
 import { nativeText } from './_native-text.js';
-import { pageWindow } from './_page-window.js';
+import { pageForSize, pageWindow } from './_page-window.js';
+import { activeStepIndex, canSelectStep } from './_steps.js';
 
 /**
  * Native navigation family - Pagination / Breadcrumb / Stepper /
@@ -39,6 +41,23 @@ export interface PaginationProps {
   total: number;
   onPageChange?: (next: number) => void;
   siblings?: number;
+  /** Pages always shown at each end of the range. Defaults to 1. */
+  boundaries?: number;
+  /** Items per page. The page-size part renders only when this is set. */
+  pageSize?: number;
+  /** The sizes the page-size part offers. */
+  pageSizeOptions?: readonly number[];
+  /**
+   * Called with the chosen size and the page that keeps the first item of the
+   * current page in view. Update both, and recompute `total`, from here.
+   */
+  onPageSizeChange?: (size: number, page: number) => void;
+  /** Renders the page-size part, after the next button. */
+  renderPageSize?: (info: {
+    pageSize: number;
+    options: readonly number[];
+    onChange: (size: number) => void;
+  }) => ReactElement;
   renderItem: (info: {
     type: 'page' | 'previous' | 'next' | 'ellipsis';
     page?: number;
@@ -55,18 +74,32 @@ export function Pagination({
   total,
   onPageChange,
   siblings = 1,
+  boundaries = 1,
+  pageSize,
+  pageSizeOptions,
+  onPageSizeChange,
+  renderPageSize,
   renderItem,
   accessibilityLabel,
   style,
 }: PaginationProps): ReactElement {
+  const messages = useMessages();
   const goto = useCallback(
     (n: number) => onPageChange?.(Math.max(1, Math.min(total, n))),
     [onPageChange, total],
   );
-  const win = pageWindow(page, total, siblings);
+  const win = pageWindow(page, total, siblings, boundaries);
+  const sizePart =
+    pageSize !== undefined && renderPageSize !== undefined
+      ? renderPageSize({
+          pageSize,
+          options: pageSizeOptions ?? [pageSize],
+          onChange: (size) => onPageSizeChange?.(size, pageForSize(page, pageSize, size)),
+        })
+      : null;
   return (
     <View
-      accessibilityLabel={accessibilityLabel ?? 'Pagination'}
+      accessibilityLabel={accessibilityLabel ?? messages.pagination}
       style={[{ flexDirection: 'row' }, style as ViewStyle]}
     >
       {renderItem({
@@ -98,6 +131,7 @@ export function Pagination({
         selected: false,
         onClick: () => goto(page + 1),
       })}
+      {sizePart}
     </View>
   );
 }
@@ -111,11 +145,13 @@ export interface BreadcrumbProps {
   style?: ViewStyle;
 }
 export function Breadcrumb({
-  accessibilityLabel = 'Breadcrumb',
+  accessibilityLabel: ownAccessibilityLabel,
   separator = '/',
   children,
   style,
 }: BreadcrumbProps): ReactElement {
+  const messages = useMessages();
+  const accessibilityLabel = ownAccessibilityLabel ?? messages.breadcrumb;
   const items = Children.toArray(children).filter(isValidElement);
   return (
     <View
@@ -154,8 +190,14 @@ export interface StepperProps {
     index: number;
     status: 'pending' | 'active' | 'complete' | 'error';
     isLast: boolean;
+    /** Whether the step can be pressed to, with `onStepChange`. */
+    selectable: boolean;
   }) => ReactElement;
   orientation?: 'horizontal' | 'vertical';
+  /** Makes the steps pressable, reporting the id pressed. */
+  onStepChange?: (id: string) => void;
+  /** With `onStepChange`, only steps before the active one can be pressed. */
+  linear?: boolean;
   style?: ViewStyle;
 }
 export function Stepper({
@@ -163,8 +205,11 @@ export function Stepper({
   current,
   renderStep,
   orientation = 'horizontal',
+  onStepChange,
+  linear = false,
   style,
 }: StepperProps): ReactElement {
+  const active = activeStepIndex(steps, current);
   return (
     <View
       style={[{ flexDirection: orientation === 'vertical' ? 'column' : 'row' }, style as ViewStyle]}
@@ -177,12 +222,30 @@ export function Stepper({
             key={step.id}
             {...(status === 'active' ? { accessibilityState: { selected: true } } : {})}
           >
-            {renderStep({
-              step,
-              index: i,
-              status: status ?? 'pending',
-              isLast: i === steps.length - 1,
-            })}
+            {onStepChange === undefined ? (
+              renderStep({
+                step,
+                index: i,
+                status: status ?? 'pending',
+                isLast: i === steps.length - 1,
+                selectable: false,
+              })
+            ) : (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityState={{ disabled: !canSelectStep(i, active, linear) }}
+                disabled={!canSelectStep(i, active, linear)}
+                onPress={() => onStepChange(step.id)}
+              >
+                {renderStep({
+                  step,
+                  index: i,
+                  status: status ?? 'pending',
+                  isLast: i === steps.length - 1,
+                  selectable: canSelectStep(i, active, linear),
+                })}
+              </Pressable>
+            )}
           </View>
         );
       })}
@@ -215,12 +278,14 @@ export interface NavigationMenuProps {
   style?: ViewStyle;
 }
 export function NavigationMenu({
-  accessibilityLabel = 'Primary',
+  accessibilityLabel: ownAccessibilityLabel,
   current,
   items,
   children,
   style,
 }: NavigationMenuProps): ReactElement {
+  const messages = useMessages();
+  const accessibilityLabel = ownAccessibilityLabel ?? messages.primaryNavigation;
   if (items !== undefined) {
     return (
       <View

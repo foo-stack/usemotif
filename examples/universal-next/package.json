@@ -1,0 +1,25 @@
+{
+  "name": "@usemotif/example-universal-next",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --port 4100",
+    "build": "next build",
+    "start": "next start --port 4100",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@usemotif/example-universal-shared": "workspace:*",
+    "@usemotif/react": "workspace:*",
+    "next": "^16.2.4",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "usemotif": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "typescript": "^6.0.3"
+  }
+}

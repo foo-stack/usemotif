@@ -5,6 +5,9 @@
  * Usage:
  *   usemotif-migrate rename-v3 [path] [--dry-run]
  *   usemotif-migrate rename-v2 [path] [--dry-run]
+ *   usemotif-migrate from-styled-components [path] [--dry-run]
+ *   usemotif-migrate from-tamagui [path] [--dry-run]
+ *   usemotif-migrate import-tokens <tokens.json> [--out theme.ts] [--name brand]
  *   usemotif-migrate --help
  *
  * Default path is the current working directory. The transform walks
@@ -13,10 +16,17 @@
  */
 
 import { readFile, writeFile } from 'node:fs/promises';
-import { isAbsolute, relative, resolve } from 'node:path';
+import { basename, extname, isAbsolute, relative, resolve } from 'node:path';
 import { exit, stderr, stdout } from 'node:process';
 import fg from 'fast-glob';
+import { MARKER } from './_ast.js';
+import { designTokensToTheme, printThemeModule } from './design-tokens.js';
 import { applyWithinMarkdownCode, isMarkdownPath } from './markdown.js';
+import {
+  applyFromStyledComponents,
+  needsFromStyledComponents,
+} from './transforms/from-styled-components.js';
+import { applyFromTamagui, needsFromTamagui } from './transforms/from-tamagui.js';
 import { applyRenameV2, needsRenameV2 } from './transforms/rename-v2.js';
 import { applyRenameV3, needsRenameV3 } from './transforms/rename-v3.js';
 
@@ -25,6 +35,8 @@ interface ParsedArgs {
   readonly path: string;
   readonly dryRun: boolean;
   readonly help: boolean;
+  readonly out: string | null;
+  readonly name: string | null;
 }
 
 const DEFAULT_GLOBS: string[] = [
@@ -54,10 +66,28 @@ Usage:
                                       rename-v3 if you're still on v1
                                       cross-platform code (see below).
 
+  usemotif-migrate from-styled-components [path]
+                                      Rewrite styled-components templates to
+                                      motif's styled() where they map directly.
+
+  usemotif-migrate from-tamagui [path]
+                                      Rewrite Tamagui imports, state props and
+                                      styled() configs to motif.
+
+  usemotif-migrate import-tokens <tokens.json> [--out theme.ts] [--name brand]
+                                      Turn a W3C Design Tokens file into a
+                                      typed createTheme module, printed or
+                                      written to --out.
+
   usemotif-migrate --help             Show this message.
 
 Flags:
   --dry-run     Print the files that would change without writing them.
+
+The from-* commands read .js, .jsx, .ts and .tsx files only. What they
+can't convert stays as it was, under a line starting
+"// usemotif-migrate:" that says why; each changed file reports how many
+it left. Search for that comment to finish the migration.
 
 rename-v3 rename map:
   @motif-js/react-web      →  @usemotif/react
@@ -90,9 +120,15 @@ function parseArgs(argv: readonly string[]): ParsedArgs {
   let path = '.';
   let dryRun = false;
   let help = false;
+  let out: string | null = null;
+  let name: string | null = null;
   let positionalIndex = 0;
-  for (const arg of argv) {
-    if (arg === '--help' || arg === '-h') {
+  for (let i = 0; i < argv.length; i++) {
+    const arg = argv[i]!;
+    if ((arg === '--out' || arg === '--name') && i + 1 < argv.length) {
+      if (arg === '--out') out = argv[++i]!;
+      else name = argv[++i]!;
+    } else if (arg === '--help' || arg === '-h') {
       help = true;
     } else if (arg === '--dry-run') {
       dryRun = true;
@@ -110,13 +146,19 @@ function parseArgs(argv: readonly string[]): ParsedArgs {
       exit(2);
     }
   }
-  return { command, path, dryRun, help };
+  return { command, path, dryRun, help, out, name };
 }
 
 interface Transform {
   readonly apply: (source: string) => string;
   readonly needs: (source: string) => boolean;
+  /** Paths the transform reads, when not every matched file. */
+  readonly only?: RegExp;
 }
+
+const CODE_FILES = /\.(m|c)?(j|t)sx?$/;
+
+const countMarkers = (text: string): number => text.split(`// ${MARKER}`).length - 1;
 
 async function runTransform(
   rootArg: string,
@@ -147,6 +189,7 @@ async function runTransform(
     // EISDIR, a transform throw) must not abort the run and strand the files
     // already rewritten with a raw stack trace. Collect failures and report.
     try {
+      if (transform.only !== undefined && !transform.only.test(absPath)) continue;
       const src = await readFile(absPath, 'utf8');
       if (!transform.needs(src)) continue;
       // In Markdown/MDX, only rewrite code regions (fenced blocks + inline
@@ -156,11 +199,13 @@ async function runTransform(
         ? applyWithinMarkdownCode(src, transform.apply)
         : transform.apply(src);
       if (out === src) continue;
+      const marked = countMarkers(out) - countMarkers(src);
+      const note = marked > 0 ? ` (${marked} left to finish by hand)` : '';
       if (dryRun) {
-        stdout.write(`would change: ${rel}\n`);
+        stdout.write(`would change: ${rel}${note}\n`);
       } else {
         await writeFile(absPath, out, 'utf8');
-        stdout.write(`changed: ${rel}\n`);
+        stdout.write(`changed: ${rel}${note}\n`);
       }
       changed++;
     } catch (err) {
@@ -195,7 +240,50 @@ export async function main(argv: readonly string[]): Promise<number> {
       needs: needsRenameV2,
     });
   }
+  if (args.command === 'from-styled-components') {
+    return runTransform(args.path, args.dryRun, {
+      apply: applyFromStyledComponents,
+      needs: needsFromStyledComponents,
+      only: CODE_FILES,
+    });
+  }
+  if (args.command === 'from-tamagui') {
+    return runTransform(args.path, args.dryRun, {
+      apply: applyFromTamagui,
+      needs: needsFromTamagui,
+      only: CODE_FILES,
+    });
+  }
+  if (args.command === 'import-tokens') return importTokens(args);
   stderr.write(`unknown command: ${args.command}\n`);
   stderr.write(HELP);
   return 2;
+}
+
+async function importTokens(args: ParsedArgs): Promise<number> {
+  if (args.path === '.') {
+    stderr.write(
+      'import-tokens needs a tokens file: usemotif-migrate import-tokens <tokens.json>\n',
+    );
+    return 2;
+  }
+  let file: unknown;
+  try {
+    file = JSON.parse(await readFile(args.path, 'utf8'));
+  } catch (err) {
+    stderr.write(`failed: ${args.path}: ${err instanceof Error ? err.message : String(err)}\n`);
+    return 1;
+  }
+  const { tokens, warnings } = designTokensToTheme(file);
+  for (const warning of warnings) stderr.write(`${warning}\n`);
+  const name = args.name ?? basename(args.path, extname(args.path)).replace(/\.tokens$/, '');
+  const module = printThemeModule(name, tokens, basename(args.path));
+  if (args.out === null) {
+    stdout.write(module);
+  } else {
+    await writeFile(args.out, module, 'utf8');
+    const count = Object.values(tokens).length;
+    stdout.write(`wrote ${args.out} (${count} scale${count === 1 ? '' : 's'}).\n`);
+  }
+  return 0;
 }

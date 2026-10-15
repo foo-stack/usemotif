@@ -1,4 +1,4 @@
-import { Box, keyframes, type BoxProps } from 'usemotif';
+import { Box, type BoxProps, keyframes, useMessages } from 'usemotif';
 
 const spin = keyframes({
   '0%': { transform: 'rotate(0deg)' },
@@ -29,10 +29,11 @@ export interface SpinnerProps extends Omit<BoxProps, 'children'> {
  * ```
  */
 export function Spinner({ size = 20, ...rest }: SpinnerProps) {
+  const messages = useMessages();
   return (
     <Box
       role="status"
-      aria-label="Loading"
+      aria-label={messages.loading}
       display="inline-block"
       width={size}
       height={size}

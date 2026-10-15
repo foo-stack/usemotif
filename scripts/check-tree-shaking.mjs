@@ -57,7 +57,14 @@ const targets = [
     // Bumped when the group states joined core's selector map and Box marks a group.
     // Lowered when the forms components' `forwardRef` calls were marked pure,
     // so the forms module stopped riding along with every Box import.
-    budget: 10900, // gzip bytes
+    // Bumped when the style cache's realm-shared state.
+    // Bumped when Box gained layoutId (the shared-layout registry in useLayoutAnimation).
+    // Bumped when Box reads the scroll-timeline slot (the compiler itself loads only with useScroll).
+    // Bumped when responsive values resolve the @contrast-style preference keys (the store on native).
+    // Bumped for fallback chains in token refs and the recipes' component token paths.
+    // Bumped for view transitions for Presence and ThemeProvider (the layoutId naming context Box reads).
+    // Bumped for the per-theme memo in resolveToken.
+    budget: 12000, // gzip bytes
   },
   {
     name: '@usemotif/react - Button only',
@@ -71,7 +78,14 @@ const targets = [
     // Bumped when the group states joined core's selector map and Box marks a group.
     // Lowered when the forms components' `forwardRef` calls were marked pure,
     // so the forms module stopped riding along with every Box import.
-    budget: 12100,
+    // Bumped when Box gained layoutId (the shared-layout registry in useLayoutAnimation).
+    // Bumped when Box reads the scroll-timeline slot (the compiler itself loads only with useScroll).
+    // Bumped when Box's style resolution moved into a shared resolver the Server Component primitives also use.
+    // Bumped when responsive values resolve the @contrast-style preference keys (the store on native).
+    // Bumped for fallback chains in token refs and the recipes' component token paths.
+    // Bumped for view transitions for Presence and ThemeProvider (the layoutId naming context Box reads).
+    // Bumped for style targets (the style cache keeps emitted CSS and syncs it to adopted sheets).
+    budget: 13100,
   },
   {
     name: '@usemotif/react-native - Box only',
@@ -92,7 +106,10 @@ const targets = [
     // Bumped when the group states joined core's selector map and Box marks a group.
     // Lowered when the forms components' `forwardRef` calls were marked pure,
     // so the forms module stopped riding along with every Box import.
-    budget: 14300,
+    // Bumped when Box gained layoutId (the shared-layout registry in useLayoutAnimation).
+    // Bumped when responsive values resolve the @contrast-style preference keys (the store on native).
+    // Bumped for fallback chains in token refs and the recipes' component token paths.
+    budget: 15300,
   },
   {
     name: '@usemotif/headless - Dialog only',
@@ -152,7 +169,10 @@ const targets = [
     // Bumped by the `gradients` scale joining core's known scale names.
     // Bumped when state bags took responsive values (nested at-rules).
     // Bumped when styled() variants took responsive values.
-    budget: 6700,
+    // Bumped when responsive values resolve the @contrast-style preference keys (the store on native).
+    // Bumped for fallback chains in token refs and the recipes' component token paths.
+    // Bumped for atomic output (the per-declaration split in extractWeb).
+    budget: 7400,
   },
   {
     name: '@usemotif/ui - Card only',
@@ -167,7 +187,14 @@ const targets = [
     // `function X(p) {}`; nothing new is pulled in.
     // Bumped when Box's `layout` animation took `layoutTransition` timing.
     // Bumped when state bags took responsive values (nested at-rules).
-    budget: 12450,
+    // Bumped when Card parts (Header, Body, Footer, Media) assembled on Card.
+    // Bumped when Box gained layoutId (the shared-layout registry in useLayoutAnimation).
+    // Bumped when Box's style resolution moved into a shared resolver the Server Component primitives also use.
+    // Bumped when responsive values resolve the @contrast-style preference keys (the store on native).
+    // Bumped for fallback chains in token refs and the recipes' component token paths.
+    // Bumped for view transitions for Presence and ThemeProvider (the layoutId naming context Box reads).
+    // Bumped for style targets (the style cache keeps emitted CSS and syncs it to adopted sheets).
+    budget: 13600,
   },
   {
     name: '@usemotif/ui - Modal only',
@@ -211,7 +238,9 @@ const targets = [
     // Switch is a themed <Box as="input">, pure primitives - it must NOT pull
     // any `@usemotif/headless` behaviour, so it stays near the Card-only floor.
     // Bumped when the group states joined core's selector map and Box marks a group.
-    budget: 12000,
+    // Bumped for view transitions for Presence and ThemeProvider (the layoutId naming context Box reads).
+    // Bumped for the per-theme memo in resolveToken.
+    budget: 12300,
   },
   {
     name: '@usemotif/ui - Tabs only',
@@ -233,7 +262,9 @@ const targets = [
     // stays near the Card/Switch floor.
     // Bumped when four more state props joined core's selector map.
     // Bumped when the group states joined core's selector map and Box marks a group.
-    budget: 12100,
+    // Bumped for view transitions for Presence and ThemeProvider (the layoutId naming context Box reads).
+    // Bumped for the per-theme memo in resolveToken.
+    budget: 12500,
   },
   {
     name: '@usemotif/ui - Radio only',
@@ -242,7 +273,9 @@ const targets = [
     // a small name-sharing context) - no headless, so they hug the same floor.
     // Bumped when state bags took responsive values (nested at-rules).
     // Bumped when the group states joined core's selector map and Box marks a group.
-    budget: 12000,
+    // Bumped for view transitions for Presence and ThemeProvider (the layoutId naming context Box reads).
+    // Bumped for style targets (the style cache keeps emitted CSS and syncs it to adopted sheets).
+    budget: 12300,
   },
   {
     name: '@usemotif/ui - Popover only',
@@ -345,7 +378,9 @@ const targets = [
     // Bumped by overlay background isolation: Overlay marks background
     // content inert + aria-hidden and locks scroll, which every headless-
     // backed entry carries through the shared floor.
-    budget: 18200,
+    // Bumped for view transitions for Presence and ThemeProvider (the layoutId naming context Box reads).
+    // Bumped for the per-theme memo in resolveToken.
+    budget: 18500,
   },
   {
     name: '@usemotif/ui - Separator only',
@@ -353,14 +388,19 @@ const targets = [
     // Pure primitive (a themed Box) - NO headless. Hugs the display floor.
     // Bumped when four more state props joined core's selector map.
     // Bumped when the group states joined core's selector map and Box marks a group.
-    budget: 11800,
+    // Bumped for view transitions for Presence and ThemeProvider (the layoutId naming context Box reads).
+    // Bumped for the per-theme memo in resolveToken.
+    budget: 12100,
   },
   {
     name: '@usemotif/ui - Skeleton only',
     code: `import { Skeleton } from '@usemotif/ui';\nconsole.log(Skeleton);\n`,
     // Pure primitive (Box + `keyframes` pulse) - NO headless. Display floor.
     // Bumped when the group states joined core's selector map and Box marks a group.
-    budget: 12000,
+    // Bumped for fallback chains in token refs and the recipes' component token paths.
+    // Bumped for view transitions for Presence and ThemeProvider (the layoutId naming context Box reads).
+    // Bumped for the per-theme memo in resolveToken.
+    budget: 12400,
   },
   {
     name: '@usemotif/ui - Pagination only',
@@ -392,7 +432,10 @@ const targets = [
     // Bumped by overlay background isolation: Overlay marks background
     // content inert + aria-hidden and locks scroll, which every headless-
     // backed entry carries through the shared floor.
-    budget: 18300,
+    // Bumped for anchor positioning and the Popover API in useFloatingPosition.
+    // Bumped for view transitions for Presence and ThemeProvider (the layoutId naming context Box reads).
+    // Bumped for the per-theme memo in resolveToken.
+    budget: 18700,
   },
   {
     name: '@usemotif/ui - Toolbar only',
@@ -564,7 +607,10 @@ const targets = [
     // colour) ships with it; that is about 70 B over the hand-inlined version.
     // Bumped when state bags took responsive values (nested at-rules).
     // Bumped when the group states joined core's selector map and Box marks a group.
-    budget: 12100,
+    // Bumped for fallback chains in token refs and the recipes' component token paths.
+    // Bumped for view transitions for Presence and ThemeProvider (the layoutId naming context Box reads).
+    // Bumped for the per-theme memo in resolveToken.
+    budget: 12500,
   },
   {
     name: '@usemotif/ui - EmptyState only',
@@ -572,7 +618,11 @@ const targets = [
     // Pure presentational (Box + Text, no headless) - display floor.
     // Bumped when state bags took responsive values (nested at-rules).
     // Bumped when the group states joined core's selector map and Box marks a group.
-    budget: 12000,
+    // Bumped for keepMounted='activity' (the Activity boundary and its feature check).
+    // Bumped for view transitions for Presence and ThemeProvider (the layoutId naming context Box reads).
+    // Bumped for style targets (the style cache keeps emitted CSS and syncs it to adopted sheets).
+    // Bumped for the per-theme memo in resolveToken.
+    budget: 12400,
   },
   {
     name: '@usemotif/ui - Timeline only',
@@ -584,7 +634,10 @@ const targets = [
     // `function X(p) {}`; nothing new is pulled in.
     // Bumped when Box's `layout` animation took `layoutTransition` timing.
     // Bumped when the group states joined core's selector map and Box marks a group.
-    budget: 12200,
+    // Bumped for fallback chains in token refs and the recipes' component token paths.
+    // Bumped for view transitions for Presence and ThemeProvider (the layoutId naming context Box reads).
+    // Bumped for the per-theme memo in resolveToken.
+    budget: 12700,
   },
   {
     name: '@usemotif/ui - AvatarGroup only',
@@ -592,7 +645,11 @@ const targets = [
     // Composes the Avatar primitive (no headless) - display floor.
     // Bumped when state bags took responsive values (nested at-rules).
     // Bumped when the group states joined core's selector map and Box marks a group.
-    budget: 12500,
+    // Bumped when the component reads a built-in label from the translatable messages catalogue.
+    // Bumped when responsive values resolve the @contrast-style preference keys (the store on native).
+    // Bumped for fallback chains in token refs and the recipes' component token paths.
+    // Bumped for style targets (the style cache keeps emitted CSS and syncs it to adopted sheets).
+    budget: 13400,
   },
   {
     name: '@usemotif/ui - Chip only',
@@ -600,7 +657,11 @@ const targets = [
     // Pure presentational (Box, no headless) - display floor.
     // Bumped when state bags took responsive values (nested at-rules).
     // Bumped when the group states joined core's selector map and Box marks a group.
-    budget: 12000,
+    // Bumped when the component reads a built-in label from the translatable messages catalogue.
+    // Bumped when responsive values resolve the @contrast-style preference keys (the store on native).
+    // Bumped for fallback chains in token refs and the recipes' component token paths.
+    // Bumped for style targets (the style cache keeps emitted CSS and syncs it to adopted sheets).
+    budget: 13200,
   },
   {
     name: '@usemotif/ui - Banner only',
@@ -611,7 +672,16 @@ const targets = [
     // Bumped when Box's `layout` animation took `layoutTransition` timing.
     // Bumped when state bags took responsive values (nested at-rules).
     // Bumped when the group states joined core's selector map and Box marks a group.
-    budget: 12300,
+    // Bumped when the four default status icons (Info, CircleCheck, TriangleAlert, CircleAlert) and Icon.
+    // Bumped when the shared dismiss part as Pressable and Text, so it also renders on native.
+    // Bumped when Box gained layoutId (the shared-layout registry in useLayoutAnimation).
+    // Bumped when Box reads the scroll-timeline slot (the compiler itself loads only with useScroll).
+    // Bumped when the component reads a built-in label from the translatable messages catalogue.
+    // Bumped when responsive values resolve the @contrast-style preference keys (the store on native).
+    // Bumped for fallback chains in token refs and the recipes' component token paths.
+    // Bumped for view transitions for Presence and ThemeProvider (the layoutId naming context Box reads).
+    // Bumped for style targets (the style cache keeps emitted CSS and syncs it to adopted sheets).
+    budget: 14300,
   },
   {
     name: '@usemotif/ui - FormField only',
@@ -621,7 +691,10 @@ const targets = [
     // share it (a couple of bytes).
     // Bumped when state bags took responsive values (nested at-rules).
     // Bumped when the group states joined core's selector map and Box marks a group.
-    budget: 12100,
+    // Bumped for fallback chains in token refs and the recipes' component token paths.
+    // Bumped for view transitions for Presence and ThemeProvider (the layoutId naming context Box reads).
+    // Bumped for the per-theme memo in resolveToken.
+    budget: 12500,
   },
   {
     name: '@usemotif/ui - SegmentedControl only',
@@ -630,7 +703,9 @@ const targets = [
     // Bumped by cascade-layer support: `Box` now reads the active layer and
     // can emit base props as a class instead of inline styles.
     // Bumped when the group states joined core's selector map and Box marks a group.
-    budget: 12300,
+    // Bumped for view transitions for Presence and ThemeProvider (the layoutId naming context Box reads).
+    // Bumped for style targets (the style cache keeps emitted CSS and syncs it to adopted sheets).
+    budget: 12600,
   },
 ];
 

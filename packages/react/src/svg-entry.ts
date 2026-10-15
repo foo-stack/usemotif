@@ -10,7 +10,7 @@
  * when you only need icons.
  */
 
-export { Icon } from './Icon.js';
-export type { IconProps } from './Icon.js';
+export { Icon, IconProvider } from './Icon.js';
+export type { IconProps, IconProviderProps } from './Icon.js';
 export { SVG_PRIMITIVES, Svg } from './Svg.js';
 export type { SvgPrimitives, SvgProps } from './Svg.js';

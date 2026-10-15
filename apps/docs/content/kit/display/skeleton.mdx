@@ -61,6 +61,11 @@ import { HStack, VStack } from 'usemotif';
   </VStack>
 </HStack>`} />
 
+A paragraph's worth of text lines, sized from the type scale, the last one shorter:
+
+<CodeBlock lang="tsx" code={`<Skeleton lines={3} width={320} />
+<Skeleton lines={2} fontSize="$fontSizes.sm" />`} />
+
 ## API
 
 <ApiSignature
@@ -86,6 +91,12 @@ import { HStack, VStack } from 'usemotif';
       default: 'false',
       description:
         'Render a circle: the height follows the width and the corners are fully rounded.',
+    },
+    {
+      name: 'lines',
+      type: 'number',
+      description:
+        'Render this many stacked text-line bars instead of one block. Each is `1em` of the font size (`$fontSizes.md` unless you pass `fontSize`) tall, with half an `em` between, and the last is 60% wide. `width` sizes the stack.',
     },
     {
       name: '...BoxProps',

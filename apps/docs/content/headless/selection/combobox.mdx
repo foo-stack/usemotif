@@ -3,7 +3,7 @@ title: Combobox
 description: A filterable single-select - a typeable input over a listbox of options. Type to narrow, arrow keys to choose.
 diataxis: reference
 covers: ['Combobox', 'ComboboxRootProps', 'ComboboxOption']
-last_verified: 2026-10-14
+last_verified: 2026-10-15
 ---
 
 import {
@@ -133,6 +133,11 @@ Combobox clones it with the combobox ARIA wiring and the keyboard handlers.
       description: 'Rendered in place of `emptyMessage` while the root is `loading`.',
     },
     {
+      name: 'renderGroupLabel',
+      type: '(group: string) => ReactNode',
+      description: 'Renders the heading of a group of options. Defaults to the group name.',
+    },
+    {
       name: 'itemHeight',
       type: 'number',
       description: 'Row height in px for long lists. Omitted, it is measured from the first row.',
@@ -162,6 +167,32 @@ const { data = [], isFetching } = useSearch(query); // your fetch, debounced as 
 While `loading` is set and there are no options, the list shows `loadingMessage` where the empty
 message would go; options already on screen stay. On the web the listbox carries `aria-busy`
 while loading. The same props work on React Native.
+
+## Option groups
+
+Give options a `group` to list them under headings. Consecutive options with the same group are
+wrapped in a `role="group"` labelled by its heading, so a screen reader announces the group as
+focus enters it:
+
+<CodeBlock lang="tsx" code={`const zones = [
+  { value: 'utc', label: 'UTC' },
+  { value: 'lon', label: 'London', group: 'Europe' },
+  { value: 'par', label: 'Paris', group: 'Europe' },
+  { value: 'nyc', label: 'New York', group: 'Americas' },
+];
+
+<Select.Root options={zones}>
+  <Select.Trigger><button>Zone</button></Select.Trigger>
+  <Select.List renderGroupLabel={(group) => <small>{group}</small>} />
+</Select.Root>`} />
+
+Options keep their place in one flat list, so the arrow keys and type-ahead move straight
+through the groups. Filtering drops a group once none of its options match. Order the options
+the way they should be grouped: a group that appears twice, separated by other options, gets two
+headings. A grouped list renders every row rather than windowing, because its headings break the
+uniform row height windowing relies on. On React Native the options sheet shows each heading
+above the first option of its group. `MultiSelect.List` and `Listbox` take `renderGroupLabel`
+too.
 
 ## Long lists
 

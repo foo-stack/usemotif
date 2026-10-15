@@ -21,7 +21,14 @@ const KNOWN_SCALES: readonly ScaleName[] = [
   'easings',
 ];
 
-const KNOWN_SCALE_SET: ReadonlySet<string> = new Set(KNOWN_SCALES);
+// `components` holds no style-prop scale, but an explicit `$components.*` ref still names it.
+const KNOWN_SCALE_SET: ReadonlySet<string> = new Set([...KNOWN_SCALES, 'components']);
+
+/** Split `'$a ?? $b'` into its alternatives, or `null` for a plain ref. */
+export function splitFallbacks(ref: string): readonly string[] | null {
+  if (!ref.includes('??')) return null;
+  return ref.split('??').map((part) => part.trim());
+}
 
 /** Type guard: is the given value a `$`-prefixed token reference? */
 export function isTokenRef(value: unknown): value is TokenRef {
@@ -87,6 +94,9 @@ export interface ResolveTokenOptions {
  *    `theme.tokens.<defaultScale>.<segments>`.
  * 4. If the resolved node is itself a `TokenRef` (semantic → primitive),
  *    recurse. Cycles are detected and short-circuit to `undefined`.
+ * 5. A fallback chain, `'$components.button.bg ?? $colors.action.primary.bg'`,
+ *    resolves to its first alternative that resolves. A last alternative that
+ *    is not a ref is a literal default.
  *
  * Returns `undefined` if the path cannot be resolved.
  */
@@ -95,12 +105,23 @@ export function resolveToken(
   theme: Theme,
   options: ResolveTokenOptions = {},
 ): TokenValue | undefined {
+  // A screen asks for the same few refs once per element, so each theme remembers its answers.
+  // Themes are treated as immutable, as everywhere else: a changed theme is a new object.
+  let memo = RESOLVED.get(theme);
+  if (memo === undefined) RESOLVED.set(theme, (memo = new Map()));
+  const key = options.defaultScale === undefined ? ref : `${options.defaultScale}\u0000${ref}`;
+  const known = memo.get(key);
+  if (known !== undefined) return known;
   const resolved = resolveTokenInner(ref, theme, options, new Set());
+  // A ref that fails stays out of the memo, so it keeps reaching the dev warning below.
+  if (resolved !== undefined) memo.set(key, resolved);
   if (resolved === undefined && process.env.NODE_ENV !== 'production') {
     warnUnresolvedTokenRef(ref, theme, options.defaultScale);
   }
   return resolved;
 }
+
+const RESOLVED = new WeakMap<Theme, Map<string, TokenValue>>();
 
 function resolveTokenInner(
   ref: TokenRef,
@@ -110,6 +131,16 @@ function resolveTokenInner(
 ): TokenValue | undefined {
   if (seen.has(ref)) return undefined;
   seen.add(ref);
+
+  const alternatives = splitFallbacks(ref);
+  if (alternatives !== null) {
+    for (const alt of alternatives) {
+      if (!isTokenRef(alt)) return alt === '' ? undefined : alt;
+      const value = resolveTokenInner(alt, theme, options, new Set(seen));
+      if (value !== undefined) return value;
+    }
+    return undefined;
+  }
 
   const segments = ref.slice(1).split('.');
   let node = lookup(segments, theme, options);

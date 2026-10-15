@@ -26,9 +26,9 @@ export const statDeltaRecipe = {
   base: { fontSize: '$fontSizes.sm', fontWeight: '$fontWeights.semibold' },
   variants: {
     trend: {
-      up: { color: '$colors.status.success.fg' },
-      down: { color: '$colors.status.danger.fg' },
-      neutral: { color: '$colors.text.muted' },
+      up: { color: '$components.statDelta.up.color ?? $colors.status.success.fg' },
+      down: { color: '$components.statDelta.down.color ?? $colors.status.danger.fg' },
+      neutral: { color: '$components.statDelta.neutral.color ?? $colors.text.muted' },
     },
   },
   defaultVariants: { trend: 'neutral' },

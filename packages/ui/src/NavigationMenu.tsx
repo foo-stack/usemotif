@@ -2,7 +2,8 @@
 
 import { NavigationMenu as HeadlessNavigationMenu } from '@usemotif/headless';
 import { createContext, useContext, type CSSProperties, type ReactNode } from 'react';
-import { Box, type BoxProps } from 'usemotif';
+import { PlatformLink } from './_link.js';
+import { usePlatformStyle } from './_platform-style.js';
 
 // The active item's id is shared down so each Item can style itself; the headless
 // also reads each child's `id` prop to set `aria-current="page"` on its <li>.
@@ -31,8 +32,8 @@ function NavigationMenuItem({ id, href, children }: NavigationMenuItemProps) {
   const current = useContext(CurrentContext);
   const active = current === id;
   return (
-    <Box
-      as={href !== undefined ? 'a' : 'button'}
+    <PlatformLink
+      href={href}
       display="inline-flex"
       alignItems="center"
       px="$space.3"
@@ -44,15 +45,9 @@ function NavigationMenuItem({ id, href, children }: NavigationMenuItemProps) {
       color={active ? '$colors.action.primary.bg' : '$colors.text.muted'}
       cursor="pointer"
       _hover={LINK_HOVER}
-      // `href` (when a link) goes to the underlying element; Box's element typing
-      // is generic HTMLElement, so cast past it.
-      {...({
-        ...(href !== undefined ? { href } : { type: 'button' }),
-        style: { textDecoration: 'none' },
-      } as unknown as BoxProps)}
     >
       {children}
-    </Box>
+    </PlatformLink>
   );
 }
 
@@ -69,10 +64,11 @@ function NavigationMenuItem({ id, href, children }: NavigationMenuItemProps) {
  * ```
  */
 function NavigationMenuRoot({ current, children, ...rest }: NavigationMenuProps) {
+  const platformStyle = usePlatformStyle();
   return (
     <CurrentContext.Provider value={current}>
       <HeadlessNavigationMenu
-        style={NAV_STYLE}
+        style={platformStyle(NAV_STYLE)}
         {...(current !== undefined ? { current } : {})}
         {...(rest['aria-label'] !== undefined ? { 'aria-label': rest['aria-label'] } : {})}
       >

@@ -16,6 +16,9 @@ const meta: MetaFile = {
   'form-field': 'FormField',
   separator: 'Separator',
   progress: 'Progress',
+  'progress-circle': 'ProgressCircle',
+  'data-table': 'DataTable',
+  charts: 'Charts',
 };
 
 export default meta;

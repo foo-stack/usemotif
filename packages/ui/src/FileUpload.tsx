@@ -1,14 +1,21 @@
 'use client';
 
-import { FileUpload as HeadlessFileUpload } from '@usemotif/headless';
+import { FileUpload as HeadlessFileUpload, type FileRejection } from '@usemotif/headless';
 import { useCallback, type CSSProperties, type ReactNode } from 'react';
-import { Box } from 'usemotif';
+import { Pressable, useMessages } from 'usemotif';
+import { platformText } from './_platform-text.js';
 
 export interface FileUploadProps {
   readonly accept?: string;
   readonly multiple?: boolean;
   readonly disabled?: boolean;
   readonly onFiles?: (files: File[]) => void;
+  /** Largest file accepted, in bytes. */
+  readonly maxSize?: number;
+  /** Most files taken from one pick or drop, with `multiple`. */
+  readonly maxFiles?: number;
+  /** Every refused file from a pick or drop, and why: `type`, `size`, or `count`. */
+  readonly onReject?: (rejections: FileRejection<File>[]) => void;
   /** Prompt shown inside the drop zone. */
   readonly label?: ReactNode;
 }
@@ -24,13 +31,16 @@ const DASHED: CSSProperties = { borderStyle: 'dashed' };
  * <FileUpload accept="image/*" multiple onFiles={(files) => upload(files)} />
  * ```
  */
-export function FileUpload({
-  label = 'Drag files here, or click to browse',
-  ...rest
-}: FileUploadProps) {
+const ZONE_TEXT = { color: '$colors.text.muted', fontSize: '$fontSizes.sm' } as const;
+
+export function FileUpload({ label: ownLabel, ...rest }: FileUploadProps) {
+  const messages = useMessages();
+  const label = ownLabel ?? messages.dropFiles;
   const renderZone = useCallback(
     (info: { isDragging: boolean; openPicker: () => void }): ReactNode => (
-      <Box
+      <Pressable
+        // A div on web, as before: the hidden file input is the control.
+        as="div"
         display="flex"
         alignItems="center"
         justifyContent="center"
@@ -46,10 +56,10 @@ export function FileUpload({
         cursor="pointer"
         transition="border-color 120ms ease, background-color 120ms ease"
         style={DASHED}
-        onClick={info.openPicker}
+        onPress={info.openPicker}
       >
-        {label}
-      </Box>
+        {platformText(label, ZONE_TEXT)}
+      </Pressable>
     ),
     [label],
   );

@@ -10,6 +10,7 @@ import {
 } from 'react';
 import { Pressable, View, type ViewStyle } from 'react-native';
 import { useControllableState } from './use-controllable-state.js';
+import { KeepMountedBoundary, keepsMounted, type KeepMounted } from './_keep-mounted.js';
 
 /**
  * Native disclosure family - Collapsible / Accordion / Tabs.
@@ -33,6 +34,10 @@ interface CollapsibleContextValue {
   readonly triggerId: string;
 }
 const CollapsibleContext = createContext<CollapsibleContextValue | null>(null);
+// Set by an Accordion item whose panel cannot be closed, so its trigger can
+// say so (`accessibilityState.disabled`).
+const CollapsibleLockedContext = createContext(false);
+
 function useCollapsibleContext(component: string): CollapsibleContextValue {
   const ctx = useContext(CollapsibleContext);
   if (ctx === null) throw new Error(`${component} must be inside <Collapsible.Root>.`);
@@ -73,7 +78,7 @@ function CollapsibleRoot({
 
 interface CollapsibleTriggerChildProps {
   onPress?: () => void;
-  accessibilityState?: { expanded?: boolean };
+  accessibilityState?: { expanded?: boolean; disabled?: boolean };
   nativeID?: string;
 }
 function CollapsibleTrigger({
@@ -82,11 +87,12 @@ function CollapsibleTrigger({
   children: ReactElement<CollapsibleTriggerChildProps>;
 }): ReactElement {
   const ctx = useCollapsibleContext('Collapsible.Trigger');
+  const locked = useContext(CollapsibleLockedContext);
   if (!isValidElement(children)) throw new Error('Collapsible.Trigger expects a single element.');
   const childOnPress = children.props.onPress;
   return cloneElement(children, {
     nativeID: ctx.triggerId,
-    accessibilityState: { expanded: ctx.open },
+    accessibilityState: locked ? { expanded: ctx.open, disabled: true } : { expanded: ctx.open },
     onPress: () => {
       childOnPress?.();
       ctx.setOpen(!ctx.open);
@@ -139,6 +145,7 @@ interface AccordionContextValue {
   readonly type: 'single' | 'multiple';
   readonly value: string[];
   readonly toggle: (id: string) => void;
+  readonly collapsible: boolean;
 }
 const AccordionContext = createContext<AccordionContextValue | null>(null);
 function useAccordionContext(component: string): AccordionContextValue {
@@ -152,6 +159,11 @@ export interface AccordionRootProps {
   value?: string[];
   defaultValue?: string[];
   onValueChange?: (value: string[]) => void;
+  /**
+   * In `single` mode, `false` keeps one item always open: the open item's
+   * trigger no longer closes it and is marked disabled. Defaults to `true`.
+   */
+  collapsible?: boolean;
   children?: ReactNode;
 }
 function AccordionRoot({
@@ -159,6 +171,7 @@ function AccordionRoot({
   value: controlled,
   defaultValue = [],
   onValueChange,
+  collapsible = true,
   children,
 }: AccordionRootProps): ReactElement {
   const [value, commit] = useControllableState<string[]>({
@@ -169,16 +182,17 @@ function AccordionRoot({
   const toggle = useCallback(
     (id: string) => {
       const isOpen = value.includes(id);
+      if (isOpen && type === 'single' && !collapsible) return;
       let next: string[];
       if (isOpen) next = value.filter((v) => v !== id);
       else if (type === 'single') next = [id];
       else next = [...value, id];
       commit(next);
     },
-    [value, type, commit],
+    [value, type, collapsible, commit],
   );
   return (
-    <AccordionContext.Provider value={{ type, value, toggle }}>
+    <AccordionContext.Provider value={{ type, value, toggle, collapsible }}>
       {children}
     </AccordionContext.Provider>
   );
@@ -191,9 +205,12 @@ export interface AccordionItemProps {
 function AccordionItem({ value, children }: AccordionItemProps): ReactElement {
   const ctx = useAccordionContext('Accordion.Item');
   const open = ctx.value.includes(value);
+  const locked = open && ctx.type === 'single' && !ctx.collapsible;
   return (
     <CollapsibleRoot open={open} onOpenChange={() => ctx.toggle(value)}>
-      {children}
+      <CollapsibleLockedContext.Provider value={locked}>
+        {children}
+      </CollapsibleLockedContext.Provider>
     </CollapsibleRoot>
   );
 }
@@ -218,6 +235,8 @@ export interface TabsRootProps {
   defaultValue?: string;
   onValueChange?: (v: string) => void;
   orientation?: 'horizontal' | 'vertical';
+  /** Keyboard activation on web. Accepted for shared code; touch selects on press either way. */
+  activationMode?: 'automatic' | 'manual';
   children?: ReactNode;
 }
 function TabsRoot({
@@ -282,19 +301,27 @@ function TabsTab({ value, disabled = false, children, style }: TabsTabProps): Re
 export interface TabsPanelProps {
   value: string;
   forceMount?: boolean;
+  /**
+   * `'activity'` keeps the panel mounted while another tab is selected, hidden through React's
+   * `<Activity>`, so its state survives and its updates run at low priority. Needs React 19.2;
+   * on older versions the panel unmounts as usual.
+   */
+  keepMounted?: KeepMounted;
   children?: ReactNode;
   style?: ViewStyle;
 }
 function TabsPanel({
   value,
   forceMount = false,
+  keepMounted,
   children,
   style,
 }: TabsPanelProps): ReactElement | null {
   const ctx = useTabsContext('Tabs.Panel');
   const active = ctx.value === value;
-  if (!active && !forceMount) return null;
-  return (
+  const keep = keepsMounted(keepMounted);
+  if (!active && !forceMount && !keep) return null;
+  const panel = (
     <View
       nativeID={`${ctx.idPrefix}-panel-${value}`}
       accessibilityLabelledBy={`${ctx.idPrefix}-tab-${value}`}
@@ -303,4 +330,5 @@ function TabsPanel({
       {children}
     </View>
   );
+  return keep ? <KeepMountedBoundary visible={active}>{panel}</KeepMountedBoundary> : panel;
 }

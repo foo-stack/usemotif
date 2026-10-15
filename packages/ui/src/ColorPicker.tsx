@@ -5,6 +5,7 @@ import {
   type ColorPickerProps as HeadlessColorPickerProps,
 } from '@usemotif/headless';
 import type { CSSProperties } from 'react';
+import { usePlatformStyle } from './_platform-style.js';
 
 export type ColorPickerProps = Omit<
   HeadlessColorPickerProps,
@@ -13,6 +14,8 @@ export type ColorPickerProps = Omit<
   | 'saturationValueThumbStyle'
   | 'hueSliderStyle'
   | 'alphaSliderStyle'
+  | 'swatchStyle'
+  | 'eyeDropperStyle'
 >;
 
 // The headless renders its own SV plane / hue / alpha tracks (with the colour
@@ -36,6 +39,21 @@ const SV_THUMB_STYLE: CSSProperties = {
   boxShadow: '0 0 0 1px rgba(0, 0, 0, 0.35)',
 };
 const SLIDER_STYLE: CSSProperties = { width: 220, height: 12, borderRadius: '9999px' };
+const SWATCH_STYLE: CSSProperties = {
+  width: 22,
+  height: 22,
+  borderRadius: 'var(--radii-sm, 4px)',
+  boxShadow: 'inset 0 0 0 1px rgba(0, 0, 0, 0.15)',
+};
+const EYEDROPPER_STYLE: CSSProperties = {
+  alignSelf: 'flex-start',
+  padding: '4px 10px',
+  borderRadius: 'var(--radii-md, 8px)',
+  border: '1px solid var(--colors-border-default, #d1d5db)',
+  background: 'var(--colors-surface-raised, #fff)',
+  color: 'var(--colors-text-default, #111)',
+  cursor: 'pointer',
+};
 
 /**
  * Themed HSV colour picker over the accessible headless `ColorPicker` (drag the
@@ -47,14 +65,17 @@ const SLIDER_STYLE: CSSProperties = { width: 220, height: 12, borderRadius: '999
  * ```
  */
 export function ColorPicker(props: ColorPickerProps) {
+  const platformStyle = usePlatformStyle();
   return (
     <HeadlessColorPicker
       {...props}
-      style={ROOT_STYLE}
-      saturationValueStyle={SV_STYLE}
-      saturationValueThumbStyle={SV_THUMB_STYLE}
-      hueSliderStyle={SLIDER_STYLE}
-      alphaSliderStyle={SLIDER_STYLE}
+      style={platformStyle(ROOT_STYLE)}
+      saturationValueStyle={platformStyle(SV_STYLE)}
+      saturationValueThumbStyle={platformStyle(SV_THUMB_STYLE)}
+      hueSliderStyle={platformStyle(SLIDER_STYLE)}
+      alphaSliderStyle={platformStyle(SLIDER_STYLE)}
+      swatchStyle={platformStyle(SWATCH_STYLE)}
+      eyeDropperStyle={platformStyle(EYEDROPPER_STYLE)}
     />
   );
 }
