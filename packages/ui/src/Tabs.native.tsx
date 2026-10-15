@@ -82,9 +82,18 @@ export function TabsTab({ value, disabled, children }: TabsTabPropsThemed): Reac
 }
 
 /** A tab panel. */
-export function TabsPanel({ value, forceMount, children }: TabsPanelPropsThemed): ReactElement {
+export function TabsPanel({
+  value,
+  forceMount,
+  keepMounted,
+  children,
+}: TabsPanelPropsThemed): ReactElement {
   return (
-    <HeadlessTabs.Panel value={value} {...(forceMount !== undefined ? { forceMount } : {})}>
+    <HeadlessTabs.Panel
+      value={value}
+      {...(forceMount !== undefined ? { forceMount } : {})}
+      {...(keepMounted !== undefined ? { keepMounted } : {})}
+    >
       <Box pt="$space.4">{nativeText(children, { color: '$colors.text.default' })}</Box>
     </HeadlessTabs.Panel>
   );

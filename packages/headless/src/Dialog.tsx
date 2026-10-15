@@ -21,6 +21,7 @@ import { mergeRefs } from './_compose-refs.js';
 import { useClickOutside } from './positioning.js';
 import { useExitTransition } from './_use-exit-transition.js';
 import { useControllableState } from './use-controllable-state.js';
+import { KeepMountedBoundary, keepsMounted, type KeepMounted } from './_keep-mounted.js';
 
 /**
  * Dialog - accessible modal dialog. Headless: composes the visuals
@@ -216,6 +217,13 @@ export interface DialogContentProps {
    * see the animation.
    */
   exitDurationMs?: number;
+  /**
+   * `'activity'` keeps the content mounted while the dialog is closed, hidden through React's
+   * `<Activity>`, so a form inside keeps what was typed. Its effects pause while hidden, so focus,
+   * scroll lock and the inert background are released and taken again on reopen. Needs React
+   * 19.2; on older versions the content unmounts as usual.
+   */
+  keepMounted?: KeepMounted;
   children?: ReactNode;
 }
 function Content({
@@ -223,6 +231,7 @@ function Content({
   dismissOnScrimClick = true,
   style,
   exitDurationMs = 0,
+  keepMounted,
   children,
 }: DialogContentProps): ReactElement | null {
   const ctx = useDialogContext('Dialog.Content');
@@ -240,8 +249,9 @@ function Content({
     close,
     ctx.triggerRef,
   );
-  if (!shouldRender) return null;
-  return (
+  const keep = keepsMounted(keepMounted);
+  if (!shouldRender && !keep) return null;
+  const content = (
     <Overlay
       {...(modal ? (dismissOnScrimClick ? { onScrimClick: close } : {}) : NON_MODAL_OVERLAY)}
     >
@@ -270,6 +280,11 @@ function Content({
         </div>
       </FocusScope>
     </Overlay>
+  );
+  return keep ? (
+    <KeepMountedBoundary visible={shouldRender}>{content}</KeepMountedBoundary>
+  ) : (
+    content
   );
 }
 

@@ -62,6 +62,11 @@ pass a `number` for a one-off pixel bound.
       description: 'Render only when the viewport is below this bound - a name or a pixel width. Combine with `above` to bracket a range.',
     },
     {
+      name: 'keepMounted',
+      type: "'activity'",
+      description: 'Keep the children mounted while the viewport does not match, hidden through React `<Activity>`, so their state survives a resize across the breakpoint. React 19.2 or later; otherwise they are dropped.',
+    },
+    {
       name: 'children',
       type: 'ReactNode',
       description: 'Rendered only when the viewport matches.',
@@ -97,6 +102,7 @@ A Show / Hide pair branching one slot:
 On web Show evaluates the viewport width and renders or returns `null`. On native it uses the
 same model against the device's window dimensions - the breakpoint names map to the same widths.
 The children are dropped from the tree on both platforms; this is not a CSS `display` toggle.
+With `keepMounted="activity"` they stay in the tree, hidden by React's `<Activity>` instead.
 
 <Callout variant="info" title="Related">
   [Hide](/components/control-flow/hide) is the inverse - render when the viewport does *not*

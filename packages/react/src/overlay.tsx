@@ -17,6 +17,7 @@ import { Box, type BoxProps } from './Box.js';
 import { isolateBackground } from './_inert-background.js';
 import { lockScroll } from './_scroll-lock.js';
 import { useBreakpointWidths, useThemeName } from './theme-context.js';
+import { KeepMountedBoundary, keepsMounted, type KeepMounted } from './_keep-mounted.js';
 
 // Token CSS vars are scoped to the `[data-theme]` element that
 // ThemeProvider / Theme render; a portal mounts under `document.body`,
@@ -413,6 +414,11 @@ export interface ShowHideProps {
   above?: BreakpointName | number;
   /** Upper bound - a breakpoint name or an explicit pixel width. */
   below?: BreakpointName | number;
+  /**
+   * `'activity'` keeps the children mounted while they are not shown, hidden through React's
+   * `<Activity>`, so their state survives a resize across the breakpoint. Needs React 19.2.
+   */
+  keepMounted?: KeepMounted;
   children?: ReactNode;
 }
 
@@ -421,17 +427,23 @@ export interface ShowHideProps {
 // identical avoids a hydration mismatch; the effect below corrects it.
 const SSR_DEFAULT_WIDTH = 1024;
 
-export function Show({ above, below, children }: ShowHideProps): ReactElement | null {
-  // For v0, we use a wrapping span with a class that maps to a
-  // server-rendered media query. The simpler approach: wrap a Box
-  // and rely on display:none / display:block toggling via inline
-  // matchMedia. To keep SSR-correct, we render an always-rendered
-  // wrapper and let the user attach matchMedia logic via CSS.
-  return useViewportMatch(above, below) ? <>{children}</> : null;
+export function Show({ above, below, keepMounted, children }: ShowHideProps): ReactElement | null {
+  return showWhen(useViewportMatch(above, below), keepMounted, children);
 }
 
-export function Hide({ above, below, children }: ShowHideProps): ReactElement | null {
-  return useViewportMatch(above, below) ? null : <>{children}</>;
+export function Hide({ above, below, keepMounted, children }: ShowHideProps): ReactElement | null {
+  return showWhen(!useViewportMatch(above, below), keepMounted, children);
+}
+
+function showWhen(
+  visible: boolean,
+  keepMounted: KeepMounted | undefined,
+  children: ReactNode,
+): ReactElement | null {
+  if (keepsMounted(keepMounted)) {
+    return <KeepMountedBoundary visible={visible}>{children}</KeepMountedBoundary>;
+  }
+  return visible ? <>{children}</> : null;
 }
 
 function useViewportMatch(
