@@ -73,8 +73,17 @@ tester.run('valid-token-paths', validTokenPaths, {
     },
     { code: '<Box bg="$blue.600" />', settings: { motif: { tokens: TOKENS } } },
     { code: '<Box aria-label="$5 off" />', settings: { motif: { tokens: TOKENS } } },
+    {
+      code: '<Box bg="$components.card.bg ?? $colors.action.primary.bg" />',
+      settings: { motif: { tokens: TOKENS } },
+    },
   ],
   invalid: [
+    {
+      code: '<Box bg="$components.card.bg ?? $colors.action.primry.bg" />',
+      settings: { motif: { tokens: TOKENS } },
+      errors: [{ messageId: 'unknown' }],
+    },
     {
       code: '<Box bg="$colors.action.primry.bg" />',
       settings: { motif: { tokens: TOKENS } },

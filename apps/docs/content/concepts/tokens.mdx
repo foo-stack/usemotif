@@ -3,7 +3,7 @@ title: Tokens
 description: Tokens are the named values - colours, spacing, type sizes - that every motif style resolves through.
 diataxis: explanation
 covers: ['createTheme', 'Theme']
-last_verified: 2026-05-15
+last_verified: 2026-10-15
 ---
 
 import { ArticleMeta, Callout, CodeBlock, Eyebrow, Lede } from '../../components/index.js';
@@ -82,6 +82,42 @@ active theme:
 If a reference points at another reference, the resolver keeps walking until it hits a literal.
 That is how a semantic name can sit one indirection above the palette without the consumer code
 knowing or caring.
+
+## Fallback chains and component tokens
+
+A reference can name alternatives with `??`. The resolver takes the first one the theme defines,
+and a last alternative that is not a reference is a literal default:
+
+<CodeBlock lang="ts" code={`'$components.button.primary.bg ?? $colors.action.primary.bg';
+'$components.card.borderRadius ?? $radii.lg ?? 12px';`} />
+
+On web a chain becomes nested CSS fallbacks,
+`var(--components-button-primary-bg, var(--colors-action-primary-bg))`, so it costs nothing at
+runtime. On native the resolver walks the alternatives in order.
+
+The kit's recipes use this to read a third layer, `components`, before the semantic one. A theme
+that defines nothing there gets the kit's usual look. A theme that wants a different button
+without forking the kit sets the paths it cares about:
+
+<CodeBlock lang="ts" code={`import { createTheme } from 'usemotif';
+import { lightTheme } from '@usemotif/tokens';
+
+export const brand = createTheme({
+  ...lightTheme,
+  name: 'brand',
+  tokens: {
+    ...lightTheme.tokens,
+    components: {
+      button: { primary: { bg: '$colors.green.600' }, borderRadius: '$radii.full' },
+      card: { borderRadius: '$radii.sm' },
+    },
+  },
+});`} />
+
+The paths are `<recipe>.<variant value>.<prop>` for a variant and `<recipe>.<prop>` for the base:
+`button.danger.color`, `input.invalid.borderColor`, `card.interactive.hover.borderColor`. Every
+colour and radius the recipes set has one. A component token holds a reference or a CSS string;
+a bare number is emitted without a unit.
 
 ## `createTheme` types the tree
 

@@ -472,13 +472,22 @@ export type InvalidTokenPath<
  * a bad path correctly and then rejects every `string` variable and every
  * value starting with a non-ASCII character, so it is not usable.
  */
-export type ValidateTokenValue<V, TTokens, S extends ScaleName> = V extends `$${string}`
-  ? S extends keyof TTokens & string
-    ? V extends ScalePath<TTokens, S>
-      ? V
-      : InvalidTokenPath<V & string, S>
+export type ValidateTokenValue<
+  V,
+  TTokens,
+  S extends ScaleName,
+> = V extends `$${string} ?? ${infer Rest}`
+  ? // The `$components` head of a fallback chain is optional by design, so only the rest is checked.
+    ValidateTokenValue<Rest, TTokens, S> extends Rest
+    ? V
     : InvalidTokenPath<V & string, S>
-  : V;
+  : V extends `$${string}`
+    ? S extends keyof TTokens & string
+      ? V extends ScalePath<TTokens, S>
+        ? V
+        : InvalidTokenPath<V & string, S>
+      : InvalidTokenPath<V & string, S>
+    : V;
 
 /**
  * Check every style prop in a props object against its own scale.

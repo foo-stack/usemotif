@@ -93,9 +93,12 @@ export const validTokenPaths: Rule.RuleModule = {
         const attr = node as unknown as JSXAttributeNode;
         if (attr.name.type !== 'JSXIdentifier') return;
         const value = literalOf(attr);
-        if (typeof value !== 'string' || !/^\$[A-Za-z0-9_]/.test(value)) return;
+        if (typeof value !== 'string') return;
+        // In a fallback chain only the last ref must exist; the `$components` heads are optional.
+        const last = value.split('??').pop()!.trim();
+        if (!/^\$[A-Za-z0-9_]/.test(value) || !/^\$[A-Za-z0-9_]/.test(last)) return;
         const scale = scaleOf(attr.name.name);
-        const ref = splitRef(value, scale);
+        const ref = splitRef(last, scale);
         if (ref === undefined) return;
         const tokens = theme.scales.get(ref.scale);
         if (tokens?.has(ref.path) === true) return;

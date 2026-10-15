@@ -23,11 +23,11 @@ export const inputRecipe = {
   base: {
     display: 'flex',
     width: '100%',
-    bg: '$colors.surface.base',
-    color: '$colors.text.default',
-    borderRadius: '$radii.md',
+    bg: '$components.input.bg ?? $colors.surface.base',
+    color: '$components.input.color ?? $colors.text.default',
+    borderRadius: '$components.input.borderRadius ?? $radii.md',
     borderWidth: '$borderWidths.thin',
-    borderColor: '$colors.border.default',
+    borderColor: '$components.input.borderColor ?? $colors.border.default',
   },
   variants: {
     size: {
@@ -36,7 +36,7 @@ export const inputRecipe = {
       lg: { height: 48, paddingInline: '$space.4', fontSize: '$fontSizes.lg' },
     },
     invalid: {
-      true: { borderColor: '$colors.action.danger.bg' },
+      true: { borderColor: '$components.input.invalid.borderColor ?? $colors.action.danger.bg' },
     },
   },
   defaultVariants: { size: 'md' },
