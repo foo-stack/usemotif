@@ -17,6 +17,7 @@ import {
   writeMotionValueToStyle,
   type MotionBinding,
 } from './_motion-bindings.js';
+import { scrollAnimator } from './_scroll-animator.js';
 
 export interface BoxWithMotionValuesProps {
   readonly as: ElementType;
@@ -105,6 +106,11 @@ export function BoxWithMotionValues(props: BoxWithMotionValuesProps) {
     return () => cancelAnimationFrame(id);
   }, [hasEnter, hasMounted]);
 
+  // One extra pass for a scroll timeline whose container or target ref attached after this
+  // Box's first layout effect ran.
+  const [, retryScroll] = useState(0);
+  const retriedScroll = useRef(false);
+
   // Motion-value subscriptions. Re-run every render (no deps) - MV
   // on/off is O(1), the binding list is typically tiny, and this
   // sidesteps the variable-length-deps problem cleanly. The seed call
@@ -122,9 +128,23 @@ export function BoxWithMotionValues(props: BoxWithMotionValuesProps) {
     const element = internalRef.current;
     if (element === null) return;
 
+    // Bindings that follow a scroll timeline run as CSS scroll-driven animation where the
+    // browser has it; the rest are written per change below.
+    const scroll = scrollAnimator()?.(element, motionBindings) ?? {
+      rest: motionBindings,
+      clear: () => {},
+      pending: false,
+    };
+    const bindings = scroll.rest;
+    let retry: number | undefined;
+    if (scroll.pending && !retriedScroll.current) {
+      retriedScroll.current = true;
+      retry = requestAnimationFrame(() => retryScroll((n) => n + 1));
+    }
+
     const transformAxes: TransformAxes = {};
     let hasTransformAxes = false;
-    for (const b of motionBindings) {
+    for (const b of bindings) {
       if (b.transformAxis !== undefined) {
         const value = b.mv.get();
         if (typeof value === 'string' || typeof value === 'number') {
@@ -137,7 +157,7 @@ export function BoxWithMotionValues(props: BoxWithMotionValuesProps) {
     }
     if (hasTransformAxes) writeComposedTransformToStyle(element, transformAxes);
 
-    const unsubs: Array<() => void> = motionBindings.map((b) =>
+    const unsubs: Array<() => void> = bindings.map((b) =>
       b.mv.on('change', (value) => {
         if (b.transformAxis !== undefined) {
           if (typeof value === 'string' || typeof value === 'number') {
@@ -152,6 +172,8 @@ export function BoxWithMotionValues(props: BoxWithMotionValuesProps) {
 
     return () => {
       for (const u of unsubs) u();
+      scroll.clear();
+      if (retry !== undefined) cancelAnimationFrame(retry);
     };
   });
 

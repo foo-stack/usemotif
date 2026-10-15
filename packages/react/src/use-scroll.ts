@@ -8,6 +8,7 @@ import {
   type ScrollOffsetPair,
 } from '@usemotif/core';
 import { useEffect, useMemo, useRef, useState, type RefObject } from 'react';
+import { tagScrollTimeline, type ScrollTimelineSpec } from './_scroll-timeline.js';
 
 /**
  * Handle returned by {@link useScrollTarget}. Same call shape as the
@@ -107,6 +108,7 @@ export interface UseScrollResult {
 }
 
 const DEFAULT_OFFSET: ScrollOffsetPair = ['start end', 'end start'];
+const DEFAULT_OFFSET_KEY = JSON.stringify(DEFAULT_OFFSET);
 
 /**
  * Track scroll position as motion values that bypass React renders.
@@ -168,6 +170,20 @@ export function useScroll(options?: UseScrollOptions): UseScrollResult {
     scrollXProgress: createMotionValue(0),
     scrollYProgress: createMotionValue(0),
   }));
+
+  // The CSS timeline each progress value follows, for a Box that binds it in a browser with
+  // scroll-driven animation. A target's default offset is exactly a `view()` timeline's cover
+  // range; other offsets have no CSS equivalent and stay on this hook's measurements.
+  const timeline = (axis: 'block' | 'inline'): ScrollTimelineSpec | null => {
+    if (targetRef !== undefined) {
+      return offsetKey === DEFAULT_OFFSET_KEY ? { kind: 'view', axis, target: targetRef } : null;
+    }
+    return containerRef !== undefined
+      ? { kind: 'scroll', axis, container: containerRef }
+      : { kind: 'page', axis };
+  };
+  tagScrollTimeline(values.scrollYProgress, timeline('block'));
+  tagScrollTimeline(values.scrollXProgress, timeline('inline'));
 
   useEffect(() => {
     if (typeof window === 'undefined') return undefined;

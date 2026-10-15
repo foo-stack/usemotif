@@ -59,7 +59,8 @@ const targets = [
     // so the forms module stopped riding along with every Box import.
     // Bumped when the style cache's realm-shared state.
     // Bumped when Box gained layoutId (the shared-layout registry in useLayoutAnimation).
-    budget: 11100, // gzip bytes
+    // Bumped when Box reads the scroll-timeline slot (the compiler itself loads only with useScroll).
+    budget: 11300, // gzip bytes
   },
   {
     name: '@usemotif/react - Button only',
@@ -74,7 +75,8 @@ const targets = [
     // Lowered when the forms components' `forwardRef` calls were marked pure,
     // so the forms module stopped riding along with every Box import.
     // Bumped when Box gained layoutId (the shared-layout registry in useLayoutAnimation).
-    budget: 12300,
+    // Bumped when Box reads the scroll-timeline slot (the compiler itself loads only with useScroll).
+    budget: 12400,
   },
   {
     name: '@usemotif/react-native - Box only',
@@ -620,7 +622,8 @@ const targets = [
     // Bumped when the four default status icons (Info, CircleCheck, TriangleAlert, CircleAlert) and Icon.
     // Bumped when the shared dismiss part as Pressable and Text, so it also renders on native.
     // Bumped when Box gained layoutId (the shared-layout registry in useLayoutAnimation).
-    budget: 12800,
+    // Bumped when Box reads the scroll-timeline slot (the compiler itself loads only with useScroll).
+    budget: 13000,
   },
   {
     name: '@usemotif/ui - FormField only',
