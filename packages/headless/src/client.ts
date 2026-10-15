@@ -221,5 +221,7 @@ export type {
 } from './navigation.js';
 
 export { useReducedMotion } from './_use-reduced-motion.js';
+export { useShortcut } from './use-shortcut.js';
+export type { UseShortcutOptions } from './use-shortcut.js';
 export { useControllableState } from './use-controllable-state.js';
 export type { UseControllableStateOptions } from './use-controllable-state.js';

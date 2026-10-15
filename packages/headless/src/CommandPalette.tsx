@@ -19,6 +19,7 @@ import {
 } from 'react';
 import { fuzzyScore } from './_fuzzy.js';
 import { useControllableState } from './use-controllable-state.js';
+import { useShortcut } from './use-shortcut.js';
 
 /**
  * CommandPalette - a fuzzy-searchable command launcher (think ⌘K). The
@@ -499,47 +500,10 @@ export {
 };
 
 /**
- * Register a global keyboard shortcut (e.g. `'mod+k'`) for opening the
- * palette. `mod` resolves to ⌘ on macOS and Ctrl elsewhere. The handler
- * is invoked on the matching keydown after `preventDefault()`.
- *
- * Bind a stable handler (memoized via `useCallback`) so the listener
- * isn't churning every render. Returns nothing; cleanup on unmount.
+ * Opens the palette on a shortcut such as `'mod+k'`. An alias of `useShortcut`
+ * that also fires while the user is typing, so the palette can be toggled from
+ * its own search box. Returns the shortcut's display label.
  */
-export function useCommandPaletteShortcut(combo: string, handler: () => void): void {
-  useEffect(() => {
-    const matches = parseShortcut(combo);
-    function onKeyDown(e: KeyboardEvent | globalThis.KeyboardEvent): void {
-      if (matches(e)) {
-        e.preventDefault();
-        handler();
-      }
-    }
-    if (typeof window === 'undefined') return undefined;
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [combo, handler]);
-}
-
-function parseShortcut(combo: string): (e: KeyboardEvent | globalThis.KeyboardEvent) => boolean {
-  const parts = combo
-    .toLowerCase()
-    .split('+')
-    .map((s) => s.trim());
-  const key = parts[parts.length - 1] ?? '';
-  const mods = new Set(parts.slice(0, -1));
-  return (e) => {
-    if (e.key.toLowerCase() !== key) return false;
-    if (mods.has('mod')) {
-      const isMac =
-        typeof navigator !== 'undefined' && /Mac|iPhone|iPad|iPod/.test(navigator.platform);
-      if (isMac && !e.metaKey) return false;
-      if (!isMac && !e.ctrlKey) return false;
-    }
-    if (mods.has('ctrl') && !e.ctrlKey) return false;
-    if (mods.has('cmd') && !e.metaKey) return false;
-    if (mods.has('shift') && !e.shiftKey) return false;
-    if (mods.has('alt') && !e.altKey) return false;
-    return true;
-  };
+export function useCommandPaletteShortcut(combo: string, handler: () => void): string {
+  return useShortcut(combo, handler, { allowInInputs: true });
 }
