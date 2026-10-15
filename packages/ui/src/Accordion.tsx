@@ -23,6 +23,8 @@ const TRIGGER_EXPANDED = {
   color: '$colors.action.primary.bg',
   backgroundImage: CHEVRON_UP,
 } as const;
+// The open item of a non-collapsible accordion: its trigger can't close it.
+const TRIGGER_LOCKED = { cursor: 'default' } as const;
 
 export type AccordionRootPropsThemed = AccordionRootProps;
 export type AccordionItemPropsThemed = HeadlessAccordionItemProps;
@@ -94,6 +96,7 @@ function AccordionTrigger({ children }: AccordionTriggerProps) {
       transition="color 120ms ease, background-color 120ms ease"
       _hover={TRIGGER_HOVER}
       _expanded={TRIGGER_EXPANDED}
+      _disabled={TRIGGER_LOCKED}
     >
       {children}
     </Box>
