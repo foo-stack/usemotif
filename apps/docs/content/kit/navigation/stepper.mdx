@@ -3,7 +3,7 @@ title: Stepper
 description: A themed step indicator over the headless Stepper - a numbered, status-coloured circle and label per step, horizontal or vertical, with aria-current="step" on the active one.
 diataxis: reference
 covers: ['Stepper', 'StepperProps', 'StepperStep']
-last_verified: 2026-10-14
+last_verified: 2026-10-15
 ---
 
 import {
@@ -91,6 +91,17 @@ Vertical, with a failed step:
       type: "'horizontal' | 'vertical'",
       default: "'horizontal'",
       description: 'Lay the steps out in a row or a column.',
+    },
+    {
+      name: 'onStepChange',
+      type: '(id: string) => void',
+      description: 'Makes each step a button (a Pressable on React Native) that reports the id clicked. The button keeps its focus ring and drops its own styling, so the step still looks as `renderStep` draws it.',
+    },
+    {
+      name: 'linear',
+      type: 'boolean',
+      default: 'false',
+      description: 'With `onStepChange`, allow going back to earlier steps but not skipping ahead: only steps before the active one can be clicked, and the rest are disabled. `renderStep` receives `selectable` to style them.',
     },
   ]}
 />

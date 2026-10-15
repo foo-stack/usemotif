@@ -3,7 +3,7 @@ title: Stepper
 description: A progress sequence - ordered steps with pending, active, complete, and error states. Checkout flows, wizards.
 diataxis: reference
 covers: ['Stepper', 'StepperProps', 'StepperStep']
-last_verified: 2026-05-15
+last_verified: 2026-10-15
 ---
 
 import {
@@ -71,6 +71,17 @@ carries its own `status`. Stepper is structure and status; the visuals are yours
       type: '"horizontal" | "vertical"',
       default: '"horizontal"',
       description: 'Lays the steps out in a row or a column.',
+    },
+    {
+      name: 'onStepChange',
+      type: '(id: string) => void',
+      description: 'Makes each step a button (a Pressable on React Native) that reports the id clicked. The button keeps its focus ring and drops its own styling, so the step still looks as `renderStep` draws it.',
+    },
+    {
+      name: 'linear',
+      type: 'boolean',
+      default: 'false',
+      description: 'With `onStepChange`, allow going back to earlier steps but not skipping ahead: only steps before the active one can be clicked, and the rest are disabled. `renderStep` receives `selectable` to style them.',
     },
     {
       name: 'style',
