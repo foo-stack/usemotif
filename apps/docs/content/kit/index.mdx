@@ -76,8 +76,13 @@ their surfaces.
 
 On native, text inside any of these sits in `Text`, carrying the colour and size the web element
 would pass down, and ProgressCircle draws with `react-native-svg`. TextField renders the platform
-`Input`, sized from the recipe. Hover and keyboard-focus styles have no native equivalent. The form
-and navigation components are web only for now.
+`Input`, sized from the recipe. Hover and keyboard-focus styles have no native equivalent.
+
+The form controls render on native as well. Most take the same props on both platforms. Checkbox,
+Switch, Radio and RadioGroup are the exception: on the web they are real `<input>` elements with
+`checked` and `onChange`, and on native they take their headless twins' `value`, `defaultValue` and
+`onValueChange`, as the platform controls do. Calendar and DatePicker drop their web surface styles
+on native. The navigation components are web only for now.
 
 <Callout variant="info" title="Where to next">
   [Display](/kit/display) - the presentational components, from status pills to loading

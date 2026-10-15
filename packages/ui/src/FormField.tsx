@@ -2,6 +2,7 @@
 
 import { cloneElement, useId, type ReactElement, type ReactNode } from 'react';
 import { Box, Text, type BoxProps } from 'usemotif';
+import { platformText } from './_platform-text.js';
 
 export interface FormFieldProps {
   /** The field label. Wired to the control via `htmlFor` / `id`. */
@@ -30,6 +31,13 @@ export interface FormFieldProps {
  * </FormField>
  * ```
  */
+const LABEL_TEXT = {
+  fontSize: '$fontSizes.sm',
+  fontWeight: '$fontWeights.medium',
+  color: '$colors.text.default',
+} as const;
+const REQUIRED_TEXT = { color: '$colors.status.danger.fg' } as const;
+
 export function FormField({ label, children, help, error, required = false }: FormFieldProps) {
   const id = useId();
   const helpId = `${id}-help`;
@@ -55,10 +63,10 @@ export function FormField({ label, children, help, error, required = false }: Fo
         color="$colors.text.default"
         {...({ htmlFor: id } as unknown as BoxProps)}
       >
-        {label}
+        {platformText(label, LABEL_TEXT)}
         {required ? (
           <Box as="span" color="$colors.status.danger.fg" aria-hidden>
-            *
+            {platformText('*', REQUIRED_TEXT)}
           </Box>
         ) : null}
       </Box>

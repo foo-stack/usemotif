@@ -3,6 +3,7 @@
 import type { ComboboxOption } from '@usemotif/headless';
 import type { CSSProperties, ReactNode } from 'react';
 import { Box } from 'usemotif';
+import { platformText } from './_platform-text.js';
 
 // The headless listbox is a portalled `<div role="listbox">` the kit can only
 // style inline - so its surface is referenced through motif's token CSS vars
@@ -35,10 +36,21 @@ export function renderThemedOption(
       fontWeight={info.selected ? 600 : 400}
       cursor={opt.disabled === true ? 'not-allowed' : 'pointer'}
     >
-      {opt.label}
+      {platformText(opt.label, {
+        fontSize: '$fontSizes.sm',
+        fontWeight: info.selected ? 600 : 400,
+        color: opt.disabled === true ? '$colors.text.muted' : '$colors.text.default',
+      })}
     </Box>
   );
 }
+
+const GROUP_TEXT = {
+  fontSize: '$fontSizes.xs',
+  fontWeight: 600,
+  color: '$colors.text.muted',
+  textTransform: 'uppercase',
+} as const;
 
 /** The themed heading over a group of options. */
 export function renderThemedGroupLabel(group: string): ReactNode {
@@ -53,7 +65,7 @@ export function renderThemedGroupLabel(group: string): ReactNode {
       textTransform="uppercase"
       letterSpacing="$letterSpacings.wide"
     >
-      {group}
+      {platformText(group, GROUP_TEXT)}
     </Box>
   );
 }
