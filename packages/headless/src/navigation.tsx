@@ -42,7 +42,7 @@ function SubmenuLevelProvider({ children }: { children: ReactNode }): ReactEleme
   return <SubmenuLevelContext.Provider value={registry}>{children}</SubmenuLevelContext.Provider>;
 }
 import { useFloatingPosition } from './positioning.js';
-import { pageWindow } from './_page-window.js';
+import { pageForSize, pageWindow } from './_page-window.js';
 import { activeStepIndex, canSelectStep } from './_steps.js';
 
 /**
@@ -64,6 +64,23 @@ export interface PaginationProps {
   onPageChange?: (next: number) => void;
   /** Number of sibling pages to show on each side of the current page. */
   siblings?: number;
+  /** Pages always shown at each end of the range. Defaults to 1. */
+  boundaries?: number;
+  /** Items per page. The page-size part renders only when this is set. */
+  pageSize?: number;
+  /** The sizes the page-size part offers. */
+  pageSizeOptions?: readonly number[];
+  /**
+   * Called with the chosen size and the page that keeps the first item of the
+   * current page in view. Update both, and recompute `total`, from here.
+   */
+  onPageSizeChange?: (size: number, page: number) => void;
+  /** Renders the page-size part, after the next button. */
+  renderPageSize?: (info: {
+    pageSize: number;
+    options: readonly number[];
+    onChange: (size: number) => void;
+  }) => ReactElement;
   /** Render fn for each page button. */
   renderItem: (info: {
     type: 'page' | 'previous' | 'next' | 'ellipsis';
@@ -81,6 +98,11 @@ export function Pagination({
   total,
   onPageChange,
   siblings = 1,
+  boundaries = 1,
+  pageSize,
+  pageSizeOptions,
+  onPageSizeChange,
+  renderPageSize,
   renderItem,
   style,
   ...aria
@@ -89,7 +111,15 @@ export function Pagination({
     (n: number) => onPageChange?.(Math.max(1, Math.min(total, n))),
     [onPageChange, total],
   );
-  const window = pageWindow(page, total, siblings);
+  const window = pageWindow(page, total, siblings, boundaries);
+  const sizePart =
+    pageSize !== undefined && renderPageSize !== undefined
+      ? renderPageSize({
+          pageSize,
+          options: pageSizeOptions ?? [pageSize],
+          onChange: (size) => onPageSizeChange?.(size, pageForSize(page, pageSize, size)),
+        })
+      : null;
   return (
     <nav aria-label={aria['aria-label'] ?? 'Pagination'} style={style}>
       {renderItem({
@@ -121,6 +151,7 @@ export function Pagination({
         selected: false,
         onClick: () => goto(page + 1),
       })}
+      {sizePart}
     </nav>
   );
 }

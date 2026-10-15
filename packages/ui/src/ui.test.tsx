@@ -1,7 +1,7 @@
 /** @vitest-environment jsdom */
 import { act, useCallback } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   Accordion,
   Alert,
@@ -874,6 +874,34 @@ describe('Pagination - themed page controls over the headless navigation', () =>
     const pageThree = buttons.find((b) => b.textContent === '3')!;
     click(pageThree);
     expect(paginationPage).toBe(3);
+  });
+
+  it('offers themed page sizes and reports the page that keeps the first item in view', () => {
+    const onPageSizeChange = vi.fn();
+    render(
+      <Pagination
+        page={5}
+        total={10}
+        boundaries={2}
+        pageSize={10}
+        onPageSizeChange={onPageSizeChange}
+      />,
+    );
+    const select = container.querySelector('select') as HTMLSelectElement;
+    expect(select.getAttribute('aria-label')).toBe('Items per page');
+    expect(Array.from(select.options, (o) => o.value)).toEqual(['10', '20', '50']);
+    expect(look(select)).not.toBe('|');
+    act(() => {
+      select.value = '50';
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    // Page 5 at 10 per page starts at item 41, which is on page 1 at 50 per page.
+    expect(onPageSizeChange).toHaveBeenCalledWith(50, 1);
+  });
+
+  it('shows no page-size select without onPageSizeChange', () => {
+    render(<Pagination page={1} total={5} pageSize={10} />);
+    expect(container.querySelector('select')).toBeNull();
   });
 });
 

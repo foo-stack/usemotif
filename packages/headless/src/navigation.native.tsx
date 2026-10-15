@@ -16,7 +16,7 @@ import {
   type ViewStyle,
 } from 'react-native';
 import { nativeText } from './_native-text.js';
-import { pageWindow } from './_page-window.js';
+import { pageForSize, pageWindow } from './_page-window.js';
 import { activeStepIndex, canSelectStep } from './_steps.js';
 
 /**
@@ -40,6 +40,23 @@ export interface PaginationProps {
   total: number;
   onPageChange?: (next: number) => void;
   siblings?: number;
+  /** Pages always shown at each end of the range. Defaults to 1. */
+  boundaries?: number;
+  /** Items per page. The page-size part renders only when this is set. */
+  pageSize?: number;
+  /** The sizes the page-size part offers. */
+  pageSizeOptions?: readonly number[];
+  /**
+   * Called with the chosen size and the page that keeps the first item of the
+   * current page in view. Update both, and recompute `total`, from here.
+   */
+  onPageSizeChange?: (size: number, page: number) => void;
+  /** Renders the page-size part, after the next button. */
+  renderPageSize?: (info: {
+    pageSize: number;
+    options: readonly number[];
+    onChange: (size: number) => void;
+  }) => ReactElement;
   renderItem: (info: {
     type: 'page' | 'previous' | 'next' | 'ellipsis';
     page?: number;
@@ -56,6 +73,11 @@ export function Pagination({
   total,
   onPageChange,
   siblings = 1,
+  boundaries = 1,
+  pageSize,
+  pageSizeOptions,
+  onPageSizeChange,
+  renderPageSize,
   renderItem,
   accessibilityLabel,
   style,
@@ -64,7 +86,15 @@ export function Pagination({
     (n: number) => onPageChange?.(Math.max(1, Math.min(total, n))),
     [onPageChange, total],
   );
-  const win = pageWindow(page, total, siblings);
+  const win = pageWindow(page, total, siblings, boundaries);
+  const sizePart =
+    pageSize !== undefined && renderPageSize !== undefined
+      ? renderPageSize({
+          pageSize,
+          options: pageSizeOptions ?? [pageSize],
+          onChange: (size) => onPageSizeChange?.(size, pageForSize(page, pageSize, size)),
+        })
+      : null;
   return (
     <View
       accessibilityLabel={accessibilityLabel ?? 'Pagination'}
@@ -99,6 +129,7 @@ export function Pagination({
         selected: false,
         onClick: () => goto(page + 1),
       })}
+      {sizePart}
     </View>
   );
 }

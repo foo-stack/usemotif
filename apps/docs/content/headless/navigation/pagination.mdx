@@ -76,6 +76,32 @@ the `onPageChange` callback.
       description: 'How many page numbers to show on each side of the current page.',
     },
     {
+      name: 'boundaries',
+      type: 'number',
+      default: '1',
+      description: 'How many page numbers are always shown at each end. `0` drops the first and last pages.',
+    },
+    {
+      name: 'pageSize',
+      type: 'number',
+      description: 'Items per page. The page-size part renders only when this and `renderPageSize` are set.',
+    },
+    {
+      name: 'pageSizeOptions',
+      type: 'readonly number[]',
+      description: 'The sizes passed to `renderPageSize` as `options`. Defaults to `[pageSize]`.',
+    },
+    {
+      name: 'onPageSizeChange',
+      type: '(size: number, page: number) => void',
+      description: 'Called with the chosen size and the page that keeps the first item of the current page in view. Update both, and recompute `total`.',
+    },
+    {
+      name: 'renderPageSize',
+      type: '(info) => ReactElement',
+      description: 'Renders the page-size part after the next control. `info` carries `pageSize`, `options`, and `onChange(size)`.',
+    },
+    {
       name: 'renderItem',
       type: '(info) => ReactElement',
       required: true,
@@ -132,6 +158,31 @@ A standard pagination bar:
       </Button>
     );
   }}
+/>`} />
+
+A page-size select that keeps the reader near the same rows:
+
+<CodeBlock lang="tsx" code={`<Pagination
+  page={page}
+  total={Math.ceil(rows.length / pageSize)}
+  boundaries={2}
+  onPageChange={setPage}
+  pageSize={pageSize}
+  pageSizeOptions={[10, 25, 50]}
+  onPageSizeChange={(size, nextPage) => {
+    setPageSize(size);
+    setPage(nextPage);
+  }}
+  renderItem={renderItem}
+  renderPageSize={({ pageSize, options, onChange }) => (
+    <select
+      aria-label="Items per page"
+      value={pageSize}
+      onChange={(e) => onChange(Number(e.currentTarget.value))}
+    >
+      {options.map((n) => <option key={n} value={n}>{n}</option>)}
+    </select>
+  )}
 />`} />
 
 <Callout variant="info" title="Related">

@@ -2,16 +2,24 @@ export function pageWindow(
   page: number,
   total: number,
   siblings: number,
+  boundaries = 1,
 ): Array<number | 'ellipsis'> {
-  if (total <= 7) {
+  const edge = Math.max(0, boundaries);
+  if (total <= 2 * edge + 5) {
     return Array.from({ length: total }, (_, i) => i + 1);
   }
-  const out: Array<number | 'ellipsis'> = [1];
-  const startWindow = Math.max(2, page - siblings);
-  const endWindow = Math.min(total - 1, page + siblings);
-  if (startWindow > 2) out.push('ellipsis');
+  const out: Array<number | 'ellipsis'> = [];
+  for (let i = 1; i <= edge; i++) out.push(i);
+  const startWindow = Math.max(edge + 1, page - siblings);
+  const endWindow = Math.min(total - edge, page + siblings);
+  if (startWindow > edge + 1) out.push('ellipsis');
   for (let i = startWindow; i <= endWindow; i++) out.push(i);
-  if (endWindow < total - 1) out.push('ellipsis');
-  out.push(total);
+  if (endWindow < total - edge) out.push('ellipsis');
+  for (let i = total - edge + 1; i <= total; i++) out.push(i);
   return out;
+}
+
+/** The page that, at `nextSize` items per page, still shows the first item of `page` at `size`. */
+export function pageForSize(page: number, size: number, nextSize: number): number {
+  return Math.floor(((page - 1) * size) / nextSize) + 1;
 }
