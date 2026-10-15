@@ -1,3 +1,4 @@
+import { useMessages } from '@usemotif/react-native';
 import { useState, type ReactElement, type ReactNode } from 'react';
 import { Pressable, Text, TextInput, View, type TextStyle, type ViewStyle } from 'react-native';
 import { defaultFilter } from './_combobox-filter.js';
@@ -28,10 +29,15 @@ const COMMA: ReadonlyArray<string> = [','];
 const NO_TAGS: ReadonlyArray<string> = [];
 
 function DefaultTag({ value, remove }: TagInfo): ReactElement {
+  const messages = useMessages();
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
       <Text>{value}</Text>
-      <Pressable accessibilityRole="button" accessibilityLabel={`Remove ${value}`} onPress={remove}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={messages.removeItem(value)}
+        onPress={remove}
+      >
         <Text>×</Text>
       </Pressable>
     </View>

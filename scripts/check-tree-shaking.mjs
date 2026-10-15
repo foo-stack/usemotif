@@ -602,7 +602,8 @@ const targets = [
     // Composes the Avatar primitive (no headless) - display floor.
     // Bumped when state bags took responsive values (nested at-rules).
     // Bumped when the group states joined core's selector map and Box marks a group.
-    budget: 12500,
+    // Bumped when the component reads a built-in label from the translatable messages catalogue.
+    budget: 12800,
   },
   {
     name: '@usemotif/ui - Chip only',
@@ -610,7 +611,8 @@ const targets = [
     // Pure presentational (Box, no headless) - display floor.
     // Bumped when state bags took responsive values (nested at-rules).
     // Bumped when the group states joined core's selector map and Box marks a group.
-    budget: 12000,
+    // Bumped when the component reads a built-in label from the translatable messages catalogue.
+    budget: 12600,
   },
   {
     name: '@usemotif/ui - Banner only',
@@ -625,7 +627,8 @@ const targets = [
     // Bumped when the shared dismiss part as Pressable and Text, so it also renders on native.
     // Bumped when Box gained layoutId (the shared-layout registry in useLayoutAnimation).
     // Bumped when Box reads the scroll-timeline slot (the compiler itself loads only with useScroll).
-    budget: 13000,
+    // Bumped when the component reads a built-in label from the translatable messages catalogue.
+    budget: 13700,
   },
   {
     name: '@usemotif/ui - FormField only',

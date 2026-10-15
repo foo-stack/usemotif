@@ -8,7 +8,7 @@ import {
   type CommandPaletteRootProps,
 } from '@usemotif/headless';
 import type { ReactNode } from 'react';
-import { Box, Pressable } from 'usemotif';
+import { Box, Pressable, useMessages } from 'usemotif';
 import { ThemedInput } from './_themed-input.js';
 import { platformText } from './_platform-text.js';
 import { usePlatformStyle } from './_platform-style.js';
@@ -157,11 +157,14 @@ function renderThemedCommand(
  * ```
  */
 export function CommandPalette({
-  placeholder = 'Type a command...',
-  emptyMessage = 'No matching commands',
+  placeholder: ownPlaceholder,
+  emptyMessage: ownEmptyMessage,
   renderItem,
   ...rootProps
 }: CommandPaletteProps) {
+  const messages = useMessages();
+  const emptyMessage = ownEmptyMessage ?? messages.noMatchingCommands;
+  const placeholder = ownPlaceholder ?? messages.commandPlaceholder;
   const platformStyle = usePlatformStyle();
   return (
     <HeadlessCommandPalette.Root {...rootProps}>

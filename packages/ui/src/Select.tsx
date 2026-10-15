@@ -5,7 +5,7 @@ import {
   useControllableState,
   type ComboboxOption,
 } from '@usemotif/headless';
-import { Pressable } from 'usemotif';
+import { Pressable, useMessages } from 'usemotif';
 import { platformText } from './_platform-text.js';
 import { LIST_STYLE, renderThemedOption, renderThemedGroupLabel } from './_list-surface.js';
 import { usePlatformStyle } from './_platform-style.js';
@@ -56,9 +56,11 @@ export function Select({
   value: controlledValue,
   defaultValue,
   onValueChange,
-  placeholder = 'Select...',
+  placeholder: ownPlaceholder,
   width = 240,
 }: SelectProps) {
+  const messages = useMessages();
+  const placeholder = ownPlaceholder ?? messages.selectPlaceholder;
   const platformStyle = usePlatformStyle();
   const [value, handleChange] = useControllableState({
     value: controlledValue,

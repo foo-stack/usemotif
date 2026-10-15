@@ -2,7 +2,7 @@
 
 import { FileUpload as HeadlessFileUpload, type FileRejection } from '@usemotif/headless';
 import { useCallback, type CSSProperties, type ReactNode } from 'react';
-import { Pressable } from 'usemotif';
+import { Pressable, useMessages } from 'usemotif';
 import { platformText } from './_platform-text.js';
 
 export interface FileUploadProps {
@@ -33,10 +33,9 @@ const DASHED: CSSProperties = { borderStyle: 'dashed' };
  */
 const ZONE_TEXT = { color: '$colors.text.muted', fontSize: '$fontSizes.sm' } as const;
 
-export function FileUpload({
-  label = 'Drag files here, or click to browse',
-  ...rest
-}: FileUploadProps) {
+export function FileUpload({ label: ownLabel, ...rest }: FileUploadProps) {
+  const messages = useMessages();
+  const label = ownLabel ?? messages.dropFiles;
   const renderZone = useCallback(
     (info: { isDragging: boolean; openPicker: () => void }): ReactNode => (
       <Pressable

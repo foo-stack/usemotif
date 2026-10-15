@@ -1,3 +1,4 @@
+import { useMessages } from '@usemotif/react-native';
 import { useEffect, useRef, type ReactElement } from 'react';
 import { TextInput, View, type TextStyle, type ViewStyle } from 'react-native';
 import { pinBackspace, pinInput, type PinType } from './_pin.js';
@@ -36,6 +37,7 @@ export function PinInput({
   style,
   inputStyle,
 }: PinInputProps): ReactElement {
+  const messages = useMessages();
   const [value, setValue] = useControllableState({
     value: controlled,
     defaultValue,
@@ -67,7 +69,7 @@ export function PinInput({
           ref={(el) => {
             inputs.current[index] = el;
           }}
-          accessibilityLabel={`Character ${index + 1} of ${length}`}
+          accessibilityLabel={messages.pinCharacter(index + 1, length)}
           value={value[index] ?? ''}
           editable={!disabled}
           secureTextEntry={mask}

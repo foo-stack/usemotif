@@ -1,3 +1,4 @@
+import { useMessages } from '@usemotif/react-native';
 import {
   cloneElement,
   createContext,
@@ -278,9 +279,11 @@ export interface CommandPaletteListProps {
 function List({
   renderItem,
   renderSection,
-  emptyMessage = 'No matches',
+  emptyMessage: ownEmptyMessage,
   style,
 }: CommandPaletteListProps): ReactElement {
+  const messages = useMessages();
+  const emptyMessage = ownEmptyMessage ?? messages.noMatches;
   const ctx = useCommandPaletteContext('CommandPalette.List');
   if (ctx.flatFiltered.length === 0) {
     return (
@@ -344,17 +347,19 @@ export interface CommandPaletteBreadcrumbProps {
 
 /** The trail of open pages, each one a way back to it. Nothing on the top level. */
 function Breadcrumb({
-  rootLabel = 'Commands',
+  rootLabel: ownRootLabel,
   separator = '/',
   renderCrumb,
   style,
 }: CommandPaletteBreadcrumbProps): ReactElement | null {
+  const messages = useMessages();
+  const rootLabel = ownRootLabel ?? messages.commands;
   const ctx = useCommandPaletteContext('CommandPalette.Breadcrumb');
   if (ctx.pages.length === 0) return null;
   const labels = [rootLabel, ...ctx.pages.map((p) => p.label)];
   return (
     <View
-      accessibilityLabel="Command pages"
+      accessibilityLabel={messages.commandPages}
       style={[{ flexDirection: 'row', alignItems: 'center' }, style as ViewStyle]}
     >
       {labels.map((label, depth) => {

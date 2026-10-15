@@ -8,7 +8,7 @@ import {
   type TreeViewProps as HeadlessTreeViewProps,
 } from '@usemotif/headless';
 import { useMemo, type CSSProperties, type ReactElement } from 'react';
-import { Box, Pressable } from 'usemotif';
+import { Box, Pressable, useMessages } from 'usemotif';
 import { platformText } from './_platform-text.js';
 import { usePlatformStyle } from './_platform-style.js';
 
@@ -44,6 +44,11 @@ const TREE_STYLE: CSSProperties = {
 // selected fill). `select` / `toggle` come from the headless info, so attaching
 // them is not a fresh closure. Row click selects; the chevron only toggles.
 function renderThemedNode(info: TreeNodeInfo): ReactElement {
+  return <ThemedNode {...info} />;
+}
+
+function ThemedNode(info: TreeNodeInfo): ReactElement {
+  const messages = useMessages();
   const { node, depth, isExpanded, isSelected, isLoading, toggle, select } = info;
   const hasChildren =
     (node.children !== undefined && node.children.length > 0) || node.hasChildren === true;
@@ -94,7 +99,10 @@ function renderThemedNode(info: TreeNodeInfo): ReactElement {
       <Box as="span">{platformText(node.label, { color, fontSize: '$fontSizes.sm' })}</Box>
       {isLoading ? (
         <Box as="span" ml="$space.2" fontSize="$fontSizes.xs" color="$colors.text.muted">
-          {platformText('Loading', { color: '$colors.text.muted', fontSize: '$fontSizes.xs' })}
+          {platformText(messages.loading, {
+            color: '$colors.text.muted',
+            fontSize: '$fontSizes.xs',
+          })}
         </Box>
       ) : null}
     </Pressable>

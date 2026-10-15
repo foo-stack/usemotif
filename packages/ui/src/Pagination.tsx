@@ -2,7 +2,7 @@
 
 import { Pagination as HeadlessPagination } from '@usemotif/headless';
 import type { ChangeEvent, CSSProperties, ReactElement } from 'react';
-import { Pressable, Box, type BoxProps } from 'usemotif';
+import { Box, type BoxProps, Pressable, useMessages } from 'usemotif';
 import { isNative } from './_platform.js';
 import { usePlatformStyle } from './_platform-style.js';
 import { platformText } from './_platform-text.js';
@@ -44,6 +44,11 @@ interface PageItemInfo {
 // The headless Pagination computes the page window + each item's state and calls
 // this for prev / next / ellipsis / page; the kit just paints them.
 function renderThemedPageItem(info: PageItemInfo): ReactElement {
+  return <ThemedPageItem {...info} />;
+}
+
+function ThemedPageItem(info: PageItemInfo): ReactElement {
+  const messages = useMessages();
   if (info.type === 'ellipsis') {
     return (
       <Box
@@ -83,6 +88,11 @@ function renderThemedPageItem(info: PageItemInfo): ReactElement {
       disabled={info.disabled}
       onPress={info.onClick}
       {...(info.selected && info.type === 'page' ? { 'aria-current': 'page' as const } : {})}
+      {...(info.type === 'previous'
+        ? { 'aria-label': messages.previousPage }
+        : info.type === 'next'
+          ? { 'aria-label': messages.nextPage }
+          : {})}
     >
       {platformText(label, { color, fontSize: '$fontSizes.sm' })}
     </Pressable>
@@ -96,6 +106,11 @@ interface PageSizeInfo {
 }
 
 function renderThemedPageSize(info: PageSizeInfo): ReactElement {
+  return <ThemedPageSize {...info} />;
+}
+
+function ThemedPageSize(info: PageSizeInfo): ReactElement {
+  const messages = useMessages();
   return (
     <Box
       as="select"
@@ -110,7 +125,7 @@ function renderThemedPageSize(info: PageSizeInfo): ReactElement {
       color="$colors.text.default"
       fontSize="$fontSizes.sm"
       {...({
-        'aria-label': 'Items per page',
+        'aria-label': messages.itemsPerPage,
         value: info.pageSize,
         onChange: (e: ChangeEvent<HTMLSelectElement>) =>
           info.onChange(Number(e.currentTarget.value)),
@@ -118,7 +133,7 @@ function renderThemedPageSize(info: PageSizeInfo): ReactElement {
     >
       {info.options.map((n) => (
         <option key={n} value={n}>
-          {n} / page
+          {messages.perPage(n)}
         </option>
       ))}
     </Box>

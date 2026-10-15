@@ -1,5 +1,6 @@
 'use client';
 
+import { useMessages } from 'usemotif';
 import {
   Combobox as HeadlessCombobox,
   Search as HeadlessSearch,
@@ -88,7 +89,9 @@ function listProps(props: ComboboxProps) {
  * <Combobox options={results} filter={false} loading={pending} onInputValueChange={fetch} />
  * ```
  */
-export function Combobox({ placeholder = 'Search...', width = 240, ...rest }: ComboboxProps) {
+export function Combobox({ placeholder: ownPlaceholder, width = 240, ...rest }: ComboboxProps) {
+  const messages = useMessages();
+  const placeholder = ownPlaceholder ?? messages.searchPlaceholder;
   const platformStyle = usePlatformStyle();
   return (
     <HeadlessCombobox.Root {...rootProps({ ...rest, placeholder, width })}>
@@ -117,7 +120,9 @@ export function Combobox({ placeholder = 'Search...', width = 240, ...rest }: Co
  * <Search options={results} onValueChange={openResult} placeholder="Search docs..." />
  * ```
  */
-export function Search({ placeholder = 'Search...', width = 280, ...rest }: ComboboxProps) {
+export function Search({ placeholder: ownPlaceholder, width = 280, ...rest }: ComboboxProps) {
+  const messages = useMessages();
+  const placeholder = ownPlaceholder ?? messages.searchPlaceholder;
   const platformStyle = usePlatformStyle();
   return (
     <HeadlessSearch.Root {...rootProps({ ...rest, placeholder, width })}>

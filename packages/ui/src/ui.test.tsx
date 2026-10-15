@@ -1383,10 +1383,10 @@ describe('MultiSelect - themed chip-select over the headless multiselect', () =>
         onValueChange={onMultiChange}
       />,
     );
-    // The default selection renders as a chip with a remove control.
+    // The default selection renders as a chip with a remove control named for its option.
     const field = container.firstElementChild as HTMLElement;
     expect(field.textContent).toContain('React');
-    expect(field.querySelector('[aria-label="Remove"]')).not.toBeNull();
+    expect(field.querySelector('[aria-label="Remove React"]')).not.toBeNull();
 
     const input = container.querySelector('[role="combobox"]') as HTMLInputElement;
     act(() => input.focus());

@@ -1,3 +1,4 @@
+import { useMessages } from '@usemotif/react-native';
 import {
   Children,
   isValidElement,
@@ -82,6 +83,7 @@ export function Pagination({
   accessibilityLabel,
   style,
 }: PaginationProps): ReactElement {
+  const messages = useMessages();
   const goto = useCallback(
     (n: number) => onPageChange?.(Math.max(1, Math.min(total, n))),
     [onPageChange, total],
@@ -97,7 +99,7 @@ export function Pagination({
       : null;
   return (
     <View
-      accessibilityLabel={accessibilityLabel ?? 'Pagination'}
+      accessibilityLabel={accessibilityLabel ?? messages.pagination}
       style={[{ flexDirection: 'row' }, style as ViewStyle]}
     >
       {renderItem({
@@ -143,11 +145,13 @@ export interface BreadcrumbProps {
   style?: ViewStyle;
 }
 export function Breadcrumb({
-  accessibilityLabel = 'Breadcrumb',
+  accessibilityLabel: ownAccessibilityLabel,
   separator = '/',
   children,
   style,
 }: BreadcrumbProps): ReactElement {
+  const messages = useMessages();
+  const accessibilityLabel = ownAccessibilityLabel ?? messages.breadcrumb;
   const items = Children.toArray(children).filter(isValidElement);
   return (
     <View
@@ -274,12 +278,14 @@ export interface NavigationMenuProps {
   style?: ViewStyle;
 }
 export function NavigationMenu({
-  accessibilityLabel = 'Primary',
+  accessibilityLabel: ownAccessibilityLabel,
   current,
   items,
   children,
   style,
 }: NavigationMenuProps): ReactElement {
+  const messages = useMessages();
+  const accessibilityLabel = ownAccessibilityLabel ?? messages.primaryNavigation;
   if (items !== undefined) {
     return (
       <View

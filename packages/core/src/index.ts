@@ -205,3 +205,4 @@ export {
   wrapInLayer,
 } from './css-emit.js';
 export type { PseudoRule } from './css-emit.js';
+export { DEFAULT_MESSAGES, mergeMessages, type MotifMessages } from './messages.js';

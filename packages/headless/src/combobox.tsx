@@ -1,6 +1,6 @@
 'use client';
 
-import { Portal } from '@usemotif/react';
+import { Portal, useMessages } from '@usemotif/react';
 import {
   cloneElement,
   createContext,
@@ -276,8 +276,8 @@ function ComboboxList<T>({
   offset = 4,
   style,
   renderOption,
-  emptyMessage = 'No options',
-  loadingMessage = 'Loading...',
+  emptyMessage: ownEmptyMessage,
+  loadingMessage: ownLoadingMessage,
   itemHeight,
   renderGroupLabel,
 }: {
@@ -302,6 +302,9 @@ function ComboboxList<T>({
   /** Shown in place of `emptyMessage` while the root is `loading`. */
   loadingMessage?: ReactNode;
 }): ReactElement | null {
+  const messages = useMessages();
+  const emptyMessage = ownEmptyMessage ?? messages.noOptions;
+  const loadingMessage = ownLoadingMessage ?? messages.loadingOptions;
   const ctx = useComboboxContext<T>('Combobox.List');
   const { position, floatingRef } = useFloatingPosition(
     ctx.inputRef as unknown as React.RefObject<HTMLElement | null>,
@@ -827,7 +830,7 @@ function MultiSelectList<T>({
   offset = 4,
   style,
   renderOption,
-  emptyMessage = 'No options',
+  emptyMessage: ownMultiEmptyMessage,
   itemHeight,
   renderGroupLabel,
 }: {
@@ -849,6 +852,8 @@ function MultiSelectList<T>({
   ) => ReactNode;
   emptyMessage?: ReactNode;
 }): ReactElement | null {
+  const messages = useMessages();
+  const emptyMessage = ownMultiEmptyMessage ?? messages.noOptions;
   const ctx = useMultiSelectContext<T>('MultiSelect.List');
   const { position, floatingRef } = useFloatingPosition(
     ctx.inputRef as unknown as React.RefObject<HTMLElement | null>,

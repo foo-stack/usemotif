@@ -1,6 +1,6 @@
 'use client';
 
-import { Avatar, Box, type AvatarSize } from 'usemotif';
+import { Avatar, type AvatarSize, Box, useMessages } from 'usemotif';
 
 const SIZE_PX: Record<'xs' | 'sm' | 'md' | 'lg' | 'xl', number> = {
   xs: 24,
@@ -36,6 +36,7 @@ export interface AvatarGroupProps {
  * ```
  */
 export function AvatarGroup({ avatars, max = 4, size = 'md' }: AvatarGroupProps) {
+  const messages = useMessages();
   const px = sizePx(size);
   const overlap = Math.round(px * 0.3);
   const ring = '0 0 0 2px var(--colors-surface-default, #fff)';
@@ -67,7 +68,7 @@ export function AvatarGroup({ avatars, max = 4, size = 'md' }: AvatarGroupProps)
           color="$colors.text.muted"
           fontSize={Math.round(px * 0.36)}
           fontWeight="$fontWeights.semibold"
-          aria-label={`${extra} more`}
+          aria-label={messages.moreItems(extra)}
         >
           +{extra}
         </Box>

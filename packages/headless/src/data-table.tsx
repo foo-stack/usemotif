@@ -1,5 +1,6 @@
 'use client';
 
+import { useMessages } from '@usemotif/react';
 import {
   useCallback,
   useEffect,
@@ -148,6 +149,7 @@ export function DataTable<T>({
   resizeHandleStyle,
   ...aria
 }: DataTableProps<T>): ReactElement {
+  const messages = useMessages();
   const [sortValue, setSort] = useControllableState<SortState | null>({
     value: controlledSort,
     defaultValue: defaultSort,
@@ -338,7 +340,7 @@ export function DataTable<T>({
                   aria-valuenow={width}
                   aria-valuemin={column.minWidth ?? 60}
                   aria-valuemax={column.maxWidth ?? 800}
-                  aria-label="Resize column"
+                  aria-label={messages.resizeColumn}
                   tabIndex={-1}
                   onPointerDown={(e) => startResize(column, e)}
                   onClick={(e) => e.stopPropagation()}

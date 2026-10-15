@@ -1,5 +1,6 @@
 'use client';
 
+import { useMessages } from './messages.js';
 import type { MotifComponent } from '@usemotif/core';
 
 import {
@@ -596,6 +597,7 @@ export const PasswordInput = /* @__PURE__ */ forwardRef(function PasswordInput(
   { togglable = true, ...rest }: PasswordInputProps,
   ref: Ref<HTMLInputElement>,
 ): ReactElement {
+  const messages = useMessages();
   const [visible, setVisible] = useState(false);
   if (!togglable) {
     return <Input ref={ref} type="password" {...rest} />;
@@ -610,7 +612,7 @@ export const PasswordInput = /* @__PURE__ */ forwardRef(function PasswordInput(
       />
       <Pressable
         onPress={() => setVisible((v) => !v)}
-        aria-label={visible ? 'Hide password' : 'Show password'}
+        aria-label={visible ? messages.hidePassword : messages.showPassword}
         position="absolute"
         right={0}
         top={0}

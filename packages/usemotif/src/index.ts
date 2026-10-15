@@ -257,3 +257,9 @@ export type {
   UseThemeSettingResult,
   VirtualListImpl,
 } from '@usemotif/react';
+export {
+  MessagesProvider,
+  useMessages,
+  type MessagesProviderProps,
+  type MotifMessages,
+} from '@usemotif/react';
