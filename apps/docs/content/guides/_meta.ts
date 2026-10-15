@@ -8,6 +8,7 @@ const meta: MetaFile = {
   'strict-token-paths': 'Strict token paths',
   'import-design-tokens': 'Import design tokens',
   'theme-builder': 'Theme builder',
+  devtools: 'Devtools',
   desktop: 'Desktop',
   performance: 'Performance',
   'server-rendering': 'Server-side rendering',

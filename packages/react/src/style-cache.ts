@@ -144,6 +144,11 @@ export const syncCollectorStorage: CollectorStorage = (() => {
   };
 })();
 
+/** Whether the runtime emitted this class, in the browser or into SSR. For the devtools. */
+export function _isRuntimeClass(className: string): boolean {
+  return shared().cache.injected.has(className);
+}
+
 /**
  * Swap the storage backend used to track the active collector. Intended
  * to be called once at app startup by `@usemotif/react/server` to
