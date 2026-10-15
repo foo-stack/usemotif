@@ -3,6 +3,7 @@
 import { resolveTransitionToVars } from '@usemotif/core';
 import { useRef, type RefObject } from 'react';
 import { useIsomorphicLayoutEffect } from './_use-isomorphic-layout-effect.js';
+import { isFlushingViewTransition } from './_view-transition.js';
 
 /**
  * What to animate when the element's layout changes. `'all'` (default)
@@ -138,6 +139,8 @@ export function useLayoutAnimation<T extends HTMLElement = HTMLElement>(
     const id = optsRef.current.layoutId;
     const prev = lastRectRef.current ?? (id === undefined ? null : (SHARED_RECTS.get(id) ?? null));
     lastRectRef.current = next;
+    // The browser animates this commit itself.
+    if (isFlushingViewTransition()) return;
 
     // First measurement, with no shared box to come from: nothing to animate against.
     if (prev === null) return;

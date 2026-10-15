@@ -19,7 +19,7 @@ import type {
   ReactNode,
   Ref,
 } from 'react';
-import { createElement } from 'react';
+import { createElement, useContext } from 'react';
 import { BoxWithEnter } from './_box-enter.js';
 import { BoxWithExit } from './_box-exit.js';
 import { getMotionDriver } from './_animation/index.js';
@@ -29,6 +29,7 @@ import { useDrag, type DragConstraints, type DragInfo, type DragSpringConfig } f
 import { useActiveCollector } from './collector-context.js';
 import { useCssLayer } from './css-layer-context.js';
 import { resolveBox } from './_box-render.js';
+import { ViewTransitionNames } from './_view-transition.js';
 
 /** Selector suffix used to opt into `exitStyle` from a parent boundary. */
 
@@ -341,6 +342,8 @@ function BoxWithLayout(props: BoxProps) {
     ...layoutTransition,
     ...(layoutId !== undefined ? { layoutId } : {}),
   });
+  // Inside a view-transition Presence the browser morphs boxes that share a name.
+  const named = useContext(ViewTransitionNames) && layoutId !== undefined;
 
   const composedRef = (node: HTMLElement | null): void => {
     layoutRef.current = node;
@@ -350,7 +353,20 @@ function BoxWithLayout(props: BoxProps) {
     }
   };
 
-  return <Box {...(rest as BoxProps)} ref={composedRef} />;
+  return (
+    <Box
+      {...(rest as BoxProps)}
+      {...(named
+        ? {
+            style: {
+              ...rest.style,
+              viewTransitionName: `motif-${layoutId.replace(/[^\w-]/g, '_')}`,
+            },
+          }
+        : {})}
+      ref={composedRef}
+    />
+  );
 }
 
 /**

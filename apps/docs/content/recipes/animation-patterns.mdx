@@ -160,6 +160,29 @@ from where the old one was. It's the moving tab underline, or a card that grows 
 `layoutId` implies `layout`, and takes its timing from `layoutTransition`. On React Native the
 boxes are measured in window coordinates, so the two can sit in different parents there too.
 
+## View transitions on web
+
+Where the browser supports the View Transitions API, `viewTransition` hands a swap to it. The
+browser snapshots the old render, applies the new one, and crossfades between them, and a
+`layoutId` box present on both sides morphs from one to the other:
+
+<CodeBlock lang="tsx" code={`<Presence viewTransition>
+  <Box key={step} enterStyle={{ opacity: 0 }} exitStyle={{ opacity: 0 }}>
+    <Box layoutId="avatar" />
+    {steps[step]}
+  </Box>
+</Presence>
+
+<ThemeProvider themes={themes} active={theme} viewTransition>`} />
+
+During the swap `enterStyle`, `exitStyle` and the layout FLIP stand down, so nothing animates
+twice. Where the API is missing, under reduced motion, and on React Native, the same code falls
+back to them. On `ThemeProvider` it crossfades the page when `active` changes.
+
+The old render stays on screen until the browser has taken its snapshot, which is a frame or
+two. Style the animation with the `::view-transition-*` pseudo-elements; a `layoutId` box is
+named `motif-<layoutId>`.
+
 ## Named animation presets
 
 The default theme ships six presets keyed under `animations`:
