@@ -28,7 +28,7 @@ export const buttonRecipe = {
     justifyContent: 'center',
     gap: '$space.2',
     fontWeight: '$fontWeights.semibold',
-    borderRadius: '$radii.md',
+    borderRadius: '$components.button.borderRadius ?? $radii.md',
     borderWidth: '$borderWidths.thin',
     borderColor: 'transparent',
     transition: 'opacity 120ms ease',
@@ -37,15 +37,24 @@ export const buttonRecipe = {
   },
   variants: {
     intent: {
-      primary: { bg: '$colors.action.primary.bg', color: '$colors.action.primary.fg' },
-      danger: { bg: '$colors.action.danger.bg', color: '$colors.action.danger.fg' },
-      success: { bg: '$colors.action.success.bg', color: '$colors.action.success.fg' },
-      neutral: {
-        bg: '$colors.surface.muted',
-        color: '$colors.text.default',
-        borderColor: '$colors.border.default',
+      primary: {
+        bg: '$components.button.primary.bg ?? $colors.action.primary.bg',
+        color: '$components.button.primary.color ?? $colors.action.primary.fg',
       },
-      ghost: { bg: 'transparent', color: '$colors.text.default' },
+      danger: {
+        bg: '$components.button.danger.bg ?? $colors.action.danger.bg',
+        color: '$components.button.danger.color ?? $colors.action.danger.fg',
+      },
+      success: {
+        bg: '$components.button.success.bg ?? $colors.action.success.bg',
+        color: '$components.button.success.color ?? $colors.action.success.fg',
+      },
+      neutral: {
+        bg: '$components.button.neutral.bg ?? $colors.surface.muted',
+        color: '$components.button.neutral.color ?? $colors.text.default',
+        borderColor: '$components.button.neutral.borderColor ?? $colors.border.default',
+      },
+      ghost: { bg: 'transparent', color: '$components.button.ghost.color ?? $colors.text.default' },
     },
     size: {
       sm: { height: 32, paddingInline: '$space.3', fontSize: '$fontSizes.sm' },

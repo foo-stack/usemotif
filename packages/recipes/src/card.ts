@@ -18,14 +18,14 @@ export const cardRecipe = {
   base: {
     display: 'flex',
     flexDirection: 'column',
-    bg: '$colors.surface.raised',
-    borderRadius: '$radii.lg',
+    bg: '$components.card.bg ?? $colors.surface.raised',
+    borderRadius: '$components.card.borderRadius ?? $radii.lg',
     borderWidth: '$borderWidths.thin',
-    borderColor: '$colors.border.muted',
+    borderColor: '$components.card.borderColor ?? $colors.border.muted',
   },
   variants: {
     elevation: {
-      flat: { borderColor: '$colors.border.default' },
+      flat: { borderColor: '$components.card.flat.borderColor ?? $colors.border.default' },
       raised: { boxShadow: '0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06)' },
     },
     padding: {
@@ -42,14 +42,15 @@ export const cardRecipe = {
         textDecoration: 'none',
         transition: 'border-color 120ms ease, box-shadow 120ms ease',
         _hover: {
-          borderColor: '$colors.border.strong',
+          borderColor: '$components.card.interactive.hover.borderColor ?? $colors.border.strong',
           boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
         },
         _focus: {
           outlineStyle: 'solid',
           outlineWidth: 2,
           outlineOffset: 2,
-          outlineColor: '$colors.action.primary.bg',
+          outlineColor:
+            '$components.card.interactive.focus.outlineColor ?? $colors.action.primary.bg',
         },
       },
     },

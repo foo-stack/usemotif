@@ -305,7 +305,9 @@ describe('display components', () => {
     const button = container.querySelector('button')!;
     expect(button.getAttribute('type')).toBe('button');
     const style = button.getAttribute('style') ?? '';
-    expect(style).toContain('background-color: var(--colors-action-danger-bg)');
+    expect(style).toContain(
+      'background-color: var(--components-button-danger-bg, var(--colors-action-danger-bg))',
+    );
     expect(style).toContain('height: 32px');
     click(button);
     expect(pressed).toBe(1);
@@ -325,7 +327,9 @@ describe('display components', () => {
     // The recipe resolves to real styles, not stray attributes on the input.
     const style = input.getAttribute('style') ?? '';
     expect(style).toContain('height: 48px');
-    expect(style).toContain('border-color: var(--colors-action-danger-bg)');
+    expect(style).toContain(
+      'border-color: var(--components-input-invalid-borderColor, var(--colors-action-danger-bg))',
+    );
     expect(input.hasAttribute('bg')).toBe(false);
     expect(container.querySelector('label')!.getAttribute('for')).toBe(input.id);
   });

@@ -1,6 +1,6 @@
 import { escapeCssValue, escapeCssVarNameSegment, wrapInLayer } from './css-emit.js';
 import { splitTokenPath } from './_token-path.js';
-import { isTokenRef, resolveToken } from './token.js';
+import { isTokenRef, resolveToken, splitFallbacks } from './token.js';
 import type {
   AnimationToken,
   ScaleName,
@@ -56,9 +56,26 @@ export function tokenPathToCssVarName(scale: string, path: readonly string[]): s
  * the lookup belongs to. Explicit references like `$colors.blue.500`
  * already carry the scale and ignore `defaultScale`.
  *
+ * A fallback chain, `'$a ?? $b'`, nests: `var(--a, var(--b))`. A last
+ * alternative that is not a ref is the literal default.
+ *
  * Returns `undefined` if the reference cannot be encoded (no scale info).
  */
 export function tokenRefToCssVar(ref: TokenRef, defaultScale?: string): string | undefined {
+  const alternatives = splitFallbacks(ref);
+  if (alternatives !== null) {
+    let out: string | undefined;
+    for (const alt of [...alternatives].reverse()) {
+      if (!isTokenRef(alt)) {
+        out = alt === '' ? undefined : alt;
+        continue;
+      }
+      const own = tokenRefToCssVar(alt, defaultScale);
+      if (own === undefined) continue;
+      out = out === undefined ? own : `${own.slice(0, -1)}, ${out})`;
+    }
+    return out;
+  }
   // Must segment exactly as `resolveToken` does, or `$space.1.5` would emit
   // `--space-1-5` against a theme block that defines `--space-1_5`.
   const segments = splitTokenPath(ref);
@@ -85,6 +102,7 @@ export function tokenRefToCssVar(ref: TokenRef, defaultScale?: string): string |
     'opacities',
     'durations',
     'easings',
+    'components',
   ]);
 
   let scale: string;

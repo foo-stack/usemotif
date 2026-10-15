@@ -73,6 +73,13 @@ export interface TokenMap {
    * (`resolveAnimationToken`), not the generic `resolveToken` path.
    */
   animations?: Readonly<Record<string, AnimationToken>>;
+  /**
+   * Per-component tokens, read before the semantic ones: the kit's recipes
+   * reference `$components.<recipe>.<part>` with a semantic fallback, so a
+   * theme restyles the kit by defining these. Values are refs or CSS strings;
+   * a bare number is emitted without a unit.
+   */
+  components?: TokenScale<TokenValue>;
   // Allow user-defined scales without breaking type-safety for known ones.
   [scale: string]: TokenScale<TokenValue> | Readonly<Record<string, AnimationToken>> | undefined;
 }
