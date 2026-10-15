@@ -1,3 +1,4 @@
+import { useMessages } from '@usemotif/react-native';
 import { cloneElement, isValidElement, useMemo, type ReactElement, type ReactNode } from 'react';
 import { Modal, Pressable, TextInput, View, type ViewStyle } from 'react-native';
 import { addMonths, isSameDay, nextRange, rangeFlags, type DateRange } from './_date-math.js';
@@ -167,6 +168,7 @@ function CalendarGrid({
   select,
   dayState,
 }: CalendarGridProps): ReactElement {
+  const messages = useMessages();
   const months = Math.max(1, Math.floor(numberOfMonths));
   const [viewMonth, setViewMonth] = useControllableState({
     value: controlledViewMonth,
@@ -187,19 +189,19 @@ function CalendarGrid({
   return (
     <View
       accessibilityLabel={
-        accessibilityLabel ?? `${viewMonth.getFullYear()}-${viewMonth.getMonth() + 1} calendar`
+        accessibilityLabel ?? messages.calendarOf(viewMonth.getFullYear(), viewMonth.getMonth() + 1)
       }
       style={style}
     >
       <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Previous month"
+          accessibilityLabel={messages.previousMonth}
           onPress={() => setViewMonth(addMonths(viewMonth, -1))}
         />
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Next month"
+          accessibilityLabel={messages.nextMonth}
           onPress={() => setViewMonth(addMonths(viewMonth, 1))}
         />
       </View>
@@ -280,9 +282,11 @@ export function DatePicker(props: DatePickerProps | RangeDatePickerProps): React
 
 function SingleDatePicker({
   renderTrigger,
-  placeholder = 'Pick a date',
+  placeholder: ownPlaceholder,
   ...props
 }: DatePickerProps): ReactElement {
+  const messages = useMessages();
+  const placeholder = ownPlaceholder ?? messages.pickDate;
   // Track the committed selection locally so the trigger label reflects an
   // *uncontrolled* Calendar's internal pick (the Calendar owns that state and
   // DatePicker can't otherwise read it). Controlled mode keeps `value`
@@ -320,9 +324,11 @@ function SingleDatePicker({
 
 function RangeDatePicker({
   renderTrigger,
-  placeholder = 'Pick dates',
+  placeholder: ownPlaceholder,
   ...props
 }: RangeDatePickerProps): ReactElement {
+  const messages = useMessages();
+  const placeholder = ownPlaceholder ?? messages.pickDates;
   const [current, commit] = useControllableState({
     value: props.value,
     defaultValue: props.defaultValue,
@@ -448,10 +454,12 @@ export function TimeInput({
   value: controlled,
   defaultValue = '',
   onValueChange,
-  accessibilityLabel = 'Time',
+  accessibilityLabel: ownAccessibilityLabel,
   placeholder = 'HH:MM',
   children,
 }: TimeInputProps): ReactElement {
+  const messages = useMessages();
+  const accessibilityLabel = ownAccessibilityLabel ?? messages.time;
   const [value, setValue] = useControllableState({
     value: controlled,
     defaultValue,

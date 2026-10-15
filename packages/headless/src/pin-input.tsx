@@ -1,5 +1,6 @@
 'use client';
 
+import { useMessages } from '@usemotif/react';
 import {
   useEffect,
   useRef,
@@ -69,6 +70,7 @@ export function PinInput({
   inputStyle,
   ...aria
 }: PinInputProps): ReactElement {
+  const messages = useMessages();
   const [value, setValue] = useControllableState({
     value: controlled,
     defaultValue,
@@ -124,7 +126,7 @@ export function PinInput({
           // Only the first box offers the autofill, so a code the browser or OS
           // supplies lands whole and is spread across the boxes.
           autoComplete={index === 0 ? 'one-time-code' : 'off'}
-          aria-label={`Character ${index + 1} of ${length}`}
+          aria-label={messages.pinCharacter(index + 1, length)}
           value={value[index] ?? ''}
           disabled={disabled}
           onChange={(e) => write(index, addedText(e.target.value, value[index] ?? ''))}

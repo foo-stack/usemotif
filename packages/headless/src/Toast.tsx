@@ -1,6 +1,6 @@
 'use client';
 
-import { Portal, useDrag } from '@usemotif/react';
+import { Portal, useDrag, useMessages } from '@usemotif/react';
 import {
   createContext,
   useCallback,
@@ -443,6 +443,7 @@ export function Toast({
   style?: CSSProperties;
   children?: ReactNode;
 }): ReactElement | null {
+  const messages = useMessages();
   const { shouldRender, phase, elementRef, ExitBoundary } = useExitTransition(open, exitDurationMs);
   // Attach the exit element ref (its `transitionend` settles the CSS route)
   // without clobbering - memoized so it isn't a fresh ref each render.
@@ -520,7 +521,7 @@ export function Toast({
             ) : null}
             {item.action !== undefined && item.action !== null ? <div>{item.action}</div> : null}
             {onDismiss !== undefined ? (
-              <button type="button" onClick={onDismiss} aria-label="Dismiss">
+              <button type="button" onClick={onDismiss} aria-label={messages.dismiss}>
                 ×
               </button>
             ) : null}

@@ -1,5 +1,6 @@
 'use client';
 
+import { useMessages } from 'usemotif';
 import {
   TagsInput as HeadlessTagsInput,
   type TagInfo,
@@ -30,9 +31,14 @@ const INPUT_STYLE: CSSProperties = {
 };
 
 // Module-scoped so they are stable references (lint: no-new-fn-as-prop).
-function renderChip({ value, remove }: TagInfo): ReactNode {
+function renderChip(info: TagInfo): ReactNode {
+  return <TagChip {...info} />;
+}
+
+function TagChip({ value, remove }: TagInfo): ReactNode {
+  const messages = useMessages();
   return (
-    <Chip onRemove={remove} removeLabel={`Remove ${value}`}>
+    <Chip onRemove={remove} removeLabel={messages.removeItem(value)}>
       {value}
     </Chip>
   );

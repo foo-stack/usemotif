@@ -7,6 +7,7 @@ const meta: MetaFile = {
   'token-autocomplete': 'Token autocomplete',
   'strict-token-paths': 'Strict token paths',
   'import-design-tokens': 'Import design tokens',
+  'translating-labels': 'Translating built-in labels',
   'theme-builder': 'Theme builder',
   devtools: 'Devtools',
   tailwind: 'Tailwind bridge',

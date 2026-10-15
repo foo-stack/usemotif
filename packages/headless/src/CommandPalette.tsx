@@ -1,5 +1,6 @@
 'use client';
 
+import { useMessages } from '@usemotif/react';
 import { DialogContent, DialogRoot } from './Dialog.js';
 import {
   cloneElement,
@@ -388,8 +389,10 @@ export interface CommandPaletteListProps {
 function List({
   renderItem,
   renderSection,
-  emptyMessage = 'No matches',
+  emptyMessage: ownEmptyMessage,
 }: CommandPaletteListProps): ReactElement {
+  const messages = useMessages();
+  const emptyMessage = ownEmptyMessage ?? messages.noMatches;
   const ctx = useCommandPaletteContext('CommandPalette.List');
   if (ctx.flatFiltered.length === 0) {
     return (
@@ -450,16 +453,18 @@ export interface CommandPaletteBreadcrumbProps {
  * top level, where there is nowhere to go back to.
  */
 function Breadcrumb({
-  rootLabel = 'Commands',
+  rootLabel: ownRootLabel,
   separator = '/',
   renderCrumb,
   style,
 }: CommandPaletteBreadcrumbProps): ReactElement | null {
+  const messages = useMessages();
+  const rootLabel = ownRootLabel ?? messages.commands;
   const ctx = useCommandPaletteContext('CommandPalette.Breadcrumb');
   if (ctx.pages.length === 0) return null;
   const labels = [rootLabel, ...ctx.pages.map((p) => p.label)];
   return (
-    <nav aria-label="Command pages" style={style}>
+    <nav aria-label={messages.commandPages} style={style}>
       <ol style={{ display: 'flex', listStyle: 'none', margin: 0, padding: 0 }}>
         {labels.map((label, depth) => {
           const current = depth === labels.length - 1;

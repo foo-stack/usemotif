@@ -243,3 +243,5 @@ export {
   type SlotVariants,
   type SlotVariantsOf,
 } from './styled-slots.js';
+export { MessagesProvider, useMessages, type MessagesProviderProps } from './messages.js';
+export type { MotifMessages } from '@usemotif/core';

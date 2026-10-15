@@ -1,0 +1,108 @@
+---
+title: Translating built-in labels
+description: Translate the accessible labels and placeholders motif writes itself, in headless, the kit and the primitives, with one MessagesProvider.
+diataxis: howto
+covers: ['MessagesProvider', 'MessagesProviderProps', 'useMessages', 'MotifMessages', 'DEFAULT_MESSAGES', 'mergeMessages']
+last_verified: 2026-10-15
+---
+
+import { ArticleMeta, Callout, CodeBlock, Eyebrow, Lede } from '../../components/index.js';
+
+<Eyebrow>Guides</Eyebrow>
+
+# Translating built-in labels
+
+<Lede>
+  Most of what a screen reader hears comes from your content. The rest comes from motif: the name
+  of a pagination landmark, a dismiss button, a remove control, a list's empty message. Wrap your
+  app in `MessagesProvider` to say those in your users' language.
+</Lede>
+
+<ArticleMeta />
+
+## Provide translations
+
+<CodeBlock lang="tsx" code={`import { MessagesProvider } from 'usemotif';
+
+<MessagesProvider
+  messages={{
+    dismiss: 'Fermer',
+    remove: 'Retirer',
+    removeItem: (item) => \`Retirer \${item}\`,
+    pagination: 'Pagination',
+    noOptions: 'Aucune option',
+  }}
+>
+  <App />
+</MessagesProvider>`} />
+
+Pass any of the keys below. Anything left out keeps its English default, and a nested
+`MessagesProvider` layers over the one above it, so a section of the app can override a few labels
+for itself. The provider works the same on the web and React Native, and covers `@usemotif/headless`,
+the `@usemotif/ui` kit and the primitives.
+
+A component's own prop still wins: `<Breadcrumb aria-label="Path">` keeps its label whatever the
+catalogue says, and so do `placeholder`, `emptyMessage`, `removeLabel` and the rest where a
+component has them.
+
+## Read the catalogue
+
+`useMessages()` returns the active catalogue, for a component of your own that should speak the
+same language as motif's. `DEFAULT_MESSAGES` is the English catalogue, and `mergeMessages(base,
+overrides)` is how providers combine.
+
+## Every key
+
+| Key | English |
+| --- | --- |
+| `pagination` | Pagination |
+| `previousPage` | Previous page |
+| `nextPage` | Next page |
+| `itemsPerPage` | Items per page |
+| `perPage(count)` | `${count} / page` |
+| `breadcrumb` | Breadcrumb |
+| `showHiddenBreadcrumbs` | Show hidden breadcrumbs |
+| `primaryNavigation` | Primary |
+| `pinCharacter(position, length)` | `Character ${position} of ${length}` |
+| `remove` | Remove |
+| `removeItem(item)` | `Remove ${item}` |
+| `dismiss` | Dismiss |
+| `loading` | Loading |
+| `loadingOptions` | Loading... |
+| `noOptions` | No options |
+| `searchPlaceholder` | Search... |
+| `selectPlaceholder` | Select... |
+| `addPlaceholder` | Add... |
+| `commands` | Commands |
+| `commandPages` | Command pages |
+| `noMatches` | No matches |
+| `commandPlaceholder` | Type a command... |
+| `noMatchingCommands` | No matching commands |
+| `resizeColumn` | Resize column |
+| `colourPicker` | Colour picker |
+| `pickColourFromScreen` | Pick a colour from the screen |
+| `pickColour` | Pick |
+| `swatches` | Swatches |
+| `saturationAndValue` | Saturation and value selector |
+| `saturationAndValueText(saturation, value)` | `Saturation ${saturation}%, value ${value}%` |
+| `hue` | Hue |
+| `alpha` | Alpha |
+| `colourFormat` | Colour format |
+| `pickDate` | Pick a date |
+| `pickDates` | Pick dates |
+| `previousMonth` | Previous month |
+| `nextMonth` | Next month |
+| `calendarOf(year, month)` | `${year}-${month} calendar` |
+| `time` | Time |
+| `fileUpload` | File upload |
+| `dropFiles` | Drag files here, or click to browse |
+| `moreItems(count)` | `${count} more` |
+| `expand` | Expand |
+| `collapse` | Collapse |
+| `showPassword` | Show password |
+| `hidePassword` | Hide password |
+
+<Callout variant="info" title="Dates and numbers">
+  Calendar and date picker labels come from `Intl.DateTimeFormat` with the component's `locale`
+  prop, not from this catalogue. Pass `locale` there.
+</Callout>

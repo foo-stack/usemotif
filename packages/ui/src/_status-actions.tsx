@@ -1,7 +1,7 @@
 'use client';
 
 import type { ReactElement, ReactNode } from 'react';
-import { Box, Pressable, Text } from 'usemotif';
+import { Box, Pressable, Text, useMessages } from 'usemotif';
 
 const DISMISS_HOVER = { opacity: 0.65 } as const;
 
@@ -18,6 +18,7 @@ interface StatusActionsProps {
  * bare `×` outside Text would throw, and the colour must sit on the Text.
  */
 export function StatusActions({ action, onDismiss, color }: StatusActionsProps): ReactElement {
+  const messages = useMessages();
   return (
     <>
       {action !== undefined ? <Box flexShrink={0}>{action}</Box> : null}
@@ -36,7 +37,7 @@ export function StatusActions({ action, onDismiss, color }: StatusActionsProps):
           color={color}
           _hover={DISMISS_HOVER}
           onPress={onDismiss}
-          aria-label="Dismiss"
+          aria-label={messages.dismiss}
         >
           <Text color={color}>×</Text>
         </Pressable>

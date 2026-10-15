@@ -8,7 +8,7 @@ import {
   type ReactElement,
   type ReactNode,
 } from 'react';
-import { Box, Pressable } from 'usemotif';
+import { Box, Pressable, useMessages } from 'usemotif';
 import { MenuContent, MenuItem } from './Menu.js';
 import { PlatformLink } from './_link.js';
 import { navigate } from './_navigate.js';
@@ -123,6 +123,7 @@ function FoldedCrumbs({
   items: ReadonlyArray<ReactElement>;
   onNavigate: (href: string) => void;
 }): ReactElement {
+  const messages = useMessages();
   return (
     <HeadlessMenu.Root>
       <HeadlessMenu.Trigger>
@@ -133,7 +134,7 @@ function FoldedCrumbs({
           bg="transparent"
           color="$colors.text.muted"
           _hover={FOLD_HOVER}
-          aria-label="Show hidden breadcrumbs"
+          aria-label={messages.showHiddenBreadcrumbs}
         >
           {platformText('...', { color: '$colors.text.muted' })}
         </Pressable>

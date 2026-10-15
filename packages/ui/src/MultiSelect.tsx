@@ -2,7 +2,7 @@
 
 import { MultiSelect as HeadlessMultiSelect, type ComboboxOption } from '@usemotif/headless';
 import type { ReactNode } from 'react';
-import { Box, Pressable } from 'usemotif';
+import { Box, Pressable, useMessages } from 'usemotif';
 import { platformText } from './_platform-text.js';
 import { ThemedInput } from './_themed-input.js';
 import { LIST_STYLE, renderThemedGroupLabel } from './_list-surface.js';
@@ -25,6 +25,17 @@ function renderThemedChip(
   opt: ComboboxOption,
   info: { remove: () => void; index: number },
 ): ReactNode {
+  return <ThemedChip opt={opt} info={info} />;
+}
+
+function ThemedChip({
+  opt,
+  info,
+}: {
+  opt: ComboboxOption;
+  info: { remove: () => void; index: number };
+}): ReactNode {
+  const messages = useMessages();
   return (
     <Box
       display="inline-flex"
@@ -50,7 +61,7 @@ function renderThemedChip(
         borderRadius="$radii.full"
         bg="transparent"
         color="$colors.text.muted"
-        aria-label="Remove"
+        aria-label={messages.removeItem(opt.label)}
         onPress={info.remove}
       >
         {platformText('×', MUTED_TEXT)}
@@ -124,10 +135,12 @@ export function MultiSelect({
   value,
   defaultValue,
   onValueChange,
-  placeholder = 'Add...',
+  placeholder: ownPlaceholder,
   maxSelections,
   width = 280,
 }: MultiSelectProps) {
+  const messages = useMessages();
+  const placeholder = ownPlaceholder ?? messages.addPlaceholder;
   const platformStyle = usePlatformStyle();
   return (
     <HeadlessMultiSelect.Root

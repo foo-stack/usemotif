@@ -1,6 +1,6 @@
 'use client';
 
-import { Portal } from '@usemotif/react';
+import { Portal, useMessages } from '@usemotif/react';
 import {
   Children,
   cloneElement,
@@ -107,6 +107,7 @@ export function Pagination({
   style,
   ...aria
 }: PaginationProps): ReactElement {
+  const messages = useMessages();
   const goto = useCallback(
     (n: number) => onPageChange?.(Math.max(1, Math.min(total, n))),
     [onPageChange, total],
@@ -121,7 +122,7 @@ export function Pagination({
         })
       : null;
   return (
-    <nav aria-label={aria['aria-label'] ?? 'Pagination'} style={style}>
+    <nav aria-label={aria['aria-label'] ?? messages.pagination} style={style}>
       {renderItem({
         type: 'previous',
         disabled: page <= 1,
@@ -159,7 +160,7 @@ export function Pagination({
 // ─────────── Breadcrumb ───────────────────────────────────────────
 
 export interface BreadcrumbProps {
-  /** A11y label for the nav landmark. Defaults to `'Breadcrumb'`. */
+  /** A11y label for the nav landmark. Defaults to the `breadcrumb` message. */
   'aria-label'?: string;
   /** Visual separator between items. */
   separator?: ReactNode;
@@ -167,11 +168,13 @@ export interface BreadcrumbProps {
   style?: CSSProperties;
 }
 export function Breadcrumb({
-  'aria-label': label = 'Breadcrumb',
+  'aria-label': ownLabel,
   separator = '/',
   children,
   style,
 }: BreadcrumbProps): ReactElement {
+  const messages = useMessages();
+  const label = ownLabel ?? messages.breadcrumb;
   const items = Children.toArray(children).filter(isValidElement);
   return (
     <nav aria-label={label} style={style}>
@@ -331,12 +334,14 @@ export interface NavigationMenuProps {
   style?: CSSProperties;
 }
 export function NavigationMenu({
-  'aria-label': label = 'Primary',
+  'aria-label': ownLabel,
   current,
   items,
   children,
   style,
 }: NavigationMenuProps): ReactElement {
+  const messages = useMessages();
+  const label = ownLabel ?? messages.primaryNavigation;
   if (items !== undefined) {
     return (
       <nav aria-label={label} style={style}>

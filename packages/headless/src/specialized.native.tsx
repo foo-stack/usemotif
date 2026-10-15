@@ -1,3 +1,4 @@
+import { useMessages } from '@usemotif/react-native';
 import {
   useCallback,
   useEffect,
@@ -194,6 +195,7 @@ export function ColorPicker({
   swatches,
   swatchStyle,
 }: ColorPickerProps): ReactElement {
+  const messages = useMessages();
   const [format, commitFormat] = useControllableState<ColorFormat>({
     value: controlledFormat,
     defaultValue: 'hex',
@@ -245,7 +247,7 @@ export function ColorPicker({
   return (
     <View
       accessibilityRole="adjustable"
-      accessibilityLabel="Colour picker"
+      accessibilityLabel={messages.colourPicker}
       accessibilityState={{ disabled }}
       style={style}
     >
@@ -318,6 +320,7 @@ function SaturationValuePlane({
   style?: ViewStyle | undefined;
   thumbStyle?: ViewStyle | undefined;
 }): ReactElement {
+  const messages = useMessages();
   const layoutRef = useRef<{ width: number; height: number }>({ width: size, height: size });
 
   const update = useCallback(
@@ -349,7 +352,7 @@ function SaturationValuePlane({
   return (
     <View
       accessibilityRole="adjustable"
-      accessibilityLabel="Saturation and value selector"
+      accessibilityLabel={messages.saturationAndValue}
       accessibilityState={{ disabled }}
       onLayout={(e) => {
         layoutRef.current = {
@@ -437,9 +440,10 @@ function HueSlider({
   onChange: (h: number) => void;
   style?: ViewStyle | undefined;
 }): ReactElement {
+  const messages = useMessages();
   return (
     <ScalarSlider
-      ariaLabel="Hue"
+      ariaLabel={messages.hue}
       min={0}
       // 359, not 360: hue is cyclic (360 ≡ 0) and clampHue(360) → 0, so a
       // full-right drag would snap the thumb back to the left. Mirrors web.
@@ -467,9 +471,10 @@ function AlphaSlider({
   onChange: (a: number) => void;
   style?: ViewStyle | undefined;
 }): ReactElement {
+  const messages = useMessages();
   return (
     <ScalarSlider
-      ariaLabel="Alpha"
+      ariaLabel={messages.alpha}
       min={0}
       max={1}
       width={width}
@@ -641,10 +646,11 @@ function FormatToggle({
   disabled: boolean;
   onChange: (next: ColorFormat) => void;
 }): ReactElement {
+  const messages = useMessages();
   return (
     <View
       accessibilityRole="radiogroup"
-      accessibilityLabel="Colour format"
+      accessibilityLabel={messages.colourFormat}
       style={{ flexDirection: 'row', marginTop: 12 }}
     >
       {options.map((opt) => (
@@ -761,6 +767,7 @@ export function FileUpload({
   children,
   style,
 }: FileUploadProps): ReactElement {
+  const messages = useMessages();
   const openPicker = useCallback(() => {
     if (disabled) return;
     if (DOCUMENT_PICKER === null) {
@@ -790,7 +797,7 @@ export function FileUpload({
   }, [accept, disabled, multiple, onFiles, maxSize, maxFiles, onReject]);
 
   return (
-    <View style={style} accessibilityLabel="File upload">
+    <View style={style} accessibilityLabel={messages.fileUpload}>
       {children({ isDragging: false, openPicker })}
     </View>
   );

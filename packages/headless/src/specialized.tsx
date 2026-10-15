@@ -1,5 +1,6 @@
 'use client';
 
+import { useMessages } from '@usemotif/react';
 import {
   useCallback,
   useEffect,
@@ -116,9 +117,10 @@ export function ColorPicker({
   swatches,
   swatchStyle,
   eyeDropper = false,
-  eyeDropperLabel = 'Pick',
+  eyeDropperLabel: ownEyeDropperLabel,
   eyeDropperStyle,
 }: ColorPickerProps): ReactElement {
+  const messages = useMessages();
   const [format, commitFormat] = useControllableState<ColorFormat>({
     value: controlledFormat,
     defaultValue: 'hex',
@@ -188,7 +190,11 @@ export function ColorPicker({
   }, [commit, hsv.a]);
 
   return (
-    <div role="group" aria-label="Colour picker" style={{ display: 'inline-block', ...style }}>
+    <div
+      role="group"
+      aria-label={messages.colourPicker}
+      style={{ display: 'inline-block', ...style }}
+    >
       <SaturationValuePlane
         hsv={hsv}
         disabled={disabled}
@@ -216,11 +222,11 @@ export function ColorPicker({
         <button
           type="button"
           disabled={disabled}
-          aria-label="Pick a colour from the screen"
+          aria-label={messages.pickColourFromScreen}
           onClick={() => void pickFromScreen()}
           style={eyeDropperStyle}
         >
-          {eyeDropperLabel}
+          {ownEyeDropperLabel ?? messages.pickColour}
         </button>
       ) : null}
     </div>
@@ -247,6 +253,7 @@ function Swatches({
   onPick: (color: string) => void;
   swatchStyle: CSSProperties | undefined;
 }): ReactElement {
+  const messages = useMessages();
   const refs = useRef<Array<HTMLDivElement | null>>([]);
   const checked = colors.findIndex((c) => formatColor(parseColor(c), 'hex') === current);
   const tabStop = checked === -1 ? 0 : checked;
@@ -258,7 +265,7 @@ function Swatches({
   return (
     <div
       role="radiogroup"
-      aria-label="Swatches"
+      aria-label={messages.swatches}
       style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}
     >
       {colors.map((c, i) => (
@@ -315,6 +322,7 @@ function SaturationValuePlane({
   style?: CSSProperties | undefined;
   thumbStyle?: CSSProperties | undefined;
 }): ReactElement {
+  const messages = useMessages();
   const planeRef = useRef<HTMLDivElement | null>(null);
   // Tear down an in-flight drag on unmount so a closing ColorPicker doesn't
   // leak the pointermove/pointerup listeners or fire onChange after unmount.
@@ -388,11 +396,14 @@ function SaturationValuePlane({
       // `aria-valuetext` describing both axes is the safer model - it announces
       // the current position without trapping the reader in application mode.
       role="slider"
-      aria-label="Saturation and value selector"
+      aria-label={messages.saturationAndValue}
       aria-valuemin={0}
       aria-valuemax={100}
       aria-valuenow={Math.round(hsv.s * 100)}
-      aria-valuetext={`Saturation ${Math.round(hsv.s * 100)}%, value ${Math.round(hsv.v * 100)}%`}
+      aria-valuetext={messages.saturationAndValueText(
+        Math.round(hsv.s * 100),
+        Math.round(hsv.v * 100),
+      )}
       aria-disabled={disabled || undefined}
       tabIndex={disabled ? -1 : 0}
       onPointerDown={onPointerDown}
@@ -428,9 +439,10 @@ function HueSlider({
   onChange: (next: number) => void;
   style?: CSSProperties | undefined;
 }): ReactElement {
+  const messages = useMessages();
   return (
     <ScalarSlider
-      ariaLabel="Hue"
+      ariaLabel={messages.hue}
       min={0}
       // 359, not 360: hue is cyclic so 360 ≡ 0, and `clampHue(360)` maps to 0
       // - with max=360 pressing End teleported the thumb from 100% to 0% and
@@ -457,9 +469,10 @@ function AlphaSlider({
   onChange: (next: number) => void;
   style?: CSSProperties | undefined;
 }): ReactElement {
+  const messages = useMessages();
   return (
     <ScalarSlider
-      ariaLabel="Alpha"
+      ariaLabel={messages.alpha}
       min={0}
       max={1}
       step={0.01}
@@ -592,6 +605,7 @@ function FormatToggle({
   options: ReadonlyArray<ColorFormat>;
   onChange: (next: ColorFormat) => void;
 }): ReactElement {
+  const messages = useMessages();
   const groupId = useId();
   // APG radiogroup: a single tab stop (roving tabindex) plus arrow-key
   // movement, not every radio tabbable with no keyboard navigation.
@@ -616,7 +630,7 @@ function FormatToggle({
   };
 
   return (
-    <div role="radiogroup" aria-label="Colour format" id={groupId}>
+    <div role="radiogroup" aria-label={messages.colourFormat} id={groupId}>
       {options.map((opt, idx) => (
         <button
           key={opt}

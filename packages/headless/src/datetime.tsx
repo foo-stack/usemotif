@@ -1,5 +1,6 @@
 'use client';
 
+import { useMessages } from '@usemotif/react';
 import {
   forwardRef,
   useEffect,
@@ -448,7 +449,8 @@ export function DatePicker(props: DatePickerProps | RangeDatePickerProps): React
 }
 
 function SingleDatePicker(props: DatePickerProps): ReactElement {
-  const { value, defaultValue, onValueChange, placeholder = 'Pick a date', ...rest } = props;
+  const messages = useMessages();
+  const { value, defaultValue, onValueChange, placeholder = messages.pickDate, ...rest } = props;
   const [open, setOpen] = useState(false);
   // Track the committed selection locally so the trigger label reflects what
   // the (uncontrolled) Calendar holds internally - the Calendar owns its own
@@ -486,7 +488,8 @@ function SingleDatePicker(props: DatePickerProps): ReactElement {
 }
 
 function RangeDatePicker(props: RangeDatePickerProps): ReactElement {
-  const { value, defaultValue, onValueChange, placeholder = 'Pick dates', ...rest } = props;
+  const messages = useMessages();
+  const { value, defaultValue, onValueChange, placeholder = messages.pickDates, ...rest } = props;
   const [open, setOpen] = useState(false);
   const [current, commit] = useControllableState({
     value,

@@ -1,4 +1,5 @@
 import { type MotifComponent, resolveStyles, type StyleProps } from '@usemotif/core';
+import { useMessages } from './messages.js';
 import {
   createContext,
   forwardRef,
@@ -284,6 +285,7 @@ export const PasswordInput = /* @__PURE__ */ forwardRef(function PasswordInput(
   { togglable = true, ...rest }: PasswordInputProps,
   ref: Ref<RNTextInput>,
 ): ReactElement {
+  const messages = useMessages();
   const [visible, setVisible] = useState(false);
   if (!togglable) {
     return <Input ref={ref} secureTextEntry {...rest} />;
@@ -294,7 +296,7 @@ export const PasswordInput = /* @__PURE__ */ forwardRef(function PasswordInput(
         <Input ref={ref} secureTextEntry={!visible} {...rest} />
       </Box>
       <Pressable
-        accessibilityLabel={visible ? 'Hide password' : 'Show password'}
+        accessibilityLabel={visible ? messages.hidePassword : messages.showPassword}
         onPress={() => setVisible((v) => !v)}
         px="$3"
       >

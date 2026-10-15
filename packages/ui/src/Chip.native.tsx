@@ -1,6 +1,6 @@
 import { chipRecipe } from '@usemotif/recipes';
 import { useState, type ReactElement } from 'react';
-import { Box, Pressable, Text } from 'usemotif';
+import { Box, Pressable, Text, useMessages } from 'usemotif';
 import type { ChipProps } from './Chip.js';
 
 export type { ChipIntent, ChipProps } from './Chip.js';
@@ -15,11 +15,13 @@ export function Chip({
   icon,
   intent = 'neutral',
   onRemove,
-  removeLabel = 'Remove',
+  removeLabel: ownRemoveLabel,
   selected: controlledSelected,
   defaultSelected,
   onSelectedChange,
 }: ChipProps): ReactElement {
+  const messages = useMessages();
+  const removeLabel = ownRemoveLabel ?? messages.remove;
   const toggle =
     controlledSelected !== undefined ||
     defaultSelected !== undefined ||

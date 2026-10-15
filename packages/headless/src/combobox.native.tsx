@@ -1,3 +1,4 @@
+import { useMessages } from '@usemotif/react-native';
 import {
   cloneElement,
   createContext,
@@ -194,8 +195,8 @@ function groupHeader<T>(options: ReadonlyArray<ComboboxOption<T>>, i: number): R
 function ComboboxList<T>({
   style,
   renderOption,
-  emptyMessage = 'No options',
-  loadingMessage = 'Loading...',
+  emptyMessage: ownEmptyMessage,
+  loadingMessage: ownLoadingMessage,
 }: {
   style?: ViewStyle;
   renderOption?: (
@@ -206,6 +207,9 @@ function ComboboxList<T>({
   /** Shown in place of `emptyMessage` while the root is `loading`. */
   loadingMessage?: ReactNode;
 }): ReactElement | null {
+  const messages = useMessages();
+  const emptyMessage = ownEmptyMessage ?? messages.noOptions;
+  const loadingMessage = ownLoadingMessage ?? messages.loadingOptions;
   const ctx = useComboboxContext<T>('Combobox.List');
   if (!ctx.open) return null;
   return (
@@ -518,7 +522,7 @@ function MultiSelectChips<T>({
 function MultiSelectList<T>({
   style,
   renderOption,
-  emptyMessage = 'No options',
+  emptyMessage: ownEmptyMessage,
 }: {
   style?: ViewStyle;
   renderOption?: (
@@ -527,6 +531,8 @@ function MultiSelectList<T>({
   ) => ReactNode;
   emptyMessage?: ReactNode;
 }): ReactElement | null {
+  const messages = useMessages();
+  const emptyMessage = ownEmptyMessage ?? messages.noOptions;
   const ctx = useMultiSelectContext<T>('MultiSelect.List');
   if (!ctx.open) return null;
   return (
