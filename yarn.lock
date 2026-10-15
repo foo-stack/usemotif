@@ -7331,6 +7331,28 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@usemotif/storybook@workspace:packages/storybook":
+  version: 0.0.0-use.local
+  resolution: "@usemotif/storybook@workspace:packages/storybook"
+  dependencies:
+    "@storybook/react": "npm:^10.4.1"
+    "@types/react": "npm:^19.2.14"
+    "@usemotif/core": "workspace:*"
+    "@usemotif/tokens": "workspace:*"
+    jsdom: "npm:^29.1.0"
+    react: "npm:^19.2.0"
+    react-dom: "npm:^19.2.0"
+    tsup: "npm:^8.5.1"
+    typescript: "npm:^6.0.3"
+    usemotif: "workspace:*"
+    vitest: "npm:^4.1.5"
+  peerDependencies:
+    "@storybook/react": ">=9.0.0"
+    react: ">=18.0.0"
+    usemotif: "workspace:^"
+  languageName: unknown
+  linkType: soft
+
 "@usemotif/test-utils@workspace:*, @usemotif/test-utils@workspace:packages/test-utils":
   version: 0.0.0-use.local
   resolution: "@usemotif/test-utils@workspace:packages/test-utils"
