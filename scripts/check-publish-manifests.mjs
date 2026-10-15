@@ -156,7 +156,10 @@ const CLIENT_ENTRY_POLICY = {
     // reference, so importing the kit from a Server Component throws.
     reexportOnly: ['./dist/index.js'],
   },
-  '@usemotif/react-native': { must: [], mustNot: ['.', './flash-list', './reanimated'] },
+  '@usemotif/react-native': {
+    must: [],
+    mustNot: ['.', './flash-list', './reanimated', './testing'],
+  },
   // A build tool: neither entry runs in a React tree. Its source mentions the directive only
   // because the Turbopack loader's tests feed it client modules.
   '@usemotif/compiler-web': { must: [], mustNot: ['.', './turbopack'] },
@@ -249,6 +252,9 @@ const CJS_LOAD_SKIP = {
     'Metro only. Requires react-native, which ships untranspiled source that ' +
     'plain Node cannot parse. Nothing consumes this through require().',
   '@usemotif/react-native#./flash-list': 'Metro only, for the same reason as the main entry.',
+  '@usemotif/react-native#./testing':
+    'Loaded by Jest with the react-native preset, which transforms react-native before ' +
+    'requiring it. Plain Node cannot parse react-native, as for the main entry.',
 };
 
 /** Does this Node accept the flag that turns require(esm) back off? */
