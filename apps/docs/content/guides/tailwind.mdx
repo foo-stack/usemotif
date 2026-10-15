@@ -1,0 +1,72 @@
+---
+title: Tailwind bridge
+description: Generate a Tailwind v4 @theme block from a motif theme, so Tailwind utilities paint motif tokens and follow theme switches.
+diataxis: howto
+covers: ['toTailwindTheme', 'TailwindThemeOptions']
+last_verified: 2026-10-15
+---
+
+import { ArticleMeta, CodeBlock, Eyebrow, Lede } from '../../components/index.js';
+
+<Eyebrow>Guides</Eyebrow>
+
+# Tailwind bridge
+
+<Lede>
+  Running Tailwind next to motif? Generate a Tailwind v4 theme from your motif theme and the two
+  share one set of tokens: `bg-action-primary-bg` paints `$colors.action.primary.bg`, and switching
+  the motif theme switches the utilities too.
+</Lede>
+
+<ArticleMeta />
+
+## Generate the theme
+
+<CodeBlock lang="ts" filename="scripts/tailwind-theme.mjs" code={`import { writeFileSync } from 'node:fs';
+import { toTailwindTheme } from '@usemotif/core/tailwind';
+import { lightTheme } from '@usemotif/tokens';
+
+writeFileSync('src/motif-theme.css', toTailwindTheme(lightTheme.tokens));`} />
+
+Then import it after Tailwind:
+
+<CodeBlock lang="css" filename="src/app.css" code={`@import "tailwindcss";
+@import "./motif-theme.css";`} />
+
+Pass any theme with the token names your app uses. Only the names come from it: every value is the
+motif variable (`var(--colors-blue-500)`), which `ThemeProvider` sets for whichever theme is
+active.
+
+## What maps where
+
+| motif scale | Tailwind namespace | Example utility |
+| --- | --- | --- |
+| `colors` | `--color-*` | `bg-action-primary-bg`, `text-text-default` |
+| `space` | `--spacing-*` | `p-4`, `gap-2` |
+| `sizes` | `--container-*` | `max-w-prose` |
+| `radii` | `--radius-*` | `rounded-md` |
+| `fontSizes` | `--text-*` | `text-2xl` |
+| `fontWeights` | `--font-weight-*` | `font-semibold` |
+| `fontFamilies` | `--font-*` | `font-sans` |
+| `lineHeights` | `--leading-*` | `leading-tight` |
+| `letterSpacings` | `--tracking-*` | `tracking-wide` |
+| `shadows` | `--shadow-*` | `shadow-md` |
+| `easings` | `--ease-*` | `ease-decelerate` |
+
+motif's breakpoints become `--breakpoint-*`, so `md:` means the same width in both. Scales Tailwind
+has no theme namespace for (`zIndices`, `opacities`, `durations`, `borderWidths`) are left out. A key
+with a dot, such as `space.1.5`, is written with an underscore: `p-1_5`.
+
+## Why `@theme inline`
+
+A plain `@theme` defines `--color-blue-500` once, at the root, so its value is fixed to whatever the
+motif variable held there. `inline` makes each utility read the motif variable where it's used, so
+a `data-theme` switch, nested sub-themes included, reaches Tailwind utilities like it reaches motif
+styles.
+
+## Options
+
+| Option | Default | |
+| --- | --- | --- |
+| `replace` | `false` | Clear Tailwind's own values in each namespace motif fills, so only motif tokens make utilities. |
+| `breakpoints` | `true` | Add `--breakpoint-*` from motif's configured breakpoints. |
