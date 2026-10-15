@@ -2,8 +2,8 @@
 title: Animation
 description: Drive prop-change transitions, mount-in entrances, and unmount-out exits with motion props on Box - plus the named presets that ship with the default theme.
 diataxis: howto
-covers: []
-last_verified: 2026-05-18
+covers: ['Presence', 'PresenceProps']
+last_verified: 2026-10-15
 ---
 
 import { ArticleMeta, Callout, CodeBlock, Eyebrow, Lede } from '../../components/index.js';
@@ -87,7 +87,7 @@ The library's `Dialog`, `Drawer`, and other overlay primitives are exit-aware ou
 
 Behind the scenes, the parent sets `data-motif-state="exiting"` on the wrapping element; motif
 emits a CSS rule keyed on that attribute. The element waits for the transition to finish before
-React unmounts it. No `<AnimatePresence>` wrapper required.
+React unmounts it. No `<AnimatePresence>` wrapper required for those.
 
 ### Asymmetric timing
 
@@ -104,6 +104,61 @@ only - the "in fast, out slow" shape without a second component:
 
 Make sure the exit-aware boundary holds the exit at least as long as the exit duration. See
 [style props](/reference/style-props) for the full motion table.
+
+## Keyed children and swaps
+
+Your own conditional rendering has no exit-aware parent, so a Box that disappears from it unmounts
+at once. Wrap the children in `Presence` and a keyed child that leaves stays mounted, marked as
+exiting, until its `exitStyle` finishes. One that arrives plays its `enterStyle` as usual.
+
+<CodeBlock lang="tsx" code={`import { Box, Presence } from 'usemotif';
+
+<Presence>
+  {toasts.map((toast) => (
+    <Box key={toast.id} enterStyle={{ opacity: 0 }} exitStyle={{ opacity: 0 }} transition="opacity 200ms">
+      {toast.text}
+    </Box>
+  ))}
+</Presence>`} />
+
+By default a new child enters while the old one exits. `mode="wait"` holds the new one back until
+the exit has finished, which is the shape you want for swapping one keyed child for another:
+
+<CodeBlock lang="tsx" code={`<Presence mode="wait">
+  <Box
+    key={step}
+    enterStyle={{ opacity: 0, transform: 'translateX(16px)' }}
+    exitStyle={{ opacity: 0, transform: 'translateX(-16px)' }}
+    transition={{ duration: '$durations.3' }}
+  >
+    {steps[step]}
+  </Box>
+</Presence>`} />
+
+| Prop | Default | |
+| --- | --- | --- |
+| `mode` | `'sync'` | `'wait'` enters a new child only after every exiting one has gone. |
+| `exitDuration` | `400` | The longest an exit may take, in ms, before the child unmounts anyway. Pass `0` under reduced motion. |
+| `onExitComplete` | | Called when the last exiting child has unmounted. |
+
+Children need a `key`. On the web the exit ends at the child's `transitionend` or at `exitDuration`,
+whichever comes first; on React Native it ends when the child's exit animation reports done. The
+same code runs on both.
+
+## Shared layout transitions
+
+Give two Boxes the same `layoutId` and, when one unmounts as the other mounts, the new one animates
+from where the old one was. It's the moving tab underline, or a card that grows into a panel:
+
+<CodeBlock lang="tsx" code={`{tabs.map((tab) => (
+  <Pressable key={tab} onPress={() => setActive(tab)}>
+    <Text>{tab}</Text>
+    {tab === active ? <Box layoutId="underline" height={2} bg="$colors.accent.fg" /> : null}
+  </Pressable>
+))}`} />
+
+`layoutId` implies `layout`, and takes its timing from `layoutTransition`. On React Native the
+boxes are measured in window coordinates, so the two can sit in different parents there too.
 
 ## Named animation presets
 

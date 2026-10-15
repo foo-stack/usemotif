@@ -58,7 +58,8 @@ const targets = [
     // Lowered when the forms components' `forwardRef` calls were marked pure,
     // so the forms module stopped riding along with every Box import.
     // Bumped when the style cache's realm-shared state.
-    budget: 11000, // gzip bytes
+    // Bumped when Box gained layoutId (the shared-layout registry in useLayoutAnimation).
+    budget: 11100, // gzip bytes
   },
   {
     name: '@usemotif/react - Button only',
@@ -72,7 +73,8 @@ const targets = [
     // Bumped when the group states joined core's selector map and Box marks a group.
     // Lowered when the forms components' `forwardRef` calls were marked pure,
     // so the forms module stopped riding along with every Box import.
-    budget: 12100,
+    // Bumped when Box gained layoutId (the shared-layout registry in useLayoutAnimation).
+    budget: 12300,
   },
   {
     name: '@usemotif/react-native - Box only',
@@ -93,7 +95,8 @@ const targets = [
     // Bumped when the group states joined core's selector map and Box marks a group.
     // Lowered when the forms components' `forwardRef` calls were marked pure,
     // so the forms module stopped riding along with every Box import.
-    budget: 14300,
+    // Bumped when Box gained layoutId (the shared-layout registry in useLayoutAnimation).
+    budget: 14600,
   },
   {
     name: '@usemotif/headless - Dialog only',
@@ -169,7 +172,8 @@ const targets = [
     // Bumped when Box's `layout` animation took `layoutTransition` timing.
     // Bumped when state bags took responsive values (nested at-rules).
     // Bumped when Card parts (Header, Body, Footer, Media) assembled on Card.
-    budget: 12600,
+    // Bumped when Box gained layoutId (the shared-layout registry in useLayoutAnimation).
+    budget: 12800,
   },
   {
     name: '@usemotif/ui - Modal only',
@@ -615,7 +619,8 @@ const targets = [
     // Bumped when the group states joined core's selector map and Box marks a group.
     // Bumped when the four default status icons (Info, CircleCheck, TriangleAlert, CircleAlert) and Icon.
     // Bumped when the shared dismiss part as Pressable and Text, so it also renders on native.
-    budget: 12700,
+    // Bumped when Box gained layoutId (the shared-layout registry in useLayoutAnimation).
+    budget: 12800,
   },
   {
     name: '@usemotif/ui - FormField only',

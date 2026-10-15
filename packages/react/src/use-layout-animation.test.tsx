@@ -333,3 +333,52 @@ describe('Box layoutTransition', () => {
     expect(el.style.transition).toBe('transform 300ms ease-in-out');
   });
 });
+
+describe('layoutId', () => {
+  // Each element reports the box written in its `data-rect`, so the leaving and the arriving
+  // element can sit in different places within one commit.
+  beforeEach(() => {
+    Element.prototype.getBoundingClientRect = function (this: Element) {
+      const [x, y, width, height] = (this.getAttribute('data-rect') ?? '0,0,0,0')
+        .split(',')
+        .map(Number) as [number, number, number, number];
+      return { x, y, width, height, left: x, top: y } as DOMRect;
+    };
+  });
+
+  function Tabs({ active }: { active: number }): ReactNode {
+    return (
+      <>
+        {[0, 1].map((i) =>
+          i === active ? (
+            <Box
+              key={i}
+              layoutId="underline"
+              data-testid={`u${i}`}
+              data-rect={`${i * 100},0,50,2`}
+            />
+          ) : null,
+        )}
+      </>
+    );
+  }
+
+  it('animates the arriving element from where the leaving one was', () => {
+    const raf = queueRaf();
+    render(<Tabs active={0} />);
+    render(<Tabs active={1} />);
+    const el = container.querySelector<HTMLElement>('[data-testid="u1"]')!;
+    expect(el.style.transform).toBe('translate(-100px, 0px) scale(1, 1)');
+    act(() => raf.forEach((cb) => cb()));
+    expect(el.style.transform).toBe('');
+  });
+
+  it('does not animate from a box left in an earlier commit', async () => {
+    render(<Tabs active={0} />);
+    render(<Tabs active={-1} />);
+    await Promise.resolve();
+    queueRaf();
+    render(<Tabs active={1} />);
+    expect(container.querySelector<HTMLElement>('[data-testid="u1"]')!.style.transform).toBe('');
+  });
+});
