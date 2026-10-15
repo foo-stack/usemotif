@@ -2,7 +2,7 @@
 title: Test utilities
 description: Cross-renderer conformance suite, default test theme, and Vitest matchers for asserting motif components in tests.
 diataxis: reference
-covers: ['assertConformance', 'defaultTestTheme', 'standardCases', 'motifMatchers', 'ConformanceCase', 'PrimitiveName', 'RendererAdapter', 'RendererOutput']
+covers: ['renderStyles', 'assertConformance', 'defaultTestTheme', 'standardCases', 'motifMatchers', 'ConformanceCase', 'PrimitiveName', 'RendererAdapter', 'RendererOutput']
 last_verified: 2026-05-15
 ---
 
@@ -106,10 +106,26 @@ renderer. Available matchers:
 | `toHaveStyle(bag)` | The inline (unconditional) style on the rendered root contains every entry of `bag`. Subset match - extra keys are tolerated. |
 | `toHaveStyleAt(scope, bag)` | The output applies `bag` under `scope` - an `@media ...`, `@container ...`, or `:pseudo` selector. Subset match within the scoped rule. |
 
-<CodeBlock lang="ts" code={`const out = adapter.render({ primitive: 'Box', props: { p: '$4' } });
+<CodeBlock lang="tsx" code={`import { renderStyles } from '@usemotif/react/testing';
+
+const out = renderStyles(<Box p={{ base: '$4', md: '$8' }} _hover={{ opacity: 0.9 }} />, theme);
 expect(out).toHaveStyle({ padding: 16 });
 expect(out).toHaveStyleAt('@media (min-width: 768px)', { padding: 32 });
 expect(out).toHaveStyleAt(':hover', { opacity: 0.9 });`} />
+
+## `renderStyles`
+
+<ApiSignature
+  name="renderStyles"
+  status="stable"
+  signature={`function renderStyles(element: ReactElement, theme: Theme): RendererOutput`}
+/>
+
+Exported from `@usemotif/react/testing`, not from this package. It renders any element on the web,
+your own `styled()` components included, inside a `ThemeProvider` for `theme`, and returns the
+root element's `RendererOutput` for the matchers above. Token variables resolve back to `theme`'s
+values, so expectations read `padding: 16` rather than `var(--space-4)`. The web conformance
+adapter renders every standard case through it.
 
 ## Types
 

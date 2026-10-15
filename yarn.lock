@@ -7179,12 +7179,15 @@ __metadata:
   peerDependencies:
     "@tanstack/react-virtual": ^3.0.0
     "@usemotif/react-native": "workspace:^"
+    "@usemotif/test-utils": "workspace:^"
     react: ">=18.0.0"
     react-dom: ">=18.0.0"
   peerDependenciesMeta:
     "@tanstack/react-virtual":
       optional: true
     "@usemotif/react-native":
+      optional: true
+    "@usemotif/test-utils":
       optional: true
     react-dom:
       optional: true

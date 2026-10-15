@@ -70,15 +70,24 @@ import { motifMatchers } from '@usemotif/test-utils';
 
 expect.extend(motifMatchers);`} />
 
-The matchers operate on a `RendererOutput` - the normalised, theme-resolved shape a renderer
-adapter produces. `toHaveStyle` checks the unconditional style; `toHaveStyleAt` checks a scoped
-rule, keyed by an `@media`, `@container`, or pseudo-selector prefix.
+The matchers operate on a `RendererOutput`: the normalised, theme-resolved styles of one rendered
+element. On the web, `renderStyles` from `@usemotif/react/testing` renders any element, your own
+`styled()` components included, and returns one. Pass the theme you render with, so token values
+read back as the theme resolves them. `toHaveStyle` checks the unconditional style; `toHaveStyleAt`
+checks a scoped rule, keyed by an `@media`, `@container`, or pseudo-selector prefix.
 
-<CodeBlock lang="ts" code={`const out = adapter.render({ primitive: 'Box', props: { p: '$4', _hover: { opacity: 0.9 } } });
+<CodeBlock lang="tsx" filename="Tag.test.tsx" code={`import { renderStyles } from '@usemotif/react/testing';
+import { theme } from './theme';
+import { Tag } from './Tag';
 
-expect(out).toHaveStyle({ padding: 16 });
-expect(out).toHaveStyleAt(':hover', { opacity: 0.9 });
-expect(out).toHaveStyleAt('@media (min-width: 768px)', { padding: 32 });`} />
+const out = renderStyles(<Tag tone="loud" p={{ base: '$space.1', md: '$space.3' }} />, theme);
+
+expect(out).toHaveStyle({ fontWeight: 700, padding: 4 });
+expect(out).toHaveStyleAt(':hover', { opacity: 0.8 });
+expect(out).toHaveStyleAt('@media (min-width: 768px)', { padding: 12 });`} />
+
+`renderStyles` is web only. On React Native, assert on the rendered output with your usual testing
+library.
 
 Both are subset matches - extra keys are tolerated, so a renderer adding delivery-specific styles
 does not break the assertion.

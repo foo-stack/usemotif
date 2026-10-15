@@ -57,7 +57,8 @@ const targets = [
     // Bumped when the group states joined core's selector map and Box marks a group.
     // Lowered when the forms components' `forwardRef` calls were marked pure,
     // so the forms module stopped riding along with every Box import.
-    budget: 10900, // gzip bytes
+    // Bumped when the style cache's realm-shared state.
+    budget: 11000, // gzip bytes
   },
   {
     name: '@usemotif/react - Button only',

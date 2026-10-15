@@ -50,6 +50,9 @@ export default defineConfig({
     // `react-native-svg` instead of an inline `<svg>` host.
     'svg.native': 'src/svg-entry.native.ts',
     server: 'src/server.ts',
+    // Test tooling for consumers: `renderStyles`. Runs under Node in a test
+    // runner, so it carries no `'use client'`.
+    testing: 'src/testing.ts',
     'virtualizers/tanstack': 'src/virtualizers/tanstack.tsx',
   },
   format: ['esm', 'cjs'],
