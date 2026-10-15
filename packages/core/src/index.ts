@@ -171,6 +171,8 @@ export {
   mediaQueryForBreakpoint,
   parseResponsiveDSL,
   parseResponsiveKey,
+  PREFERENCE_QUERIES,
+  type PreferenceKey,
   resolveBreakpoints,
   responsiveArrayToObject,
   sameMatches,

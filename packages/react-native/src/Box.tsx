@@ -25,7 +25,11 @@ import { splitMotionValueProps } from './_motion-bindings.js';
 import { sanitizeNativeStyle } from './_native-style.js';
 import { useContainerInfo } from './container-context.js';
 import { useDirection } from './direction-context.js';
-import { resolveResponsivePropsAtViewportAndContainer, useViewportWidth } from './responsive.js';
+import {
+  resolveResponsivePropsAtViewportAndContainer,
+  usePreferences,
+  useViewportWidth,
+} from './responsive.js';
 import { useBreakpointWidths, useTheme } from './theme-context.js';
 import { useLayoutAnimation, type LayoutAnimationKind } from './use-layout-animation.js';
 import { useDrag, type DragConstraints, type DragInfo, type DragSpringConfig } from './use-drag.js';
@@ -348,6 +352,7 @@ interface ResolvedBoxStyleCache {
   theme: Theme | undefined;
   direction: string;
   width: number;
+  preferences: unknown;
   container: unknown;
   breakpoints: unknown;
   baseStyle: Record<string, unknown>;
@@ -393,6 +398,7 @@ function useResolvedBoxBaseStyle(rest: Record<string, unknown>): {
   const theme = useTheme();
   const direction = useDirection();
   const width = useViewportWidth();
+  const preferences = usePreferences();
   const container = useContainerInfo();
   const breakpoints = useBreakpointWidths();
 
@@ -403,6 +409,7 @@ function useResolvedBoxBaseStyle(rest: Record<string, unknown>): {
     cache.theme === theme &&
     cache.direction === direction &&
     cache.width === width &&
+    cache.preferences === preferences &&
     cache.container === container &&
     cache.breakpoints === breakpoints &&
     shallowEqualProps(cache.rest, rest)
@@ -432,6 +439,7 @@ function useResolvedBoxBaseStyle(rest: Record<string, unknown>): {
     theme,
     direction,
     width,
+    preferences,
     container,
     breakpoints,
     baseStyle,

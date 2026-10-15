@@ -1,13 +1,15 @@
 import {
   getBreakpoints,
   isResponsiveObject,
+  PREFERENCE_QUERIES,
+  type PreferenceKey,
   parseResponsiveDSL,
   parseResponsiveKey,
   responsiveArrayToObject,
   type BreakpointName,
 } from '@usemotif/core';
-import { useEffect, useState } from 'react';
-import { Dimensions } from 'react-native';
+import { useEffect, useState, useSyncExternalStore } from 'react';
+import { AccessibilityInfo, Dimensions } from 'react-native';
 import type { ContainerContextValue } from './container-context.js';
 
 /**
@@ -20,7 +22,115 @@ import type { ContainerContextValue } from './container-context.js';
  * notch on most platforms) which is the right unit for breakpoint
  * matching.
  */
+/** The user preferences React Native reports, for the `@contrast`-style responsive keys. */
+interface NativePreferences {
+  readonly contrast: boolean;
+  readonly reducedTransparency: boolean;
+  readonly landscape: boolean;
+}
+
+interface PreferenceSources {
+  isHighTextContrastEnabled?: () => Promise<boolean>;
+  isDarkerSystemColorsEnabled?: () => Promise<boolean>;
+  isReduceTransparencyEnabled?: () => Promise<boolean>;
+  addEventListener?: (event: string, handler: (enabled: boolean) => void) => { remove(): void };
+}
+
+let preferences: NativePreferences = {
+  contrast: false,
+  reducedTransparency: false,
+  landscape: false,
+};
+const preferenceListeners = new Set<() => void>();
+let preferencesStarted = false;
+
+function setPreferences(patch: Partial<NativePreferences>): void {
+  const next = { ...preferences, ...patch };
+  if (
+    next.contrast === preferences.contrast &&
+    next.reducedTransparency === preferences.reducedTransparency &&
+    next.landscape === preferences.landscape
+  ) {
+    return;
+  }
+  preferences = next;
+  for (const listener of preferenceListeners) listener();
+}
+
+/**
+ * Read the platform's settings once, for the whole app, and follow their changes. Android reports
+ * high text contrast and iOS darker system colours; either counts as `@contrast`. Reduced
+ * transparency is iOS's. A method the platform lacks is skipped.
+ */
+function startPreferences(): void {
+  if (preferencesStarted) return;
+  preferencesStarted = true;
+  const { width, height } = Dimensions.get('window');
+  setPreferences({ landscape: width > height });
+  Dimensions.addEventListener('change', ({ window }) => {
+    setPreferences({ landscape: window.width > window.height });
+  });
+  const sources = AccessibilityInfo as unknown as PreferenceSources;
+  let highContrast = false;
+  let darkerColours = false;
+  const follow = (
+    read: (() => Promise<boolean>) | undefined,
+    event: string,
+    apply: (enabled: boolean) => void,
+  ): void => {
+    read?.call(sources).then(apply, () => {});
+    sources.addEventListener?.(event, apply);
+  };
+  follow(sources.isHighTextContrastEnabled, 'highTextContrastChanged', (on) => {
+    highContrast = on;
+    setPreferences({ contrast: highContrast || darkerColours });
+  });
+  follow(sources.isDarkerSystemColorsEnabled, 'darkerSystemColorsChanged', (on) => {
+    darkerColours = on;
+    setPreferences({ contrast: highContrast || darkerColours });
+  });
+  follow(sources.isReduceTransparencyEnabled, 'reduceTransparencyChanged', (on) => {
+    setPreferences({ reducedTransparency: on });
+  });
+}
+
+function subscribePreferences(listener: () => void): () => void {
+  startPreferences();
+  preferenceListeners.add(listener);
+  return () => preferenceListeners.delete(listener);
+}
+
+/** Whether a preference key's condition holds now. Print and forced colours never do on native. */
+function preferenceActive(key: PreferenceKey): boolean {
+  if (key === '@contrast') return preferences.contrast;
+  if (key === '@reducedTransparency') return preferences.reducedTransparency;
+  if (key === '@landscape') return preferences.landscape;
+  return false;
+}
+
+/** Test hook: put the preferences back to their defaults. */
+export function _setPreferencesForTesting(patch: Partial<NativePreferences> | null): void {
+  if (patch === null) {
+    preferences = { contrast: false, reducedTransparency: false, landscape: false };
+    preferencesStarted = false;
+    return;
+  }
+  setPreferences(patch);
+}
+
+/** The current preferences; a new object whenever one changes, so it can key a cache. */
+export function usePreferences(): NativePreferences {
+  return useSyncExternalStore(
+    subscribePreferences,
+    () => preferences,
+    () => preferences,
+  );
+}
+
 export function useViewportWidth(): number {
+  // Responsive values resolve against the user's preferences as well as the width, so every
+  // component that resolves them re-renders when one changes.
+  usePreferences();
   const [width, setWidth] = useState<number>(() => Dimensions.get('window').width);
   useEffect(() => {
     const sub = Dimensions.addEventListener('change', ({ window }) => {
@@ -102,6 +212,14 @@ function pickFromObject(obj: Record<string, unknown>, width: number, asc: AscBre
     if (width < px) break;
     const slot = obj[name];
     if (slot !== undefined) chosen = slot;
+  }
+  return applyPreferences(obj, chosen);
+}
+
+/** The value for the last preference key that holds, after the width cascade chose `chosen`. */
+function applyPreferences(obj: Record<string, unknown>, chosen: unknown): unknown {
+  for (const key of Object.keys(PREFERENCE_QUERIES) as PreferenceKey[]) {
+    if (obj[key] !== undefined && preferenceActive(key)) chosen = obj[key];
   }
   return chosen;
 }
@@ -205,7 +323,8 @@ function cascadeObject(
     }
   }
 
-  return chosen;
+  // Pass 4 - preference conditions, last, so a user preference wins over any width.
+  return applyPreferences(obj, chosen);
 }
 
 /**
