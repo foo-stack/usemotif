@@ -1,0 +1,101 @@
+---
+title: Import design tokens
+description: Turn a W3C Design Tokens file, as exported from Figma variables or Tokens Studio, into a typed createTheme module.
+diataxis: howto
+covers: ['designTokensToTheme', 'printThemeModule', 'DesignTokensResult']
+last_verified: 2026-10-15
+---
+
+import { ArticleMeta, Callout, CodeBlock, Eyebrow, Lede } from '../../components/index.js';
+
+<Eyebrow>Guides</Eyebrow>
+
+# Import design tokens
+
+<Lede>
+  If your design tokens live in a W3C Design Tokens file, one command turns it into a theme
+  module: every token in the motif scale its type names, and every alias kept as a `$`-reference,
+  so your primitive and semantic layers come across intact.
+</Lede>
+
+<ArticleMeta />
+
+## Generate the module
+
+<CodeBlock lang="bash" code={`npx @usemotif/migrate import-tokens tokens/brand.tokens.json --out src/theme.ts`} />
+
+The theme is named after the file (`brand` here), or after `--name`. Without `--out` the module
+prints to stdout. Given this file:
+
+<CodeBlock lang="json" code={`{
+  "color": {
+    "$type": "color",
+    "blue": { "500": { "$value": "#3b82f6" } },
+    "accent": { "$value": "{color.blue.500}" }
+  },
+  "spacing": { "$type": "dimension", "4": { "$value": "16px" } },
+  "motion": { "fast": { "$type": "duration", "$value": { "value": 150, "unit": "ms" } } }
+}`} />
+
+it writes:
+
+<CodeBlock lang="ts" filename="src/theme.ts" code={`// Generated from brand.tokens.json by usemotif-migrate import-tokens.
+import { createTheme } from 'usemotif';
+
+export const brandTheme = createTheme({
+  name: 'brand',
+  tokens: {
+    colors: {
+      blue: {
+        '500': '#3b82f6',
+      },
+      accent: '$colors.blue.500',
+    },
+    space: {
+      '4': 16,
+    },
+    durations: {
+      motion: {
+        fast: '150ms',
+      },
+    },
+  },
+} as const);`} />
+
+The module is `as const`, so it's ready for [token autocomplete](/guides/token-autocomplete): add
+the one `declare module` block that page shows.
+
+## Where each token goes
+
+| `$type` | Scale |
+| --- | --- |
+| `color` | `colors` |
+| `fontFamily` | `fontFamilies` |
+| `fontWeight` | `fontWeights` (named weights such as `semi-bold` become numbers) |
+| `duration` | `durations` |
+| `cubicBezier` | `easings` |
+| `shadow` | `shadows`, as a CSS shadow string |
+| `dimension` | The scale its group is named for (`spacing`, `size`, `radius`, `fontSize`, `lineHeight`, `letterSpacing`, `borderWidth`), else `space` |
+| `number` | The scale its group is named for (`opacity`, `zIndex`, `lineHeight`, `fontWeight`) |
+
+A group name that only names the token's scale drops out of the path, so `color.blue.500` becomes
+`colors.blue.500` and `semantic.color.text` becomes `colors.semantic.text`. Pixel dimensions become
+numbers, which motif reads as pixels on the web and density-independent points on native. Other
+units stay as strings.
+
+A token whose whole value is an alias becomes a `$`-reference to wherever the aliased token
+landed. Aliases inside a shadow resolve to their value, since a reference has to be the whole
+value.
+
+## What it skips
+
+`typography`, `border`, `transition`, `gradient` and `strokeStyle` tokens have no single motif
+scale, so they're skipped, as is a `number` in a group that names no scale. Each skip is reported
+on stderr with the token's path, as is an alias to a skipped token and a token that lands on a path
+another one already took.
+
+<Callout variant="info" title="From code">
+  `designTokensToTheme(file)` returns `{ tokens, warnings }` from parsed JSON, and
+  `printThemeModule(name, tokens)` prints the module, both from `@usemotif/migrate`, for a build
+  step that regenerates the theme whenever the tokens file changes.
+</Callout>
