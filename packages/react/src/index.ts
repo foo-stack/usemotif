@@ -209,6 +209,7 @@ export {
   type PresenceContextValue,
   type UseExitPresenceResult,
 } from './_animation/index.js';
+export { Presence, type PresenceProps } from './Presence.js';
 export {
   createMotionValue,
   isMotionValue,

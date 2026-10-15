@@ -222,6 +222,7 @@ export type {
   PresenceContextValue,
   UseExitTransitionNativeResult,
 } from './_animation/presence-context.js';
+export { Presence, type PresenceProps } from './Presence.js';
 export type {
   MotionDriver,
   MotionDriverEntryOptions,

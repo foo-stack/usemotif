@@ -21,6 +21,11 @@ export interface UseLayoutAnimationOptions {
   duration?: number | string;
   /** CSS easing function or an `$easings` token. Default `'ease-in-out'`. */
   easing?: string;
+  /**
+   * Shared layout identity. When an element with this id unmounts and another with the same id
+   * mounts in the same commit, the new one animates from where the old one was.
+   */
+  layoutId?: string;
 }
 
 /**
@@ -53,6 +58,9 @@ interface RectSnapshot {
   width: number;
   height: number;
 }
+
+/** The box each `layoutId` left behind on unmount, kept only until the end of that commit. */
+const SHARED_RECTS = new Map<string, RectSnapshot>();
 
 /**
  * Animate an element between its previous and next layout box (FLIP).
@@ -105,16 +113,33 @@ export function useLayoutAnimation<T extends HTMLElement = HTMLElement>(
   const lastRectRef = useRef<RectSnapshot | null>(null);
   const optsRef = useRef<UseLayoutAnimationOptions>(options);
   optsRef.current = options;
+  const { layoutId } = options;
+
+  // Declared before the FLIP effect so its cleanup reads the box mid-animation, before that
+  // effect's cleanup restores the transform.
+  useIsomorphicLayoutEffect(() => {
+    if (layoutId === undefined) return undefined;
+    return () => {
+      const el = ref.current;
+      if (el === null) return;
+      const rect = readRect(el);
+      SHARED_RECTS.set(layoutId, rect);
+      queueMicrotask(() => {
+        if (SHARED_RECTS.get(layoutId) === rect) SHARED_RECTS.delete(layoutId);
+      });
+    };
+  }, [layoutId]);
 
   useIsomorphicLayoutEffect(() => {
     const el = ref.current;
     if (el === null) return;
 
     const next = readRect(el);
-    const prev = lastRectRef.current;
+    const id = optsRef.current.layoutId;
+    const prev = lastRectRef.current ?? (id === undefined ? null : (SHARED_RECTS.get(id) ?? null));
     lastRectRef.current = next;
 
-    // First measurement - nothing to animate against.
+    // First measurement, with no shared box to come from: nothing to animate against.
     if (prev === null) return;
 
     const opts = optsRef.current;

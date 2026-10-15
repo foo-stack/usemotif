@@ -138,6 +138,23 @@ export type BoxProps = ResponsiveStyleProps &
      */
     layout?: boolean | 'position' | 'size';
     /**
+     * Shared layout identity. When a Box with this id unmounts and another with the same id
+     * mounts in the same commit, the new one animates from the old one's position and size,
+     * for an underline that moves between tabs or a card that expands into a panel. Implies
+     * `layout`.
+     *
+     * @example
+     * ```tsx
+     * {tabs.map((tab) => (
+     *   <Box key={tab}>
+     *     {tab}
+     *     {tab === active ? <Box layoutId="underline" height={2} bg="$colors.accent.fg" /> : null}
+     *   </Box>
+     * ))}
+     * ```
+     */
+    layoutId?: string;
+    /**
      * Duration and easing of the `layout` animation, as literals or
      * `$durations` / `$easings` tokens. Tokens emit CSS variables, so a
      * theme switch applies.
@@ -236,7 +253,7 @@ export const Box: MotifComponent<BoxProps, ReactElement | null> = function (prop
   // Layout-animation dispatch sits at the very top because the wrapper
   // owns the element ref the FLIP hook needs to write to. The wrapper
   // re-enters Box without `layout` set, so there's no recursion.
-  if (props.layout !== undefined && props.layout !== false) {
+  if ((props.layout !== undefined && props.layout !== false) || props.layoutId !== undefined) {
     return createElement(BoxWithLayout, props);
   }
 
@@ -276,6 +293,7 @@ export const Box: MotifComponent<BoxProps, ReactElement | null> = function (prop
     animation,
     animateOnly,
     layout: _layout,
+    layoutId: _layoutId,
     layoutTransition: _layoutTransition,
     onLayout: _onLayout,
     drag: _drag,
@@ -515,10 +533,16 @@ export const Box: MotifComponent<BoxProps, ReactElement | null> = function (prop
  * still get a usable handle to the underlying element.
  */
 function BoxWithLayout(props: BoxProps) {
-  const { layout, layoutTransition, ref: userRef, ...rest } = props;
+  const { layout, layoutId, layoutTransition, ref: userRef, ...rest } = props;
   const kind: LayoutAnimationKind =
-    layout === true || layout === undefined ? 'all' : (layout as LayoutAnimationKind);
-  const { ref: layoutRef } = useLayoutAnimation<HTMLElement>({ kind, ...layoutTransition });
+    layout === true || layout === undefined || layout === false
+      ? 'all'
+      : (layout as LayoutAnimationKind);
+  const { ref: layoutRef } = useLayoutAnimation<HTMLElement>({
+    kind,
+    ...layoutTransition,
+    ...(layoutId !== undefined ? { layoutId } : {}),
+  });
 
   const composedRef = (node: HTMLElement | null): void => {
     layoutRef.current = node;

@@ -11,6 +11,12 @@ export interface UseLayoutAnimationOptions {
   duration?: number;
   /** CSS easing keyword or `cubic-bezier(...)`. Default `'ease-in-out'`. */
   easing?: string;
+  /**
+   * Shared layout identity. When an element with this id unmounts and another with the same id
+   * lays out right after, the new one animates from where the old one was on screen. Needs
+   * `ref` attached to the host view, which measures in window coordinates.
+   */
+  layoutId?: string;
 }
 
 /**
@@ -34,6 +40,16 @@ interface LayoutSnapshot {
   width: number;
   height: number;
 }
+
+interface Measurable {
+  measureInWindow(callback: (x: number, y: number, width: number, height: number) => void): void;
+}
+
+/** The window box each `layoutId` left behind on unmount, and when. */
+const SHARED_LAYOUTS = new Map<string, { box: LayoutSnapshot; at: number }>();
+// ponytail: a time window stands in for "the same commit", since native layout is async.
+// Narrow it if an unrelated later mount ever picks up a stale box.
+const SHARED_LAYOUT_TTL_MS = 500;
 
 /**
  * Animate a Box between its previous and next layout (FLIP) on native.
@@ -109,27 +125,19 @@ export function useLayoutAnimation<T = unknown>(
   const running = useRef<Animated.CompositeAnimation | null>(null);
   useEffect(() => () => running.current?.stop(), []);
 
-  const onLayout = useCallback((event: LayoutChangeEvent): void => {
-    const next: LayoutSnapshot = {
-      x: event.nativeEvent.layout.x,
-      y: event.nativeEvent.layout.y,
-      width: event.nativeEvent.layout.width,
-      height: event.nativeEvent.layout.height,
+  // This element's last box in window coordinates, measured only under a `layoutId`.
+  const windowBox = useRef<LayoutSnapshot | null>(null);
+  const { layoutId } = options;
+  useEffect(() => {
+    if (layoutId === undefined) return undefined;
+    return () => {
+      if (windowBox.current !== null) {
+        SHARED_LAYOUTS.set(layoutId, { box: windowBox.current, at: Date.now() });
+      }
     };
-    const prev = lastLayoutRef.current;
-    lastLayoutRef.current = next;
+  }, [layoutId]);
 
-    if (prev === null) return;
-
-    const opts = optsRef.current;
-    const kind = opts.kind ?? 'all';
-    const dx = kind === 'size' ? 0 : prev.x - next.x;
-    const dy = kind === 'size' ? 0 : prev.y - next.y;
-    const sx =
-      kind === 'position' ? 1 : prev.width === 0 ? 1 : prev.width / Math.max(1, next.width);
-    const sy =
-      kind === 'position' ? 1 : prev.height === 0 ? 1 : prev.height / Math.max(1, next.height);
-
+  const play = useCallback((dx: number, dy: number, sx: number, sy: number): void => {
     if (dx === 0 && dy === 0 && sx === 1 && sy === 1) return;
 
     // Apply the inverse transform instantly.
@@ -142,6 +150,7 @@ export function useLayoutAnimation<T = unknown>(
     running.current?.stop();
 
     // Animate each axis back to identity.
+    const opts = optsRef.current;
     const durationMs = (opts.duration ?? 0.3) * 1000;
     const easingFn = mapEasing(opts.easing ?? 'ease-in-out');
     const anim = Animated.parallel([
@@ -175,6 +184,50 @@ export function useLayoutAnimation<T = unknown>(
       if (running.current === anim) running.current = null;
     });
   }, []);
+
+  const onLayout = useCallback(
+    (event: LayoutChangeEvent): void => {
+      const next: LayoutSnapshot = {
+        x: event.nativeEvent.layout.x,
+        y: event.nativeEvent.layout.y,
+        width: event.nativeEvent.layout.width,
+        height: event.nativeEvent.layout.height,
+      };
+      const prev = lastLayoutRef.current;
+      lastLayoutRef.current = next;
+      const kind = optsRef.current.kind ?? 'all';
+      const id = optsRef.current.layoutId;
+      const host = ref.current as Partial<Measurable> | null;
+
+      if (id !== undefined && typeof host?.measureInWindow === 'function') {
+        host.measureInWindow((x, y, width, height) => {
+          const arriving = windowBox.current === null;
+          windowBox.current = { x, y, width, height };
+          const shared = SHARED_LAYOUTS.get(id);
+          if (!arriving || shared === undefined) return;
+          SHARED_LAYOUTS.delete(id);
+          if (Date.now() - shared.at > SHARED_LAYOUT_TTL_MS) return;
+          // RN scales about the centre, so move centre to centre.
+          const from = shared.box;
+          play(
+            kind === 'size' ? 0 : from.x + from.width / 2 - (x + width / 2),
+            kind === 'size' ? 0 : from.y + from.height / 2 - (y + height / 2),
+            kind === 'position' || from.width === 0 ? 1 : from.width / Math.max(1, width),
+            kind === 'position' || from.height === 0 ? 1 : from.height / Math.max(1, height),
+          );
+        });
+      }
+
+      if (prev === null) return;
+      play(
+        kind === 'size' ? 0 : prev.x - next.x,
+        kind === 'size' ? 0 : prev.y - next.y,
+        kind === 'position' ? 1 : prev.width === 0 ? 1 : prev.width / Math.max(1, next.width),
+        kind === 'position' ? 1 : prev.height === 0 ? 1 : prev.height / Math.max(1, next.height),
+      );
+    },
+    [play],
+  );
 
   const style: ViewStyle = {
     transform: [

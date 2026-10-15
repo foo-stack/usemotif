@@ -220,8 +220,12 @@ between renders animates instead of jumping (`'position'` or `'size'` limits it 
 
 On the web the tokens become CSS variables, so a theme switch retimes the animation. On React
 Native they resolve against the active theme, and `cubic-bezier(...)` easings map to RN's
-`Easing.bezier`. The compiler leaves a Box with either prop in place, since the animation runs in
-the runtime component.
+`Easing.bezier`. The compiler leaves a Box with any of these props in place, since the animation
+runs in the runtime component.
+
+`layoutId` shares one layout between two Boxes: when a Box with the id unmounts and another with
+the same id mounts, the new one animates from the old one's position and size. See
+[shared layout transitions](/recipes/animation-patterns#shared-layout-transitions).
 
 ## Container query prop
 
